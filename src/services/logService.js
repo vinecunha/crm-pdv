@@ -116,14 +116,9 @@ class LogService {
     }
   }
 
-  async getUserIP() {
-    try {
-      const response = await fetch('https://api.ipify.org?format=json')
-      const data = await response.json()
-      return data.ip
-    } catch (error) {
-      return '0.0.0.0'
-    }
+  const logAction = async (logData) => {
+    // IP é automaticamente adicionado pelo Supabase via request.headers['x-forwarded-for']
+    return supabase.from('system_logs').insert(logData)
   }
 
   async logLogin(email, success) {

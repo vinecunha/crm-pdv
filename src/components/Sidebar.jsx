@@ -36,8 +36,8 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
 
   // Usar dados do banco ou fallback
-  const companyName = company?.company_name || 'Brasalino Pollo'
-  const logoSrc = company?.company_logo_url || '/brasalino-pollo.png'
+  const companyName = company?.company_name || 'Empresa'
+  const logoSrc = company?.company_logo_url || '/logomarca.png'
   const primaryColor = getCompanyColor('primary') || '#2563eb'
   const secondaryColor = getCompanyColor('secondary') || '#7c3aed'
 
