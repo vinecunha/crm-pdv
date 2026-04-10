@@ -6,6 +6,7 @@ import ErrorBoundaryWithCompany from './components/ErrorBoundaryWithCompany'
 import SectionErrorBoundary from './components/SectionErrorBoundary'
 import ProtectedRoute from './components/ProtectedRoute'
 import SplashScreen from './components/ui/SplashScreen'
+import DynamicHead from './components/DynamicHead'
 
 // Lazy load das páginas - Cada página será carregada sob demanda
 const Login = lazy(() => import('./pages/Login'))
@@ -40,6 +41,7 @@ function App() {
       <Router>
         <AuthProvider>
           <CompanyProvider>
+            <DynamicHead />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* Rota pública */}
