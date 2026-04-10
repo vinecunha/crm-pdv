@@ -88,42 +88,51 @@ cp .env.example .env
 # Execute o projeto
 npm run dev
 
-🗄️ Estrutura do Banco de Dados
-O sistema utiliza as seguintes tabelas principais:
+```
 
-products - Produtos
+## 📚 Vendors
+[![React](https://img.shields.io/badge/React-18-blue.svg)](https://reactjs.org/)
+[![Vite](https://img.shields.io/badge/Vite-5.0-purple.svg)](https://vitejs.dev/)
+[![Tailwind](https://img.shields.io/badge/Tailwind-3.0-38bdf8.svg)](https://tailwindcss.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-Database-green.svg)](https://supabase.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-customers - Clientes
+## 🗄️ Estrutura do Banco de Dados
+- O sistema utiliza as seguintes tabelas principais:
 
-sales - Vendas
+- products - Produtos
 
-sale_items - Itens das vendas
+- customers - Clientes
 
-stock_movements - Movimentações de estoque
+- sales - Vendas
 
-stock_count_sessions - Sessões de balanço
+- sale_items - Itens das vendas
 
-stock_count_items - Itens contados no balanço
+- stock_movements - Movimentações de estoque
 
-coupons - Cupons de desconto
+- stock_count_sessions - Sessões de balanço
 
-profiles - Perfis de usuários
+- stock_count_items - Itens contados no balanço
 
-system_logs - Logs do sistema
+- coupons - Cupons de desconto
 
-Scripts SQL disponíveis em /sql/
+- profiles - Perfis de usuários
 
-🔐 Permissões
-Função	Permissões
-Admin	Acesso total ao sistema
-Gerente	Gerenciar produtos, clientes, vendas, relatórios
-Operador	Apenas PDV e consultas básicas
+- system_logs - Logs do sistema
 
-🤝 Contribuindo
+**Scripts SQL disponíveis em /sql/**
+
+## 🔐 Permissões
+- Função	| Permissões
+- Admin	    | Acesso total ao sistema
+- Gerente	| Gerenciar produtos, clientes, vendas, relatórios
+- Operador	| Apenas PDV e consultas básicas
+
+## 🤝 Contribuindo
 Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests.
 
-📄 Licença
+## 📄 Licença
 Este projeto está sob a licença MIT.
 
-👨‍💻 Autor
+## 👨‍💻 Autor
 Vinicius Martins
