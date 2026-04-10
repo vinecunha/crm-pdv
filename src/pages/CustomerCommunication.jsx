@@ -456,14 +456,6 @@ const CustomerCommunication = () => {
                 </div>
               </div>
             </div>
-
-            <Button
-              variant="outline"
-              onClick={() => navigate(`/customers/edit/${customer.id}`)}
-              icon={User}
-            >
-              Editar Cliente
-            </Button>
           </div>
         </div>
 
