@@ -1,27 +1,31 @@
-// components/Header.jsx - VERSÃO CORRIGIDA (Hooks no topo)
 import React, { useState } from 'react'
-import { useLocation } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext.jsx'
+import { Link, useLocation } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import { useClock } from '../hooks/useClock'
 import { useNotifications } from '../hooks/useNotifications'
-import { RefreshCw, LogOut } from 'lucide-react'
+import { 
+  RefreshCw, 
+  Calendar, 
+  Clock, 
+  ChevronRight,
+  Home,
+  User,
+  Settings,
+  LogOut,
+  Bell
+} from 'lucide-react'
 import NotificationsPanel from './NotificationsPanel'
 
-const Header = ({ collapsed, onMobileMenuOpen }) => {
-  // ============================================
-  // TODOS OS HOOKS DEVEM VIR PRIMEIRO (SEM CONDIÇÕES)
-  // ============================================
+const Header = ({ collapsed }) => {
   const { user, profile, logout } = useAuth()
   const location = useLocation()
   const { greeting, formatTime, formatDate, refresh } = useClock()
-  const { unreadCount } = useNotifications() // Hook de notificações
+  const { unreadCount } = useNotifications()
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
 
-  // ============================================
-  // FUNÇÕES AUXILIARES (DEPOIS DOS HOOKS)
-  // ============================================
   const userName = profile?.full_name?.trim() 
-    ? profile.full_name 
+    ? profile.full_name.split(' ')[0]
     : user?.email?.split('@')[0] || 'Usuário'
 
   const getPageTitle = () => {
@@ -37,111 +41,199 @@ const Header = ({ collapsed, onMobileMenuOpen }) => {
       '/users': 'Usuários',
       '/logs': 'Logs do Sistema',
       '/settings': 'Configurações',
-      '/stock-count': 'Produtos | Balanço de Estoque'
+      '/stock-count': 'Balanço de Estoque'
     }
     return titles[location.pathname] || 'Sistema'
   }
 
-  // Função de refresh
+  const getBreadcrumbItems = () => {
+    const path = location.pathname
+    const items = [
+      { label: 'Home', path: '/dashboard', icon: Home }
+    ]
+
+    if (path === '/stock-count') {
+      items.push({ label: 'Produtos', path: '/products' })
+      items.push({ label: 'Balanço de Estoque', path: '/stock-count' })
+    } else if (path !== '/dashboard') {
+      items.push({ label: getPageTitle(), path })
+    }
+
+    return items
+  }
+
   const handleRefresh = async () => {
     setIsRefreshing(true)
-    refresh() // Atualiza o relógio
-    window.location.reload() // Recarrega a página
+    refresh()
+    window.location.reload()
     setTimeout(() => setIsRefreshing(false), 1000)
   }
 
-  // Função de logout
   const handleLogout = async () => {
     if (window.confirm('Tem certeza que deseja sair do sistema?')) {
       await logout()
     }
   }
 
-  // ============================================
-  // RENDER (SEM HOOKS AQUI!)
-  // ============================================
+  const breadcrumbItems = getBreadcrumbItems()
+
   return (
-    <div className={`
+    <header className={`
+      sticky top-0 z-20 bg-gray-50/95 backdrop-blur-sm
       transition-all duration-300
       ${collapsed ? 'lg:ml-20' : 'lg:ml-64'}
     `}>
-      <div className="pt-4 sm:pt-6 px-4 sm:px-6 mb-6">
-        
-        {/* Breadcrumb */}
-        <div className="mb-4 ms-14">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span className="text-blue-600">Home</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-            <span className="font-medium text-gray-700">{getPageTitle()}</span>
+      {/* Barra Superior - Status */}
+      <div className="px-4 sm:px-6 py-2 border-b border-gray-200/50">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 text-xs text-gray-500">
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+              <span>Sistema Online</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Calendar size={12} />
+              <span>{formatDate()}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Clock size={12} />
+              <span>{formatTime()}</span>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+              title="Atualizar página"
+            >
+              <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* Card único - Data e Hora */}
-        <div className="mx-6 my-2">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+      {/* Conteúdo Principal */}
+      <div className="px-4 sm:px-6 py-4">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-1.5 mb-3 text-sm">
+          {breadcrumbItems.map((item, index) => (
+            <React.Fragment key={item.path}>
+              {index > 0 && <ChevronRight size={14} className="text-gray-400" />}
+              {index === breadcrumbItems.length - 1 ? (
+                <span className="font-medium text-gray-900">{item.label}</span>
+              ) : (
+                <Link
+                  to={item.path}
+                  className="flex items-center gap-1.5 text-gray-500 hover:text-blue-600 transition-colors"
+                >
+                  {item.icon && <item.icon size={14} />}
+                  <span>{item.label}</span>
+                </Link>
+              )}
+            </React.Fragment>
+          ))}
+        </nav>
+
+        {/* Card Principal - Saudação e Ações */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+          <div className="px-5 py-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               
-              {/* Saudação e Nome do Usuário */}
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold">
-                  {userName.charAt(0).toUpperCase()}
+              {/* Saudação */}
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-lg shadow-md">
+                    {userName.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white" />
                 </div>
+                
                 <div>
-                  <p className="text-sm text-gray-500">
-                    Olá, <span className="font-semibold text-gray-900">{userName}</span>
-                  </p>
-                  <p className="text-xs text-gray-400">{greeting}</p>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      Olá, {userName}!
+                    </h2>
+                    <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
+                      {profile?.role === 'admin' ? 'Admin' : profile?.role === 'gerente' ? 'Gerente' : 'Operador'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-500">{greeting}</p>
                 </div>
               </div>
 
-              {/* Data e Hora */}
-              <div className="flex items-center gap-6">
-                <div className="flex flex-col items-center">
-                  <span className="text-xs text-gray-400 uppercase tracking-wider">Data</span>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span className="text-sm font-medium text-gray-700">{formatDate()}</span>
-                  </div>
-                </div>
-                
-                <div className="w-px h-10 bg-gray-200"></div>
-                
-                <div className="flex flex-col items-center">
-                  <span className="text-xs text-gray-400 uppercase tracking-wider">Horário</span>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span className="text-sm font-mono font-medium text-gray-700">{formatTime()}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Botões de Ação */}
+              {/* Ações Rápidas */}
               <div className="flex items-center gap-2">
-                {/* Botão Refresh */}
-                <button
-                  onClick={handleRefresh}
-                  disabled={isRefreshing}
-                  className="p-2 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all disabled:opacity-50"
-                  title="Atualizar página"
-                >
-                  <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                </button>
-                
-                {/* Componente de Notificações */}
+                {/* Notificações */}
                 <NotificationsPanel />
+
+                {/* Menu do Usuário */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="p-2 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all"
+                  >
+                    <Settings size={20} />
+                  </button>
+
+                  {showUserMenu && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-10" 
+                        onClick={() => setShowUserMenu(false)} 
+                      />
+                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-20">
+                        <Link
+                          to="/profile"
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <User size={16} />
+                          Meu Perfil
+                        </Link>
+                        <Link
+                          to="/settings"
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <Settings size={16} />
+                          Configurações
+                        </Link>
+                        <div className="border-t border-gray-100 my-1" />
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false)
+                            handleLogout()
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
+                        >
+                          <LogOut size={16} />
+                          Sair
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
+            </div>
+          </div>
+
+          {/* Rodapé do Card - Estatísticas Rápidas (opcional) */}
+          <div className="px-5 py-3 bg-gray-50/50 border-t border-gray-100 flex items-center gap-6 text-xs text-gray-500">
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+              <span>{profile?.role === 'admin' ? 'Acesso Total' : profile?.role === 'gerente' ? 'Acesso Gerencial' : 'Acesso Operacional'}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+              <span>Sessão ativa</span>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </header>
   )
 }
 
-export default Header 
+export default Header

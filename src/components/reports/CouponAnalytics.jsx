@@ -81,6 +81,23 @@ const CouponAnalytics = ({ dateRange, customDateRange }) => {
 
       if (salesError) throw salesError
 
+      // Buscar todas as vendas (para calcular última compra)
+      const { data: allSales, error: allSalesError } = await supabase
+        .from('sales')
+        .select('customer_id, created_at, status')
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+
+      if (allSalesError) throw allSalesError
+
+      // Calcular última compra por cliente
+      const lastPurchaseMap = {}
+      allSales?.forEach(sale => {
+        if (sale.customer_id && !lastPurchaseMap[sale.customer_id]) {
+          lastPurchaseMap[sale.customer_id] = sale.created_at
+        }
+      })
+
       // Buscar todos os cupons disponíveis
       const { data: coupons, error: couponsError } = await supabase
         .from('coupons')
@@ -89,10 +106,11 @@ const CouponAnalytics = ({ dateRange, customDateRange }) => {
 
       if (couponsError) throw couponsError
 
-      // Buscar clientes que NUNCA usaram cupom
+      // Buscar todos os clientes ativos
       const { data: allCustomers, error: customersError } = await supabase
         .from('customers')
         .select('id, name, email, phone, total_purchases, status, created_at')
+        .eq('status', 'active')
 
       if (customersError) throw customersError
 
@@ -150,10 +168,10 @@ const CouponAnalytics = ({ dateRange, customDateRange }) => {
       // Identificar oportunidades de engajamento
       const opportunities = []
       
-      // Clientes que gastam muito mas nunca usaram cupom
+      // 1. Clientes que gastam muito mas NUNCA usaram cupom
       const highSpendersNoCoupon = allCustomers?.filter(c => {
         const hasUsedCoupon = customerCouponUsage[c.id]
-        return !hasUsedCoupon && (c.total_purchases || 0) > 500
+        return !hasUsedCoupon && (c.total_purchases || 0) > 100 // Reduzi para 100 reais
       }).sort((a, b) => (b.total_purchases || 0) - (a.total_purchases || 0)).slice(0, 5)
 
       highSpendersNoCoupon?.forEach(customer => {
@@ -167,27 +185,45 @@ const CouponAnalytics = ({ dateRange, customDateRange }) => {
         })
       })
 
-      // Clientes que não compram há mais de 30 dias
+      // 2. Clientes que NÃO compram há mais de 30 dias
       const thirtyDaysAgo = new Date()
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
       
+      // CORREÇÃO: Usar o mapa de última compra calculado
       const inactiveCustomers = allCustomers?.filter(c => {
-        const lastPurchase = c.last_purchase ? new Date(c.last_purchase) : null
-        return (!lastPurchase || lastPurchase < thirtyDaysAgo) && c.status === 'active'
+        const lastPurchase = lastPurchaseMap[c.id]
+        
+        // Se nunca comprou, considera como inativo também
+        if (!lastPurchase) {
+          // Verifica se é cliente há mais de 30 dias
+          const createdAt = new Date(c.created_at)
+          return createdAt < thirtyDaysAgo
+        }
+        
+        // Se tem última compra, verifica se foi há mais de 30 dias
+        return new Date(lastPurchase) < thirtyDaysAgo
       }).slice(0, 5)
 
+      console.log('📊 Clientes inativos encontrados:', inactiveCustomers.length)
+      console.log('📊 Mapa de última compra:', lastPurchaseMap)
+
       inactiveCustomers?.forEach(customer => {
+        const lastPurchase = lastPurchaseMap[customer.id]
+        const reason = lastPurchase 
+          ? `Cliente inativo há mais de 30 dias (última compra: ${new Date(lastPurchase).toLocaleDateString('pt-BR')})`
+          : 'Cliente nunca realizou uma compra'
+        
         opportunities.push({
           type: 'inactive',
           priority: 'medium',
           customer,
-          reason: 'Cliente inativo há mais de 30 dias',
+          reason: reason,
           suggestion: 'Envie cupom de reengajamento',
           icon: AlertCircle
         })
       })
 
-      // Clientes que usam cupons frequentemente
+      // 3. Clientes que usam cupons frequentemente (3+ vezes)
       const frequentCouponUsers = Object.values(customerCouponUsage)
         .filter(u => u.count >= 3)
         .map(u => u.customer)
@@ -204,7 +240,18 @@ const CouponAnalytics = ({ dateRange, customDateRange }) => {
         })
       })
 
-      setEngagementOpportunities(opportunities)
+      // Remover duplicatas (um cliente pode aparecer em múltiplas categorias)
+      const uniqueOpportunities = []
+      const seenCustomers = new Set()
+      
+      opportunities.forEach(opp => {
+        if (!seenCustomers.has(opp.customer.id)) {
+          seenCustomers.add(opp.customer.id)
+          uniqueOpportunities.push(opp)
+        }
+      })
+
+      setEngagementOpportunities(uniqueOpportunities)
 
       // Estatísticas gerais
       const customersWithCoupon = Object.keys(customerCouponUsage).length

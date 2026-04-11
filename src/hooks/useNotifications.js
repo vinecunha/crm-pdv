@@ -6,7 +6,6 @@ export const useNotifications = () => {
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
 
-  // Buscar notificações
   const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true)
@@ -27,7 +26,6 @@ export const useNotifications = () => {
     }
   }, [])
 
-  // Marcar como lida
   const markAsRead = useCallback(async (notificationId) => {
     try {
       const { error } = await supabase
@@ -48,7 +46,6 @@ export const useNotifications = () => {
     }
   }, [])
 
-  // Marcar todas como lidas
   const markAllAsRead = useCallback(async () => {
     try {
       const unreadIds = notifications.filter(n => !n.read).map(n => n.id)
@@ -70,13 +67,13 @@ export const useNotifications = () => {
     }
   }, [notifications])
 
-  // Buscar notificações a cada 30 segundos (polling)
+  // Apenas polling (sem realtime)
   useEffect(() => {
     fetchNotifications()
 
     const interval = setInterval(() => {
       fetchNotifications()
-    }, 30000) // 30 segundos
+    }, 10000) // 10 segundos para mais responsividade
 
     return () => clearInterval(interval)
   }, [fetchNotifications])
