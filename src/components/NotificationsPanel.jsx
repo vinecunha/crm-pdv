@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Bell, Check, CheckCheck, X, Info, AlertCircle, CheckCircle, AlertTriangle } from 'lucide-react'
 import { useNotifications } from '../hooks/useNotifications'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext.jsx'
 
 const NotificationsPanel = () => {
   const { profile } = useAuth()

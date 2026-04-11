@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext.jsx'
 import { supabase } from '../lib/supabase'
 import { Search, Filter, Calendar, Download, Eye, RefreshCw, X, ChevronRight } from 'lucide-react'
 import DataTable from '../components/ui/DataTable'

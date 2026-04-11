@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext.jsx'
 import { LogIn, User, Lock, AlertCircle, AlertTriangle, Clock, Building } from 'lucide-react'
 import { useRateLimit } from '../hooks/useRateLimit'
 import { supabase } from '../lib/supabase'
@@ -27,6 +27,8 @@ const Login = () => {
   // Redireciona se já estiver logado
   useEffect(() => {
     if (!authLoading && user) {
+      // Atualizar last_login após login bem-sucedido
+      updateLastLogin(user.id)
       navigate('/dashboard', { replace: true })
     }
   }, [user, authLoading, navigate])
@@ -40,7 +42,6 @@ const Login = () => {
         .single()
 
       if (error) {
-        // Fallback para configurações padrão
         console.warn('Configurações da empresa não encontradas:', error)
         setCompanySettings({
           company_name: 'Brasalino Pollo',
@@ -64,6 +65,30 @@ const Login = () => {
     }
   }
 
+  // Função para atualizar last_login e login_count
+  const updateLastLogin = async (userId) => {
+    try {
+      // Chamar RPC (Remote Procedure Call) para atualizar
+      const { error } = await supabase.rpc('update_user_login_info', {
+        user_id: userId
+      })
+      
+      if (error) {
+        console.warn('Erro ao atualizar info de login:', error)
+        // Fallback: atualizar diretamente (menos seguro, mas funciona)
+        await supabase
+          .from('profiles')
+          .update({ 
+            last_login: new Date().toISOString(),
+            login_count: supabase.raw('COALESCE(login_count, 0) + 1')
+          })
+          .eq('id', userId)
+      }
+    } catch (error) {
+      console.warn('Erro ao atualizar last_login:', error)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -79,7 +104,7 @@ const Login = () => {
     try {
       await login(email, password)
       recordAttempt(true) // Sucesso - reseta tentativas
-      // O useEffect vai redirecionar
+      // O useEffect vai redirecionar e atualizar last_login
     } catch (err) {
       recordAttempt(false) // Falha - incrementa tentativas
       
@@ -112,16 +137,6 @@ const Login = () => {
     background: `linear-gradient(135deg, ${primaryColor}15, ${secondaryColor}15)`
   }
 
-  // Estilo do botão
-  const buttonStyle = {
-    backgroundColor: primaryColor
-  }
-
-  // Estilo do foco dos inputs
-  const focusRingStyle = {
-    '--tw-ring-color': primaryColor
-  }
-
   if (authLoading || loadingSettings) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={gradientStyle}>
@@ -145,11 +160,10 @@ const Login = () => {
               className="h-20 mx-auto mb-4 object-contain"
               onError={(e) => {
                 e.target.style.display = 'none'
-                // Mostrar fallback
                 const fallback = document.createElement('div')
                 fallback.className = 'inline-flex items-center justify-center w-20 h-20 rounded-full mb-4'
                 fallback.style.backgroundColor = `${primaryColor}20`
-                fallback.innerHTML = `<svg>...</svg>` // Ícone de Building
+                fallback.innerHTML = `<svg>...</svg>`
                 e.target.parentNode.appendChild(fallback)
               }}
             />
@@ -245,9 +259,6 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg transition-all"
-                style={{
-                  '--tw-ring-color': primaryColor
-                }}
                 onFocus={(e) => {
                   e.target.style.borderColor = primaryColor
                   e.target.style.boxShadow = `0 0 0 2px ${primaryColor}20`

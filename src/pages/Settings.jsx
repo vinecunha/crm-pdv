@@ -1,6 +1,6 @@
 // pages/Settings.jsx - COM ABA DE PERMISSÕES
 import React, { useState, useEffect } from 'react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext.jsx'
 import { supabase } from '../lib/supabase'
 import { 
   Building2, 

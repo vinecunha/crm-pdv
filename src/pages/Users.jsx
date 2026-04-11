@@ -1,7 +1,7 @@
 // pages/Users.jsx - COM LOGS INTEGRADOS
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext.jsx'
 import { Edit, Trash2, Plus, Mail, User, Shield, RefreshCw, AlertTriangle, X } from 'lucide-react'
 
 // Componentes genéricos

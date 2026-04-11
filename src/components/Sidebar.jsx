@@ -1,7 +1,6 @@
-// components/Sidebar.jsx - VERSÃO ATUALIZADA COM GESTÃO DE VENDAS
 import React, { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext.jsx'
 import { useCompany } from '../hooks/useCompany'
 import {
   LogOut,
@@ -18,7 +17,8 @@ import {
   ChevronRight,
   ClipboardList,
   Ticket,
-  Calculator 
+  Calculator,
+  User
 } from 'lucide-react'
 
 const Sidebar = ({ collapsed, setCollapsed }) => {
@@ -33,6 +33,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
   
   const { company, loading: companyLoading, getCompanyColor } = useCompany()
   const location = useLocation()
+  const navigate = useNavigate()
   const [isMobileOpen, setIsMobileOpen] = useState(false)
 
   // Usar dados do banco ou fallback
@@ -40,6 +41,11 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
   const logoSrc = company?.company_logo_url || '/logomarca.png'
   const primaryColor = getCompanyColor('primary') || '#2563eb'
   const secondaryColor = getCompanyColor('secondary') || '#7c3aed'
+
+  // Avatar do usuário
+  const avatarUrl = profile?.avatar_url
+  const userInitial = profile?.full_name?.charAt(0)?.toUpperCase() || 
+                      profile?.email?.charAt(0)?.toUpperCase() || 'U'
 
   // Menus baseados nas permissões
   const allMenuItems = [
@@ -69,6 +75,75 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
 
   const handleLogout = async () => {
     await logout()
+  }
+
+  const handleProfileClick = () => {
+    navigate('/profile')
+    setIsMobileOpen(false)
+  }
+
+  // Componente do Avatar (reutilizável)
+  const AvatarDisplay = ({ size = 'md', showStatus = true }) => {
+    const sizeClasses = {
+      sm: 'w-8 h-8',
+      md: 'w-10 h-10',
+      lg: 'w-12 h-12'
+    }
+    
+    const iconSizes = {
+      sm: 'w-4 h-4',
+      md: 'w-5 h-5',
+      lg: 'w-6 h-6'
+    }
+    
+    if (avatarUrl) {
+      return (
+        <div className="relative">
+          <img 
+            src={avatarUrl} 
+            alt={profile?.full_name || 'Avatar'} 
+            className={`${sizeClasses[size]} rounded-4xl object-cover shadow-lg`}
+            onError={(e) => {
+              e.target.onerror = null
+              e.target.style.display = 'none'
+              e.target.nextSibling?.style.display === 'flex' 
+                ? e.target.nextSibling.style.display = 'flex' 
+                : null
+            }}
+          />
+          <div 
+            className={`${sizeClasses[size]} rounded-xl flex items-center justify-center shadow-lg`}
+            style={{ 
+              background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
+              display: avatarUrl ? 'none' : 'flex'
+            }}
+          >
+            <span className={`${iconSizes[size]} text-white font-bold`}>
+              {userInitial}
+            </span>
+          </div>
+          {showStatus && (
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+          )}
+        </div>
+      )
+    }
+    
+    return (
+      <div className="relative">
+        <div 
+          className={`${sizeClasses[size]} rounded-xl flex items-center justify-center shadow-lg`}
+          style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}
+        >
+          <span className={`${iconSizes[size]} text-white font-bold`}>
+            {userInitial}
+          </span>
+        </div>
+        {showStatus && (
+          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+        )}
+      </div>
+    )
   }
 
   // Loading combinado
@@ -164,19 +239,21 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
             </div>
 
             <div className="p-4 border-t border-gray-100">
-              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl mb-3">
-                <div 
-                  className="w-10 h-10 rounded-lg flex items-center justify-center"
-                  style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}
-                >
-                  <UserCircle className="w-5 h-5 text-white" />
+              {/* ÁREA DO USUÁRIO CLICÁVEL - MOBILE */}
+              <div 
+                onClick={handleProfileClick}
+                className="flex items-center gap-3 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl mb-3 cursor-pointer hover:shadow-md transition-all group"
+              >
+                <div className="group-hover:scale-105 transition-transform">
+                  <AvatarDisplay size="md" showStatus={true} />
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900">
                     {profile?.full_name?.split(' ')[0] || profile?.email?.split('@')[0] || 'Usuário'}
                   </p>
                   <p className="text-xs text-gray-500">{getRoleName()}</p>
                 </div>
+                <User className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
               </div>
               
               <button
@@ -243,24 +320,45 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         </div>
 
         {!collapsed && !authLoading && (
-          <div className="p-4 mx-3 mt-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl">
+          // ÁREA DO USUÁRIO CLICÁVEL - DESKTOP (expandido)
+          <div 
+            onClick={handleProfileClick}
+            className="p-4 mx-3 mt-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl cursor-pointer hover:shadow-md transition-all group"
+          >
             <div className="flex items-center gap-3">
-              <div 
-                className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg"
-                style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}
-              >
-                <UserCircle className="w-5 h-5 text-white" />
+              <div className="group-hover:scale-105 transition-transform">
+                <AvatarDisplay size="md" showStatus={true} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-900 truncate">
                   {profile?.full_name?.split(' ')[0] || profile?.email?.split('@')[0] || 'Usuário'}
                 </p>
                 <div className="flex items-center gap-1">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                   <p className="text-xs text-gray-500">{getRoleName()}</p>
                 </div>
               </div>
+              <User className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
             </div>
+          </div>
+        )}
+
+        {collapsed && !authLoading && (
+          // ÁREA DO USUÁRIO CLICÁVEL - DESKTOP (colapsado)
+          <div className="flex justify-center mt-4">
+            <button
+              onClick={handleProfileClick}
+              className="relative group"
+              title="Meu Perfil"
+            >
+              <div className="hover:scale-105 transition-transform">
+                <AvatarDisplay size="md" showStatus={true} />
+              </div>
+              
+              {/* Tooltip */}
+              <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                {profile?.full_name?.split(' ')[0] || 'Perfil'}
+              </div>
+            </button>
           </div>
         )}
 

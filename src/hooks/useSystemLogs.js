@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext.jsx'
 
 const useSystemLogs = () => {
   const { profile } = useAuth()

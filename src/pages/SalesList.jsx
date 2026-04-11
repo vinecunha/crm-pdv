@@ -6,7 +6,7 @@ import {
   CreditCard, Banknote, QrCode, Ticket, Phone, FileText
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext.jsx'
 import FeedbackMessage from '../components/ui/FeedbackMessage'
 import Modal from '../components/ui/Modal'
 import Button from '../components/ui/Button'

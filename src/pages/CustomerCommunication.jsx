@@ -15,7 +15,7 @@ import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
 import Badge from '../components/Badge'
 import { supabase } from '../lib/supabase'
 import useSystemLogs from '../hooks/useSystemLogs'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext.jsx'
 
 const CustomerCommunication = () => {
   const { id } = useParams()

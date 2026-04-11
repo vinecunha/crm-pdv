@@ -1,6 +1,6 @@
 import React, { Suspense, lazy } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from './contexts/AuthContext'
+import { AuthProvider } from './contexts/AuthContext.jsx'
 import { CompanyProvider } from './contexts/CompanyContext'
 import ErrorBoundaryWithCompany from './components/ErrorBoundaryWithCompany'
 import SectionErrorBoundary from './components/SectionErrorBoundary'
@@ -22,6 +22,7 @@ const Customers = lazy(() => import('./pages/Customers'))
 const CustomerCommunication = lazy(() => import('./pages/CustomerCommunication'))
 const Reports = lazy(() => import('./pages/Reports'))
 const Users = lazy(() => import('./pages/Users'))
+const Profile = lazy(() => import('./pages/Profile'))
 const Settings = lazy(() => import('./pages/Settings'))
 const PrivateLayout = lazy(() => import('./layouts/PrivateLayout'))
 
@@ -173,6 +174,16 @@ function App() {
                     <PrivateLayout>
                       <SectionErrorBoundary title="Erro nas Configurações">
                         <Settings />
+                      </SectionErrorBoundary>
+                    </PrivateLayout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <PrivateLayout>
+                      <SectionErrorBoundary title="Erro no Perfil">
+                        <Profile />
                       </SectionErrorBoundary>
                     </PrivateLayout>
                   </ProtectedRoute>

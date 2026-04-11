@@ -1,7 +1,7 @@
 // components/Header.jsx - VERSÃO CORRIGIDA (Hooks no topo)
 import React, { useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext.jsx'
 import { useClock } from '../hooks/useClock'
 import { useNotifications } from '../hooks/useNotifications'
 import { RefreshCw, LogOut } from 'lucide-react'

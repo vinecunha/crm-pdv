@@ -1,0 +1,83 @@
+import React, { useState } from 'react'
+import { Key, Shield, AlertCircle } from 'lucide-react'
+import Button from '../ui/Button'
+import ChangePasswordModal from './ChangePasswordModal'
+
+const SecuritySection = ({ user, onChangePassword, onLogout }) => {
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+
+  return (
+    <>
+      <div className="space-y-6">
+        {/* Alterar Senha */}
+        <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Key size={20} className="text-blue-600" />
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900">Alterar Senha</h4>
+                <p className="text-sm text-gray-500">
+                  Recomendamos usar uma senha forte que você não usa em outros sites
+                </p>
+              </div>
+            </div>
+            <Button size="sm" onClick={() => setShowPasswordModal(true)}>
+              Alterar
+            </Button>
+          </div>
+        </div>
+
+        {/* Sessões Ativas */}
+        <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Shield size={20} className="text-green-600" />
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900">Sessões Ativas</h4>
+                <p className="text-sm text-gray-500">
+                  Você está logado neste dispositivo
+                </p>
+              </div>
+            </div>
+            <Button size="sm" variant="outline" onClick={onLogout}>
+              Sair de todos
+            </Button>
+          </div>
+        </div>
+
+        {/* Excluir Conta */}
+        <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <AlertCircle size={20} className="text-red-600" />
+              </div>
+              <div>
+                <h4 className="font-medium text-red-900">Excluir Conta</h4>
+                <p className="text-sm text-red-700">
+                  Esta ação é permanente e não pode ser desfeita
+                </p>
+              </div>
+            </div>
+            <Button size="sm" variant="danger" disabled>
+              Excluir
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <ChangePasswordModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        user={user}
+        onChangePassword={onChangePassword}
+      />
+    </>
+  )
+}
+
+export default SecuritySection
