@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { Phone } from 'lucide-react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { Phone, Keyboard, ShoppingCart, User, Ticket, CreditCard } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import FeedbackMessage from '../components/ui/FeedbackMessage'
@@ -7,6 +7,8 @@ import Modal from '../components/ui/Modal'
 import Button from '../components/ui/Button'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
 import useSystemLogs from '../hooks/useSystemLogs'
+import usePDVShortcuts from '../hooks/usePDVShortcuts'
+import ShortcutFeedback from '../components/ui/ShortcutFeedback'
 
 import ProductGrid from '../components/sales/pdv/ProductGrid'
 import CartSummary from '../components/sales/pdv/CartSummary'
@@ -14,6 +16,8 @@ import CustomerSelector from '../components/sales/pdv/CustomerSelector'
 import QuickCustomerForm from '../components/sales/pdv/QuickCustomerForm'
 import CouponSelector from '../components/sales/pdv/CouponSelector'
 import CheckoutModal from '../components/sales/pdv/CheckoutModal'
+import ShortcutsHelpModal from '../components/sales/pdv/ShortcutsHelpModal'
+import ConfirmModal from '../components/ui/ConfirmModal'
 
 const Sales = () => {
   const { profile } = useAuth()
@@ -47,6 +51,12 @@ const Sales = () => {
   const [showQuickCustomerModal, setShowQuickCustomerModal] = useState(false)
   const [showCouponModal, setShowCouponModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false)
+  const [showClearCartConfirm, setShowClearCartConfirm] = useState(false)
+  
+  // Estados para atalhos
+  const [selectedCartItemIndex, setSelectedCartItemIndex] = useState(0)
+  const [shortcutFeedback, setShortcutFeedback] = useState(null)
   
   // Formulário rápido
   const [quickCustomerForm, setQuickCustomerForm] = useState({ name: '', phone: '', email: '' })
@@ -62,6 +72,15 @@ const Sales = () => {
   useEffect(() => { fetchProducts() }, [])
   useEffect(() => { filterProducts() }, [searchTerm, selectedCategory, products])
   useEffect(() => { if (customer) fetchAvailableCoupons() }, [customer])
+  
+  // Resetar índice selecionado quando o carrinho muda
+  useEffect(() => {
+    if (cart.length === 0) {
+      setSelectedCartItemIndex(0)
+    } else if (selectedCartItemIndex >= cart.length) {
+      setSelectedCartItemIndex(cart.length - 1)
+    }
+  }, [cart, selectedCartItemIndex])
 
   const fetchProducts = async () => {
     setLoading(true)
@@ -88,7 +107,11 @@ const Sales = () => {
     let filtered = [...products]
     if (searchTerm.trim()) {
       const search = searchTerm.toLowerCase()
-      filtered = filtered.filter(p => p.name?.toLowerCase().includes(search) || p.code?.toLowerCase().includes(search))
+      filtered = filtered.filter(p => 
+        p.name?.toLowerCase().includes(search) || 
+        p.code?.toLowerCase().includes(search) ||
+        p.barcode?.toLowerCase().includes(search)
+      )
     }
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(p => p.category === selectedCategory)
@@ -164,19 +187,21 @@ const Sales = () => {
     })
   }
 
-  const clearCart = () => {
+  const handleClearCart = () => {
     if (cart.length === 0) return
+    setShowClearCartConfirm(true)
+  }
+
+  const confirmClearCart = () => {
+    setCart([])
+    setShowClearCartConfirm(false)
+    showFeedback('info', 'Carrinho limpo')
     
-    if (window.confirm('Limpar todos os itens do carrinho?')) {
-      setCart([])
-      showFeedback('info', 'Carrinho limpo')
-      
-      logAction({
-        action: 'CLEAR_CART',
-        entityType: 'sale',
-        details: { items_removed: cart.length }
-      })
-    }
+    logAction({
+      action: 'CLEAR_CART',
+      entityType: 'sale',
+      details: { items_removed: cart.length }
+    })
   }
 
   // ========== FUNÇÕES DO CLIENTE ==========
@@ -398,7 +423,9 @@ const Sales = () => {
 
   // ========== FINALIZAR VENDA ==========
 
-  const confirmPayment = async () => {
+  const confirmPayment = async (method = null) => {
+    const finalPaymentMethod = method || paymentMethod
+    
     setIsSubmitting(true)
     try {
       const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
@@ -415,7 +442,7 @@ const Sales = () => {
           discount_percent: coupon?.discount_type === 'percent' ? coupon.discount_value : 0,
           coupon_code: coupon?.code || null,
           final_amount: total,
-          payment_method: paymentMethod,
+          payment_method: finalPaymentMethod,
           payment_status: 'paid',
           status: 'completed',
           created_by: profile?.id
@@ -436,6 +463,17 @@ const Sales = () => {
       }))
       
       await supabase.from('sale_items').insert(saleItems)
+      
+      // Atualizar estoque
+      for (const item of cart) {
+        await supabase
+          .from('products')
+          .update({ 
+            stock_quantity: item.stock - item.quantity,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', item.id)
+      }
       
       if (coupon) {
         await supabase
@@ -477,6 +515,7 @@ const Sales = () => {
       setCouponCode('')
       setDiscount(0)
       setShowPaymentModal(false)
+      setSelectedCartItemIndex(0)
       
       await fetchProducts()
       
@@ -496,11 +535,107 @@ const Sales = () => {
     }).format(value || 0)
   }
 
+  // ========== HANDLERS PARA ATALHOS ==========
+  
+  const handleFocusSearch = useCallback(() => {
+    searchInputRef.current?.focus()
+  }, [])
+
+  const handleClearSearch = useCallback(() => {
+    setSearchTerm('')
+    setSelectedCategory('all')
+  }, [])
+
+  const handleRefreshProducts = useCallback(async () => {
+    await fetchProducts()
+    showFeedback('info', 'Produtos atualizados')
+  }, [])
+
+  const handleIncreaseQuantity = useCallback((item) => {
+    updateCartItemQuantity(item.id, item.quantity + 1)
+  }, [cart, products])
+
+  const handleDecreaseQuantity = useCallback((item) => {
+    updateCartItemQuantity(item.id, item.quantity - 1)
+  }, [cart])
+
+  const handleRemoveItem = useCallback((productId) => {
+    removeFromCart(productId)
+  }, [])
+
+  const handleOpenCustomerModal = useCallback(() => {
+    setShowCustomerModal(true)
+  }, [])
+
+  const handleClearCustomer = useCallback(() => {
+    clearCustomer()
+  }, [customer, coupon])
+
+  const handleOpenCouponModal = useCallback(() => {
+    if (customer) {
+      setShowCouponModal(true)
+    } else {
+      showFeedback('warning', 'Identifique um cliente primeiro')
+    }
+  }, [customer])
+
+  const handleRemoveCoupon = useCallback(() => {
+    removeCoupon()
+  }, [])
+
+  const handleOpenPaymentModal = useCallback(() => {
+    if (cart.length === 0) {
+      showFeedback('warning', 'Adicione itens ao carrinho')
+      return
+    }
+    setShowPaymentModal(true)
+  }, [cart])
+
+  const handleConfirmPayment = useCallback(async (method = null) => {
+    await confirmPayment(method)
+  }, [cart, discount, customer, coupon, paymentMethod])
+
+  const handleCancelPayment = useCallback(() => {
+    setShowPaymentModal(false)
+  }, [])
+
+  const handleShortcutFeedback = useCallback((shortcut) => {
+    setShortcutFeedback(shortcut)
+  }, [])
+
+  // Hook de atalhos
+  const { shortcuts } = usePDVShortcuts({
+    onFocusSearch: handleFocusSearch,
+    onClearSearch: handleClearSearch,
+    onRefreshProducts: handleRefreshProducts,
+    onClearCart: handleClearCart,
+    onIncreaseQuantity: handleIncreaseQuantity,
+    onDecreaseQuantity: handleDecreaseQuantity,
+    onRemoveItem: handleRemoveItem,
+    onOpenCustomerModal: handleOpenCustomerModal,
+    onClearCustomer: handleClearCustomer,
+    onOpenCouponModal: handleOpenCouponModal,
+    onRemoveCoupon: handleRemoveCoupon,
+    onOpenPaymentModal: handleOpenPaymentModal,
+    onConfirmPayment: handleConfirmPayment,
+    onCancelPayment: handleCancelPayment,
+    onOpenHelp: () => setShowShortcutsHelp(true),
+    cartItems: cart,
+    selectedCartItemIndex,
+    setSelectedCartItemIndex,
+    onShortcutFeedback: handleShortcutFeedback,
+    enabled: !showCustomerModal && !showQuickCustomerModal && !showCouponModal && !showPaymentModal && !showShortcutsHelp && !showClearCartConfirm
+  })
+
+  // Calcular totais
+  const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
+  const total = subtotal - discount
+
   if (loading) return <DataLoadingSkeleton />
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {feedback.show && (
           <FeedbackMessage 
             type={feedback.type} 
@@ -509,7 +644,38 @@ const Sales = () => {
           />
         )}
 
+        {/* Feedback de atalho */}
+        {shortcutFeedback && (
+          <ShortcutFeedback 
+            shortcut={shortcutFeedback} 
+            onHide={() => setShortcutFeedback(null)} 
+          />
+        )}
+
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <ShoppingCart className="text-blue-600" />
+              Ponto de Venda (PDV)
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Realize vendas rapidamente com atalhos de teclado
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowShortcutsHelp(true)}
+            shortcut={{ key: 'F1', description: 'Atalhos' }}
+            icon={Keyboard}
+          >
+            Atalhos (F1)
+          </Button>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Coluna da Esquerda - Produtos */}
           <div className="lg:col-span-2">
             <ProductGrid
               products={filteredProducts}
@@ -523,38 +689,128 @@ const Sales = () => {
             />
           </div>
 
+          {/* Coluna da Direita - Carrinho e Resumo */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm sticky top-4">
-              <div className="p-4 border-b">
-                <CustomerSelector 
-                  customer={customer} 
-                  onClear={clearCustomer} 
-                  onOpenModal={() => setShowCustomerModal(true)} 
-                />
-                <CouponSelector
-                  customer={customer}
-                  coupon={coupon}
-                  availableCoupons={availableCoupons}
-                  couponCode={couponCode}
-                  setCouponCode={setCouponCode}
-                  couponError={couponError}
-                  onApplyCoupon={validateCoupon}
-                  onRemoveCoupon={removeCoupon}
-                  onOpenModal={() => setShowCouponModal(true)}
-                  onCloseModal={() => setShowCouponModal(false)}
-                  showModal={showCouponModal}
-                />
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 sticky top-4">
+              {/* Cabeçalho do Carrinho */}
+              <div className="p-4 border-b border-gray-200">
+                <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+                  <ShoppingCart size={18} />
+                  Carrinho
+                  {cart.length > 0 && (
+                    <span className="ml-auto text-sm text-gray-500">
+                      {cart.length} {cart.length === 1 ? 'item' : 'itens'}
+                    </span>
+                  )}
+                </h2>
               </div>
 
+              {/* Seção Cliente e Cupom */}
+              <div className="p-4 border-b border-gray-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <User size={16} className="text-gray-400" />
+                    <span className="text-sm font-medium text-gray-700">Cliente</span>
+                  </div>
+                  {customer ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600 truncate max-w-[150px]">
+                        {customer.name}
+                      </span>
+                      <button
+                        onClick={clearCustomer}
+                        className="text-xs text-red-500 hover:text-red-700"
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowCustomerModal(true)}
+                      shortcut={{ key: 'C', alt: true, description: 'Cliente' }}
+                    >
+                      Identificar
+                    </Button>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Ticket size={16} className="text-gray-400" />
+                    <span className="text-sm font-medium text-gray-700">Cupom</span>
+                  </div>
+                  {coupon ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-green-600 font-medium">
+                        {coupon.code}
+                      </span>
+                      <button
+                        onClick={removeCoupon}
+                        className="text-xs text-red-500 hover:text-red-700"
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowCouponModal(true)}
+                      shortcut={{ key: 'U', alt: true, description: 'Cupom' }}
+                      disabled={!customer}
+                    >
+                      Aplicar
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Lista de Itens do Carrinho */}
               <CartSummary 
                 cart={cart} 
                 discount={discount}
                 products={products}
                 onUpdateQuantity={updateCartItemQuantity}
                 onRemoveItem={removeFromCart}
-                onClearCart={clearCart}
+                onClearCart={handleClearCart}
                 onCheckout={() => setShowPaymentModal(true)}
+                selectedItemIndex={selectedCartItemIndex}
+                onSelectItem={setSelectedCartItemIndex}
               />
+
+              {/* Rodapé com Total e Finalizar */}
+              <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+                <div className="space-y-2 mb-4">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Subtotal</span>
+                    <span className="font-medium">{formatCurrency(subtotal)}</span>
+                  </div>
+                  {discount > 0 && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span>Desconto</span>
+                      <span>- {formatCurrency(discount)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200">
+                    <span>Total</span>
+                    <span className="text-blue-600">{formatCurrency(total)}</span>
+                  </div>
+                </div>
+
+                <Button
+                  variant="success"
+                  size="lg"
+                  fullWidth
+                  onClick={() => setShowPaymentModal(true)}
+                  disabled={cart.length === 0}
+                  icon={CreditCard}
+                  shortcut={{ key: 'Enter', ctrl: true, description: 'Finalizar' }}
+                >
+                  Finalizar Venda (Ctrl+Enter)
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -568,7 +824,9 @@ const Sales = () => {
         >
           <div className="space-y-4">
             <div className="text-center">
-              <Phone size={48} className="mx-auto text-blue-600 mb-3" />
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Phone size={28} className="text-blue-600" />
+              </div>
               <p className="text-gray-600 mb-4">Digite o telefone do cliente</p>
             </div>
             <input 
@@ -576,12 +834,13 @@ const Sales = () => {
               placeholder="(11) 99999-9999" 
               value={customerPhone} 
               onChange={(e) => setCustomerPhone(e.target.value)} 
-              className="w-full px-4 py-2 border rounded-lg" 
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg text-center" 
               onKeyPress={(e) => e.key === 'Enter' && searchCustomer()} 
+              autoFocus
             />
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setShowCustomerModal(false)} className="flex-1">
-                Cancelar
+                Cancelar (ESC)
               </Button>
               <Button onClick={searchCustomer} className="flex-1">
                 Buscar
@@ -601,17 +860,59 @@ const Sales = () => {
           isSubmitting={isSubmittingCustomer}
         />
 
+        {/* Modal de Cupons */}
+        <CouponSelector
+          isOpen={showCouponModal}
+          onClose={() => setShowCouponModal(false)}
+          customer={customer}
+          coupon={coupon}
+          availableCoupons={availableCoupons}
+          couponCode={couponCode}
+          setCouponCode={setCouponCode}
+          couponError={couponError}
+          onApplyCoupon={validateCoupon}
+          onRemoveCoupon={removeCoupon}
+        />
+
         {/* Modal Finalizar Venda */}
         <CheckoutModal
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}
           cart={cart}
           discount={discount}
+          subtotal={subtotal}
+          total={total}
           customer={customer}
           paymentMethod={paymentMethod}
           setPaymentMethod={setPaymentMethod}
           onConfirm={confirmPayment}
           isSubmitting={isSubmitting}
+        />
+
+        {/* Modal de Confirmação - Limpar Carrinho */}
+        <ConfirmModal
+          isOpen={showClearCartConfirm}
+          onClose={() => setShowClearCartConfirm(false)}
+          onConfirm={confirmClearCart}
+          title="Limpar Carrinho"
+          message={
+            <div>
+              <p className="mb-2">Tem certeza que deseja remover todos os itens do carrinho?</p>
+              <p className="text-sm text-gray-500">
+                {cart.length} {cart.length === 1 ? 'item será' : 'itens serão'} removidos.
+              </p>
+            </div>
+          }
+          confirmText="Limpar Carrinho"
+          cancelText="Cancelar"
+          variant="danger"
+        />
+
+        {/* Modal de Atalhos */}
+        <ShortcutsHelpModal
+          isOpen={showShortcutsHelp}
+          onClose={() => setShowShortcutsHelp(false)}
+          shortcuts={shortcuts}
         />
       </div>
     </div>
