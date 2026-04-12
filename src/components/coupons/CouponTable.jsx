@@ -1,8 +1,9 @@
 import React from 'react'
-import { Copy, Edit, Users, RefreshCw, Trash2, Globe, Percent, DollarSign } from 'lucide-react'
+import { Copy, Globe, Users, Percent, DollarSign } from 'lucide-react'
 import DataTable from '../ui/DataTable'
 import Badge from '../Badge'
 import { formatCurrency, formatDate } from '../../utils/formatters'
+import { createAction } from '../../utils/actions'
 
 const CouponTable = ({ 
   coupons, 
@@ -34,7 +35,7 @@ const CouponTable = ({
       header: 'Código',
       sortable: true,
       render: (row) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 group">
           <span className="font-mono font-bold text-blue-600">{row.code}</span>
           <button
             onClick={(e) => { e.stopPropagation(); onCopyCode(row.code) }}
@@ -119,31 +120,14 @@ const CouponTable = ({
   ]
 
   const actions = [
-    {
-      label: 'Editar',
-      icon: <Edit size={16} />,
-      className: 'text-blue-600 hover:text-blue-800 hover:bg-blue-50',
-      onClick: onEdit
-    },
-    {
-      label: 'Gerenciar Clientes',
-      icon: <Users size={16} />,
-      className: 'text-green-600 hover:text-green-800 hover:bg-green-50',
-      onClick: onManageCustomers,
+    createAction('edit', onEdit),
+    createAction('manage', onManageCustomers, {
       disabled: (row) => row.is_global === true
-    },
-    {
-      label: 'Ativar/Desativar',
-      icon: <RefreshCw size={16} />,
-      className: 'text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50',
-      onClick: onToggleStatus
-    },
-    {
-      label: 'Excluir',
-      icon: <Trash2 size={16} />,
-      className: 'text-red-600 hover:text-red-800 hover:bg-red-50',
-      onClick: onDelete
-    }
+    }),
+    createAction('deactivate', onToggleStatus, {
+      label: (row) => row.is_active ? 'Desativar' : 'Ativar'
+    }),
+    createAction('delete', onDelete)
   ]
 
   return (

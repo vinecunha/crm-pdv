@@ -3,10 +3,10 @@ import { Package, ArchiveX, AlertTriangle, TrendingUp, CheckCircle } from 'lucid
 import DataTable from '../ui/DataTable'
 import Badge from '../Badge'
 import { formatCurrency, formatNumber } from '../../utils/formatters'
+import { createAction } from '../../utils/actions'
 
 const ProductTable = ({ 
   products, 
-  loading, 
   onViewDetails,
   onEdit,
   onDelete,
@@ -41,9 +41,7 @@ const ProductTable = ({
     {
       key: 'code',
       header: 'Código',
-      render: (row) => (
-        <div className="text-sm font-mono text-gray-600">{row.code || '-'}</div>
-      )
+      render: (row) => <div className="text-sm font-mono text-gray-600">{row.code || '-'}</div>
     },
     {
       key: 'name',
@@ -85,20 +83,12 @@ const ProductTable = ({
       key: 'price',
       header: 'Preço Venda',
       sortable: true,
-      render: (row) => (
-        <div className="font-semibold text-green-600">
-          {formatCurrency(row.price)}
-        </div>
-      )
+      render: (row) => <div className="font-semibold text-green-600">{formatCurrency(row.price)}</div>
     },
     {
       key: 'cost_price',
       header: 'Último Custo',
-      render: (row) => (
-        <div className="text-sm text-gray-600">
-          {formatCurrency(row.cost_price)}
-        </div>
-      )
+      render: (row) => <div className="text-sm text-gray-600">{formatCurrency(row.cost_price)}</div>
     },
     {
       key: 'is_active',
@@ -107,55 +97,30 @@ const ProductTable = ({
     }
   ]
 
-  const getActions = () => {
-    const actionsList = []
-    
-    if (canViewAll || canViewOnlyActive) {
-      actionsList.push({
-        label: 'Ver detalhes',
-        icon: <Package size={16} />,
-        onClick: onViewDetails,
-        className: 'text-gray-600 hover:text-gray-700 hover:bg-gray-50'
-      })
-    }
-    
-    if (canManageStock) {
-      actionsList.push({
-        label: 'Registrar entrada',
-        icon: <TrendingUp size={16} />,
-        onClick: onRegisterEntry,
-        className: 'text-green-600 hover:text-green-700 hover:bg-green-50'
-      })
-    }
-    
-    if (canEdit) {
-      actionsList.push({
-        label: 'Editar',
-        icon: <Package size={16} />,
-        onClick: onEdit,
-        className: 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
-      })
-      
-      actionsList.push({
-        label: 'Excluir',
-        icon: <ArchiveX size={16} />,
-        onClick: onDelete,
-        className: 'text-red-600 hover:text-red-700 hover:bg-red-50'
-      })
-    }
-    
-    return actionsList
-  }
+  const actions = [
+    createAction('view', onViewDetails, {
+      disabled: () => !canViewAll && !canViewOnlyActive
+    }),
+    createAction('entry', onRegisterEntry, {
+      disabled: () => !canManageStock
+    }),
+    createAction('edit', onEdit, {
+      disabled: () => !canEdit
+    }),
+    createAction('delete', onDelete, {
+      disabled: () => !canEdit
+    })
+  ]
 
   return (
     <DataTable
       columns={columns}
       data={products}
-      actions={getActions()}
+      actions={actions}
       onRowClick={onViewDetails}
       striped
       hover
-      pagination={true}
+      pagination
       itemsPerPageOptions={[20, 50, 100]}
       defaultItemsPerPage={20}
     />

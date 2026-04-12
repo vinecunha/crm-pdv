@@ -1,5 +1,5 @@
-import React from 'react'
-import { FileText, Building, Calendar, Box, DollarSign } from 'lucide-react'
+import React, { useState } from 'react'
+import { FileText, Building, Calendar, Box, DollarSign, Search } from 'lucide-react'
 import FormInput from '../forms/FormInput'
 import Button from '../ui/Button'
 
@@ -10,12 +10,52 @@ const ProductEntryForm = ({
   onSubmit, 
   onCancel, 
   isSubmitting,
-  productName 
+  productName,
+  showFeedback 
 }) => {
+  const [loadingCNPJ, setLoadingCNPJ] = useState(false)
+
+  const consultarCNPJ = async () => {
+    const cnpj = formData.supplier_cnpj
+    if (!cnpj) {
+      showFeedback?.('error', 'Digite um CNPJ')
+      return
+    }
+
+    const cnpjLimpo = cnpj.replace(/\D/g, '')
+    if (cnpjLimpo.length !== 14) {
+      showFeedback?.('error', 'CNPJ deve ter 14 dígitos')
+      return
+    }
+
+    setLoadingCNPJ(true)
+    try {
+      // Usando Brasil API (gratuita e estável)
+      const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`)
+      
+      if (!response.ok) {
+        throw new Error('CNPJ não encontrado')
+      }
+      
+      const data = await response.json()
+      
+      // Preencher nome do fornecedor
+      const nomeFornecedor = data.razao_social || data.nome_fantasia || ''
+      onChange({ target: { name: 'supplier_name', value: nomeFornecedor } })
+      
+      showFeedback?.('success', `Fornecedor: ${nomeFornecedor}`)
+      
+    } catch (error) {
+      console.error('Erro ao consultar CNPJ:', error)
+      showFeedback?.('error', 'CNPJ não encontrado ou serviço indisponível')
+    } finally {
+      setLoadingCNPJ(false)
+    }
+  }
+
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
       <div className="space-y-4">
-        {/* Informação do Produto */}
         {productName && (
           <div className="bg-blue-50 rounded-lg p-3 mb-2">
             <p className="text-sm text-blue-700">
@@ -44,6 +84,26 @@ const ProductEntryForm = ({
             placeholder="1"
           />
           
+          <div className="relative">
+            <FormInput
+              label="CNPJ do Fornecedor"
+              name="supplier_cnpj"
+              value={formData.supplier_cnpj || ''}
+              onChange={onChange}
+              placeholder="00.000.000/0001-00"
+              mask="cnpj"
+            />
+            <button
+              type="button"
+              onClick={consultarCNPJ}
+              disabled={loadingCNPJ || !formData.supplier_cnpj}
+              className="absolute right-3 top-8 p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
+              title="Consultar CNPJ"
+            >
+              <Search size={16} className={loadingCNPJ ? 'animate-spin' : ''} />
+            </button>
+          </div>
+          
           <FormInput
             label="Fornecedor"
             name="supplier_name"
@@ -51,15 +111,6 @@ const ProductEntryForm = ({
             onChange={onChange}
             placeholder="Nome do fornecedor"
             icon={Building}
-          />
-          
-          <FormInput
-            label="CNPJ do Fornecedor"
-            name="supplier_cnpj"  
-            value={formData.supplier_cnpj || ''}
-            onChange={onChange}
-            placeholder="00.000.000/0001-00"
-            mask="cnpj"  
           />
           
           <FormInput
@@ -116,11 +167,9 @@ const ProductEntryForm = ({
             error={formErrors.unit_cost}
             placeholder="0,00"
             icon={DollarSign}
-            mask="currency"  
           />
         </div>
         
-        {/* Preview do valor total */}
         {formData.quantity && formData.unit_cost && (
           <div className="bg-gray-50 rounded-lg p-3">
             <p className="text-sm text-gray-600">Valor Total da Entrada:</p>

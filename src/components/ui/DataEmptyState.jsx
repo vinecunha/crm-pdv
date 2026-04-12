@@ -1,5 +1,5 @@
 import React from 'react'
-import { Package, Users, FileText, ShoppingCart, AlertCircle, Unlock  } from 'lucide-react'
+import { Package, Users, FileText, ShoppingCart, AlertCircle, Unlock, Trash2  } from 'lucide-react'
 
 const iconMap = {
   users: Users,
@@ -7,6 +7,7 @@ const iconMap = {
   orders: ShoppingCart,
   logs: FileText,
   unlock: Unlock, 
+  trash: Trash2,
   default: AlertCircle
 }
 

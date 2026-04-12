@@ -1,15 +1,11 @@
 import React from 'react'
-import { User, Trash, Mail } from 'lucide-react'
+import { User, Phone } from 'lucide-react'
 import DataTable from '../ui/DataTable'
 import Badge from '../Badge'
 import { formatCurrency, formatDate } from '../../utils/formatters'
+import { createAction } from '../../utils/actions'
 
-const CustomerTable = ({ 
-  customers, 
-  onEdit, 
-  onDelete, 
-  onCommunicate 
-}) => {
+const CustomerTable = ({ customers, onEdit, onDelete, onCommunicate }) => {
   const getStatusBadge = (status) => {
     return status === 'active' 
       ? <Badge variant="success">Ativo</Badge>
@@ -38,7 +34,7 @@ const CustomerTable = ({
       header: 'Telefone',
       render: (row) => (
         <div className="flex items-center gap-2">
-          <Trash size={14} className="text-gray-400" />
+          <Phone size={14} className="text-gray-400" />
           <span>{row.phone || '-'}</span>
         </div>
       )
@@ -53,9 +49,7 @@ const CustomerTable = ({
       header: 'Total em Compras',
       sortable: true,
       render: (row) => (
-        <span className="font-medium text-green-600">
-          {formatCurrency(row.total_purchases)}
-        </span>
+        <span className="font-medium text-green-600">{formatCurrency(row.total_purchases)}</span>
       )
     },
     {
@@ -72,24 +66,9 @@ const CustomerTable = ({
   ]
 
   const actions = [
-    {
-      label: 'Comunicar',
-      icon: <Mail size={16} />,
-      onClick: onCommunicate,
-      className: 'text-green-600 hover:text-green-700 hover:bg-green-50'
-    },
-    {
-      label: 'Editar',
-      icon: <User size={16} />,
-      onClick: onEdit,
-      className: 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
-    },
-    {
-      label: 'Excluir',
-      icon: <Trash size={16} />,
-      onClick: onDelete,
-      className: 'text-red-600 hover:text-red-700 hover:bg-red-50'
-    }
+    createAction('communicate', onCommunicate),
+    createAction('edit', onEdit),
+    createAction('delete', onDelete)
   ]
 
   return (

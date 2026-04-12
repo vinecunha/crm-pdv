@@ -498,6 +498,7 @@ const Products = () => {
             onCancel={() => setIsEntryModalOpen(false)}
             isSubmitting={isSubmitting}
             productName={selectedProduct?.name}
+            showFeedback={showFeedback} 
           />
         </Modal>
 

@@ -1,23 +1,49 @@
 import React from 'react'
-import { Eye, Ban, Printer, User, Phone, Ticket, Banknote, CreditCard, QrCode } from 'lucide-react'
-import DataTable from '../../ui/DataTable'
-import { formatCurrency, formatDateTime } from '../../../utils/formatters'
+import { User, Phone, Ticket, Banknote, CreditCard, QrCode, CheckCircle, Clock, Ban, RefreshCw } from 'lucide-react'
+import DataTable from '../ui/DataTable'
+import Badge from '../Badge'
+import { formatCurrency, formatDateTime } from '../../utils/formatters'
+import { createAction } from '../../utils/actions'
+
+// Componentes auxiliares
+const CheckCircleIcon = ({ size }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M9 12l2 2 4-4" />
+  </svg>
+)
+
+const ClockIcon = ({ size }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 6v6l4 2" />
+  </svg>
+)
+
+const RefreshCwIcon = ({ size }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+    <path d="M21 3v5h-5" />
+    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+    <path d="M3 21v-5h5" />
+  </svg>
+)
 
 const SalesTable = ({ sales, onViewDetails, onCancel, onPrint }) => {
   const getStatusBadge = (status) => {
     const statusConfig = {
-      completed: { color: 'green', icon: CheckCircle, text: 'Concluída' },
-      cancelled: { color: 'red', icon: Ban, text: 'Cancelada' },
-      pending: { color: 'yellow', icon: Clock, text: 'Pendente' },
-      refunded: { color: 'orange', icon: RefreshCw, text: 'Reembolsada' }
+      completed: { variant: 'success', icon: CheckCircleIcon, text: 'Concluída' },
+      cancelled: { variant: 'danger', icon: Ban, text: 'Cancelada' },
+      pending: { variant: 'warning', icon: ClockIcon, text: 'Pendente' },
+      refunded: { variant: 'info', icon: RefreshCwIcon, text: 'Reembolsada' }
     }
     const config = statusConfig[status] || statusConfig.completed
     const Icon = config.icon
     return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-${config.color}-100 text-${config.color}-800`}>
+      <Badge variant={config.variant}>
         <Icon size={12} />
-        {config.text}
-      </span>
+        <span className="ml-1">{config.text}</span>
+      </Badge>
     )
   }
 
@@ -28,7 +54,7 @@ const SalesTable = ({ sales, onViewDetails, onCancel, onPrint }) => {
   }
 
   const getPaymentMethodText = (method) => {
-    const texts = { cash: 'Dinheiro', credit_card: 'Cartão Crédito', debit_card: 'Cartão Débito', pix: 'PIX' }
+    const texts = { cash: 'Dinheiro', credit_card: 'Crédito', debit_card: 'Débito', pix: 'PIX' }
     return texts[method] || method
   }
 
@@ -112,25 +138,11 @@ const SalesTable = ({ sales, onViewDetails, onCancel, onPrint }) => {
   ]
 
   const actions = [
-    {
-      label: 'Ver detalhes',
-      icon: <Eye size={18} />,
-      className: 'text-blue-600 hover:text-blue-800 hover:bg-blue-50',
-      onClick: onViewDetails
-    },
-    {
-      label: 'Cancelar venda',
-      icon: <Ban size={18} />,
-      className: 'text-red-600 hover:text-red-800 hover:bg-red-50',
-      onClick: onCancel,
+    createAction('view', onViewDetails),
+    createAction('cancel', onCancel, {
       disabled: (row) => row.status !== 'completed'
-    },
-    {
-      label: 'Imprimir',
-      icon: <Printer size={18} />,
-      className: 'text-gray-600 hover:text-gray-800 hover:bg-gray-100',
-      onClick: onPrint
-    }
+    }),
+    createAction('print', onPrint)
   ]
 
   return (
@@ -149,29 +161,5 @@ const SalesTable = ({ sales, onViewDetails, onCancel, onPrint }) => {
     />
   )
 }
-
-// Componentes auxiliares
-const CheckCircle = ({ size }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="12" r="10" />
-    <path d="M9 12l2 2 4-4" />
-  </svg>
-)
-
-const Clock = ({ size }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="12" r="10" />
-    <path d="M12 6v6l4 2" />
-  </svg>
-)
-
-const RefreshCw = ({ size }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-    <path d="M21 3v5h-5" />
-    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-    <path d="M3 21v-5h5" />
-  </svg>
-)
 
 export default SalesTable

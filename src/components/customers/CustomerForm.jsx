@@ -1,5 +1,5 @@
-import React from 'react'
-import { User, Mail, Phone, Calendar, MapPin, Hash } from 'lucide-react'
+import React, { useState } from 'react'
+import { User, Mail, Phone, Calendar, MapPin, Hash, Search } from 'lucide-react'
 import FormInput from '../forms/FormInput'
 import Button from '../ui/Button'
 
@@ -10,12 +10,50 @@ const CustomerForm = ({
   onSubmit, 
   onCancel, 
   isSubmitting,
-  isEditing 
+  isEditing,
+  showFeedback 
 }) => {
+  const [loadingCEP, setLoadingCEP] = useState(false)
+
+  const consultarCEP = async () => {
+    const cep = formData.zip_code
+    if (!cep) {
+      showFeedback?.('error', 'Digite um CEP')
+      return
+    }
+
+    const cepLimpo = cep.replace(/\D/g, '')
+    if (cepLimpo.length !== 8) {
+      showFeedback?.('error', 'CEP deve ter 8 dígitos')
+      return
+    }
+
+    setLoadingCEP(true)
+    try {
+      const response = await fetch(`https://brasilapi.com.br/api/cep/v1/${cepLimpo}`)
+      
+      if (!response.ok) {
+        throw new Error('CEP não encontrado')
+      }
+      
+      const data = await response.json()
+      
+      onChange({ target: { name: 'address', value: data.street || '' } })
+      onChange({ target: { name: 'city', value: data.city || '' } })
+      onChange({ target: { name: 'state', value: data.state || '' } })
+      
+      showFeedback?.('success', 'Endereço preenchido automaticamente!')
+      
+    } catch (error) {
+      showFeedback?.('error', 'CEP não encontrado')
+    } finally {
+      setLoadingCEP(false)
+    }
+  }
+
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
       <div className="space-y-4">
-        {/* Campos Obrigatórios */}
         <div className="bg-blue-50 rounded-lg p-3 mb-2">
           <p className="text-xs text-blue-700 font-medium">Campos obrigatórios *</p>
         </div>
@@ -78,14 +116,12 @@ const CustomerForm = ({
           />
           
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">
-              Status
-            </label>
+            <label className="block text-sm font-medium text-gray-700">Status</label>
             <select
               name="status"
               value={formData.status || 'active'}
               onChange={onChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
             >
               <option value="active">Ativo</option>
               <option value="inactive">Inativo</option>
@@ -93,12 +129,34 @@ const CustomerForm = ({
           </div>
         </div>
 
-        {/* Endereço - Todos opcionais */}
+        {/* Endereço */}
         <div className="border-t pt-4 mt-2">
           <h3 className="text-sm font-medium text-gray-700 mb-3">
             Endereço <span className="text-xs text-gray-400 font-normal">(opcional)</span>
           </h3>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* CEP com botão */}
+            <div className="relative">
+              <FormInput
+                label="CEP"
+                name="zip_code"
+                value={formData.zip_code || ''}
+                onChange={onChange}
+                placeholder="12345-678"
+                mask="cep"
+              />
+              <button
+                type="button"
+                onClick={consultarCEP}
+                disabled={loadingCEP || !formData.zip_code}
+                className="absolute right-3 top-8 p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-50"
+                title="Consultar CEP"
+              >
+                <Search size={16} className={loadingCEP ? 'animate-spin' : ''} />
+              </button>
+            </div>
+
             <FormInput
               label="Endereço"
               name="address"
@@ -123,15 +181,6 @@ const CustomerForm = ({
               onChange={onChange}
               placeholder="UF"
               maxLength={2}
-            />
-            
-            <FormInput
-              label="CEP"
-              name="zip_code"
-              value={formData.zip_code || ''}
-              onChange={onChange}
-              placeholder="12345-678"
-              mask="cep"
             />
           </div>
         </div>
