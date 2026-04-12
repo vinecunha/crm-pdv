@@ -1,5 +1,5 @@
 import React from 'react'
-import { Phone, MapPin, Calendar, Hash } from 'lucide-react'
+import { Phone, MapPin, Calendar, Hash, User, AtSign } from 'lucide-react'
 import FormInput from '../forms/FormInput'
 
 const ProfileInfoForm = ({ formData, formErrors, onChange }) => {
@@ -10,10 +10,21 @@ const ProfileInfoForm = ({ formData, formErrors, onChange }) => {
           label="Nome Completo"
           name="full_name"
           value={formData.full_name}
-          onChange={onChange}
-          required
-          error={formErrors.full_name}
+          disabled
+          readOnly
           placeholder="Seu nome completo"
+          icon={User}
+          helperText="Nome registrado na conta (não pode ser alterado)"
+        />
+
+        <FormInput
+          label="Nome de Exibição"
+          name="display_name"
+          value={formData.display_name}
+          onChange={onChange}
+          placeholder="Como você quer ser chamado"
+          icon={AtSign}
+          helperText="Este nome aparecerá no sistema"
         />
 
         <FormInput
@@ -21,6 +32,7 @@ const ProfileInfoForm = ({ formData, formErrors, onChange }) => {
           name="email"
           value={formData.email}
           disabled
+          readOnly
           placeholder="seu@email.com"
           helperText="Email não pode ser alterado"
         />
@@ -32,6 +44,7 @@ const ProfileInfoForm = ({ formData, formErrors, onChange }) => {
           onChange={onChange}
           placeholder="(11) 99999-9999"
           icon={Phone}
+          mask="phone"
         />
 
         <FormInput
@@ -41,6 +54,7 @@ const ProfileInfoForm = ({ formData, formErrors, onChange }) => {
           onChange={onChange}
           placeholder="123.456.789-00"
           icon={Hash}
+          mask="cpfCnpj"
         />
 
         <FormInput
@@ -83,6 +97,15 @@ const ProfileInfoForm = ({ formData, formErrors, onChange }) => {
               onChange={onChange}
               placeholder="UF"
               maxLength={2}
+            />
+
+            <FormInput
+              label="CEP"
+              name="zip_code"
+              value={formData.zip_code}
+              onChange={onChange}
+              placeholder="12345-678"
+              mask="cep"
             />
           </div>
         </div>

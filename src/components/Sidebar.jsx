@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext.jsx'
+import { useAuth } from '../contexts/AuthContext'
 import { useCompany } from '../hooks/useCompany'
 import {
   LogOut,
@@ -44,8 +44,14 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
 
   // Avatar do usuário
   const avatarUrl = profile?.avatar_url
-  const userInitial = profile?.full_name?.charAt(0)?.toUpperCase() || 
-                      profile?.email?.charAt(0)?.toUpperCase() || 'U'
+  
+  // Usar display_name com fallback para full_name
+  const displayName = profile?.display_name?.trim() || 
+                      profile?.full_name?.trim().split(' ')[0] || 
+                      profile?.email?.split('@')[0] || 
+                      'Usuário'
+  
+  const userInitial = displayName.charAt(0).toUpperCase()
 
   // Menus baseados nas permissões
   const allMenuItems = [
@@ -101,8 +107,8 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         <div className="relative">
           <img 
             src={avatarUrl} 
-            alt={profile?.full_name || 'Avatar'} 
-            className={`${sizeClasses[size]} rounded-4xl object-cover shadow-lg`}
+            alt={displayName} 
+            className={`${sizeClasses[size]} rounded-xl object-cover shadow-lg`}
             onError={(e) => {
               e.target.onerror = null
               e.target.style.display = 'none'
@@ -249,7 +255,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900">
-                    {profile?.full_name?.split(' ')[0] || profile?.email?.split('@')[0] || 'Usuário'}
+                    {displayName}
                   </p>
                   <p className="text-xs text-gray-500">{getRoleName()}</p>
                 </div>
@@ -320,7 +326,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         </div>
 
         {!collapsed && !authLoading && (
-          // ÁREA DO USUÁRIO CLICÁVEL - DESKTOP (expandido)
           <div 
             onClick={handleProfileClick}
             className="p-4 mx-3 mt-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl cursor-pointer hover:shadow-md transition-all group"
@@ -331,7 +336,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-900 truncate">
-                  {profile?.full_name?.split(' ')[0] || profile?.email?.split('@')[0] || 'Usuário'}
+                  {displayName}
                 </p>
                 <div className="flex items-center gap-1">
                   <p className="text-xs text-gray-500">{getRoleName()}</p>
@@ -343,7 +348,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         )}
 
         {collapsed && !authLoading && (
-          // ÁREA DO USUÁRIO CLICÁVEL - DESKTOP (colapsado)
           <div className="flex justify-center mt-4">
             <button
               onClick={handleProfileClick}
@@ -354,9 +358,8 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
                 <AvatarDisplay size="md" showStatus={true} />
               </div>
               
-              {/* Tooltip */}
               <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                {profile?.full_name?.split(' ')[0] || 'Perfil'}
+                {displayName}
               </div>
             </button>
           </div>

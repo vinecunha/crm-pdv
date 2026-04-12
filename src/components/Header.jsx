@@ -11,8 +11,7 @@ import {
   Home,
   User,
   Settings,
-  LogOut,
-  Bell
+  LogOut
 } from 'lucide-react'
 import NotificationsPanel from './NotificationsPanel'
 
@@ -24,9 +23,13 @@ const Header = ({ collapsed }) => {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
 
-  const userName = profile?.full_name?.trim() 
-    ? profile.full_name.split(' ')[0]
-    : user?.email?.split('@')[0] || 'Usuário'
+  // Usar display_name com fallback para full_name
+  const displayName = profile?.display_name?.trim() || 
+                      profile?.full_name?.trim().split(' ')[0] || 
+                      user?.email?.split('@')[0] || 
+                      'Usuário'
+
+  const userInitial = displayName.charAt(0).toUpperCase()
 
   const getPageTitle = () => {
     const titles = {
@@ -41,7 +44,8 @@ const Header = ({ collapsed }) => {
       '/users': 'Usuários',
       '/logs': 'Logs do Sistema',
       '/settings': 'Configurações',
-      '/stock-count': 'Balanço de Estoque'
+      '/stock-count': 'Balanço de Estoque',
+      '/profile': 'Meu Perfil'
     }
     return titles[location.pathname] || 'Sistema'
   }
@@ -55,6 +59,8 @@ const Header = ({ collapsed }) => {
     if (path === '/stock-count') {
       items.push({ label: 'Produtos', path: '/products' })
       items.push({ label: 'Balanço de Estoque', path: '/stock-count' })
+    } else if (path === '/profile') {
+      items.push({ label: 'Meu Perfil', path: '/profile' })
     } else if (path !== '/dashboard') {
       items.push({ label: getPageTitle(), path })
     }
@@ -145,7 +151,7 @@ const Header = ({ collapsed }) => {
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-lg shadow-md">
-                    {userName.charAt(0).toUpperCase()}
+                    {userInitial}
                   </div>
                   <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white" />
                 </div>
@@ -153,7 +159,7 @@ const Header = ({ collapsed }) => {
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg font-semibold text-gray-900">
-                      Olá, {userName}!
+                      Olá, {displayName}!
                     </h2>
                     <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
                       {profile?.role === 'admin' ? 'Admin' : profile?.role === 'gerente' ? 'Gerente' : 'Operador'}
@@ -219,7 +225,7 @@ const Header = ({ collapsed }) => {
             </div>
           </div>
 
-          {/* Rodapé do Card - Estatísticas Rápidas (opcional) */}
+          {/* Rodapé do Card */}
           <div className="px-5 py-3 bg-gray-50/50 border-t border-gray-100 flex items-center gap-6 text-xs text-gray-500">
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />

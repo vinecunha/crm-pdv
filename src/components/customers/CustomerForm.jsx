@@ -1,5 +1,5 @@
 import React from 'react'
-import { User, Mail, Phone, Calendar, MapPin } from 'lucide-react'
+import { User, Mail, Phone, Calendar, MapPin, Hash } from 'lucide-react'
 import FormInput from '../forms/FormInput'
 import Button from '../ui/Button'
 
@@ -15,11 +15,16 @@ const CustomerForm = ({
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
       <div className="space-y-4">
+        {/* Campos Obrigatórios */}
+        <div className="bg-blue-50 rounded-lg p-3 mb-2">
+          <p className="text-xs text-blue-700 font-medium">Campos obrigatórios *</p>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormInput
-            label="Nome Completo"
+            label="Nome Completo *"
             name="name"
-            value={formData.name}
+            value={formData.name || ''}
             onChange={onChange}
             required
             error={formErrors.name}
@@ -28,10 +33,10 @@ const CustomerForm = ({
           />
           
           <FormInput
-            label="E-mail"
+            label="E-mail *"
             name="email"
             type="email"
-            value={formData.email}
+            value={formData.email || ''}
             onChange={onChange}
             required
             error={formErrors.email}
@@ -40,31 +45,36 @@ const CustomerForm = ({
           />
           
           <FormInput
-            label="Telefone"
+            label="Telefone *"
             name="phone"
-            value={formData.phone}
+            value={formData.phone || ''}
             onChange={onChange}
             required
             error={formErrors.phone}
             placeholder="(11) 99999-9999"
             icon={Phone}
+            mask="phone"
           />
           
           <FormInput
             label="CPF/CNPJ"
             name="document"
-            value={formData.document}
+            value={formData.document || ''}
             onChange={onChange}
             placeholder="123.456.789-00"
+            icon={Hash}
+            mask="cpfCnpj"
+            helperText="Opcional"
           />
           
           <FormInput
             label="Data de Nascimento"
             name="birth_date"
             type="date"
-            value={formData.birth_date}
+            value={formData.birth_date || ''}
             onChange={onChange}
             icon={Calendar}
+            helperText="Opcional"
           />
           
           <div className="space-y-1">
@@ -73,7 +83,7 @@ const CustomerForm = ({
             </label>
             <select
               name="status"
-              value={formData.status}
+              value={formData.status || 'active'}
               onChange={onChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
@@ -83,13 +93,16 @@ const CustomerForm = ({
           </div>
         </div>
 
-        <div className="border-t pt-4">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Endereço</h3>
+        {/* Endereço - Todos opcionais */}
+        <div className="border-t pt-4 mt-2">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">
+            Endereço <span className="text-xs text-gray-400 font-normal">(opcional)</span>
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormInput
               label="Endereço"
               name="address"
-              value={formData.address}
+              value={formData.address || ''}
               onChange={onChange}
               placeholder="Rua, número, complemento"
               icon={MapPin}
@@ -98,7 +111,7 @@ const CustomerForm = ({
             <FormInput
               label="Cidade"
               name="city"
-              value={formData.city}
+              value={formData.city || ''}
               onChange={onChange}
               placeholder="Cidade"
             />
@@ -106,7 +119,7 @@ const CustomerForm = ({
             <FormInput
               label="Estado"
               name="state"
-              value={formData.state}
+              value={formData.state || ''}
               onChange={onChange}
               placeholder="UF"
               maxLength={2}
@@ -115,9 +128,10 @@ const CustomerForm = ({
             <FormInput
               label="CEP"
               name="zip_code"
-              value={formData.zip_code}
+              value={formData.zip_code || ''}
               onChange={onChange}
               placeholder="12345-678"
+              mask="cep"
             />
           </div>
         </div>

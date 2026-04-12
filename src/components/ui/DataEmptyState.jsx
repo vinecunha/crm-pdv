@@ -1,11 +1,12 @@
 import React from 'react'
-import { Package, Users, FileText, ShoppingCart, AlertCircle } from 'lucide-react'
+import { Package, Users, FileText, ShoppingCart, AlertCircle, Unlock  } from 'lucide-react'
 
 const iconMap = {
   users: Users,
   products: Package,
   orders: ShoppingCart,
   logs: FileText,
+  unlock: Unlock, 
   default: AlertCircle
 }
 

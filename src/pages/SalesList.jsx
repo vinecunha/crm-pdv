@@ -13,6 +13,7 @@ import Badge from '../components/Badge'
 import { formatCurrency, formatNumber, formatDateTime } from '../utils/formatters'
 import useSystemLogs from '../hooks/useSystemLogs'
 import useLogger from '../hooks/useLogger'
+import CancelSaleModal from '../components/sales/management/CancelSaleModal'
 
 // Componentes internos modernizados
 const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) => {
@@ -76,6 +77,10 @@ const SalesList = () => {
   const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Verificar permissões baseadas na role do banco
+  const canCancelDirectly = profile?.role === 'admin' || profile?.role === 'gerente'
+  const canRequestCancellation = profile?.role === 'operador' // Operador pode solicitar com aprovação
+
   const paymentIcons = { cash: '💵', credit_card: '💳', debit_card: '🏧', pix: '📱' }
   const paymentLabels = { cash: 'Dinheiro', credit_card: 'Crédito', debit_card: 'Débito', pix: 'PIX' }
 
@@ -126,31 +131,53 @@ const SalesList = () => {
     }
   }
 
-  const cancelSale = async () => {
-    if (!cancelReason) { showFeedback('error', 'Selecione um motivo'); return }
+  // Função de cancelamento COM aprovação
+  const handleCancelWithApproval = async (approvalData) => {
+    const { approvedBy, approverName, approverRole } = approvalData
+    
     setIsSubmitting(true)
     try {
-      const { error } = await supabase.rpc('cancel_sale', {
+      // Chamar RPC com dados de aprovação
+      const { error } = await supabase.rpc('cancel_sale_with_approval', {
         p_sale_number: selectedSale.sale_number,
         p_cancelled_by: profile?.id,
+        p_approved_by: approvedBy,
         p_cancellation_reason: cancelReason,
         p_cancellation_notes: cancelNotes || null
       })
+      
       if (error) throw error
       
       await logAction({ 
-        action: 'CANCEL_SALE', entityType: 'sale', entityId: selectedSale.id, 
-        details: { sale_number: selectedSale.sale_number, reason: cancelReason }, severity: 'WARNING' 
+        action: 'CANCEL_SALE', 
+        entityType: 'sale', 
+        entityId: selectedSale.id, 
+        details: { 
+          sale_number: selectedSale.sale_number, 
+          reason: cancelReason,
+          cancelled_by: profile?.email,
+          cancelled_by_role: profile?.role,
+          approved_by: approverName,
+          approver_role: approverRole
+        }, 
+        severity: 'WARNING' 
       })
-      showFeedback('success', `Venda ${selectedSale.sale_number} cancelada!`)
+      
+      const message = canCancelDirectly 
+        ? `Venda ${selectedSale.sale_number} cancelada!`
+        : `Venda ${selectedSale.sale_number} cancelada com aprovação de ${approverName}!`
+      
+      showFeedback('success', message)
       setShowCancelModal(false)
       setShowDetailsModal(false)
       setSelectedSale(null)
       setCancelReason('')
       setCancelNotes('')
       await fetchSales()
+      
     } catch (error) {
       showFeedback('error', `Erro ao cancelar: ${error.message}`)
+      await logComponentError(error, { action: 'cancel_sale' })
     } finally {
       setIsSubmitting(false)
     }
@@ -241,6 +268,7 @@ const SalesList = () => {
     }
   ]
 
+  // Ações - Condicional baseado na role
   const actions = [
     {
       label: 'Ver detalhes',
@@ -248,13 +276,21 @@ const SalesList = () => {
       onClick: viewSaleDetails,
       className: 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
     },
-    {
-      label: 'Cancelar',
+    // Mostrar botão de cancelar apenas para admin, gerente OU operador (com aprovação)
+    ...(canCancelDirectly || canRequestCancellation ? [{
+      label: canCancelDirectly ? 'Cancelar' : 'Solicitar Cancelamento',
       icon: <Ban size={16} />,
-      onClick: (row) => { setSelectedSale(row); setShowCancelModal(true) },
-      className: 'text-gray-500 hover:text-red-600 hover:bg-red-50',
+      onClick: (row) => { 
+        setSelectedSale(row)
+        setCancelReason('')
+        setCancelNotes('')
+        setShowCancelModal(true) 
+      },
+      className: canCancelDirectly 
+        ? 'text-gray-500 hover:text-red-600 hover:bg-red-50' 
+        : 'text-gray-500 hover:text-orange-600 hover:bg-orange-50',
       disabled: (row) => row.status !== 'completed'
-    },
+    }] : []),
     {
       label: 'Imprimir',
       icon: <Printer size={16} />,
@@ -401,46 +437,37 @@ const SalesList = () => {
 
               <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
                 <Button variant="outline" onClick={() => setShowDetailsModal(false)}>Fechar</Button>
-                {selectedSale.status === 'completed' && (
-                  <Button variant="danger" onClick={() => { setShowDetailsModal(false); setShowCancelModal(true) }}>Cancelar Venda</Button>
+                {selectedSale.status === 'completed' && (canCancelDirectly || canRequestCancellation) && (
+                  <Button 
+                    variant="danger" 
+                    onClick={() => { 
+                      setShowDetailsModal(false)
+                      setCancelReason('')
+                      setCancelNotes('')
+                      setShowCancelModal(true) 
+                    }}
+                  >
+                    {canCancelDirectly ? 'Cancelar Venda' : 'Solicitar Cancelamento'}
+                  </Button>
                 )}
               </div>
             </div>
           </div>
         )}
 
-        {/* Modal de Cancelamento */}
-        {showCancelModal && selectedSale && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="absolute inset-0 bg-black/30" onClick={() => !isSubmitting && setShowCancelModal(false)} />
-            <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100">
-                <h3 className="text-lg font-semibold">Cancelar Venda #{selectedSale.sale_number}</h3>
-              </div>
-              
-              <div className="p-6 space-y-4">
-                <div className="bg-yellow-50 rounded-lg p-3 text-sm text-yellow-800">
-                  ⚠️ Esta ação não poderá ser desfeita. O estoque será restaurado.
-                </div>
-
-                <select value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} className="w-full px-3 py-2 border rounded-lg">
-                  <option value="">Selecione um motivo</option>
-                  <option value="Cliente desistiu">Cliente desistiu</option>
-                  <option value="Produto indisponível">Produto indisponível</option>
-                  <option value="Erro no valor">Erro no valor</option>
-                  <option value="Outros">Outros</option>
-                </select>
-
-                <textarea value={cancelNotes} onChange={(e) => setCancelNotes(e.target.value)} rows={2} className="w-full px-3 py-2 border rounded-lg" placeholder="Observações (opcional)" />
-              </div>
-
-              <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setShowCancelModal(false)} disabled={isSubmitting}>Cancelar</Button>
-                <Button variant="danger" onClick={cancelSale} loading={isSubmitting}>Confirmar</Button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Modal de Cancelamento com Aprovação */}
+        <CancelSaleModal
+          isOpen={showCancelModal}
+          onClose={() => !isSubmitting && setShowCancelModal(false)}
+          sale={selectedSale}
+          cancelReason={cancelReason}
+          setCancelReason={setCancelReason}
+          cancelNotes={cancelNotes}
+          setCancelNotes={setCancelNotes}
+          onConfirm={handleCancelWithApproval}
+          isSubmitting={isSubmitting}
+          currentUser={profile}
+        />
       </div>
     </div>
   )

@@ -7,7 +7,7 @@ import { secureStorage } from '../utils/secureStorage'
 const logger = {
   log: (...args) => import.meta.env.DEV && console.log(...args),
   warn: (...args) => import.meta.env.DEV && console.warn(...args),
-  error: (...args) => console.error(...args), // Erros sempre logados
+  error: (...args) => console.error(...args),
 }
 
 const AuthContext = createContext(null)
@@ -44,23 +44,6 @@ export const validatePasswordStrength = (password) => {
   if (checks.hasSpecialChar) score++
   if (checks.isLongEnough) score++
   
-  let message = ''
-  let valid = false
-  
-  if (score <= 2) {
-    message = 'Senha fraca'
-    valid = false
-  } else if (score === 3) {
-    message = 'Senha média'
-    valid = true
-  } else if (score === 4) {
-    message = 'Senha forte'
-    valid = true
-  } else {
-    message = 'Senha muito forte'
-    valid = true
-  }
-  
   // Requisitos mínimos
   if (!checks.hasUpperCase) {
     return { valid: false, score, message: 'A senha deve conter pelo menos uma letra maiúscula' }
@@ -72,12 +55,13 @@ export const validatePasswordStrength = (password) => {
     return { valid: false, score, message: 'A senha deve conter pelo menos um número' }
   }
   
-  return { 
-    valid, 
-    score, 
-    message,
-    checks 
-  }
+  let message = ''
+  if (score <= 2) message = 'Senha fraca'
+  else if (score === 3) message = 'Senha média'
+  else if (score === 4) message = 'Senha forte'
+  else message = 'Senha muito forte'
+  
+  return { valid: true, score, message, checks }
 }
 
 // Hook para validação de senha em tempo real
@@ -103,18 +87,12 @@ export const usePasswordStrength = (password) => {
     return `${(strength.score / 5) * 100}%`
   }
   
-  return {
-    ...strength,
-    color: getStrengthColor(),
-    width: getStrengthWidth()
-  }
+  return { ...strength, color: getStrengthColor(), width: getStrengthWidth() }
 }
 
 export function useAuth() {
   const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider')
-  }
+  if (!context) throw new Error('useAuth must be used within AuthProvider')
   return context
 }
 
@@ -123,8 +101,6 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
-  
-  // Ref para evitar múltiplas inicializações
   const initialized = useRef(false)
 
   // ==============================
@@ -173,7 +149,6 @@ export function AuthProvider({ children }) {
         canViewSettings: false,
       }
     }
-
     return permissions[role] || permissions.operador
   }, [])
 
@@ -182,14 +157,13 @@ export function AuthProvider({ children }) {
   // ==============================
   const buildProfileFromJWT = useCallback((userData) => {
     if (!userData) return null
-    
     const role = userData.app_metadata?.role || 'operador'
     const fullName = userData.user_metadata?.full_name || userData.email?.split('@')[0] || 'Usuário'
-    
     return {
       id: userData.id,
       email: userData.email,
       full_name: fullName,
+      display_name: userData.user_metadata?.display_name || fullName.split(' ')[0],
       role: role,
       created_at: userData.created_at,
       updated_at: userData.updated_at
@@ -197,12 +171,11 @@ export function AuthProvider({ children }) {
   }, [])
 
   // ==============================
-  // BUSCAR PROFILE COMPLETO DO BANCO (APENAS QUANDO NECESSÁRIO)
+  // BUSCAR PROFILE COMPLETO DO BANCO
   // ==============================
   const fetchFullProfileFromDB = useCallback(async (userId) => {
     try {
       logger.log('🔍 Buscando profile completo no banco...')
-      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -212,15 +185,43 @@ export function AuthProvider({ children }) {
       if (error) throw error
       
       if (data) {
+        // Verificar status
+        if (data.status && data.status !== 'active') {
+          logger.warn('⚠️ Usuário com status não ativo:', data.status)
+        }
         logger.log('✅ Profile encontrado no banco')
         secureStorage.set('profile', data)
         return data
       }
-      
       return null
     } catch (error) {
       logger.error('❌ Erro ao buscar profile do banco:', error.message)
       return null
+    }
+  }, [])
+
+  // ==============================
+  // VERIFICAR STATUS DO USUÁRIO (EDGE FUNCTION)
+  // ==============================
+  const checkUserStatus = useCallback(async (userId) => {
+    try {
+      logger.log('🔒 Verificando status do usuário...')
+      
+      const { data, error } = await supabase.functions.invoke('check-user-status', {
+        body: { user_id: userId }
+      })
+      
+      if (error) {
+        logger.error('❌ Erro ao chamar Edge Function:', error)
+        return { allowed: true } // Fail open
+      }
+      
+      logger.log('📊 Resultado da verificação:', data)
+      return data
+      
+    } catch (error) {
+      logger.error('❌ Erro ao verificar status:', error)
+      return { allowed: true } // Fail open
     }
   }, [])
 
@@ -230,25 +231,18 @@ export function AuthProvider({ children }) {
   const syncProfile = useCallback(async (userData, forceDBFetch = false) => {
     if (!userData) return null
     
-    // 1. Primeiro, constrói profile básico do JWT (instantâneo)
     const jwtProfile = buildProfileFromJWT(userData)
     
     if (jwtProfile) {
       setProfile(jwtProfile)
-      
-      // Salva no storage seguro (com assinatura)
       secureStorage.set('profile', jwtProfile)
       secureStorage.set('user_role', jwtProfile.role)
-      
       logger.log('📦 Profile carregado do JWT:', jwtProfile.role)
     }
     
-    // 2. Se necessário, busca dados complementares do banco (assíncrono, não bloqueia)
     if (forceDBFetch) {
-      // Fire and forget - não espera
       fetchFullProfileFromDB(userData.id).then(dbProfile => {
         if (dbProfile) {
-          // Atualiza com dados mais completos
           setProfile(prev => ({ ...prev, ...dbProfile }))
           secureStorage.set('profile', { ...jwtProfile, ...dbProfile })
           logger.log('🔄 Profile atualizado com dados do banco')
@@ -281,7 +275,6 @@ export function AuthProvider({ children }) {
         }
       }
       
-      // Se o bloqueio expirou, limpa
       if (blockedUntil && Date.now() >= blockedUntil) {
         secureStorage.remove(LOGIN_ATTEMPTS_KEY)
         return { blocked: false, remaining: MAX_LOGIN_ATTEMPTS }
@@ -299,7 +292,7 @@ export function AuthProvider({ children }) {
   // ==============================
   // REGISTRAR TENTATIVA DE LOGIN
   // ==============================
-  const recordLoginAttempt = useCallback((success) => {
+  const recordLoginAttempt = useCallback(async (success, email = null) => {
     try {
       if (success) {
         secureStorage.remove(LOGIN_ATTEMPTS_KEY)
@@ -314,6 +307,19 @@ export function AuthProvider({ children }) {
           attempts,
           blockedUntil: Date.now() + LOGIN_BLOCK_DURATION
         })
+        
+        // Se temos email, atualizar status no banco para 'locked'
+        if (email) {
+          try {
+            await supabase
+              .from('profiles')
+              .update({ status: 'locked', updated_at: new Date().toISOString() })
+              .eq('email', email)
+            logger.log('🔒 Usuário bloqueado por excesso de tentativas:', email)
+          } catch (err) {
+            logger.error('Erro ao bloquear usuário:', err)
+          }
+        }
       } else {
         secureStorage.set(LOGIN_ATTEMPTS_KEY, { attempts, blockedUntil: null })
       }
@@ -322,23 +328,17 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  // ==============================
-  // LOGIN (COM VALIDAÇÃO DE SENHA)
-  // ==============================
   const login = async (email, password) => {
     try {
-      // Verificar rate limit
       const rateLimit = checkLoginRateLimit()
       if (rateLimit.blocked) {
         throw new Error(rateLimit.message)
       }
       
-      // Validação básica de email
       if (!email || !email.includes('@')) {
         throw new Error('Email inválido')
       }
       
-      // Validação de senha (pelo menos preenchida)
       if (!password || password.length < 1) {
         throw new Error('Senha é obrigatória')
       }
@@ -346,28 +346,58 @@ export function AuthProvider({ children }) {
       logger.log('🔐 Tentando login para:', email)
       setLoading(true)
       
+      // 1. Fazer login
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password,
       })
 
       if (error) {
-        recordLoginAttempt(false)
+        await recordLoginAttempt(false, email)
         throw error
       }
       
-      // Login bem sucedido
-      recordLoginAttempt(true)
-      logger.log('✅ Login realizado')
-      
+      // 2. VERIFICAR STATUS DO USUÁRIO (ADICIONAR ESTE BLOCO)
       if (data.user) {
-        // Sincroniza profile (JWT primeiro, depois banco)
+        logger.log('🔒 Verificando status do usuário...')
+        
+        // Verificar status diretamente no banco (mais confiável)
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('status')
+          .eq('id', data.user.id)
+          .single()
+        
+        if (profileError) {
+          logger.error('❌ Erro ao buscar status:', profileError)
+        } else if (profile) {
+          logger.log('📊 Status do usuário:', profile.status)
+          
+          if (profile.status && profile.status !== 'active') {
+            // Usuário bloqueado - fazer logout
+            logger.warn('❌ Acesso negado. Status:', profile.status)
+            await supabase.auth.signOut()
+            await recordLoginAttempt(false, email)
+            
+            const messages = {
+              'inactive': 'Usuário inativo. Contate o administrador.',
+              'blocked': 'Usuário bloqueado. Contate o administrador.',
+              'locked': 'Conta bloqueada por excesso de tentativas. Contate o administrador.'
+            }
+            throw new Error(messages[profile.status] || 'Acesso negado.')
+          }
+        }
+        
+        // 3. Status OK - continuar
+        logger.log('✅ Status verificado, acesso permitido')
+        await recordLoginAttempt(true)
         await syncProfile(data.user, true)
         setUser(data.user)
       }
       
       setLoading(false)
       return data
+      
     } catch (error) {
       logger.error('❌ Erro no login:', error.message)
       setLoading(false)
@@ -380,7 +410,6 @@ export function AuthProvider({ children }) {
   // ==============================
   const register = async (email, password, fullName) => {
     try {
-      // Validar força da senha
       const passwordValidation = validatePasswordStrength(password)
       if (!passwordValidation.valid) {
         throw new Error(passwordValidation.message)
@@ -394,7 +423,8 @@ export function AuthProvider({ children }) {
         password,
         options: {
           data: {
-            full_name: fullName
+            full_name: fullName,
+            display_name: fullName.split(' ')[0]
           }
         }
       })
@@ -416,7 +446,6 @@ export function AuthProvider({ children }) {
   // ==============================
   const changePassword = async (newPassword) => {
     try {
-      // Validar força da nova senha
       const passwordValidation = validatePasswordStrength(newPassword)
       if (!passwordValidation.valid) {
         throw new Error(passwordValidation.message)
@@ -425,9 +454,7 @@ export function AuthProvider({ children }) {
       logger.log('🔑 Alterando senha...')
       setLoading(true)
       
-      const { data, error } = await supabase.auth.updateUser({
-        password: newPassword
-      })
+      const { data, error } = await supabase.auth.updateUser({ password: newPassword })
 
       if (error) throw error
       
@@ -450,9 +477,7 @@ export function AuthProvider({ children }) {
       
       const { data, error } = await supabase.auth.resetPasswordForEmail(
         email.trim().toLowerCase(),
-        {
-          redirectTo: `${window.location.origin}/reset-password`
-        }
+        { redirectTo: `${window.location.origin}/reset-password` }
       )
 
       if (error) throw error
@@ -473,7 +498,6 @@ export function AuthProvider({ children }) {
       logger.log('🚪 Iniciando logout...')
       setLoading(true)
       
-      // Limpa cache seguro
       secureStorage.remove('profile')
       secureStorage.remove('user_role')
       secureStorage.remove(LOGIN_ATTEMPTS_KEY)
@@ -482,7 +506,6 @@ export function AuthProvider({ children }) {
       setProfile(null)
       
       const { error } = await supabase.auth.signOut()
-      
       if (error) throw error
       
       logger.log('✅ Logout concluído')
@@ -503,23 +526,34 @@ export function AuthProvider({ children }) {
     setIsRefreshing(true)
     
     try {
-      logger.log('🔄 Atualizando sessão...')
-      const { data: { session }, error } = await supabase.auth.refreshSession()
+      logger.log('🔄 Atualizando sessão e perfil...')
       
-      if (error) throw error
+      const { data: { session }, error: sessionError } = await supabase.auth.refreshSession()
+      if (sessionError) throw sessionError
       
       if (session?.user) {
         setUser(session.user)
-        await syncProfile(session.user, false)
+        
+        const { data: freshProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+        
+        if (!profileError && freshProfile) {
+          setProfile(freshProfile)
+          secureStorage.set('profile', freshProfile)
+          logger.log('✅ Perfil recarregado do banco')
+        }
+        
         logger.log('✅ Sessão atualizada')
       }
     } catch (error) {
       logger.error('❌ Erro ao atualizar sessão:', error.message)
-      await logout()
     } finally {
       setIsRefreshing(false)
     }
-  }, [isRefreshing, syncProfile, logout])
+  }, [isRefreshing])
 
   // ==============================
   // EFFECT PRINCIPAL - INICIALIZAÇÃO
@@ -532,14 +566,12 @@ export function AuthProvider({ children }) {
 
     const initializeAuth = async () => {
       try {
-        // 1. PRIMEIRO: Tenta carregar do cache seguro (instantâneo)
         const cachedProfile = secureStorage.get('profile')
         if (cachedProfile) {
           logger.log('✅ Cache seguro encontrado, exibindo imediatamente')
           setProfile(cachedProfile)
         }
         
-        // 2. Busca a sessão atual
         logger.log('🔍 Verificando sessão no Supabase...')
         const { data: { session }, error } = await supabase.auth.getSession()
         
@@ -548,8 +580,6 @@ export function AuthProvider({ children }) {
         if (session?.user) {
           logger.log('✅ Sessão encontrada')
           setUser(session.user)
-          
-          // 3. Sincroniza profile (JWT primeiro)
           await syncProfile(session.user, true)
         } else {
           logger.log('❌ Sem sessão ativa')
@@ -566,7 +596,6 @@ export function AuthProvider({ children }) {
     
     initializeAuth()
 
-    // Listener para mudanças de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         logger.log('📢 Auth event:', event)
@@ -621,7 +650,7 @@ export function AuthProvider({ children }) {
       } catch (error) {
         logger.error('Erro ao verificar sessão:', error.message)
       }
-    }, 30 * 60 * 1000) // 30 minutos
+    }, 30 * 60 * 1000)
     
     return () => clearInterval(interval)
   }, [user, logout])
@@ -653,7 +682,6 @@ export function AuthProvider({ children }) {
 
     hasPermission: (perm) => permissions[perm] === true,
     
-    // Funções auxiliares expostas
     checkLoginRateLimit,
     validatePasswordStrength,
   }

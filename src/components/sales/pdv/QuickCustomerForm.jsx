@@ -50,6 +50,7 @@ const QuickCustomerForm = ({
           placeholder="(11) 99999-9999"
           icon={Phone}
           disabled
+          mask="phone"
         />
         
         <FormInput

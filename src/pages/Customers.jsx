@@ -77,10 +77,33 @@ const Customers = () => {
 
   const validateForm = () => {
     const errors = {}
-    if (!formData.name?.trim()) errors.name = 'Nome é obrigatório'
-    if (!formData.email?.trim()) errors.email = 'E-mail é obrigatório'
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'E-mail inválido'
-    if (!formData.phone?.trim()) errors.phone = 'Telefone é obrigatório'
+    
+    // Apenas valida os campos obrigatórios
+    if (!formData.name?.trim()) {
+      errors.name = 'Nome é obrigatório'
+    } else if (formData.name.length < 3) {
+      errors.name = 'Nome deve ter pelo menos 3 caracteres'
+    }
+    
+    if (!formData.email?.trim()) {
+      errors.email = 'E-mail é obrigatório'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'E-mail inválido'
+    }
+    
+    if (!formData.phone?.trim()) {
+      errors.phone = 'Telefone é obrigatório'
+    }
+    
+    // Validações opcionais (só se preenchido)
+    if (formData.document && formData.document.replace(/\D/g, '').length < 11) {
+      errors.document = 'Documento inválido'
+    }
+    
+    if (formData.zip_code && formData.zip_code.replace(/\D/g, '').length < 8) {
+      errors.zip_code = 'CEP inválido'
+    }
+    
     setFormErrors(errors)
     return Object.keys(errors).length === 0
   }
@@ -94,24 +117,67 @@ const Customers = () => {
 
   const handleSubmit = async () => {
     if (!validateForm()) return
+    
     setIsSubmitting(true)
     try {
-      if (selectedCustomer) {
-        const { data, error } = await supabase.from('customers').update({ ...formData, updated_at: new Date() }).eq('id', selectedCustomer.id).select().single()
-        if (error) throw error
-        await logUpdate('customer', selectedCustomer.id, selectedCustomer, data)
-        setCustomers(prev => prev.map(c => c.id === selectedCustomer.id ? data : c))
-        showFeedback('success', 'Cliente atualizado!')
-      } else {
-        const { data, error } = await supabase.from('customers').insert([{ ...formData, total_purchases: 0 }]).select().single()
-        if (error) throw error
-        await logCreate('customer', data.id, data)
-        setCustomers(prev => [...prev, data])
-        showFeedback('success', 'Cliente cadastrado!')
+      // Preparar dados - remover máscaras e converter vazios para null
+      const customerData = {
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.replace(/\D/g, ''),
+        document: formData.document?.replace(/\D/g, '') || null,
+        address: formData.address?.trim() || null,
+        city: formData.city?.trim() || null,
+        state: formData.state?.trim() || null,
+        zip_code: formData.zip_code?.replace(/\D/g, '') || null,
+        birth_date: formData.birth_date || null,
+        status: formData.status || 'active'
       }
+
+      console.log('📝 Salvando cliente:', customerData)
+
+      if (selectedCustomer) {
+        const { error } = await supabase
+          .from('customers')
+          .update({ ...customerData, updated_at: new Date().toISOString() })
+          .eq('id', selectedCustomer.id)
+        
+        if (error) throw error
+        
+        await logUpdate('customer', selectedCustomer.id, selectedCustomer, customerData)
+        showFeedback('success', 'Cliente atualizado com sucesso!')
+      } else {
+        const { error } = await supabase
+          .from('customers')
+          .insert([{ 
+            ...customerData, 
+            total_purchases: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }])
+        
+        if (error) throw error
+        
+        await logCreate('customer', null, customerData)
+        showFeedback('success', 'Cliente cadastrado com sucesso!')
+      }
+      
       setIsModalOpen(false)
+      await fetchCustomers()
+      
     } catch (error) {
-      showFeedback('error', error.message)
+      console.error('Erro ao salvar cliente:', error)
+      
+      let errorMessage = 'Erro ao salvar cliente'
+      if (error.message?.includes('duplicate key') || error.message?.includes('email')) {
+        errorMessage = 'Este e-mail já está cadastrado'
+      } else if (error.message?.includes('phone')) {
+        errorMessage = 'Este telefone já está cadastrado'
+      } else {
+        errorMessage = error.message
+      }
+      
+      showFeedback('error', errorMessage)
       await logError('customer', error, { action: selectedCustomer ? 'update' : 'create' })
     } finally {
       setIsSubmitting(false)

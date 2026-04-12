@@ -109,6 +109,7 @@ const CompanySettingsTab = ({ settings, setSettings, onSave, saving }) => {
               onChange={(e) => handleChange('phone', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
               placeholder="(00) 0000-0000"
+              mask="phone"
             />
           </div>
           <div>

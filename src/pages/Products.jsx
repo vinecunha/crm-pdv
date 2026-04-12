@@ -55,6 +55,7 @@ const Products = () => {
   const [formErrors, setFormErrors] = useState({})
   const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [entryModalError, setEntryModalError] = useState(null)
   
   // Permissões
   const isAdmin = profile?.role === 'admin'
@@ -95,6 +96,40 @@ const Products = () => {
     filterProducts()
   }, [searchTerm, products, activeFilters])
 
+  // Função para gerar próximo código sequencial
+  const generateNextCode = async () => {
+    try {
+      // Buscar o último código cadastrado (ordenado por ID)
+      const { data, error } = await supabase
+        .from('products')
+        .select('code, id')
+        .not('code', 'is', null)
+        .order('id', { ascending: false })
+        .limit(1)
+
+      if (error) throw error
+
+      if (data && data.length > 0 && data[0].code) {
+        const lastCode = data[0].code
+        // Extrair apenas os números do código
+        const numericPart = lastCode.replace(/\D/g, '')
+        
+        if (numericPart) {
+          const nextNumber = parseInt(numericPart) + 1
+          // Formatar com 3 dígitos (001, 002, ..., 999)
+          return nextNumber.toString().padStart(3, '0')
+        }
+      }
+      
+      // Se não houver produtos ou código numérico, começar com 001
+      return '001'
+    } catch (error) {
+      console.error('Erro ao gerar código:', error)
+      // Fallback: usar timestamp
+      return Date.now().toString().slice(-6)
+    }
+  }
+
   // Funções de API
   const fetchProducts = async () => {
     setLoading(true)
@@ -130,24 +165,49 @@ const Products = () => {
     setFilteredProducts(filtered)
   }
 
-  // Handlers
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
   }
 
-  const handleOpenProductModal = (product = null) => {
-    setSelectedProduct(product)
-    setProductForm(product ? {
-      code: product.code || '', name: product.name || '', description: product.description || '',
-      category: product.category || '', unit: product.unit || 'UN', price: product.price || '',
-      min_stock: product.min_stock || '', max_stock: product.max_stock || '',
-      location: product.location || '', brand: product.brand || '', weight: product.weight || '',
-      is_active: product.is_active !== false
-    } : {
-      code: '', name: '', description: '', category: '', unit: 'UN',
-      price: '', min_stock: '', max_stock: '', location: '', brand: '', weight: '', is_active: true
-    })
+  const handleOpenProductModal = async (product = null) => {
+    if (product) {
+      setSelectedProduct(product)
+      setProductForm({
+        code: product.code || '',
+        name: product.name || '',
+        description: product.description || '',
+        category: product.category || '',
+        unit: product.unit || 'UN',
+        price: product.price || '',
+        min_stock: product.min_stock || '',
+        max_stock: product.max_stock || '',
+        location: product.location || '',
+        brand: product.brand || '',
+        weight: product.weight || '',
+        is_active: product.is_active !== false
+      })
+    } else {
+      setSelectedProduct(null)
+      
+      // Gerar próximo código automaticamente
+      const nextCode = await generateNextCode()
+      
+      setProductForm({
+        code: nextCode,
+        name: '',
+        description: '',
+        category: '',
+        unit: 'UN',
+        price: '',
+        min_stock: '',
+        max_stock: '',
+        location: '',
+        brand: '',
+        weight: '',
+        is_active: true
+      })
+    }
     setFormErrors({})
     setIsProductModalOpen(true)
   }
@@ -155,11 +215,19 @@ const Products = () => {
   const handleOpenEntryModal = (product) => {
     setSelectedProduct(product)
     setEntryForm({
-      invoice_number: '', invoice_series: '', supplier_name: '', supplier_cnpj: '',
-      batch_number: '', manufacture_date: '', expiration_date: '',
-      quantity: '', unit_cost: product.cost_price || '', notes: ''
+      invoice_number: '',
+      invoice_series: '',
+      supplier_name: '',
+      supplier_cnpj: '',
+      batch_number: '',
+      manufacture_date: '',
+      expiration_date: '',
+      quantity: '',
+      unit_cost: product.cost_price || '',
+      notes: ''
     })
     setFormErrors({})
+    setEntryModalError(null)
     setIsEntryModalOpen(true)
   }
 
@@ -174,33 +242,76 @@ const Products = () => {
     setIsViewModalOpen(true)
   }
 
+  const validateProductForm = () => {
+    const errors = {}
+    if (!productForm.name?.trim()) errors.name = 'Nome é obrigatório'
+    if (productForm.price && parseFloat(productForm.price) < 0) errors.price = 'Preço inválido'
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const validateEntryForm = () => {
+    const errors = {}
+    if (!entryForm.invoice_number?.trim()) errors.invoice_number = 'Número da NF é obrigatório'
+    if (!entryForm.quantity || parseFloat(entryForm.quantity) <= 0) errors.quantity = 'Quantidade deve ser maior que zero'
+    if (!entryForm.unit_cost || parseFloat(entryForm.unit_cost) <= 0) errors.unit_cost = 'Valor unitário deve ser maior que zero'
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleProductChange = (e) => {
+    const { name, value, type, checked } = e.target
+    setProductForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
+    if (formErrors[name]) setFormErrors(prev => ({ ...prev, [name]: '' }))
+  }
+
+  const handleEntryChange = (e) => {
+    const { name, value } = e.target
+    setEntryForm(prev => ({ ...prev, [name]: value }))
+    if (formErrors[name]) setFormErrors(prev => ({ ...prev, [name]: '' }))
+  }
+
   const handleSubmitProduct = async () => {
-    if (!productForm.name?.trim()) {
-      setFormErrors({ name: 'Nome é obrigatório' })
-      return
-    }
+    if (!validateProductForm()) return
     
     setIsSubmitting(true)
     try {
       const productData = {
-        code: productForm.code || null, name: productForm.name, description: productForm.description || null,
-        category: productForm.category || null, unit: productForm.unit, price: parseFloat(productForm.price) || 0,
-        min_stock: parseFloat(productForm.min_stock) || 0, max_stock: parseFloat(productForm.max_stock) || 0,
-        location: productForm.location || null, brand: productForm.brand || null,
-        weight: productForm.weight ? parseFloat(productForm.weight) : null, is_active: productForm.is_active,
+        code: productForm.code,
+        name: productForm.name,
+        description: productForm.description || null,
+        category: productForm.category || null,
+        unit: productForm.unit,
+        price: parseFloat(productForm.price) || 0,
+        min_stock: parseFloat(productForm.min_stock) || 0,
+        max_stock: parseFloat(productForm.max_stock) || 0,
+        location: productForm.location || null,
+        brand: productForm.brand || null,
+        weight: productForm.weight ? parseFloat(productForm.weight) : null,
+        is_active: productForm.is_active,
         updated_by: profile?.id
       }
 
       if (selectedProduct) {
-        const { data, error } = await supabase.from('products').update(productData).eq('id', selectedProduct.id).select().single()
+        const { error } = await supabase.from('products').update(productData).eq('id', selectedProduct.id)
         if (error) throw error
-        await logUpdate('product', selectedProduct.id, selectedProduct, data)
+        await logUpdate('product', selectedProduct.id, selectedProduct, productData)
         showFeedback('success', 'Produto atualizado com sucesso!')
       } else {
         productData.created_by = profile?.id
-        const { data, error } = await supabase.from('products').insert([productData]).select().single()
-        if (error) throw error
-        await logCreate('product', data.id, data)
+        const { error } = await supabase.from('products').insert([productData])
+        if (error) {
+          // Se der erro de código duplicado, tentar gerar um novo código
+          if (error.message?.includes('duplicate key') || error.message?.includes('code')) {
+            const newCode = await generateNextCode()
+            productData.code = newCode
+            const { error: retryError } = await supabase.from('products').insert([productData])
+            if (retryError) throw retryError
+          } else {
+            throw error
+          }
+        }
+        await logCreate('product', null, productData)
         showFeedback('success', 'Produto cadastrado com sucesso!')
       }
       
@@ -215,31 +326,52 @@ const Products = () => {
   }
 
   const handleSubmitEntry = async () => {
-    if (!entryForm.quantity || entryForm.quantity <= 0) {
-      setFormErrors({ quantity: 'Quantidade deve ser maior que zero' })
-      return
-    }
+    if (!validateEntryForm()) return
     
     setIsSubmitting(true)
+    setEntryModalError(null)
+    
     try {
+      const quantity = parseFloat(entryForm.quantity)
+      const unitCost = parseFloat(entryForm.unit_cost)
+      const totalCost = quantity * unitCost
+      
       const entryData = {
-        product_id: selectedProduct.id, invoice_number: entryForm.invoice_number,
-        invoice_series: entryForm.invoice_series || null, supplier_name: entryForm.supplier_name || null,
-        supplier_cnpj: entryForm.supplier_cnpj || null, batch_number: entryForm.batch_number || null,
-        manufacture_date: entryForm.manufacture_date || null, expiration_date: entryForm.expiration_date || null,
-        quantity: parseFloat(entryForm.quantity), unit_cost: parseFloat(entryForm.unit_cost),
-        total_cost: parseFloat(entryForm.quantity) * parseFloat(entryForm.unit_cost),
-        notes: entryForm.notes || null, created_by: profile?.id
+        product_id: selectedProduct.id,
+        invoice_number: entryForm.invoice_number,
+        quantity: quantity,
+        unit_cost: unitCost,
+        total_cost: totalCost,
+        invoice_series: entryForm.invoice_series || null,
+        supplier_name: entryForm.supplier_name || null,
+        supplier_cnpj: entryForm.supplier_cnpj?.replace(/\D/g, '') || null,
+        batch_number: entryForm.batch_number || null,
+        manufacture_date: entryForm.manufacture_date || null,
+        expiration_date: entryForm.expiration_date || null,
+        entry_date: new Date().toISOString().split('T')[0],
+        notes: entryForm.notes || null,
+        created_by: profile?.id
       }
 
       const { error } = await supabase.from('product_entries').insert([entryData])
-      if (error) throw error
+
+      if (error) {
+        let errorMessage = 'Erro ao registrar entrada'
+        if (error.message?.includes('foreign key')) errorMessage = 'Produto não encontrado'
+        else if (error.message?.includes('not-null')) errorMessage = 'Preencha todos os campos obrigatórios'
+        else errorMessage = error.message
+        
+        setEntryModalError(errorMessage)
+        return
+      }
       
       showFeedback('success', 'Entrada de estoque registrada com sucesso!')
       setIsEntryModalOpen(false)
+      setEntryModalError(null)
       await fetchProducts()
+      
     } catch (error) {
-      showFeedback('error', error.message)
+      setEntryModalError(error.message || 'Erro ao registrar entrada')
       await logError('product_entry', error, { action: 'create_entry' })
     } finally {
       setIsSubmitting(false)
@@ -264,7 +396,6 @@ const Products = () => {
     }
   }
 
-  // Loading
   if (loading) return <DataLoadingSkeleton />
 
   return (
@@ -331,15 +462,17 @@ const Products = () => {
           />
         )}
 
-        {/* Modais */}
-        <Modal isOpen={isProductModalOpen} onClose={() => !isSubmitting && setIsProductModalOpen(false)} title={selectedProduct ? 'Editar Produto' : 'Novo Produto'} size="lg">
+        {/* Modal de Produto */}
+        <Modal 
+          isOpen={isProductModalOpen} 
+          onClose={() => !isSubmitting && setIsProductModalOpen(false)} 
+          title={selectedProduct ? 'Editar Produto' : 'Novo Produto'} 
+          size="lg"
+        >
           <ProductForm
             formData={productForm}
             formErrors={formErrors}
-            onChange={(e) => {
-              const { name, value, type, checked } = e.target
-              setProductForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
-            }}
+            onChange={handleProductChange}
             onSubmit={handleSubmitProduct}
             onCancel={() => setIsProductModalOpen(false)}
             isSubmitting={isSubmitting}
@@ -349,14 +482,18 @@ const Products = () => {
           />
         </Modal>
 
-        <Modal isOpen={isEntryModalOpen} onClose={() => !isSubmitting && setIsEntryModalOpen(false)} title={`Registrar Entrada - ${selectedProduct?.name}`} size="lg">
+        {/* Modal de Entrada */}
+        <Modal 
+          isOpen={isEntryModalOpen} 
+          onClose={() => !isSubmitting && setIsEntryModalOpen(false)} 
+          title={`Registrar Entrada - ${selectedProduct?.name}`} 
+          size="lg"
+          error={entryModalError}
+        >
           <ProductEntryForm
             formData={entryForm}
             formErrors={formErrors}
-            onChange={(e) => {
-              const { name, value } = e.target
-              setEntryForm(prev => ({ ...prev, [name]: value }))
-            }}
+            onChange={handleEntryChange}
             onSubmit={handleSubmitEntry}
             onCancel={() => setIsEntryModalOpen(false)}
             isSubmitting={isSubmitting}
@@ -364,6 +501,7 @@ const Products = () => {
           />
         </Modal>
 
+        {/* Modal de Detalhes */}
         <ProductDetailsModal
           isOpen={isViewModalOpen}
           onClose={() => setIsViewModalOpen(false)}
@@ -373,6 +511,7 @@ const Products = () => {
           units={units}
         />
 
+        {/* Modal de Exclusão */}
         <ProductDeleteModal
           isOpen={isDeleteModalOpen}
           onClose={() => setIsDeleteModalOpen(false)}

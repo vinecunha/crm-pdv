@@ -1,5 +1,5 @@
 import React from 'react'
-import { Package, DollarSign } from 'lucide-react'
+import { Package, DollarSign, Hash } from 'lucide-react'
 import FormInput from '../forms/FormInput'
 import Button from '../ui/Button'
 
@@ -23,11 +23,14 @@ const ProductForm = ({
             name="code"
             value={formData.code}
             onChange={onChange}
-            placeholder="Código do produto"
+            placeholder="001"
+            icon={Hash}
+            disabled={isEditing} // Não permite editar código de produto existente
+            helperText={!isEditing ? "Código gerado automaticamente" : "Código não pode ser alterado"}
           />
           
           <FormInput
-            label="Nome do Produto"
+            label="Nome do Produto *"
             name="name"
             value={formData.name}
             onChange={onChange}
@@ -81,10 +84,11 @@ const ProductForm = ({
           </div>
           
           <FormInput
-            label="Preço de Venda"
+            label="Preço de Venda (R$)"
             name="price"
             type="number"
             step="0.01"
+            min="0"
             value={formData.price}
             onChange={onChange}
             placeholder="0,00"
@@ -96,6 +100,7 @@ const ProductForm = ({
             name="min_stock"
             type="number"
             step="0.01"
+            min="0"
             value={formData.min_stock}
             onChange={onChange}
             placeholder="0"
@@ -106,6 +111,7 @@ const ProductForm = ({
             name="max_stock"
             type="number"
             step="0.01"
+            min="0"
             value={formData.max_stock}
             onChange={onChange}
             placeholder="0"
@@ -132,6 +138,7 @@ const ProductForm = ({
             name="weight"
             type="number"
             step="0.001"
+            min="0"
             value={formData.weight}
             onChange={onChange}
             placeholder="0,000"

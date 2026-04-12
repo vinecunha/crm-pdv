@@ -74,13 +74,22 @@ const Login = () => {
     try {
       await login(email, password)
       recordAttempt(true)
-      // O redirecionamento será feito pelo useEffect
     } catch (err) {
       recordAttempt(false)
-      setError(remainingAttempts <= 1 
-        ? 'Última tentativa! Email ou senha incorretos.'
-        : `Email ou senha incorretos. ${remainingAttempts - 1} tentativa(s) restante(s).`
-      )
+      
+      // ✅ CORREÇÃO: Usar a mensagem de erro que veio do AuthContext
+      // Se for erro de bloqueio, mostra a mensagem real
+      if (err.message.includes('bloqueado') || 
+          err.message.includes('inativo') || 
+          err.message.includes('Conta bloqueada')) {
+        setError(err.message)  // Mostra a mensagem real de bloqueio
+      } else {
+        // Só mostra "senha incorreta" para erros de autenticação
+        setError(remainingAttempts <= 1 
+          ? 'Última tentativa! Email ou senha incorretos.'
+          : `Email ou senha incorretos. ${remainingAttempts - 1} tentativa(s) restante(s).`
+        )
+      }
     } finally {
       setLoading(false)
     }

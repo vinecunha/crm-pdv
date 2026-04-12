@@ -34,6 +34,7 @@ const ProfileSidebar = ({
           user={user}
           avatarUrl={formData.avatar_url}
           fullName={formData.full_name}
+          displayName={formData.display_name}
           onAvatarUpdate={onAvatarUpdate}
         />
 

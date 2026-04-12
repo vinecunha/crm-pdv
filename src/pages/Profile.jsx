@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { secureStorage } from '../utils/secureStorage' // ADICIONAR IMPORT
 import {
-  User, Save, RotateCcw, Shield, Key, AlertCircle
+  User, Save, RotateCcw, Shield, Key
 } from 'lucide-react'
 import Button from '../components/ui/Button'
 import FeedbackMessage from '../components/ui/FeedbackMessage'
@@ -10,7 +11,6 @@ import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
 import AvatarUploader from '../components/profile/AvatarUploader'
 import ProfileInfoForm from '../components/profile/ProfileInfoForm'
 import SecuritySection from '../components/profile/SecuritySection'
-import PreferencesSection from '../components/profile/PreferencesSection'
 import ChangePasswordModal from '../components/profile/ChangePasswordModal'
 
 const Profile = () => {
@@ -20,23 +20,22 @@ const Profile = () => {
   const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
   const [activeTab, setActiveTab] = useState('profile')
   
-  // Estados do formulário
   const [formData, setFormData] = useState({
     full_name: '',
+    display_name: '', // ADICIONAR
     email: '',
     phone: '',
     avatar_url: '',
     address: '',
     city: '',
     state: '',
+    zip_code: '',
     birth_date: '',
     document: ''
   })
   
   const [hasChanges, setHasChanges] = useState(false)
   const [formErrors, setFormErrors] = useState({})
-
-  // Modal de senha
   const [showPasswordModal, setShowPasswordModal] = useState(false)
 
   useEffect(() => {
@@ -59,12 +58,14 @@ const Profile = () => {
       if (data) {
         setFormData({
           full_name: data.full_name || '',
+          display_name: data.display_name || '', // ADICIONAR
           email: data.email || user?.email || '',
           phone: data.phone || '',
           avatar_url: data.avatar_url || '',
           address: data.address || '',
           city: data.city || '',
           state: data.state || '',
+          zip_code: data.zip_code || '',
           birth_date: data.birth_date || '',
           document: data.document || ''
         })
@@ -95,12 +96,6 @@ const Profile = () => {
   const validateForm = () => {
     const errors = {}
     
-    if (!formData.full_name?.trim()) {
-      errors.full_name = 'Nome é obrigatório'
-    } else if (formData.full_name.length < 3) {
-      errors.full_name = 'Nome deve ter pelo menos 3 caracteres'
-    }
-    
     if (formData.phone && !/^[\d\s\(\)-]+$/.test(formData.phone)) {
       errors.phone = 'Telefone inválido'
     }
@@ -119,16 +114,19 @@ const Profile = () => {
     setSaving(true)
     try {
       const updateData = {
-        full_name: formData.full_name,
+        display_name: formData.display_name || null,
         phone: formData.phone || null,
         avatar_url: formData.avatar_url || null,
         address: formData.address || null,
         city: formData.city || null,
         state: formData.state || null,
+        zip_code: formData.zip_code || null,
         birth_date: formData.birth_date || null,
         document: formData.document || null,
         updated_at: new Date().toISOString()
       }
+
+      console.log('📝 Salvando perfil:', updateData)
 
       const { error } = await supabase
         .from('profiles')
@@ -137,15 +135,27 @@ const Profile = () => {
 
       if (error) throw error
 
-      if (formData.full_name !== profile?.full_name) {
-        await supabase.auth.updateUser({
-          data: { full_name: formData.full_name }
-        })
+      console.log('✅ Perfil salvo no banco')
+
+      // Recarregar o perfil do banco
+      const { data: freshProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user?.id)
+        .single()
+
+      if (freshProfile) {
+        // Atualizar secureStorage
+        secureStorage.set('profile', freshProfile)
+        console.log('✅ SecureStorage atualizado')
       }
 
-      showFeedback('success', 'Perfil atualizado com sucesso!')
-      setHasChanges(false)
-      await refreshSession()
+      // Recarregar a página para atualizar todos os componentes
+      showFeedback('success', 'Perfil atualizado! Recarregando...')
+      
+      setTimeout(() => {
+        window.location.reload()
+      }, 1000)
 
     } catch (error) {
       console.error('Erro ao salvar perfil:', error)
@@ -161,7 +171,6 @@ const Profile = () => {
   }
 
   const handleChangePassword = async (currentPassword, newPassword) => {
-    // Verificar senha atual
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: user?.email,
       password: currentPassword
@@ -171,10 +180,8 @@ const Profile = () => {
       throw new Error('Senha atual incorreta')
     }
 
-    // Alterar senha
     await changePassword(newPassword)
 
-    // Logout após 2 segundos
     setTimeout(() => {
       logout()
     }, 2000)
@@ -182,8 +189,7 @@ const Profile = () => {
 
   const tabs = [
     { id: 'profile', label: 'Perfil', icon: User },
-    { id: 'security', label: 'Segurança', icon: Shield },
-    //{ id: 'preferences', label: 'Preferências', icon: Key }
+    { id: 'security', label: 'Segurança', icon: Shield }
   ]
 
   const roleColors = {
@@ -198,6 +204,9 @@ const Profile = () => {
     operador: 'Operador'
   }
 
+  // Nome de exibição para o avatar
+  const displayNameForAvatar = formData.display_name || formData.full_name || 'Usuário'
+
   if (loading) {
     return <DataLoadingSkeleton type="cards" rows={3} />
   }
@@ -205,7 +214,6 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <User className="text-blue-600" />
@@ -216,7 +224,6 @@ const Profile = () => {
           </p>
         </div>
 
-        {/* Feedback */}
         {feedback.show && (
           <div className="mb-4">
             <FeedbackMessage
@@ -228,19 +235,18 @@ const Profile = () => {
         )}
 
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Sidebar */}
           <div className="lg:w-72 flex-shrink-0">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
-              {/* Avatar */}
               <AvatarUploader
                 user={user}
                 avatarUrl={formData.avatar_url}
                 fullName={formData.full_name}
+                displayName={displayNameForAvatar}
                 onAvatarUpdate={handleAvatarUpdate}
               />
 
               <h2 className="mt-4 text-lg font-semibold text-gray-900">
-                {formData.full_name || 'Usuário'}
+                {displayNameForAvatar}
               </h2>
               <p className="text-sm text-gray-500">{user?.email}</p>
               
@@ -254,7 +260,6 @@ const Profile = () => {
                 </span>
               </div>
 
-              {/* Estatísticas rápidas */}
               <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-gray-100">
                 <div className="text-center">
                   <p className="text-lg font-semibold text-gray-900">
@@ -273,7 +278,6 @@ const Profile = () => {
               </div>
             </div>
 
-            {/* Abas */}
             <div className="mt-4 bg-white rounded-lg shadow-sm border border-gray-200 p-2">
               <nav className="space-y-1">
                 {tabs.map((tab) => {
@@ -299,10 +303,8 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* Conteúdo principal */}
           <div className="flex-1">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              {/* Aba Perfil */}
               {activeTab === 'profile' && (
                 <div className="p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-6">
@@ -315,7 +317,6 @@ const Profile = () => {
                     onChange={handleInputChange}
                   />
 
-                  {/* Botões */}
                   {hasChanges && (
                     <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
                       <Button variant="outline" onClick={loadProfileData}>
@@ -331,7 +332,6 @@ const Profile = () => {
                 </div>
               )}
 
-              {/* Aba Segurança */}
               {activeTab === 'security' && (
                 <div className="p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-6">
@@ -345,25 +345,10 @@ const Profile = () => {
                   />
                 </div>
               )}
-
-              {/* Aba Preferências 
-              {activeTab === 'preferences' && (
-                <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-6">
-                    Preferências do Sistema
-                  </h3>
-
-                  <PreferencesSection
-                    user={user}
-                    onUpdate={refreshSession}
-                  />
-                </div>
-              )}*/} 
             </div>
           </div>
         </div>
 
-        {/* Modal de Alterar Senha */}
         <ChangePasswordModal
           isOpen={showPasswordModal}
           onClose={() => setShowPasswordModal(false)}
