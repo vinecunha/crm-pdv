@@ -352,6 +352,54 @@ const Users = () => {
     }
   ]
 
+  const handleUpdateStatus = async (user, newStatus) => {
+    console.log('📝 Atualizando status no banco:', user.email, '→', newStatus)
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id)
+
+      if (error) {
+        console.error('❌ Erro do Supabase:', error)
+        throw error
+      }
+
+      console.log('✅ Status atualizado com sucesso!')
+      
+      await logAction({
+        action: 'UPDATE_USER_STATUS',
+        entityType: 'profile',
+        entityId: user.id,
+        details: {
+          user_email: user.email,
+          old_status: user.status || 'active',
+          new_status: newStatus,
+          updated_by: profile?.email
+        }
+      })
+
+      const messages = {
+        active: 'ativado',
+        inactive: 'desativado',
+        blocked: 'bloqueado'
+      }
+      
+      showFeedback('success', `Usuário ${user.email} ${messages[newStatus]}!`)
+      
+      // Recarregar a lista
+      await fetchUsers()
+      
+    } catch (error) {
+      console.error('❌ Erro completo:', error)
+      showFeedback('error', 'Erro ao atualizar status: ' + error.message)
+    }
+  }
+
   const unlockActions = [
     {
       label: 'Desbloquear',
@@ -495,7 +543,8 @@ const Users = () => {
                     users={filteredUsers} 
                     currentUserId={profile?.id} 
                     onEdit={handleEdit} 
-                    onDelete={(u) => { setUserToDelete(u); setShowDeleteModal(true) }} 
+                    onDelete={(u) => { setUserToDelete(u); setShowDeleteModal(true) }}
+                    onUpdateStatus={handleUpdateStatus}
                     canEdit={canEditUser} 
                     canDelete={canDeleteUser} 
                     isAdmin={isAdmin} 
