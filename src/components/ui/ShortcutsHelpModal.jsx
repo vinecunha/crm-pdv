@@ -1,6 +1,6 @@
 import React from 'react'
 import { Keyboard, X } from 'lucide-react'
-import Modal from '../../ui/Modal'
+import Modal from '../ui/Modal'
 
 const ShortcutsHelpModal = ({ isOpen, onClose, shortcuts }) => {
   const categories = shortcuts.reduce((acc, shortcut) => {

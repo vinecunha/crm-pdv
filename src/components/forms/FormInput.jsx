@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useEffect, useRef, useCallback } from 'react'
+import useKeyboardShortcuts from '../../hooks/useKeyboardShortcuts'
 
 // Funções de máscara
 const applyMask = (value, mask) => {
@@ -41,6 +42,38 @@ const getMask = (maskType, value) => {
   }
 }
 
+// Placeholder padrão baseado na máscara
+const getPlaceholder = (mask) => {
+  const placeholders = {
+    phone: '(11) 99999-9999',
+    cpf: '123.456.789-00',
+    cnpj: '12.345.678/0001-90',
+    cpfCnpj: 'CPF ou CNPJ',
+    cep: '12345-678'
+  }
+  return placeholders[mask] || ''
+}
+
+// Formatar descrição do atalho
+const formatShortcutHint = (shortcut) => {
+  if (!shortcut) return null
+  
+  const keys = []
+  if (shortcut.ctrl) keys.push('⌘')
+  if (shortcut.alt) keys.push('⌥')
+  if (shortcut.shift) keys.push('⇧')
+  
+  let key = shortcut.key
+  if (key === 'Enter') key = '↵'
+  else if (key === 'Escape') key = 'Esc'
+  else if (key === ' ') key = '␣'
+  else key = key.toUpperCase()
+  
+  keys.push(key)
+  
+  return keys.join('')
+}
+
 const FormInput = ({
   label,
   name,
@@ -54,12 +87,66 @@ const FormInput = ({
   helperText,
   icon: Icon,
   autoComplete = 'off',
-  mask = null,        // NOVO: 'phone', 'cpf', 'cnpj', 'cpfCnpj', 'cep'
-  maxLength = null,   // NOVO: limite de caracteres
+  mask = null,
+  maxLength = null,
   min = null,
   max = null,
-  step = null
+  step = null,
+  
+  // NOVAS PROPS PARA ATALHOS
+  shortcut = null,           // { key: 'f', ctrl: true, description: 'Buscar' }
+  shortcutAction = null,     // Função executada quando o atalho é acionado
+  autoFocus = false,
+  focusOnShortcut = true,    // Se true, foca o input quando o atalho é acionado
+  onShortcutTriggered = null, // Callback quando atalho é acionado
+  showShortcutHint = true,   // Mostrar dica visual do atalho
+  shortcutEnabled = true     // Habilitar/desabilitar atalho
 }) => {
+  const inputRef = useRef(null)
+
+  // Handler para quando o atalho é acionado
+  const handleShortcut = useCallback((event) => {
+    if (disabled) return
+    if (!shortcutEnabled) return
+    
+    // Focar o input se configurado
+    if (focusOnShortcut && inputRef.current) {
+      inputRef.current.focus()
+      
+      // Selecionar texto se já tiver valor
+      if (value && inputRef.current.select) {
+        inputRef.current.select()
+      }
+    }
+    
+    // Executar ação personalizada
+    if (shortcutAction) {
+      shortcutAction(event, inputRef.current)
+    }
+    
+    // Callback de notificação
+    if (onShortcutTriggered) {
+      onShortcutTriggered(shortcut)
+    }
+  }, [disabled, shortcutEnabled, focusOnShortcut, value, shortcutAction, onShortcutTriggered, shortcut])
+
+  // Registrar atalho de teclado
+  useKeyboardShortcuts(
+    shortcut ? [{
+      ...shortcut,
+      handler: handleShortcut,
+      enabled: shortcutEnabled && !disabled
+    }] : [],
+    { enabled: shortcutEnabled && !disabled }
+  )
+
+  // Auto focus
+  useEffect(() => {
+    if (autoFocus && inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [autoFocus])
+
   const handleChange = (e) => {
     let newValue = e.target.value
     
@@ -89,13 +176,45 @@ const FormInput = ({
     onChange(syntheticEvent)
   }
 
+  // Handler para tecla Enter
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      // Prevenir submit do form se não for textarea
+      if (type !== 'textarea') {
+        e.preventDefault()
+      }
+      
+      // Disparar evento personalizado
+      const enterEvent = new CustomEvent('forminput:enter', {
+        detail: { name, value, inputRef: inputRef.current }
+      })
+      window.dispatchEvent(enterEvent)
+    }
+  }
+
+  const shortcutHint = shortcut && showShortcutHint ? formatShortcutHint(shortcut) : null
+
   return (
     <div className="space-y-1">
       {label && (
-        <label className="block text-sm font-medium text-gray-700">
-          {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
-        </label>
+        <div className="flex items-center justify-between">
+          <label className="block text-sm font-medium text-gray-700">
+            {label}
+            {required && <span className="text-red-500 ml-1">*</span>}
+          </label>
+          
+          {/* Indicador de atalho no label */}
+          {shortcutHint && (
+            <span className="text-xs text-gray-400 font-mono flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded text-gray-600">
+                {shortcutHint}
+              </kbd>
+              {shortcut.description && (
+                <span className="hidden sm:inline">{shortcut.description}</span>
+              )}
+            </span>
+          )}
+        </div>
       )}
       
       <div className="relative">
@@ -104,11 +223,14 @@ const FormInput = ({
             <Icon size={18} />
           </div>
         )}
+        
         <input
+          ref={inputRef}
           type={type}
           name={name}
           value={value}
           onChange={handleChange}
+          onKeyDown={handleKeyDown}
           required={required}
           disabled={disabled}
           placeholder={placeholder || getPlaceholder(mask)}
@@ -119,6 +241,7 @@ const FormInput = ({
           className={`
             w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-all
             ${Icon ? 'pl-10' : ''}
+            ${shortcutHint && showShortcutHint ? 'pr-16' : ''}
             ${error 
               ? 'border-red-300 focus:border-red-500 focus:ring-red-200' 
               : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
@@ -126,6 +249,24 @@ const FormInput = ({
             ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
           `}
         />
+        
+        {/* Indicador de atalho dentro do input */}
+        {shortcutHint && showShortcutHint && !Icon && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded text-gray-500">
+              {shortcutHint}
+            </kbd>
+          </div>
+        )}
+        
+        {/* Indicador de atalho quando tem ícone (posição ajustada) */}
+        {shortcutHint && showShortcutHint && Icon && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded text-gray-500">
+              {shortcutHint}
+            </kbd>
+          </div>
+        )}
       </div>
       
       {error && (
@@ -135,20 +276,16 @@ const FormInput = ({
       {helperText && !error && (
         <p className="text-xs text-gray-500 mt-1">{helperText}</p>
       )}
+      
+      {/* Dica de atalho adicional */}
+      {shortcut && shortcut.description && showShortcutHint && (
+        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+          <span className="inline-block w-1 h-1 bg-gray-300 rounded-full"></span>
+          Atalho: {shortcut.description}
+        </p>
+      )}
     </div>
   )
-}
-
-// Função auxiliar para placeholder padrão
-const getPlaceholder = (mask) => {
-  const placeholders = {
-    phone: '(11) 99999-9999',
-    cpf: '123.456.789-00',
-    cnpj: '12.345.678/0001-90',
-    cpfCnpj: 'CPF ou CNPJ',
-    cep: '12345-678'
-  }
-  return placeholders[mask] || ''
 }
 
 export default FormInput

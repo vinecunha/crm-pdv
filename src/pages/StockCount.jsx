@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
-  ClipboardList, Plus, RotateCcw
+  ClipboardList, Plus, RotateCcw, Keyboard
 } from 'lucide-react'
 import Button from '../components/ui/Button'
 import FeedbackMessage from '../components/ui/FeedbackMessage'
@@ -8,6 +8,8 @@ import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
 import { supabase } from '../lib/supabase'
 import useSystemLogs from '../hooks/useSystemLogs'
 import { useAuth } from '../contexts/AuthContext.jsx'
+import useStockCountShortcuts from '../hooks/useStockCountShortcuts'
+import ShortcutFeedback from '../components/ui/ShortcutFeedback'
 
 // Componentes modularizados
 import StockCountSessionsView from '../components/stock-count/StockCountSessionsView'
@@ -16,6 +18,7 @@ import NewSessionModal from '../components/stock-count/NewSessionModal'
 import ProductSearchModal from '../components/stock-count/ProductSearchModal'
 import CountItemModal from '../components/stock-count/CountItemModal'
 import FinishSessionModal from '../components/stock-count/FinishSessionModal'
+import ShortcutsHelpModal from '../components/ui/ShortcutsHelpModal'
 
 const StockCount = () => {
   const { profile } = useAuth()
@@ -36,8 +39,11 @@ const StockCount = () => {
   const [isProductSearchModalOpen, setIsProductSearchModalOpen] = useState(false)
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false)
   const [isCountModalOpen, setIsCountModalOpen] = useState(false)
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false)
   const [selectedItem, setSelectedItem] = useState(null)
+  const [selectedItemIndex, setSelectedItemIndex] = useState(-1)
   const [productSearchTerm, setProductSearchTerm] = useState('')
+  const [shortcutFeedback, setShortcutFeedback] = useState(null)
 
   // Formulários
   const [sessionForm, setSessionForm] = useState({
@@ -63,6 +69,8 @@ const StockCount = () => {
     differences: 0,
     progress: 0
   })
+
+  const searchInputRef = useRef(null)
 
   // Log de acesso
   useEffect(() => {
@@ -181,6 +189,145 @@ const StockCount = () => {
     if (error) throw error
   }
 
+  // ========== HANDLERS PARA ATALHOS ==========
+
+  const handleFocusSearch = useCallback(() => {
+    searchInputRef.current?.focus()
+  }, [])
+
+  const handleClearSearch = useCallback(() => {
+    setSearchTerm('')
+    setActiveFilters({})
+  }, [])
+
+  const handleBack = useCallback(() => {
+    setViewMode('sessions')
+    setActiveSession(null)
+    setSessionItems([])
+  }, [])
+
+  const handleRefreshSessions = useCallback(async () => {
+    await fetchCountSessions()
+    showFeedback('info', 'Lista atualizada')
+  }, [])
+
+  const handleNextItem = useCallback(() => {
+    if (!isCountModalOpen) {
+      // Se modal não está aberto, abrir o primeiro item pendente
+      const pendingItems = sessionItems.filter(item => item.counted_quantity === null)
+      if (pendingItems.length > 0) {
+        handleOpenCountModal(pendingItems[0], 0)
+      }
+      return
+    }
+
+    // Navegar para próximo item
+    const filteredItems = getFilteredItems()
+    const currentFilteredIndex = filteredItems.findIndex(item => item.id === selectedItem?.id)
+    
+    if (currentFilteredIndex < filteredItems.length - 1) {
+      const nextItem = filteredItems[currentFilteredIndex + 1]
+      const originalIndex = sessionItems.findIndex(item => item.id === nextItem.id)
+      handleOpenCountModal(nextItem, originalIndex)
+    }
+  }, [isCountModalOpen, selectedItem, sessionItems, activeFilters])
+
+  const handlePreviousItem = useCallback(() => {
+    if (!isCountModalOpen) return
+
+    const filteredItems = getFilteredItems()
+    const currentFilteredIndex = filteredItems.findIndex(item => item.id === selectedItem?.id)
+    
+    if (currentFilteredIndex > 0) {
+      const prevItem = filteredItems[currentFilteredIndex - 1]
+      const originalIndex = sessionItems.findIndex(item => item.id === prevItem.id)
+      handleOpenCountModal(prevItem, originalIndex)
+    }
+  }, [isCountModalOpen, selectedItem, sessionItems, activeFilters])
+
+  const handleCountItemShortcut = useCallback(() => {
+    if (isCountModalOpen && selectedItem) {
+      const quantity = parseFloat(countForm.counted_quantity)
+      if (!isNaN(quantity) && quantity >= 0) {
+        handleCountItem()
+      }
+    }
+  }, [isCountModalOpen, selectedItem, countForm])
+
+  const handleSkipItem = useCallback(() => {
+    if (isCountModalOpen) {
+      handleNextItem()
+    }
+  }, [isCountModalOpen, handleNextItem])
+
+  const handleShortcutFeedback = useCallback((shortcut) => {
+    setShortcutFeedback(shortcut)
+  }, [])
+
+  const getFilteredItems = useCallback(() => {
+    return sessionItems.filter(item => {
+      if (activeFilters.status === 'pending') return item.counted_quantity === null
+      if (activeFilters.status === 'diverged') return item.status === 'diverged'
+      if (activeFilters.status === 'matched') return item.status === 'matched'
+      return true
+    })
+  }, [sessionItems, activeFilters])
+
+  const handleCancelSession = async () => {
+    setIsSubmitting(true)
+    try {
+      const { error } = await supabase
+        .from('stock_count_sessions')
+        .update({
+          status: 'cancelled',
+          cancelled_at: new Date().toISOString(),
+          cancelled_by: profile?.id
+        })
+        .eq('id', activeSession?.id)
+
+      if (error) throw error
+
+      await logAction({
+        action: 'CANCEL_COUNT',
+        entityType: 'stock_count_session',
+        entityId: activeSession?.id,
+        details: { session_name: activeSession?.name }
+      })
+
+      showFeedback('info', 'Balanço cancelado')
+      setViewMode('sessions')
+      setActiveSession(null)
+      setSessionItems([])
+
+      await fetchCountSessions()
+    } catch (error) {
+      showFeedback('error', 'Erro ao cancelar balanço')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Hook de atalhos
+  const { shortcuts } = useStockCountShortcuts({
+    onFocusSearch: handleFocusSearch,
+    onClearSearch: handleClearSearch,
+    onBack: handleBack,
+    onNewSession: () => setIsNewSessionModalOpen(true),
+    onRefreshSessions: handleRefreshSessions,
+    onNextItem: handleNextItem,
+    onPreviousItem: handlePreviousItem,
+    onCountItem: handleCountItemShortcut,
+    onSkipItem: handleSkipItem,
+    onAddProduct: () => setIsProductSearchModalOpen(true),
+    onFinishSession: () => sessionStats.countedItems > 0 && setIsFinishModalOpen(true),
+    onCancelSession: handleCancelSession,
+    onOpenHelp: () => setShowShortcutsHelp(true),
+    onShortcutFeedback: handleShortcutFeedback,
+    enabled: !isNewSessionModalOpen && !isProductSearchModalOpen && !isFinishModalOpen && !showShortcutsHelp,
+    viewMode,
+    hasSelectedItem: isCountModalOpen && !!selectedItem
+  })
+
   // Handlers
   const handleCreateSession = async () => {
     if (!sessionForm.name.trim()) {
@@ -290,6 +437,16 @@ const StockCount = () => {
     }
   }
 
+  const handleOpenCountModal = (item, index = null) => {
+    setSelectedItem(item)
+    setSelectedItemIndex(index !== null ? index : sessionItems.findIndex(i => i.id === item.id))
+    setCountForm({
+      counted_quantity: item.counted_quantity?.toString() || '',
+      notes: item.notes || ''
+    })
+    setIsCountModalOpen(true)
+  }
+
   const handleCountItem = async () => {
     if (!selectedItem) return
 
@@ -348,10 +505,21 @@ const StockCount = () => {
         : 'Contagem registrada! Quantidade confere.'
       )
 
-      setIsCountModalOpen(false)
-      setSelectedItem(null)
-      setCountForm({ counted_quantity: '', notes: '' })
-      setFormErrors({})
+      // Navegar automaticamente para o próximo item pendente
+      const pendingItems = sessionItems.filter(item => 
+        item.id !== selectedItem.id && item.counted_quantity === null
+      )
+      
+      if (pendingItems.length > 0) {
+        const nextPending = pendingItems[0]
+        const nextIndex = sessionItems.findIndex(item => item.id === nextPending.id)
+        handleOpenCountModal(nextPending, nextIndex)
+      } else {
+        setIsCountModalOpen(false)
+        setSelectedItem(null)
+        setCountForm({ counted_quantity: '', notes: '' })
+        setFormErrors({})
+      }
 
     } catch (error) {
       console.error('Erro ao registrar contagem:', error)
@@ -443,51 +611,7 @@ const StockCount = () => {
     }
   }
 
-  const handleCancelSession = async () => {
-    setIsSubmitting(true)
-    try {
-      const { error } = await supabase
-        .from('stock_count_sessions')
-        .update({
-          status: 'cancelled',
-          cancelled_at: new Date().toISOString(),
-          cancelled_by: profile?.id
-        })
-        .eq('id', activeSession.id)
-
-      if (error) throw error
-
-      await logAction({
-        action: 'CANCEL_COUNT',
-        entityType: 'stock_count_session',
-        entityId: activeSession.id,
-        details: { session_name: activeSession.name }
-      })
-
-      showFeedback('info', 'Balanço cancelado')
-      setViewMode('sessions')
-      setActiveSession(null)
-      setSessionItems([])
-
-      await fetchCountSessions()
-    } catch (error) {
-      showFeedback('error', 'Erro ao cancelar balanço')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleOpenCountModal = (item) => {
-    setSelectedItem(item)
-    setCountForm({
-      counted_quantity: item.counted_quantity?.toString() || '',
-      notes: item.notes || ''
-    })
-    setIsCountModalOpen(true)
-  }
-
   const handleViewDetails = (session) => {
-    // Implementar visualização de detalhes/relatório
     console.log('Ver detalhes da sessão:', session.id)
   }
 
@@ -495,9 +619,31 @@ const StockCount = () => {
     return <DataLoadingSkeleton type="cards" rows={6} cardsPerRow={3} />
   }
 
+  const filteredItems = getFilteredItems()
+  const currentFilteredIndex = filteredItems.findIndex(item => item.id === selectedItem?.id)
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Feedback */}
+        {feedback.show && (
+          <div className="mb-4">
+            <FeedbackMessage
+              type={feedback.type}
+              message={feedback.message}
+              onClose={() => setFeedback({ show: false, type: 'success', message: '' })}
+            />
+          </div>
+        )}
+
+        {/* Feedback de atalho */}
+        {shortcutFeedback && (
+          <ShortcutFeedback
+            shortcut={shortcutFeedback}
+            onHide={() => setShortcutFeedback(null)}
+          />
+        )}
+
         {/* Header */}
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -514,41 +660,48 @@ const StockCount = () => {
               </p>
             </div>
 
-            {viewMode === 'sessions' ? (
-              <Button onClick={() => setIsNewSessionModalOpen(true)} icon={Plus}>
-                Novo Balanço
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowShortcutsHelp(true)}
+                shortcut={{ key: 'F1', description: 'Atalhos' }}
+                icon={Keyboard}
+              >
+                Atalhos (F1)
               </Button>
-            ) : (
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsProductSearchModalOpen(true)}
+
+              {viewMode === 'sessions' ? (
+                <Button 
+                  onClick={() => setIsNewSessionModalOpen(true)} 
                   icon={Plus}
+                  shortcut={{ key: 'n', ctrl: true, description: 'Novo' }}
                 >
-                  Adicionar Produto
+                  Novo Balanço
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setViewMode('sessions')}
-                >
-                  <RotateCcw size={16} className="mr-1" />
-                  Voltar
-                </Button>
-              </div>
-            )}
+              ) : (
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsProductSearchModalOpen(true)}
+                    icon={Plus}
+                    shortcut={{ key: 'a', ctrl: true, description: 'Adicionar' }}
+                  >
+                    Adicionar Produto
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleBack}
+                    shortcut={{ key: 'b', alt: true, description: 'Voltar' }}
+                  >
+                    <RotateCcw size={16} className="mr-1" />
+                    Voltar
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-
-        {/* Feedback */}
-        {feedback.show && (
-          <div className="mb-4">
-            <FeedbackMessage
-              type={feedback.type}
-              message={feedback.message}
-              onClose={() => setFeedback({ show: false, type: 'success', message: '' })}
-            />
-          </div>
-        )}
 
         {/* Conteúdo Principal */}
         {viewMode === 'sessions' ? (
@@ -568,10 +721,13 @@ const StockCount = () => {
             stats={sessionStats}
             activeFilters={activeFilters}
             setActiveFilters={setActiveFilters}
-            onItemClick={handleOpenCountModal}
+            onItemClick={(item, index) => handleOpenCountModal(item, index)}
             onAddProduct={() => setIsProductSearchModalOpen(true)}
             onFinish={() => setIsFinishModalOpen(true)}
             isFinishingDisabled={sessionStats.countedItems === 0}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            searchInputRef={searchInputRef}
           />
         )}
 
@@ -615,6 +771,12 @@ const StockCount = () => {
           errors={formErrors}
           onSubmit={handleCountItem}
           isSubmitting={isSubmitting}
+          onNext={handleNextItem}
+          onPrevious={handlePreviousItem}
+          hasNext={currentFilteredIndex < filteredItems.length - 1}
+          hasPrevious={currentFilteredIndex > 0}
+          currentIndex={currentFilteredIndex}
+          totalItems={filteredItems.length}
         />
 
         <FinishSessionModal
@@ -624,6 +786,13 @@ const StockCount = () => {
           onFinish={handleFinishSession}
           onCancel={handleCancelSession}
           isSubmitting={isSubmitting}
+        />
+
+        {/* Modal de Atalhos */}
+        <ShortcutsHelpModal
+          isOpen={showShortcutsHelp}
+          onClose={() => setShowShortcutsHelp(false)}
+          shortcuts={shortcuts}
         />
       </div>
     </div>

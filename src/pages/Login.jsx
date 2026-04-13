@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Mail, Lock } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useRateLimit } from '../hooks/useRateLimit'
 import { supabase } from '../lib/supabase'
 
 import LoginHeader from '../components/auth/LoginHeader'
-import LoginForm from '../components/auth/LoginForm'
 import LoginFooter from '../components/auth/LoginFooter'
 import { BlockedAlert, AttemptsIndicator } from '../components/auth/RateLimitIndicator'
 import ErrorAlert from '../components/auth/ErrorAlert'
+import FormInput from '../components/forms/FormInput'
+import Button from '../components/ui/Button'
+import { formShortcuts } from '../utils/formShortcuts'
 
 const Login = () => {
   const [email, setEmail] = useState('')
@@ -27,7 +30,6 @@ const Login = () => {
     fetchCompanySettings() 
   }, [])
 
-  // CORREÇÃO: Só redireciona se user existir E authLoading for false
   useEffect(() => {
     if (!authLoading && user) {
       updateLastLogin(user.id)
@@ -77,14 +79,11 @@ const Login = () => {
     } catch (err) {
       recordAttempt(false)
       
-      // ✅ CORREÇÃO: Usar a mensagem de erro que veio do AuthContext
-      // Se for erro de bloqueio, mostra a mensagem real
       if (err.message.includes('bloqueado') || 
           err.message.includes('inativo') || 
           err.message.includes('Conta bloqueada')) {
-        setError(err.message)  // Mostra a mensagem real de bloqueio
+        setError(err.message)
       } else {
-        // Só mostra "senha incorreta" para erros de autenticação
         setError(remainingAttempts <= 1 
           ? 'Última tentativa! Email ou senha incorretos.'
           : `Email ou senha incorretos. ${remainingAttempts - 1} tentativa(s) restante(s).`
@@ -108,7 +107,6 @@ const Login = () => {
 
   const gradientStyle = { background: `linear-gradient(135deg, ${primaryColor}15, ${secondaryColor}15)` }
 
-  // CORREÇÃO: Mostrar loading apenas se authLoading for true
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={gradientStyle}>
@@ -117,12 +115,10 @@ const Login = () => {
     )
   }
 
-  // CORREÇÃO: Se já estiver autenticado, não renderiza o formulário (evita flicker)
   if (user) {
     return null
   }
 
-  // Só renderiza o formulário se não estiver carregando settings
   if (loadingSettings) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={gradientStyle}>
@@ -143,17 +139,60 @@ const Login = () => {
             <AttemptsIndicator remainingAttempts={remainingAttempts} primaryColor={primaryColor} />
           )}
 
-          <LoginForm
-            email={email}
-            setEmail={setEmail}
-            password={password}
-            setPassword={setPassword}
-            onSubmit={handleSubmit}
-            loading={loading}
-            isBlocked={isBlocked}
-            primaryColor={primaryColor}
-            secondaryColor={secondaryColor}
-          />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <FormInput
+              label="Email"
+              name="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="seu@email.com"
+              required
+              disabled={loading || isBlocked}
+              icon={Mail}
+              autoComplete="email"
+              autoFocus
+              shortcut={formShortcuts.EMAIL_FOCUS}
+            />
+
+            <FormInput
+              label="Senha"
+              name="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              disabled={loading || isBlocked}
+              icon={Lock}
+              autoComplete="current-password"
+              shortcut={formShortcuts.PASSWORD_FOCUS}
+            />
+
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              fullWidth
+              loading={loading}
+              disabled={isBlocked}
+              shortcut={{ key: 'Enter', description: 'Entrar' }}
+              className="mt-6"
+              style={{ 
+                backgroundColor: primaryColor,
+                '--tw-ring-color': primaryColor 
+              }}
+            >
+              Entrar
+            </Button>
+          </form>
+
+          {/* Dica de atalhos */}
+          <div className="text-center text-xs text-gray-400">
+            <kbd className="px-1.5 py-0.5 bg-gray-100 border rounded">Ctrl+E</kbd> Email • 
+            <kbd className="px-1.5 py-0.5 bg-gray-100 border rounded ml-1">Ctrl+P</kbd> Senha • 
+            <kbd className="px-1.5 py-0.5 bg-gray-100 border rounded ml-1">Enter</kbd> Entrar
+          </div>
         </div>
 
         <LoginFooter companyName={companyName} cnpj={companySettings?.cnpj} />

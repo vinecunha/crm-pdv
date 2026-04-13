@@ -95,7 +95,7 @@ const ProfileInfoForm = ({ formData, formErrors, onChange, showFeedback }) => {
           onChange={onChange}
           placeholder="123.456.789-00"
           icon={Hash}
-          mask="cpfCnpj"
+          mask="cpf"
         />
 
         <FormInput
