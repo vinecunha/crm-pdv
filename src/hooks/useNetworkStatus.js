@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { logger } from '../utils/logger' 
 
 export const useNetworkStatus = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine)
@@ -6,21 +7,21 @@ export const useNetworkStatus = () => {
 
   useEffect(() => {
     const handleOnline = () => {
-      console.log('🌐 Conexão restaurada!')
+      logger.log('🌐 Conexão restaurada!')
       setIsOnline(true)
       
       // Tentar sincronizar dados pendentes
       if ('serviceWorker' in navigator && 'SyncManager' in window) {
         navigator.serviceWorker.ready.then((registration) => {
           registration.sync.register('sync-pending-sales')
-            .then(() => console.log('🔄 Sincronização registrada'))
+            .then(() => logger.log('🔄 Sincronização registrada'))
             .catch(err => console.error('Erro ao registrar sync:', err))
         })
       }
     }
 
     const handleOffline = () => {
-      console.log('📴 Conexão perdida - modo offline ativado')
+      logger.log('📴 Conexão perdida - modo offline ativado')
       setIsOnline(false)
       setWasOffline(true)
     }

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'  
 import { perfMonitor } from './lib/performance'
+import { logger } from '../src/utils/logger' 
 
 perfMonitor.measurePageLoad()
 perfMonitor.measureFirstInputDelay()
@@ -15,7 +16,7 @@ if ('serviceWorker' in navigator) {
         scope: '/'
       })
       .then((registration) => {
-        console.log('✅ Service Worker registrado com sucesso!', {
+        logger.log('✅ Service Worker registrado com sucesso!', {
           scope: registration.scope,
           state: registration.installing?.state || registration.waiting?.state || registration.active?.state
         })
@@ -23,23 +24,23 @@ if ('serviceWorker' in navigator) {
         // Verificar atualizações a cada 60 minutos
         setInterval(() => {
           registration.update()
-          console.log('🔄 Verificando atualizações do Service Worker...')
+          logger.log('🔄 Verificando atualizações do Service Worker...')
         }, 60 * 60 * 1000)
 
         // Escutar mensagens do Service Worker
         navigator.serviceWorker.addEventListener('message', (event) => {
           if (event.data && event.data.type === 'SYNC_COMPLETE') {
-            console.log(`✅ Sincronização completa: ${event.data.count} vendas sincronizadas`)
+            logger.log(`✅ Sincronização completa: ${event.data.count} vendas sincronizadas`)
             
             // Opcional: Mostrar notificação para o usuário
             if (event.data.count > 0) {
               // Você pode usar um toast notification aqui
-              console.log(`🎉 ${event.data.count} vendas foram sincronizadas com sucesso!`)
+              logger.log(`🎉 ${event.data.count} vendas foram sincronizadas com sucesso!`)
             }
           }
           
           if (event.data && event.data.type === 'CACHE_UPDATED') {
-            console.log('📦 Cache atualizado:', event.data.url)
+            logger.log('📦 Cache atualizado:', event.data.url)
           }
         })
       })
@@ -49,7 +50,7 @@ if ('serviceWorker' in navigator) {
 
     // Quando uma nova versão do Service Worker é encontrada
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      console.log('🔄 Service Worker atualizado! Recarregando página...')
+      logger.log('🔄 Service Worker atualizado! Recarregando página...')
       // Opcional: Recarregar a página para usar a nova versão
       // window.location.reload()
     })
@@ -59,7 +60,7 @@ if ('serviceWorker' in navigator) {
 // ============= Verificar status da rede =============
 const updateOnlineStatus = () => {
   const isOnline = navigator.onLine
-  console.log(isOnline ? '🌐 Online' : '📴 Offline')
+  logger.log(isOnline ? '🌐 Online' : '📴 Offline')
   
   // Disparar evento personalizado para componentes React
   window.dispatchEvent(new CustomEvent('networkchange', { 
@@ -76,7 +77,7 @@ window.addEventListener('online', () => {
   if ('serviceWorker' in navigator && 'SyncManager' in window) {
     navigator.serviceWorker.ready.then((registration) => {
       registration.sync.register('sync-pending-sales')
-        .then(() => console.log('🔄 Sincronização de vendas pendentes registrada'))
+        .then(() => logger.log('🔄 Sincronização de vendas pendentes registrada'))
         .catch(err => console.error('❌ Erro ao registrar sync:', err))
     })
   }
@@ -91,7 +92,7 @@ if (import.meta.env.PROD) {
       .then(data => {
         const currentVersion = localStorage.getItem('app-version')
         if (currentVersion && currentVersion !== data.version) {
-          console.log('🆕 Nova versão disponível!', data.version)
+          logger.log('🆕 Nova versão disponível!', data.version)
           
           // Limpar cache e recarregar
           if ('caches' in window) {
@@ -141,16 +142,16 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 if (import.meta.env.PROD) {
   // Web Vitals
   import('web-vitals').then(({ onCLS, onFID, onLCP, onTTFB }) => {
-    onCLS(console.log)
-    onFID(console.log)
-    onLCP(console.log)
-    onTTFB(console.log)
+    onCLS(logger.log)
+    onFID(logger.log)
+    onLCP(logger.log)
+    onTTFB(logger.log)
   })
 }
 
 // ============= Detectar se é PWA instalado =============
 if (window.matchMedia('(display-mode: standalone)').matches) {
-  console.log('📱 Executando como PWA instalado')
+  logger.log('📱 Executando como PWA instalado')
   document.body.classList.add('pwa-mode')
 }
 

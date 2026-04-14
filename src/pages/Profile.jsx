@@ -6,6 +6,7 @@ import { secureStorage } from '../utils/secureStorage'
 import {
   User, Save, RotateCcw, Shield
 } from 'lucide-react'
+import { sanitizeObject } from '../utils/sanitize'
 import Button from '../components/ui/Button'
 import FeedbackMessage from '../components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
@@ -27,16 +28,18 @@ const fetchProfile = async (userId) => {
 }
 
 const updateProfile = async ({ userId, profileData }) => {
+  const safeData = sanitizeObject(profileData) // ✅ Sanitizar
+  
   const updateData = {
-    display_name: profileData.display_name || null,
-    phone: profileData.phone || null,
-    avatar_url: profileData.avatar_url || null,
-    address: profileData.address || null,
-    city: profileData.city || null,
-    state: profileData.state || null,
-    zip_code: profileData.zip_code || null,
-    birth_date: profileData.birth_date || null,
-    document: profileData.document || null,
+    display_name: safeData.display_name || null,
+    phone: safeData.phone || null,
+    avatar_url: safeData.avatar_url || null,
+    address: safeData.address || null,
+    city: safeData.city || null,
+    state: safeData.state || null,
+    zip_code: safeData.zip_code || null,
+    birth_date: safeData.birth_date || null,
+    document: safeData.document || null,
     updated_at: new Date().toISOString()
   }
 
@@ -47,7 +50,6 @@ const updateProfile = async ({ userId, profileData }) => {
 
   if (error) throw error
 
-  // Buscar perfil atualizado
   const { data: freshProfile } = await supabase
     .from('profiles')
     .select('*')

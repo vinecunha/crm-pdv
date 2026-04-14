@@ -11,6 +11,7 @@ import useSystemLogs from '../hooks/useSystemLogs'
 import usePDVShortcuts from '../hooks/usePDVShortcuts'
 import { saveSaleOffline } from '../utils/offlineStorage'
 import { useNetworkStatus } from '../hooks/useNetworkStatus'
+import { sanitizeObject } from '../utils/sanitize'
 
 import ShortcutFeedback from '../components/ui/ShortcutFeedback'
 import ProductGrid from '../components/sales/pdv/ProductGrid'
@@ -80,11 +81,13 @@ const searchCustomerByPhone = async (phone) => {
 }
 
 const createCustomer = async (customerData) => {
+  const safeData = sanitizeObject(customerData) // ✅ Sanitizar
+  
   const { data, error } = await supabase
     .from('customers')
     .insert([{ 
-      ...customerData, 
-      phone: customerData.phone.replace(/\D/g, ''),
+      ...safeData, 
+      phone: safeData.phone.replace(/\D/g, ''),
       status: 'active',
       total_purchases: 0
     }])

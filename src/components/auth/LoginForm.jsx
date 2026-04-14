@@ -1,5 +1,5 @@
 import React from 'react'
-import { User, Lock, LogIn, Clock } from 'lucide-react'
+import { User, Lock, LogIn, Clock } from '../../utils/icons'
 
 const LoginForm = ({ 
   email, 

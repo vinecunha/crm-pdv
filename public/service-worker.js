@@ -1,3 +1,5 @@
+import { logger } from '../src/utils/logger' 
+
 const CACHE_NAME = 'pdv-cache-v1';
 const API_CACHE_NAME = 'pdv-api-cache-v1';
 
@@ -12,12 +14,12 @@ const STATIC_ASSETS = [
 
 // Instalar - Cache inicial
 self.addEventListener('install', (event) => {
-  console.log('🛠️ Service Worker: Instalando...');
+  logger.log('🛠️ Service Worker: Instalando...');
   
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('📦 Cacheando recursos estáticos');
+        logger.log('📦 Cacheando recursos estáticos');
         return cache.addAll(STATIC_ASSETS);
       })
       .then(() => self.skipWaiting())
@@ -26,14 +28,14 @@ self.addEventListener('install', (event) => {
 
 // Ativar - Limpar caches antigos
 self.addEventListener('activate', (event) => {
-  console.log('✅ Service Worker: Ativado!');
+  logger.log('✅ Service Worker: Ativado!');
   
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME && cacheName !== API_CACHE_NAME) {
-            console.log('🗑️ Removendo cache antigo:', cacheName);
+            logger.log('🗑️ Removendo cache antigo:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -69,7 +71,7 @@ async function handleApiRequest(request) {
     return networkResponse;
   } catch (error) {
     // Offline - buscar do cache
-    console.log('📴 Offline - usando cache para:', request.url);
+    logger.log('📴 Offline - usando cache para:', request.url);
     const cachedResponse = await caches.match(request);
     
     if (cachedResponse) {
@@ -121,7 +123,7 @@ async function handleStaticRequest(request) {
 // Sincronização em background
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-pending-sales') {
-    console.log('🔄 Sincronizando vendas pendentes...');
+    logger.log('🔄 Sincronizando vendas pendentes...');
     event.waitUntil(syncPendingSales());
   }
 });
@@ -132,7 +134,7 @@ async function syncPendingSales() {
     const db = await openDatabase();
     const pendingSales = await getPendingSales(db);
     
-    console.log(`📊 ${pendingSales.length} vendas para sincronizar`);
+    logger.log(`📊 ${pendingSales.length} vendas para sincronizar`);
     
     for (const sale of pendingSales) {
       try {
@@ -144,7 +146,7 @@ async function syncPendingSales() {
         
         if (response.ok) {
           await markAsSynced(db, sale.id);
-          console.log(`✅ Venda ${sale.id} sincronizada`);
+          logger.log(`✅ Venda ${sale.id} sincronizada`);
         }
       } catch (error) {
         console.error(`❌ Erro ao sincronizar venda ${sale.id}:`, error);

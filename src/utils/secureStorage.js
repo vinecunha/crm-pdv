@@ -1,5 +1,5 @@
-// utils/secureStorage.js
-
+import { logger } from '../utils/logger' 
+import { useState } from 'react
 const SIGNATURE_KEY = 'app_signature'
 const STORAGE_VERSION = '1.0'
 
@@ -9,7 +9,8 @@ const STORAGE_VERSION = '1.0'
  */
 const generateSignature = (data) => {
   try {
-    const secret = import.meta.env.VITE_STORAGE_SECRET || 'default-secret-key-2024'
+    const secret = import.meta.env.VITE_STORAGE_SECRET
+    if (!secret) throw new Error('[secureStorage] VITE_STORAGE_SECRET não definida no .env')
     const dataString = JSON.stringify(data) + secret + STORAGE_VERSION
     return btoa(dataString).slice(0, 32)
   } catch (error) {
@@ -145,7 +146,7 @@ export const secureStorage = {
       
       keysToRemove.forEach(key => localStorage.removeItem(key))
       
-      console.log(`🧹 ${keysToRemove.length} itens removidos do storage`)
+      logger.log(`🧹 ${keysToRemove.length} itens removidos do storage`)
       return true
     } catch (error) {
       console.error('Erro ao limpar secureStorage:', error)
@@ -190,7 +191,7 @@ export const secureStorage = {
       }
       
       if (cleaned > 0) {
-        console.log(`🧹 ${cleaned} itens expirados removidos`)
+        logger.log(`🧹 ${cleaned} itens expirados removidos`)
       }
       
       return cleaned

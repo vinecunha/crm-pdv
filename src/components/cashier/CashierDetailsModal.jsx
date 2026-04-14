@@ -1,5 +1,5 @@
 import React from 'react'
-import { Printer } from 'lucide-react'
+import { Printer } from '../../utils/icons'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
 import { formatCurrency, formatDate, formatDateTime } from '../../utils/formatters'

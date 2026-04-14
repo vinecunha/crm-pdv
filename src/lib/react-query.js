@@ -1,6 +1,7 @@
 import { QueryClient } from '@tanstack/react-query'
 import { persistQueryClient } from '@tanstack/react-query-persist-client'
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
+import { logger } from '../utils/logger' 
 
 // Lista de queries que NÃO devem ser persistidas (dados sensíveis)
 const SENSITIVE_QUERY_KEYS = [
@@ -87,7 +88,7 @@ if (typeof window !== 'undefined') {
       },
     })
 
-    console.log('✅ [React Query] Persist client inicializado')
+    logger.log('✅ [React Query] Persist client inicializado')
   } catch (error) {
     console.warn('⚠️ [React Query] Erro ao inicializar persist client:', error)
   }
@@ -97,7 +98,7 @@ if (typeof window !== 'undefined') {
 export const clearPersistedCache = () => {
   try {
     localStorage.removeItem('REACT_QUERY_CACHE_V3')
-    console.log('✅ [React Query] Cache persistido limpo')
+    logger.log('✅ [React Query] Cache persistido limpo')
     return true
   } catch (error) {
     console.warn('[React Query] Erro ao limpar cache:', error)

@@ -1,5 +1,5 @@
 import React from 'react'
-import { AlertCircle, RefreshCw, ChevronDown, ChevronUp, Copy, Check, Bug } from 'lucide-react'
+import { AlertCircle, RefreshCw, ChevronDown, ChevronUp, Copy, Check, Bug } from '../utils/icons'
 
 class SectionErrorBoundary extends React.Component {
   constructor(props) {

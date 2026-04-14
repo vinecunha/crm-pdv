@@ -1,5 +1,5 @@
 import React from 'react'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw } from '../../utils/icons'
 import Button from '../ui/Button'
 
 const CashierFilters = ({ 

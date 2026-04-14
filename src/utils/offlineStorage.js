@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger'
+
 const DB_NAME = 'pdv-offline-db'
 const DB_VERSION = 1
 const STORE_NAME = 'pendingSales'
@@ -42,7 +44,7 @@ export const saveSaleOffline = async (saleData) => {
     
     return new Promise((resolve, reject) => {
       request.onsuccess = () => {
-        console.log('✅ Venda salva offline:', request.result)
+        logger.log('✅ Venda salva offline:', request.result)
         resolve(request.result)
       }
       request.onerror = () => reject(request.error)
@@ -88,7 +90,7 @@ export const markSaleAsSynced = async (localId) => {
         sale.synced = true
         sale.syncedAt = new Date().toISOString()
         store.put(sale)
-        console.log('✅ Venda marcada como sincronizada:', localId)
+        logger.log('✅ Venda marcada como sincronizada:', localId)
       }
     }
   } catch (error) {

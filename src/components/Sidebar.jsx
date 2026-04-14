@@ -20,7 +20,7 @@ import {
   Ticket,
   Calculator,
   User
-} from 'lucide-react'
+} from '../utils/icons'
 
 const Sidebar = ({ collapsed, setCollapsed }) => {
   const { 

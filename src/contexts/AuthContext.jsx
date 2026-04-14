@@ -2,31 +2,27 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { secureStorage } from '../utils/secureStorage'
+import { sanitizeInput } from '../utils/sanitize' 
+import { logger } from '../utils/logger' 
 
-// Logger condicional (só loga em desenvolvimento)
 const logger = {
-  log: (...args) => import.meta.env.DEV && console.log(...args),
+  log: (...args) => import.meta.env.DEV && logger.log(...args),
   warn: (...args) => import.meta.env.DEV && console.warn(...args),
   error: (...args) => console.error(...args),
 }
 
 const AuthContext = createContext(null)
 
-// Rate limiting para login
 const LOGIN_ATTEMPTS_KEY = 'login_attempts'
 const MAX_LOGIN_ATTEMPTS = 5
-const LOGIN_BLOCK_DURATION = 15 * 60 * 1000 // 15 minutos
+const LOGIN_BLOCK_DURATION = 15 * 60 * 1000
 
 // ==============================
 // VALIDAÇÃO DE FORÇA DA SENHA
 // ==============================
 export const validatePasswordStrength = (password) => {
   if (!password || password.length < 8) {
-    return { 
-      valid: false, 
-      score: 0,
-      message: 'A senha deve ter pelo menos 8 caracteres' 
-    }
+    return { valid: false, score: 0, message: 'A senha deve ter pelo menos 8 caracteres' }
   }
   
   let score = 0
@@ -44,7 +40,6 @@ export const validatePasswordStrength = (password) => {
   if (checks.hasSpecialChar) score++
   if (checks.isLongEnough) score++
   
-  // Requisitos mínimos
   if (!checks.hasUpperCase) {
     return { valid: false, score, message: 'A senha deve conter pelo menos uma letra maiúscula' }
   }
@@ -64,7 +59,6 @@ export const validatePasswordStrength = (password) => {
   return { valid: true, score, message, checks }
 }
 
-// Hook para validação de senha em tempo real
 export const usePasswordStrength = (password) => {
   const [strength, setStrength] = useState({ valid: false, score: 0, message: '' })
   
@@ -83,9 +77,7 @@ export const usePasswordStrength = (password) => {
     return 'bg-green-600'
   }
   
-  const getStrengthWidth = () => {
-    return `${(strength.score / 5) * 100}%`
-  }
+  const getStrengthWidth = () => `${(strength.score / 5) * 100}%`
   
   return { ...strength, color: getStrengthColor(), width: getStrengthWidth() }
 }
@@ -103,101 +95,48 @@ export function AuthProvider({ children }) {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const initialized = useRef(false)
 
-  // ==============================
-  // PERMISSÕES
-  // ==============================
   const getPermissions = useCallback((role) => {
     const permissions = {
       admin: {
         roleName: 'Administrador',
         roleColor: 'from-purple-600 to-purple-700',
-        canViewDashboard: true,
-        canViewSales: true,
-        canCreateSales: true,
-        canCancelSales: true,
-        canApplyDiscount: true,
-        canViewProducts: true,
-        canCreateProducts: true,
-        canEditProducts: true,
-        canManageStock: true,
-        canViewCustomers: true,
-        canCreateCustomers: true,
-        canEditCustomers: true,
-        canCommunicateWithCustomers: true,
-        canViewCoupons: true,
-        canCreateCoupons: true,
-        canEditCoupons: true,
-        canViewCashier: true,
-        canCloseCashier: true,
-        canViewReports: true,
-        canExportReports: true,
-        canViewUsers: true,
-        canViewLogs: true,
-        canViewSettings: true,
+        canViewDashboard: true, canViewSales: true, canCreateSales: true,
+        canCancelSales: true, canApplyDiscount: true, canViewProducts: true,
+        canCreateProducts: true, canEditProducts: true, canManageStock: true,
+        canViewCustomers: true, canCreateCustomers: true, canEditCustomers: true,
+        canCommunicateWithCustomers: true, canViewCoupons: true, canCreateCoupons: true,
+        canEditCoupons: true, canViewCashier: true, canCloseCashier: true,
+        canViewReports: true, canExportReports: true, canViewUsers: true,
+        canViewLogs: true, canViewSettings: true,
       },
       gerente: {
         roleName: 'Gerente',
         roleColor: 'from-blue-500 to-cyan-500',
-        canViewDashboard: true,
-        canViewSales: true,
-        canCreateSales: true,
-        canCancelSales: true,
-        canApplyDiscount: true,
-        canViewSalesList: true,
-        canViewProducts: true,
-        canCreateProducts: true,
-        canEditProducts: true,
-        canManageStock: true,
-        canViewCustomers: true,
-        canCreateCustomers: true,
-        canEditCustomers: true,
-        canCommunicateWithCustomers: true,
-        canViewCoupons: true,
-        canCreateCoupons: true,
-        canEditCoupons: true,
-        canViewCashier: true,
-        canCloseCashier: true,
-        canViewReports: true,
-        canExportReports: true,
-        canViewUsers: false,
-        canViewLogs: true,
-        canViewSettings: false,
+        canViewDashboard: true, canViewSales: true, canCreateSales: true,
+        canCancelSales: true, canApplyDiscount: true, canViewSalesList: true,
+        canViewProducts: true, canCreateProducts: true, canEditProducts: true,
+        canManageStock: true, canViewCustomers: true, canCreateCustomers: true,
+        canEditCustomers: true, canCommunicateWithCustomers: true, canViewCoupons: true,
+        canCreateCoupons: true, canEditCoupons: true, canViewCashier: true,
+        canCloseCashier: true, canViewReports: true, canExportReports: true,
+        canViewUsers: false, canViewLogs: true, canViewSettings: false,
       },
       operador: {
         roleName: 'Operador',
         roleColor: 'from-gray-500 to-gray-600',
-        canViewDashboard: true,
-        canViewSales: true,
-        canCreateSales: true,
-        canCancelSales: false,
-        canApplyDiscount: false,
-        canViewSalesList: false,
-        canViewProducts: true,
-        canCreateProducts: false,
-        canEditProducts: false,
-        canManageStock: false,
-        canViewCustomers: true,
-        canCreateCustomers: true,
-        canEditCustomers: false,
-        canCommunicateWithCustomers: false,
-        canViewCoupons: false,
-        canCreateCoupons: false,
-        canEditCoupons: false,
-        canViewCashier: false,
-        canCloseCashier: false,
-        canViewReports: false,
-        canExportReports: false,
-        canViewUsers: false,
-        canViewLogs: false,
-        canViewSettings: false,
+        canViewDashboard: true, canViewSales: true, canCreateSales: true,
+        canCancelSales: false, canApplyDiscount: false, canViewSalesList: false,
+        canViewProducts: true, canCreateProducts: false, canEditProducts: false,
+        canManageStock: false, canViewCustomers: true, canCreateCustomers: true,
+        canEditCustomers: false, canCommunicateWithCustomers: false, canViewCoupons: false,
+        canCreateCoupons: false, canEditCoupons: false, canViewCashier: false,
+        canCloseCashier: false, canViewReports: false, canExportReports: false,
+        canViewUsers:0, canViewLogs: false, canViewSettings: false,
       }
     }
     return permissions[role] || permissions.operador
   }, [])
 
-  // ==============================
-  // CONSTRUIR PROFILE A PARTIR DO JWT
-  // ==============================
   const buildProfileFromJWT = useCallback((userData) => {
     if (!userData) return null
     const role = userData.app_metadata?.role || 'operador'
@@ -213,12 +152,8 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  // ==============================
-  // BUSCAR PROFILE COMPLETO DO BANCO
-  // ==============================
   const fetchFullProfileFromDB = useCallback(async (userId) => {
     try {
-      logger.log('🔍 Buscando profile completo no banco...')
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -228,11 +163,9 @@ export function AuthProvider({ children }) {
       if (error) throw error
       
       if (data) {
-        // Verificar status
         if (data.status && data.status !== 'active') {
           logger.warn('⚠️ Usuário com status não ativo:', data.status)
         }
-        logger.log('✅ Profile encontrado no banco')
         secureStorage.set('profile', data)
         return data
       }
@@ -243,34 +176,6 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  // ==============================
-  // VERIFICAR STATUS DO USUÁRIO (EDGE FUNCTION)
-  // ==============================
-  const checkUserStatus = useCallback(async (userId) => {
-    try {
-      logger.log('🔒 Verificando status do usuário...')
-      
-      const { data, error } = await supabase.functions.invoke('check-user-status', {
-        body: { user_id: userId }
-      })
-      
-      if (error) {
-        logger.error('❌ Erro ao chamar Edge Function:', error)
-        return { allowed: true } // Fail open
-      }
-      
-      logger.log('📊 Resultado da verificação:', data)
-      return data
-      
-    } catch (error) {
-      logger.error('❌ Erro ao verificar status:', error)
-      return { allowed: true } // Fail open
-    }
-  }, [])
-
-  // ==============================
-  // SINCRONIZAR PROFILE (JWT + BANCO)
-  // ==============================
   const syncProfile = useCallback(async (userData, forceDBFetch = false) => {
     if (!userData) return null
     
@@ -280,7 +185,6 @@ export function AuthProvider({ children }) {
       setProfile(jwtProfile)
       secureStorage.set('profile', jwtProfile)
       secureStorage.set('user_role', jwtProfile.role)
-      logger.log('📦 Profile carregado do JWT:', jwtProfile.role)
     }
     
     if (forceDBFetch) {
@@ -289,7 +193,6 @@ export function AuthProvider({ children }) {
         const mergedProfile = { ...jwtProfile, ...dbProfile }
         setProfile(mergedProfile)
         secureStorage.set('profile', mergedProfile)
-        logger.log('🔄 Profile atualizado com dados do banco')
         return mergedProfile
       }
     }
@@ -297,9 +200,6 @@ export function AuthProvider({ children }) {
     return jwtProfile
   }, [buildProfileFromJWT, fetchFullProfileFromDB])
 
-  // ==============================
-  // VERIFICAR RATE LIMIT DE LOGIN
-  // ==============================
   const checkLoginRateLimit = useCallback(() => {
     try {
       const stored = secureStorage.get(LOGIN_ATTEMPTS_KEY)
@@ -309,12 +209,7 @@ export function AuthProvider({ children }) {
       
       if (blockedUntil && Date.now() < blockedUntil) {
         const minutesLeft = Math.ceil((blockedUntil - Date.now()) / 60000)
-        return { 
-          blocked: true, 
-          remaining: 0, 
-          minutesLeft,
-          message: `Muitas tentativas. Tente novamente em ${minutesLeft} minuto(s).`
-        }
+        return { blocked: true, remaining: 0, minutesLeft, message: `Muitas tentativas. Tente novamente em ${minutesLeft} minuto(s).` }
       }
       
       if (blockedUntil && Date.now() >= blockedUntil) {
@@ -322,18 +217,12 @@ export function AuthProvider({ children }) {
         return { blocked: false, remaining: MAX_LOGIN_ATTEMPTS }
       }
       
-      return { 
-        blocked: false, 
-        remaining: MAX_LOGIN_ATTEMPTS - (attempts || 0)
-      }
+      return { blocked: false, remaining: MAX_LOGIN_ATTEMPTS - (attempts || 0) }
     } catch {
       return { blocked: false, remaining: MAX_LOGIN_ATTEMPTS }
     }
   }, [])
 
-  // ==============================
-  // REGISTRAR TENTATIVA DE LOGIN
-  // ==============================
   const recordLoginAttempt = useCallback(async (success, email = null) => {
     try {
       if (success) {
@@ -345,19 +234,14 @@ export function AuthProvider({ children }) {
       const attempts = (stored?.attempts || 0) + 1
       
       if (attempts >= MAX_LOGIN_ATTEMPTS) {
-        secureStorage.set(LOGIN_ATTEMPTS_KEY, {
-          attempts,
-          blockedUntil: Date.now() + LOGIN_BLOCK_DURATION
-        })
+        secureStorage.set(LOGIN_ATTEMPTS_KEY, { attempts, blockedUntil: Date.now() + LOGIN_BLOCK_DURATION })
         
-        // Se temos email, atualizar status no banco para 'locked'
         if (email) {
           try {
             await supabase
               .from('profiles')
               .update({ status: 'locked', updated_at: new Date().toISOString() })
               .eq('email', email)
-            logger.log('🔒 Usuário bloqueado por excesso de tentativas:', email)
           } catch (err) {
             logger.error('Erro ao bloquear usuário:', err)
           }
@@ -371,70 +255,52 @@ export function AuthProvider({ children }) {
   }, [])
 
   // ==============================
-  // LOGIN
+  // LOGIN COM SANITIZAÇÃO
   // ==============================
   const login = async (email, password) => {
     try {
       const rateLimit = checkLoginRateLimit()
-      if (rateLimit.blocked) {
-        throw new Error(rateLimit.message)
-      }
+      if (rateLimit.blocked) throw new Error(rateLimit.message)
       
-      if (!email || !email.includes('@')) {
-        throw new Error('Email inválido')
-      }
+      // ✅ Sanitizar email
+      const safeEmail = sanitizeInput(email)
       
-      if (!password || password.length < 1) {
-        throw new Error('Senha é obrigatória')
-      }
+      if (!safeEmail || !safeEmail.includes('@')) throw new Error('Email inválido')
+      if (!password || password.length < 1) throw new Error('Senha é obrigatória')
       
-      logger.log('🔐 Tentando login para:', email)
       setLoading(true)
       
-      // 1. Fazer login
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
+        email: safeEmail.trim().toLowerCase(),
         password,
       })
 
       if (error) {
-        await recordLoginAttempt(false, email)
+        await recordLoginAttempt(false, safeEmail)
         throw error
       }
       
-      // 2. VERIFICAR STATUS DO USUÁRIO
       if (data.user) {
-        logger.log('🔒 Verificando status do usuário...')
-        
-        // Verificar status diretamente no banco (mais confiável)
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('status')
           .eq('id', data.user.id)
           .single()
         
-        if (profileError) {
-          logger.error('❌ Erro ao buscar status:', profileError)
-        } else if (profileData) {
-          logger.log('📊 Status do usuário:', profileData.status)
+        if (profileError) throw profileError
+        
+        if (profileData?.status && profileData.status !== 'active') {
+          await supabase.auth.signOut()
+          await recordLoginAttempt(false, safeEmail)
           
-          if (profileData.status && profileData.status !== 'active') {
-            // Usuário bloqueado - fazer logout
-            logger.warn('❌ Acesso negado. Status:', profileData.status)
-            await supabase.auth.signOut()
-            await recordLoginAttempt(false, email)
-            
-            const messages = {
-              'inactive': 'Usuário inativo. Contate o administrador.',
-              'blocked': 'Usuário bloqueado. Contate o administrador.',
-              'locked': 'Conta bloqueada por excesso de tentativas. Contate o administrador.'
-            }
-            throw new Error(messages[profileData.status] || 'Acesso negado.')
+          const messages = {
+            'inactive': 'Usuário inativo. Contate o administrador.',
+            'blocked': 'Usuário bloqueado. Contate o administrador.',
+            'locked': 'Conta bloqueada por excesso de tentativas.'
           }
+          throw new Error(messages[profileData.status] || 'Acesso negado.')
         }
         
-        // 3. Status OK - continuar
-        logger.log('✅ Status verificado, acesso permitido')
         await recordLoginAttempt(true)
         setUser(data.user)
         await syncProfile(data.user, true)
@@ -451,32 +317,32 @@ export function AuthProvider({ children }) {
   }
 
   // ==============================
-  // REGISTRO COM VALIDAÇÃO DE SENHA
+  // REGISTRO COM SANITIZAÇÃO
   // ==============================
   const register = async (email, password, fullName) => {
     try {
       const passwordValidation = validatePasswordStrength(password)
-      if (!passwordValidation.valid) {
-        throw new Error(passwordValidation.message)
-      }
+      if (!passwordValidation.valid) throw new Error(passwordValidation.message)
       
-      logger.log('📝 Registrando novo usuário:', email)
+      // ✅ Sanitizar entradas
+      const safeEmail = sanitizeInput(email)
+      const safeFullName = sanitizeInput(fullName)
+      
       setLoading(true)
       
       const { data, error } = await supabase.auth.signUp({
-        email: email.trim().toLowerCase(),
+        email: safeEmail.trim().toLowerCase(),
         password,
         options: {
           data: {
-            full_name: fullName,
-            display_name: fullName.split(' ')[0]
+            full_name: safeFullName,
+            display_name: safeFullName.split(' ')[0]
           }
         }
       })
 
       if (error) throw error
       
-      logger.log('✅ Registro realizado')
       setLoading(false)
       return data
     } catch (error) {
@@ -486,24 +352,15 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // ==============================
-  // ALTERAR SENHA COM VALIDAÇÃO
-  // ==============================
   const changePassword = async (newPassword) => {
     try {
       const passwordValidation = validatePasswordStrength(newPassword)
-      if (!passwordValidation.valid) {
-        throw new Error(passwordValidation.message)
-      }
+      if (!passwordValidation.valid) throw new Error(passwordValidation.message)
       
-      logger.log('🔑 Alterando senha...')
       setLoading(true)
-      
       const { data, error } = await supabase.auth.updateUser({ password: newPassword })
-
       if (error) throw error
       
-      logger.log('✅ Senha alterada com sucesso')
       setLoading(false)
       return data
     } catch (error) {
@@ -513,21 +370,16 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // ==============================
-  // RESETAR SENHA (ESQUECI MINHA SENHA)
-  // ==============================
   const resetPassword = async (email) => {
     try {
-      logger.log('📧 Solicitando reset de senha para:', email)
+      const safeEmail = sanitizeInput(email) // ✅ Sanitizar
       
       const { data, error } = await supabase.auth.resetPasswordForEmail(
-        email.trim().toLowerCase(),
+        safeEmail.trim().toLowerCase(),
         { redirectTo: `${window.location.origin}/reset-password` }
       )
 
       if (error) throw error
-      
-      logger.log('✅ Email de reset enviado')
       return data
     } catch (error) {
       logger.error('❌ Erro ao solicitar reset:', error.message)
@@ -535,12 +387,8 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // ==============================
-  // LOGOUT
-  // ==============================
   const logout = async () => {
     try {
-      logger.log('🚪 Iniciando logout...')
       setLoading(true)
       
       secureStorage.remove('profile')
@@ -553,9 +401,7 @@ export function AuthProvider({ children }) {
       const { error } = await supabase.auth.signOut()
       if (error) throw error
       
-      logger.log('✅ Logout concluído')
       setLoading(false)
-      
     } catch (error) {
       logger.error('❌ Erro no logout:', error.message)
       setLoading(false)
@@ -563,16 +409,11 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // ==============================
-  // REFRESH SESSION
-  // ==============================
   const refreshSession = useCallback(async () => {
     if (isRefreshing) return
     setIsRefreshing(true)
     
     try {
-      logger.log('🔄 Atualizando sessão e perfil...')
-      
       const { data: { session }, error: sessionError } = await supabase.auth.refreshSession()
       if (sessionError) throw sessionError
       
@@ -588,10 +429,7 @@ export function AuthProvider({ children }) {
         if (!profileError && freshProfile) {
           setProfile(freshProfile)
           secureStorage.set('profile', freshProfile)
-          logger.log('✅ Perfil recarregado do banco')
         }
-        
-        logger.log('✅ Sessão atualizada')
       }
     } catch (error) {
       logger.error('❌ Erro ao atualizar sessão:', error.message)
@@ -601,38 +439,24 @@ export function AuthProvider({ children }) {
   }, [isRefreshing])
 
   // ==============================
-  // EFFECT PRINCIPAL - INICIALIZAÇÃO (CORRIGIDO)
+  // EFFECT PRINCIPAL - INICIALIZAÇÃO
   // ==============================
   useEffect(() => {
     if (initialized.current) return
     initialized.current = true
-    
-    logger.log('🚀 Inicializando AuthProvider...')
 
     const initializeAuth = async () => {
       try {
-        // 1. Carregar cache primeiro (para UI rápida)
         const cachedProfile = secureStorage.get('profile')
-        if (cachedProfile) {
-          logger.log('✅ Cache seguro encontrado, exibindo imediatamente')
-          setProfile(cachedProfile)
-        }
+        if (cachedProfile) setProfile(cachedProfile)
         
-        // 2. Verificar sessão real
-        logger.log('🔍 Verificando sessão no Supabase...')
         const { data: { session }, error } = await supabase.auth.getSession()
-        
         if (error) throw error
         
         if (session?.user) {
-          logger.log('✅ Sessão encontrada para:', session.user.email)
           setUser(session.user)
-          
-          // ✅ AGUARDAR o perfil ser carregado do banco
           await syncProfile(session.user, true)
-          logger.log('✅ Perfil sincronizado com sucesso')
         } else {
-          logger.log('❌ Sem sessão ativa')
           secureStorage.remove('profile')
           secureStorage.remove('user_role')
           setProfile(null)
@@ -645,8 +469,6 @@ export function AuthProvider({ children }) {
         secureStorage.remove('profile')
         secureStorage.remove('user_role')
       } finally {
-        // ✅ Só finalizar loading depois de tudo pronto
-        logger.log('✅ Inicialização concluída, loading = false')
         setLoading(false)
       }
     }
@@ -655,8 +477,6 @@ export function AuthProvider({ children }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        logger.log('📢 Auth event:', event)
-        
         if (event === 'SIGNED_OUT') {
           secureStorage.remove('profile')
           secureStorage.remove('user_role')
@@ -682,73 +502,40 @@ export function AuthProvider({ children }) {
         }
         
         if (event === 'TOKEN_REFRESH_FAILED') {
-          logger.warn('⚠️ Token refresh falhou, fazendo logout...')
           await logout()
         }
       }
     )
 
-    return () => {
-      logger.log('🧹 Cleanup AuthProvider')
-      subscription.unsubscribe()
-    }
-  }, [syncProfile, logout])
+    return () => subscription.unsubscribe()
+  }, [syncProfile])
 
-  // ==============================
-  // VERIFICAÇÃO PERIÓDICA DE SESSÃO
-  // ==============================
   useEffect(() => {
     if (!user) return
     
     const interval = setInterval(async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession()
-        if (error || !session) {
-          logger.warn('⚠️ Sessão expirada, fazendo logout...')
-          await logout()
-        }
+        if (error || !session) await logout()
       } catch (error) {
         logger.error('Erro ao verificar sessão:', error.message)
       }
     }, 30 * 60 * 1000)
     
     return () => clearInterval(interval)
-  }, [user, logout])
+  }, [user])
 
-  // ==============================
-  // VALORES DO CONTEXTO
-  // ==============================
   const permissions = getPermissions(profile?.role)
 
   const value = {
-    user,
-    profile,
-    loading,
-    login,
-    logout,
-    register,
-    changePassword,
-    resetPassword,
-    refreshSession,
-
-    isAuthenticated: !!user && !!profile,
-    isAdmin: profile?.role === 'admin',
-    isManager: profile?.role === 'gerente',
-    isOperator: profile?.role === 'operador',
-
-    permissions,
-    roleName: permissions.roleName,
-    roleColor: permissions.roleColor,
-
+    user, profile, loading, login, logout, register, changePassword,
+    resetPassword, refreshSession, isAuthenticated: !!user && !!profile,
+    isAdmin: profile?.role === 'admin', isManager: profile?.role === 'gerente',
+    isOperator: profile?.role === 'operador', permissions,
+    roleName: permissions.roleName, roleColor: permissions.roleColor,
     hasPermission: (perm) => permissions[perm] === true,
-    
-    checkLoginRateLimit,
-    validatePasswordStrength,
+    checkLoginRateLimit, validatePasswordStrength,
   }
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

@@ -13,6 +13,7 @@ import DataTable from '../components/ui/DataTable'
 import Badge from '../components/Badge'
 import useSystemLogs from '../hooks/useSystemLogs'
 import { formatDateTime } from '../utils/formatters'
+import { sanitizeObject } from '../utils/sanitize'
 
 import UserStats from '../components/users/UserStats'
 import UserForm from '../components/users/UserForm'
@@ -48,13 +49,15 @@ const fetchBlockedUsers = async () => {
 }
 
 const createUser = async ({ userData }) => {
+  const safeData = sanitizeObject(userData) // ✅ Sanitizar
+  
   const { data: authData, error: authError } = await supabase.auth.signUp({
-    email: userData.email,
-    password: userData.password,
+    email: safeData.email,
+    password: safeData.password,
     options: { 
       data: { 
-        full_name: userData.full_name, 
-        role: userData.role 
+        full_name: safeData.full_name, 
+        role: safeData.role 
       } 
     }
   })
@@ -64,13 +67,15 @@ const createUser = async ({ userData }) => {
 }
 
 const updateUser = async ({ id, userData }) => {
+  const safeData = sanitizeObject(userData) // ✅ Sanitizar
+  
   const { error } = await supabase
     .from('profiles')
-    .update(userData)
+    .update(safeData)
     .eq('id', id)
   
   if (error) throw error
-  return { id, ...userData }
+  return { id, ...safeData }
 }
 
 const updateUserStatus = async ({ id, status }) => {

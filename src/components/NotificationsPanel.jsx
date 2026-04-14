@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Bell, CheckCheck, X, Info, AlertCircle, CheckCircle, AlertTriangle } from 'lucide-react'
+import { Bell, CheckCheck, X, Info, AlertCircle, CheckCircle, AlertTriangle } from '../utils/icons'
 import { useNotifications } from '../hooks/useNotifications'
 import { useAuth } from '../contexts/AuthContext'
 

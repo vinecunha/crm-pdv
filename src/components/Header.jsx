@@ -12,7 +12,7 @@ import {
   User,
   Settings,
   LogOut
-} from 'lucide-react'
+} from '../utils/icons'
 import NotificationsPanel from './NotificationsPanel'
 
 const Header = ({ collapsed }) => {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { logger } from '../utils/logger' 
 
 export const useNotifications = () => {
   const { profile } = useAuth()
@@ -16,7 +17,7 @@ export const useNotifications = () => {
   const fetchNotifications = useCallback(async (force = false) => {
     // Evitar requisições simultâneas
     if (isFetchingRef.current) {
-      console.log('Já está buscando notificações, ignorando...')
+      logger.log('Já está buscando notificações, ignorando...')
       return
     }
 

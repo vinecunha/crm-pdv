@@ -6,6 +6,7 @@ import SummaryCard from './SummaryCard'
 import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
 import { Bar, Doughnut } from 'react-chartjs-2'
 import '../../lib/chartConfig'
+import { logger } from '../../utils/logger' 
 
 const ProductsReport = ({ dateRange, customDateRange }) => {
   const [loading, setLoading] = useState(true)
@@ -68,7 +69,7 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
     try {
       const { startDate, endDate } = getDateRange()
       
-      console.log('📊 Buscando itens...', {
+      logger.log('📊 Buscando itens...', {
         start: startDate.toISOString(),
         end: endDate.toISOString()
       })
@@ -93,7 +94,7 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
         throw itemsError
       }
 
-      console.log(`✅ ${saleItems?.length || 0} itens encontrados`)
+      logger.log(`✅ ${saleItems?.length || 0} itens encontrados`)
 
       // Buscar produtos separadamente
       const productIds = [...new Set(saleItems?.map(item => item.product_id).filter(Boolean)) || []]
@@ -168,7 +169,7 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
       .filter(p => p.product)
       .sort((a, b) => b.quantity - a.quantity)
 
-    console.log(`📊 ${sortedProducts.length} produtos processados, ${totalItemsSold} itens, R$ ${totalRevenue}`)
+    logger.log(`📊 ${sortedProducts.length} produtos processados, ${totalItemsSold} itens, R$ ${totalRevenue}`)
 
     setTopProducts(sortedProducts.slice(0, 10))
 
@@ -204,7 +205,7 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
         (p.stock_quantity || 0) <= (p.min_stock || 5)
       ) || []
 
-      console.log(`📦 ${activeProducts?.length || 0} produtos ativos, ${lowStockProducts.length} estoque baixo`)
+      logger.log(`📦 ${activeProducts?.length || 0} produtos ativos, ${lowStockProducts.length} estoque baixo`)
 
       setProductsData(prev => ({
         ...prev,

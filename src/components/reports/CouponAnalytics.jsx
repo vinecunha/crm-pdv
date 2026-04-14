@@ -9,6 +9,7 @@ import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
 import Badge from '../Badge'
 import Button from '../ui/Button'
 import { useNavigate } from 'react-router-dom'
+import { logger } from '../../utils/logger' 
 
 const CouponAnalytics = ({ dateRange, customDateRange }) => {
   const [loading, setLoading] = useState(true)
@@ -204,8 +205,8 @@ const CouponAnalytics = ({ dateRange, customDateRange }) => {
         return new Date(lastPurchase) < thirtyDaysAgo
       }).slice(0, 5)
 
-      console.log('📊 Clientes inativos encontrados:', inactiveCustomers.length)
-      console.log('📊 Mapa de última compra:', lastPurchaseMap)
+      logger.log('📊 Clientes inativos encontrados:', inactiveCustomers.length)
+      logger.log('📊 Mapa de última compra:', lastPurchaseMap)
 
       inactiveCustomers?.forEach(customer => {
         const lastPurchase = lastPurchaseMap[customer.id]

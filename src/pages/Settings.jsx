@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Shield } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { sanitizeObject } from '../utils/sanitize'
 import FeedbackMessage from '../components/ui/FeedbackMessage'
 import SplashScreen from '../components/ui/SplashScreen'
 
@@ -38,15 +39,17 @@ const fetchCompanySettings = async () => {
 }
 
 const saveCompanySettings = async (settings) => {
+  const safeData = sanitizeObject(settings) // ✅ Sanitizar
+  
   const { error } = await supabase
     .from('company_settings')
     .upsert({ 
-      ...settings, 
+      ...safeData, 
       updated_at: new Date().toISOString() 
     })
   
   if (error) throw error
-  return settings
+  return safeData
 }
 
 // ============= Componente Principal =============

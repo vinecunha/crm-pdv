@@ -1,6 +1,7 @@
 import React from 'react'
 import { supabase } from '../lib/supabase'
-import { AlertCircle, RefreshCw, Home, Bug, ChevronLeft, ChevronRight } from 'lucide-react'
+import { AlertCircle, RefreshCw, Home, Bug, ChevronLeft, ChevronRight } from '../utils/icons'
+import { logger } from '../utils/logger' 
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -65,7 +66,7 @@ class ErrorBoundary extends React.Component {
           }
         })
       
-      console.log('Erro registrado no Supabase')
+      logger.log('Erro registrado no Supabase')
     } catch (logError) {
       console.error('Erro ao registrar erro no Supabase:', logError)
     }

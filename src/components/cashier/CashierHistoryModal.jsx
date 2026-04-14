@@ -1,5 +1,5 @@
 import React from 'react'
-import { Eye, Printer } from 'lucide-react'
+import { Eye, Printer } from '../../utils/icons'
 import Modal from '../ui/Modal'
 import DataTable from '../ui/DataTable'
 import { formatCurrency, formatDate, formatDateTime } from '../../utils/formatters'

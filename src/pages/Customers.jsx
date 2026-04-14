@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useReactQuery } from '../hooks/useReactQuery'
 import useSystemLogs from '../hooks/useSystemLogs'
+import { sanitizeObject } from '../utils/sanitize'
 
 import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
@@ -30,10 +31,12 @@ const fetchCustomers = async () => {
 }
 
 const createCustomer = async (customerData) => {
+  const safeData = sanitizeObject(customerData) // ✅ Sanitizar
+  
   const { data, error } = await supabase
     .from('customers')
     .insert([{ 
-      ...customerData, 
+      ...safeData,
       total_purchases: 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -46,10 +49,12 @@ const createCustomer = async (customerData) => {
 }
 
 const updateCustomer = async ({ id, customerData }) => {
+  const safeData = sanitizeObject(customerData) // ✅ Sanitizar
+  
   const { data, error } = await supabase
     .from('customers')
     .update({ 
-      ...customerData, 
+      ...safeData,
       updated_at: new Date().toISOString() 
     })
     .eq('id', id)

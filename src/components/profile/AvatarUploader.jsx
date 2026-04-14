@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Camera, Upload, AlertCircle } from 'lucide-react'
+import { compressAvatar, isImageFile, validateImageSize } from '../../utils/imageCompression'
 import Button from '../ui/Button'
 import Modal from '../ui/Modal'
 import LazyImage from '../ui/LazyImage'
@@ -26,25 +27,32 @@ const AvatarUploader = ({ user, avatarUrl, fullName, displayName, onAvatarUpdate
 
     setError('')
 
-    if (!file.type.startsWith('image/')) {
+    // Validar tipo
+    if (!isImageFile(file)) {
       setError('Apenas imagens são permitidas')
       return
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      setError('Imagem muito grande (máx 2MB)')
+    // Validar tamanho
+    try {
+      validateImageSize(file, 5) // Máximo 5MB
+    } catch (err) {
+      setError(err.message)
       return
     }
 
     setSaving(true)
     try {
-      const fileExt = file.name.split('.').pop()
+      // ✅ COMPRIMIR ANTES DO UPLOAD
+      const compressedFile = await compressAvatar(file)
+      
+      const fileExt = compressedFile.name.split('.').pop()
       const fileName = `${Date.now()}.${fileExt}`
       const filePath = `${user.id}/${fileName}`
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { cacheControl: '3600', upsert: false })
+        .upload(filePath, compressedFile, { cacheControl: '3600', upsert: false })
 
       if (uploadError) throw uploadError
 

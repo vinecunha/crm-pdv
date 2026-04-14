@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import useSystemLogs from '../hooks/useSystemLogs'
+import { sanitizeObject } from '../utils/sanitize'
 
 import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
@@ -71,32 +72,35 @@ const generateNextCode = async () => {
 }
 
 const createProduct = async ({ productData, profile }) => {
-  const { error } = await supabase.from('products').insert([{ ...productData, created_by: profile?.id }])
+  const safeData = sanitizeObject(productData) // ✅ Sanitizar
+  
+  const { error } = await supabase.from('products').insert([{ ...safeData, created_by: profile?.id }])
   
   if (error) {
-    // Se der erro de código duplicado, tentar gerar um novo código
     if (error.message?.includes('duplicate key') || error.message?.includes('code')) {
       const newCode = await generateNextCode()
       const { error: retryError } = await supabase
         .from('products')
-        .insert([{ ...productData, code: newCode, created_by: profile?.id }])
+        .insert([{ ...safeData, code: newCode, created_by: profile?.id }])
       if (retryError) throw retryError
-      return { ...productData, code: newCode }
+      return { ...safeData, code: newCode }
     }
     throw error
   }
   
-  return productData
+  return safeData
 }
 
 const updateProduct = async ({ id, productData, profile }) => {
+  const safeData = sanitizeObject(productData) // ✅ Sanitizar
+  
   const { error } = await supabase
     .from('products')
-    .update({ ...productData, updated_by: profile?.id })
+    .update({ ...safeData, updated_by: profile?.id })
     .eq('id', id)
   
   if (error) throw error
-  return { id, ...productData }
+  return { id, ...safeData }
 }
 
 const deleteProduct = async (id) => {
@@ -106,9 +110,11 @@ const deleteProduct = async (id) => {
 }
 
 const createProductEntry = async ({ entryData, profile }) => {
+  const safeData = sanitizeObject(entryData) // ✅ Sanitizar
+  
   const { error } = await supabase
     .from('product_entries')
-    .insert([{ ...entryData, created_by: profile?.id }])
+    .insert([{ ...safeData, created_by: profile?.id }])
 
   if (error) {
     let errorMessage = 'Erro ao registrar entrada'
@@ -118,7 +124,7 @@ const createProductEntry = async ({ entryData, profile }) => {
     throw new Error(errorMessage)
   }
   
-  return entryData
+  return safeData
 }
 
 const fetchProductDetails = async (productId) => {

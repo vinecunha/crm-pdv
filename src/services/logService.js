@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { logger } from '../utils/logger' 
 
 class LogService {
   constructor() {
@@ -81,7 +82,7 @@ class LogService {
       
       // Em desenvolvimento, loga no console
       if (import.meta.env.DEV) {
-        console.log('[LOG]', action, logEntry)
+        logger.log('[LOG]', action, logEntry)
       }
     } catch (error) {
       // Não deixar o erro de log quebrar a aplicação

@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger' 
+
 class PerformanceMonitor {
   constructor() {
     this.metrics = []
@@ -12,7 +14,7 @@ class PerformanceMonitor {
       for (const entry of list.getEntries()) {
         if (entry.entryType === 'navigation') {
           const loadTime = entry.loadEventEnd - entry.startTime
-          console.log(`📊 Page Load: ${loadTime.toFixed(0)}ms`)
+          logger.log(`📊 Page Load: ${loadTime.toFixed(0)}ms`)
           
           // Salvar no localStorage para análise
           this.saveMetric('page_load', loadTime)
@@ -41,7 +43,7 @@ class PerformanceMonitor {
     const observer = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
         const fid = entry.processingStart - entry.startTime
-        console.log(`📊 First Input Delay: ${fid.toFixed(0)}ms`)
+        logger.log(`📊 First Input Delay: ${fid.toFixed(0)}ms`)
         this.saveMetric('fid', fid)
       }
     })

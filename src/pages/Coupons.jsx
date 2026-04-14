@@ -2,6 +2,7 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { Plus, RefreshCw } from 'lucide-react'
+import { sanitizeObject } from '../utils/sanitize'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useReactQuery } from '../hooks/useReactQuery'
@@ -67,15 +68,17 @@ const fetchAllowedCustomers = async (couponId) => {
 }
 
 const createCoupon = async ({ couponData, allowedCustomers, profile }) => {
+  const safeData = sanitizeObject(couponData) // ✅ Sanitizar
+  
   const { data: coupon, error: couponError } = await supabase
     .from('coupons')
-    .insert([{ ...couponData, created_by: profile?.id }])
+    .insert([{ ...safeData, created_by: profile?.id }])
     .select()
     .single()
   
   if (couponError) throw couponError
   
-  if (!couponData.is_global && allowedCustomers?.length > 0) {
+  if (!safeData.is_global && allowedCustomers?.length > 0) {
     const { error: customersError } = await supabase
       .from('coupon_allowed_customers')
       .insert(allowedCustomers.map(customerId => ({
@@ -90,16 +93,18 @@ const createCoupon = async ({ couponData, allowedCustomers, profile }) => {
 }
 
 const updateCoupon = async ({ id, couponData, allowedCustomers, profile }) => {
+  const safeData = sanitizeObject(couponData) // ✅ Sanitizar
+  
   const { data: coupon, error: couponError } = await supabase
     .from('coupons')
-    .update({ ...couponData, updated_by: profile?.id })
+    .update({ ...safeData, updated_by: profile?.id })
     .eq('id', id)
     .select()
     .single()
   
   if (couponError) throw couponError
   
-  if (!couponData.is_global) {
+  if (!safeData.is_global) {
     await supabase.from('coupon_allowed_customers').delete().eq('coupon_id', id)
     
     if (allowedCustomers?.length > 0) {
