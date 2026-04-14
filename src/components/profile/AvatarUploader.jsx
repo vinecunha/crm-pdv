@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Camera, Upload, AlertCircle } from 'lucide-react'
 import Button from '../ui/Button'
 import Modal from '../ui/Modal'
+import LazyImage from '../ui/LazyImage'
 import { supabase } from '../../lib/supabase'
 
 const AvatarUploader = ({ user, avatarUrl, fullName, displayName, onAvatarUpdate }) => {
@@ -10,18 +11,14 @@ const AvatarUploader = ({ user, avatarUrl, fullName, displayName, onAvatarUpdate
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  // Prioridade: display_name > full_name > 'U'
   const getUserInitial = () => {
-    if (displayName) {
-      return displayName.charAt(0).toUpperCase()
-    }
-    if (fullName) {
-      return fullName.charAt(0).toUpperCase()
-    }
+    if (displayName) return displayName.charAt(0).toUpperCase()
+    if (fullName) return fullName.charAt(0).toUpperCase()
     return 'U'
   }
 
   const userInitial = getUserInitial()
+  const nameForAvatar = displayName || fullName || 'Usuário'
 
   const handleUpload = async (e) => {
     const file = e.target.files?.[0]
@@ -98,22 +95,21 @@ const AvatarUploader = ({ user, avatarUrl, fullName, displayName, onAvatarUpdate
       <div className="relative inline-block">
         <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-md mx-auto">
           {avatarUrl ? (
-            <img 
-              src={avatarUrl} 
-              alt="Avatar" 
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.target.onerror = null
-                e.target.style.display = 'none'
-                e.target.nextSibling?.classList.remove('hidden')
-              }}
+            <LazyImage
+              src={avatarUrl}
+              alt={nameForAvatar}
+              className="w-full h-full"
+              fallback={
+                <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                  <span className="text-4xl font-bold text-white">{userInitial}</span>
+                </div>
+              }
             />
-          ) : null}
-          <div className={`w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center ${avatarUrl ? 'hidden' : ''}`}>
-            <span className="text-4xl font-bold text-white">
-              {userInitial}
-            </span>
-          </div>
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <span className="text-4xl font-bold text-white">{userInitial}</span>
+            </div>
+          )}
         </div>
         <button
           onClick={() => setShowModal(true)}
@@ -141,22 +137,21 @@ const AvatarUploader = ({ user, avatarUrl, fullName, displayName, onAvatarUpdate
           <div className="flex justify-center">
             <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100">
               {tempAvatarUrl ? (
-                <img 
-                  src={tempAvatarUrl} 
-                  alt="Avatar Preview" 
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.onerror = null
-                    e.target.style.display = 'none'
-                    e.target.nextSibling?.classList.remove('hidden')
-                  }}
+                <LazyImage
+                  src={tempAvatarUrl}
+                  alt="Avatar Preview"
+                  className="w-full h-full"
+                  fallback={
+                    <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                      <span className="text-4xl font-bold text-white">{userInitial}</span>
+                    </div>
+                  }
                 />
-              ) : null}
-              <div className={`w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center ${tempAvatarUrl ? 'hidden' : ''}`}>
-                <span className="text-4xl font-bold text-white">
-                  {userInitial}
-                </span>
-              </div>
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                  <span className="text-4xl font-bold text-white">{userInitial}</span>
+                </div>
+              )}
             </div>
           </div>
 

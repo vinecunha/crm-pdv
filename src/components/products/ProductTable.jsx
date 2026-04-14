@@ -1,6 +1,6 @@
 import React from 'react'
 import { Package, ArchiveX, AlertTriangle, TrendingUp, CheckCircle } from 'lucide-react'
-import DataTable from '../ui/DataTable'
+import { useTableStrategy } from '../../hooks/useTableStrategy'
 import Badge from '../Badge'
 import { formatCurrency, formatNumber } from '../../utils/formatters'
 import { createAction } from '../../utils/actions'
@@ -17,6 +17,8 @@ const ProductTable = ({
   canViewOnlyActive,
   units 
 }) => {
+  const TableComponent = useTableStrategy(products, 100)
+
   const getUnitLabel = (unit) => {
     const found = units.find(u => u.value === unit)
     return found ? found.label : unit
@@ -41,20 +43,23 @@ const ProductTable = ({
     {
       key: 'code',
       header: 'Código',
+      width: '100px',
       render: (row) => <div className="text-sm font-mono text-gray-600">{row.code || '-'}</div>
     },
     {
       key: 'name',
       header: 'Produto',
       sortable: true,
+      width: '25%',
+      minWidth: '200px',
       render: (row) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
             <Package size={16} className="text-blue-600" />
           </div>
-          <div>
-            <div className="font-medium text-gray-900">{row.name}</div>
-            <div className="text-xs text-gray-500">{row.category || 'Sem categoria'}</div>
+          <div className="min-w-0">
+            <div className="font-medium text-gray-900 truncate">{row.name}</div>
+            <div className="text-xs text-gray-500 truncate">{row.category || 'Sem categoria'}</div>
           </div>
         </div>
       )
@@ -63,6 +68,7 @@ const ProductTable = ({
       key: 'stock_quantity',
       header: 'Estoque',
       sortable: true,
+      width: '120px',
       render: (row) => {
         const status = getStockStatus(row)
         const StatusIcon = status.icon
@@ -83,16 +89,19 @@ const ProductTable = ({
       key: 'price',
       header: 'Preço Venda',
       sortable: true,
+      width: '120px',
       render: (row) => <div className="font-semibold text-green-600">{formatCurrency(row.price)}</div>
     },
     {
       key: 'cost_price',
       header: 'Último Custo',
+      width: '120px',
       render: (row) => <div className="text-sm text-gray-600">{formatCurrency(row.cost_price)}</div>
     },
     {
       key: 'is_active',
       header: 'Status',
+      width: '100px',
       render: (row) => getStatusBadge(row.is_active)
     }
   ]
@@ -113,16 +122,15 @@ const ProductTable = ({
   ]
 
   return (
-    <DataTable
+    <TableComponent
       columns={columns}
       data={products}
       actions={actions}
       onRowClick={onViewDetails}
+      emptyMessage="Nenhum produto encontrado"
       striped
       hover
-      pagination
-      itemsPerPageOptions={[20, 50, 100]}
-      defaultItemsPerPage={20}
+      showTotalItems
     />
   )
 }

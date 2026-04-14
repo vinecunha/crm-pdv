@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Phone, Keyboard, ShoppingCart, User, Ticket, CreditCard } from 'lucide-react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Phone, Keyboard, ShoppingCart, User, Ticket, CreditCard, WifiOff } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import FeedbackMessage from '../components/ui/FeedbackMessage'
@@ -8,29 +9,239 @@ import Button from '../components/ui/Button'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
 import useSystemLogs from '../hooks/useSystemLogs'
 import usePDVShortcuts from '../hooks/usePDVShortcuts'
-import ShortcutFeedback from '../components/ui/ShortcutFeedback'
+import { saveSaleOffline } from '../utils/offlineStorage'
+import { useNetworkStatus } from '../hooks/useNetworkStatus'
 
+import ShortcutFeedback from '../components/ui/ShortcutFeedback'
 import ProductGrid from '../components/sales/pdv/ProductGrid'
 import CartSummary from '../components/sales/pdv/CartSummary'
-import CustomerSelector from '../components/sales/pdv/CustomerSelector'
 import QuickCustomerForm from '../components/sales/pdv/QuickCustomerForm'
 import CouponSelector from '../components/sales/pdv/CouponSelector'
 import CheckoutModal from '../components/sales/pdv/CheckoutModal'
-import ShortcutsHelpModal from '../components/sales/pdv/ShortcutsHelpModal'
+import ShortcutsHelpModal from '../components/ui/ShortcutsHelpModal'
 import ConfirmModal from '../components/ui/ConfirmModal'
 
+// ============= API Functions =============
+const fetchProducts = async () => {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('is_active', true)
+    .gt('stock_quantity', 0)
+    .order('name')
+  
+  if (error) throw error
+  return data || []
+}
+
+const fetchAvailableCoupons = async (customerId) => {
+  if (!customerId) return []
+  
+  const today = new Date().toISOString()
+  
+  const [globalResult, allowedResult] = await Promise.all([
+    supabase
+      .from('coupons')
+      .select('*')
+      .eq('is_active', true)
+      .eq('is_global', true)
+      .lte('valid_from', today)
+      .gte('valid_to', today),
+    supabase
+      .from('coupon_allowed_customers')
+      .select('coupon_id')
+      .eq('customer_id', customerId)
+  ])
+  
+  let restricted = []
+  if (allowedResult.data?.length) {
+    const { data } = await supabase
+      .from('coupons')
+      .select('*')
+      .eq('is_active', true)
+      .in('id', allowedResult.data.map(a => a.coupon_id))
+      .lte('valid_from', today)
+      .gte('valid_to', today)
+    restricted = data || []
+  }
+  
+  return [...(globalResult.data || []), ...restricted]
+}
+
+const searchCustomerByPhone = async (phone) => {
+  const { data, error } = await supabase
+    .from('customers')
+    .select('*')
+    .eq('phone', phone.replace(/\D/g, ''))
+    .maybeSingle()
+    
+  if (error) throw error
+  return data
+}
+
+const createCustomer = async (customerData) => {
+  const { data, error } = await supabase
+    .from('customers')
+    .insert([{ 
+      ...customerData, 
+      phone: customerData.phone.replace(/\D/g, ''),
+      status: 'active',
+      total_purchases: 0
+    }])
+    .select()
+    .single()
+    
+  if (error) throw error
+  return data
+}
+
+const validateCoupon = async ({ code, customerId, cartSubtotal }) => {
+  const { data, error } = await supabase
+    .from('coupons')
+    .select('*')
+    .eq('code', code.toUpperCase())
+    .eq('is_active', true)
+    .single()
+    
+  if (error) throw new Error('Cupom inválido')
+  
+  const today = new Date()
+  if (data.valid_from && today < new Date(data.valid_from)) {
+    throw new Error('Cupom ainda não está válido')
+  }
+  if (data.valid_to && today > new Date(data.valid_to)) {
+    throw new Error('Cupom expirado')
+  }
+  if (data.usage_limit && data.used_count >= data.usage_limit) {
+    throw new Error('Cupom esgotado')
+  }
+  if (cartSubtotal < (data.min_purchase || 0)) {
+    throw new Error(`Valor mínimo: ${formatCurrency(data.min_purchase)}`)
+  }
+  
+  if (!data.is_global) {
+    const { data: allowed } = await supabase
+      .from('coupon_allowed_customers')
+      .select('*')
+      .eq('coupon_id', data.id)
+      .eq('customer_id', customerId)
+      .maybeSingle()
+      
+    if (!allowed) {
+      throw new Error('Cupom não disponível para este cliente')
+    }
+  }
+  
+  let discountValue = data.discount_type === 'percent' 
+    ? (cartSubtotal * data.discount_value) / 100 
+    : data.discount_value
+    
+  if (data.discount_type === 'percent' && data.max_discount) {
+    discountValue = Math.min(discountValue, data.max_discount)
+  }
+  discountValue = Math.min(discountValue, cartSubtotal)
+  
+  return { coupon: data, discountValue }
+}
+
+const createSale = async ({ cart, customer, coupon, discount, paymentMethod, profile }) => {
+  const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
+  const total = subtotal - discount
+  
+  // Criar venda
+  const { data: sale, error: saleError } = await supabase
+    .from('sales')
+    .insert([{
+      customer_id: customer?.id || null,
+      customer_name: customer?.name || null,
+      customer_phone: customer?.phone || null,
+      total_amount: subtotal,
+      discount_amount: discount,
+      discount_percent: coupon?.discount_type === 'percent' ? coupon.discount_value : 0,
+      coupon_code: coupon?.code || null,
+      final_amount: total,
+      payment_method: paymentMethod,
+      payment_status: 'paid',
+      status: 'completed',
+      created_by: profile?.id
+    }])
+    .select()
+    .single()
+    
+  if (saleError) throw saleError
+  
+  // Criar itens da venda
+  const saleItems = cart.map(item => ({
+    sale_id: sale.id,
+    product_id: item.id,
+    product_name: item.name,
+    product_code: item.code,
+    quantity: item.quantity,
+    unit_price: item.price,
+    total_price: item.total
+  }))
+  
+  const { error: itemsError } = await supabase.from('sale_items').insert(saleItems)
+  if (itemsError) throw itemsError
+  
+  // Atualizar estoque
+  for (const item of cart) {
+    await supabase
+      .from('products')
+      .update({ 
+        stock_quantity: item.stock - item.quantity,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', item.id)
+  }
+  
+  // Atualizar uso do cupom
+  if (coupon) {
+    await supabase
+      .from('coupons')
+      .update({ used_count: (coupon.used_count || 0) + 1 })
+      .eq('id', coupon.id)
+      
+    if (customer) {
+      await supabase
+        .from('customer_coupons')
+        .insert([{ coupon_id: coupon.id, customer_id: customer.id, sale_id: sale.id }])
+    }
+  }
+  
+  // Atualizar cliente
+  if (customer) {
+    await supabase
+      .from('customers')
+      .update({ 
+        last_purchase: new Date().toISOString(),
+        total_purchases: (customer.total_purchases || 0) + total
+      })
+      .eq('id', customer.id)
+  }
+  
+  return sale
+}
+
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(value || 0)
+}
+
+// ============= Componente Principal =============
 const Sales = () => {
   const { profile } = useAuth()
   const { logCreate, logAction, logError } = useSystemLogs()
+  const queryClient = useQueryClient()
   
-  // Estados
-  const [products, setProducts] = useState([])
-  const [filteredProducts, setFilteredProducts] = useState([])
+  // Estados locais
   const [cart, setCart] = useState([])
-  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [categories, setCategories] = useState([])
+  const { isOnline } = useNetworkStatus()
   
   // Cliente
   const [customerPhone, setCustomerPhone] = useState('')
@@ -41,7 +252,6 @@ const Sales = () => {
   const [coupon, setCoupon] = useState(null)
   const [couponError, setCouponError] = useState('')
   const [discount, setDiscount] = useState(0)
-  const [availableCoupons, setAvailableCoupons] = useState([])
   
   // Pagamento
   const [paymentMethod, setPaymentMethod] = useState('cash')
@@ -61,19 +271,215 @@ const Sales = () => {
   // Formulário rápido
   const [quickCustomerForm, setQuickCustomerForm] = useState({ name: '', phone: '', email: '' })
   const [quickCustomerErrors, setQuickCustomerErrors] = useState({})
-  const [isSubmittingCustomer, setIsSubmittingCustomer] = useState(false)
   
   // Feedback
   const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
-  const [isSubmitting, setIsSubmitting] = useState(false)
   
   const searchInputRef = useRef(null)
 
-  useEffect(() => { fetchProducts() }, [])
-  useEffect(() => { filterProducts() }, [searchTerm, selectedCategory, products])
-  useEffect(() => { if (customer) fetchAvailableCoupons() }, [customer])
-  
-  // Resetar índice selecionado quando o carrinho muda
+  // ============= Queries =============
+  const { 
+    data: products = [], 
+    isLoading,
+    refetch: refetchProducts 
+  } = useQuery({
+    queryKey: ['products-active'],
+    queryFn: fetchProducts,
+    staleTime: 2 * 60 * 1000,
+  })
+
+  const { data: availableCoupons = [] } = useQuery({
+    queryKey: ['available-coupons', customer?.id],
+    queryFn: () => fetchAvailableCoupons(customer?.id),
+    enabled: !!customer,
+  })
+
+  // ============= Mutations =============
+  const searchCustomerMutation = useMutation({
+    mutationFn: searchCustomerByPhone,
+    onSuccess: (data) => {
+      if (data) {
+        setCustomer(data)
+        showFeedback('success', `Cliente encontrado: ${data.name}`)
+        setShowCustomerModal(false)
+      } else {
+        setQuickCustomerForm({ name: '', phone: customerPhone, email: '' })
+        setShowCustomerModal(false)
+        setShowQuickCustomerModal(true)
+      }
+    },
+    onError: (error) => {
+      showFeedback('error', 'Erro ao buscar cliente: ' + error.message)
+    }
+  })
+
+  const createCustomerMutation = useMutation({
+    mutationFn: createCustomer,
+    onSuccess: async (data) => {
+      setCustomer(data)
+      await logCreate('customer', data.id, { name: data.name, phone: data.phone })
+      showFeedback('success', `Cliente ${data.name} cadastrado!`)
+      setShowQuickCustomerModal(false)
+    },
+    onError: (error) => {
+      showFeedback('error', 'Erro ao cadastrar cliente: ' + error.message)
+    }
+  })
+
+  const validateCouponMutation = useMutation({
+    mutationFn: validateCoupon,
+    onSuccess: (data) => {
+      setCoupon(data.coupon)
+      setCouponCode(data.coupon.code)
+      setDiscount(data.discountValue)
+      setCouponError('')
+      setShowCouponModal(false)
+      showFeedback('success', `Cupom ${data.coupon.code} aplicado! Desconto: ${formatCurrency(data.discountValue)}`)
+    },
+    onError: (error) => {
+      setCouponError(error.message)
+    }
+  })
+
+  const createSaleMutation = useMutation({
+    mutationFn: createSale,
+    onSuccess: async (sale) => {
+      await logCreate('sale', sale.id, { 
+        sale_number: sale.sale_number, 
+        total_amount: sale.total_amount, 
+        discount: sale.discount_amount, 
+        final_amount: sale.final_amount,
+        mode: 'online'
+      })
+      
+      queryClient.invalidateQueries({ queryKey: ['products-active'] })
+      
+      showFeedback('success', `Venda finalizada! Nº: ${sale.sale_number}`)
+      
+      // Limpar estados
+      setCart([])
+      setCustomer(null)
+      setCustomerPhone('')
+      setCoupon(null)
+      setCouponCode('')
+      setDiscount(0)
+      setShowPaymentModal(false)
+      setSelectedCartItemIndex(0)
+    },
+    onError: async (error) => {
+      console.error('Erro ao finalizar venda:', error)
+      
+      // Se for erro de rede, tentar salvar offline
+      if (!isOnline || error.message?.includes('network') || error.message?.includes('fetch') || error.message?.includes('Failed to fetch')) {
+        await handleOfflineSale()
+      } else {
+        showFeedback('error', 'Erro ao finalizar venda: ' + error.message)
+        await logError('sale', error, { action: 'create_sale' })
+      }
+    }
+  })
+
+  // ============= Handler para venda OFFLINE =============
+  const handleOfflineSale = async () => {
+    try {
+      const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
+      const total = subtotal - discount
+      
+      // Preparar dados da venda
+      const offlineSaleData = {
+        // Dados da venda
+        customer_id: customer?.id || null,
+        customer_name: customer?.name || 'Cliente offline',
+        customer_phone: customer?.phone || null,
+        total_amount: subtotal,
+        discount_amount: discount,
+        discount_percent: coupon?.discount_type === 'percent' ? coupon.discount_value : 0,
+        coupon_code: coupon?.code || null,
+        final_amount: total,
+        payment_method: paymentMethod,
+        payment_status: 'pending',
+        status: 'pending',
+        created_by: profile?.id,
+        created_by_email: profile?.email,
+        
+        // Itens do carrinho
+        items: cart.map(item => ({
+          product_id: item.id,
+          product_name: item.name,
+          product_code: item.code,
+          quantity: item.quantity,
+          unit_price: item.price,
+          total_price: item.total
+        })),
+        
+        // Metadados offline
+        offlineCreated: true,
+        offlineCreatedAt: new Date().toISOString(),
+      }
+      
+      // Salvar no IndexedDB
+      const localId = await saveSaleOffline(offlineSaleData)
+      
+      // Registrar sincronização para quando voltar online
+      if ('serviceWorker' in navigator && 'SyncManager' in window) {
+        const registration = await navigator.serviceWorker.ready
+        await registration.sync.register('sync-pending-sales')
+      }
+      
+      // Atualizar estoque localmente (para consistência visual)
+      updateLocalStock(cart)
+      
+      // Log
+      await logCreate('sale', `offline-${localId}`, { 
+        offline: true, 
+        total_amount: subtotal, 
+        discount, 
+        final_amount: total 
+      })
+      
+      showFeedback('success', `✅ Venda salva OFFLINE! Sincroniza quando houver internet.`)
+      
+      // Limpar estados
+      setCart([])
+      setCustomer(null)
+      setCustomerPhone('')
+      setCoupon(null)
+      setCouponCode('')
+      setDiscount(0)
+      setShowPaymentModal(false)
+      setSelectedCartItemIndex(0)
+      
+    } catch (error) {
+      console.error('❌ Erro ao salvar offline:', error)
+      showFeedback('error', 'Erro ao salvar venda offline: ' + error.message)
+    }
+  }
+
+  // Atualizar estoque localmente (para consistência visual)
+  const updateLocalStock = (cartItems) => {
+    queryClient.setQueryData(['products-active'], (oldData) => {
+      if (!oldData) return oldData
+      
+      return oldData.map(product => {
+        const cartItem = cartItems.find(item => item.id === product.id)
+        if (cartItem) {
+          return {
+            ...product,
+            stock_quantity: product.stock_quantity - cartItem.quantity
+          }
+        }
+        return product
+      })
+    })
+  }
+
+  // ============= Efeitos =============
+  useEffect(() => {
+    if (products.length > 0) {
+      setCategories([...new Set(products.map(p => p.category).filter(Boolean))])
+    }
+  }, [products])
+
   useEffect(() => {
     if (cart.length === 0) {
       setSelectedCartItemIndex(0)
@@ -82,29 +488,10 @@ const Sales = () => {
     }
   }, [cart, selectedCartItemIndex])
 
-  const fetchProducts = async () => {
-    setLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('is_active', true)
-        .gt('stock_quantity', 0)
-        .order('name')
-      
-      if (error) throw error
-      setProducts(data || [])
-      setFilteredProducts(data || [])
-      setCategories([...new Set(data?.map(p => p.category).filter(Boolean))])
-    } catch (error) {
-      showFeedback('error', 'Erro ao carregar produtos')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const filterProducts = () => {
+  // ============= Produtos Filtrados =============
+  const filteredProducts = React.useMemo(() => {
     let filtered = [...products]
+    
     if (searchTerm.trim()) {
       const search = searchTerm.toLowerCase()
       filtered = filtered.filter(p => 
@@ -113,19 +500,20 @@ const Sales = () => {
         p.barcode?.toLowerCase().includes(search)
       )
     }
+    
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(p => p.category === selectedCategory)
     }
-    setFilteredProducts(filtered)
-  }
+    
+    return filtered
+  }, [products, searchTerm, selectedCategory])
 
+  // ============= Handlers =============
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
   }
 
-  // ========== FUNÇÕES DO CARRINHO ==========
-  
   const addToCart = (product) => {
     const existing = cart.find(item => item.id === product.id)
     
@@ -204,87 +592,26 @@ const Sales = () => {
     })
   }
 
-  // ========== FUNÇÕES DO CLIENTE ==========
-
-  const searchCustomer = async () => {
+  const searchCustomer = () => {
     if (!customerPhone || customerPhone.length < 10) {
       showFeedback('error', 'Digite um telefone válido')
       return
     }
-    try {
-      const { data, error } = await supabase
-        .from('customers')
-        .select('*')
-        .eq('phone', customerPhone.replace(/\D/g, ''))
-        .maybeSingle()
-        
-      if (error) throw error
-      
-      if (data) {
-        setCustomer(data)
-        showFeedback('success', `Cliente encontrado: ${data.name}`)
-        setShowCustomerModal(false)
-      } else {
-        setQuickCustomerForm({ name: '', phone: customerPhone, email: '' })
-        setShowCustomerModal(false)
-        setShowQuickCustomerModal(true)
-      }
-    } catch (error) {
-      showFeedback('error', 'Erro ao buscar cliente')
-    }
+    searchCustomerMutation.mutate(customerPhone)
   }
 
-  const quickRegisterCustomer = async () => {
+  const quickRegisterCustomer = () => {
     const errors = {}
     if (!quickCustomerForm.name?.trim()) errors.name = 'Nome é obrigatório'
     if (!quickCustomerForm.phone?.trim() || quickCustomerForm.phone.length < 10) errors.phone = 'Telefone inválido'
     if (quickCustomerForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(quickCustomerForm.email)) errors.email = 'E-mail inválido'
+    
     if (Object.keys(errors).length > 0) { 
       setQuickCustomerErrors(errors)
       return 
     }
     
-    setIsSubmittingCustomer(true)
-    try {
-      const { data: existing } = await supabase
-        .from('customers')
-        .select('id')
-        .eq('phone', quickCustomerForm.phone.replace(/\D/g, ''))
-        .maybeSingle()
-        
-      if (existing) {
-        const { data: customerData } = await supabase
-          .from('customers')
-          .select('*')
-          .eq('id', existing.id)
-          .single()
-        setCustomer(customerData)
-        showFeedback('success', `Cliente já existente: ${customerData.name}`)
-        setShowQuickCustomerModal(false)
-        return
-      }
-      
-      const { data: newCustomer, error } = await supabase
-        .from('customers')
-        .insert([{ 
-          ...quickCustomerForm, 
-          phone: quickCustomerForm.phone.replace(/\D/g, ''),
-          status: 'active'
-        }])
-        .select()
-        .single()
-        
-      if (error) throw error
-      
-      setCustomer(newCustomer)
-      showFeedback('success', `Cliente ${newCustomer.name} cadastrado!`)
-      setShowQuickCustomerModal(false)
-      await logCreate('customer', newCustomer.id, { name: newCustomer.name, phone: newCustomer.phone })
-    } catch (error) {
-      showFeedback('error', 'Erro ao cadastrar cliente: ' + error.message)
-    } finally {
-      setIsSubmittingCustomer(false)
-    }
+    createCustomerMutation.mutate(quickCustomerForm)
   }
 
   const clearCustomer = () => { 
@@ -294,124 +621,24 @@ const Sales = () => {
     showFeedback('info', 'Cliente removido')
   }
 
-  // ========== FUNÇÕES DE CUPOM ==========
-
-  const fetchAvailableCoupons = async () => {
-    try {
-      const today = new Date().toISOString()
-      const { data: global } = await supabase
-        .from('coupons')
-        .select('*')
-        .eq('is_active', true)
-        .eq('is_global', true)
-        .lte('valid_from', today)
-        .gte('valid_to', today)
-        
-      let restricted = []
-      if (customer) {
-        const { data: allowed } = await supabase
-          .from('coupon_allowed_customers')
-          .select('coupon_id')
-          .eq('customer_id', customer.id)
-          
-        if (allowed?.length) {
-          const { data } = await supabase
-            .from('coupons')
-            .select('*')
-            .eq('is_active', true)
-            .in('id', allowed.map(a => a.coupon_id))
-            .lte('valid_from', today)
-            .gte('valid_to', today)
-          restricted = data || []
-        }
-      }
-      setAvailableCoupons([...(global || []), ...restricted])
-    } catch (error) {
-      console.error('Erro ao buscar cupons:', error)
-    }
-  }
-
-  const validateCoupon = async (couponToValidate = null) => {
+  const applyCoupon = (couponToValidate = null) => {
     const code = couponToValidate?.code || couponCode
     if (!code) { 
       setCouponError('Digite o código do cupom')
-      return false 
+      return 
     }
     if (!customer) { 
       setCouponError('Identifique um cliente para usar cupons')
-      return false 
+      return 
     }
     
-    try {
-      const { data, error } = await supabase
-        .from('coupons')
-        .select('*')
-        .eq('code', code.toUpperCase())
-        .eq('is_active', true)
-        .single()
-        
-      if (error) { 
-        setCouponError('Cupom inválido')
-        return false 
-      }
-      
-      const today = new Date()
-      if (data.valid_from && today < new Date(data.valid_from)) { 
-        setCouponError('Cupom ainda não está válido')
-        return false 
-      }
-      if (data.valid_to && today > new Date(data.valid_to)) { 
-        setCouponError('Cupom expirado')
-        return false 
-      }
-      if (data.usage_limit && data.used_count >= data.usage_limit) { 
-        setCouponError('Cupom esgotado')
-        return false 
-      }
-      
-      const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
-      if (subtotal < (data.min_purchase || 0)) { 
-        setCouponError(`Valor mínimo: ${formatCurrency(data.min_purchase)}`)
-        return false 
-      }
-      
-      if (!data.is_global) {
-        const { data: allowed } = await supabase
-          .from('coupon_allowed_customers')
-          .select('*')
-          .eq('coupon_id', data.id)
-          .eq('customer_id', customer.id)
-          .maybeSingle()
-          
-        if (!allowed) { 
-          setCouponError('Cupom não disponível para este cliente')
-          return false 
-        }
-      }
-      
-      let discountValue = data.discount_type === 'percent' 
-        ? (subtotal * data.discount_value) / 100 
-        : data.discount_value
-        
-      if (data.discount_type === 'percent' && data.max_discount) {
-        discountValue = Math.min(discountValue, data.max_discount)
-      }
-      discountValue = Math.min(discountValue, subtotal)
-      
-      setCoupon(data)
-      setCouponCode(data.code)
-      setDiscount(discountValue)
-      setCouponError('')
-      setShowCouponModal(false)
-      
-      showFeedback('success', `Cupom ${data.code} aplicado! Desconto: ${formatCurrency(discountValue)}`)
-      return true
-      
-    } catch (error) {
-      console.error('Erro ao validar cupom:', error)
-      setCouponError('Erro ao validar cupom')
-      return false
-    }
+    const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
+    
+    validateCouponMutation.mutate({
+      code,
+      customerId: customer.id,
+      cartSubtotal: subtotal
+    })
   }
 
   const removeCoupon = () => { 
@@ -421,122 +648,27 @@ const Sales = () => {
     showFeedback('info', 'Cupom removido')
   }
 
-  // ========== FINALIZAR VENDA ==========
-
-  const confirmPayment = async (method = null) => {
+  const confirmPayment = (method = null) => {
     const finalPaymentMethod = method || paymentMethod
     
-    setIsSubmitting(true)
-    try {
-      const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
-      const total = subtotal - discount
-      
-      const { data: sale, error: saleError } = await supabase
-        .from('sales')
-        .insert([{
-          customer_id: customer?.id || null,
-          customer_name: customer?.name || null,
-          customer_phone: customer?.phone || null,
-          total_amount: subtotal,
-          discount_amount: discount,
-          discount_percent: coupon?.discount_type === 'percent' ? coupon.discount_value : 0,
-          coupon_code: coupon?.code || null,
-          final_amount: total,
-          payment_method: finalPaymentMethod,
-          payment_status: 'paid',
-          status: 'completed',
-          created_by: profile?.id
-        }])
-        .select()
-        .single()
-        
-      if (saleError) throw saleError
-      
-      const saleItems = cart.map(item => ({
-        sale_id: sale.id,
-        product_id: item.id,
-        product_name: item.name,
-        product_code: item.code,
-        quantity: item.quantity,
-        unit_price: item.price,
-        total_price: item.total
-      }))
-      
-      await supabase.from('sale_items').insert(saleItems)
-      
-      // Atualizar estoque
-      for (const item of cart) {
-        await supabase
-          .from('products')
-          .update({ 
-            stock_quantity: item.stock - item.quantity,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', item.id)
-      }
-      
-      if (coupon) {
-        await supabase
-          .from('coupons')
-          .update({ used_count: (coupon.used_count || 0) + 1 })
-          .eq('id', coupon.id)
-          
-        if (customer) {
-          await supabase
-            .from('customer_coupons')
-            .insert([{ coupon_id: coupon.id, customer_id: customer.id, sale_id: sale.id }])
-        }
-      }
-      
-      if (customer) {
-        await supabase
-          .from('customers')
-          .update({ 
-            last_purchase: new Date().toISOString(),
-            total_purchases: (customer.total_purchases || 0) + total
-          })
-          .eq('id', customer.id)
-      }
-      
-      await logCreate('sale', sale.id, { 
-        sale_number: sale.sale_number, 
-        total_amount: subtotal, 
-        discount, 
-        final_amount: total 
-      })
-      
-      showFeedback('success', `Venda finalizada! Nº: ${sale.sale_number}`)
-      
-      // Limpar estados
-      setCart([])
-      setCustomer(null)
-      setCustomerPhone('')
-      setCoupon(null)
-      setCouponCode('')
-      setDiscount(0)
-      setShowPaymentModal(false)
-      setSelectedCartItemIndex(0)
-      
-      await fetchProducts()
-      
-    } catch (error) {
-      console.error('Erro ao finalizar venda:', error)
-      showFeedback('error', 'Erro ao finalizar venda: ' + error.message)
-      await logError('sale', error, { action: 'create_sale' })
-    } finally {
-      setIsSubmitting(false)
+    if (!isOnline) {
+      // Se estiver offline, ir direto para o fluxo offline
+      handleOfflineSale()
+      return
     }
+    
+    // Online - tentar enviar normalmente
+    createSaleMutation.mutate({
+      cart,
+      customer,
+      coupon,
+      discount,
+      paymentMethod: finalPaymentMethod,
+      profile
+    })
   }
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value || 0)
-  }
-
-  // ========== HANDLERS PARA ATALHOS ==========
-  
+  // ============= Handlers para Atalhos =============
   const handleFocusSearch = useCallback(() => {
     searchInputRef.current?.focus()
   }, [])
@@ -547,9 +679,9 @@ const Sales = () => {
   }, [])
 
   const handleRefreshProducts = useCallback(async () => {
-    await fetchProducts()
+    await refetchProducts()
     showFeedback('info', 'Produtos atualizados')
-  }, [])
+  }, [refetchProducts])
 
   const handleIncreaseQuantity = useCallback((item) => {
     updateCartItemQuantity(item.id, item.quantity + 1)
@@ -592,8 +724,8 @@ const Sales = () => {
   }, [cart])
 
   const handleConfirmPayment = useCallback(async (method = null) => {
-    await confirmPayment(method)
-  }, [cart, discount, customer, coupon, paymentMethod])
+    confirmPayment(method)
+  }, [cart, discount, customer, coupon, paymentMethod, isOnline])
 
   const handleCancelPayment = useCallback(() => {
     setShowPaymentModal(false)
@@ -631,11 +763,24 @@ const Sales = () => {
   const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
   const total = subtotal - discount
 
-  if (loading) return <DataLoadingSkeleton />
+  const isMutating = searchCustomerMutation.isPending || createCustomerMutation.isPending || 
+                     validateCouponMutation.isPending || createSaleMutation.isPending
+
+  if (isLoading) return <DataLoadingSkeleton />
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Indicador de modo OFFLINE */}
+      {!isOnline && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-500 text-white py-2 px-4 text-center text-sm font-medium shadow-md">
+          <div className="flex items-center justify-center gap-2">
+            <WifiOff size={16} />
+            <span>MODO OFFLINE - As vendas serão salvas localmente e sincronizadas quando a internet voltar</span>
+          </div>
+        </div>
+      )}
+      
+      <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 ${!isOnline ? 'pt-12' : ''}`}>
         {feedback.show && (
           <FeedbackMessage 
             type={feedback.type} 
@@ -644,7 +789,6 @@ const Sales = () => {
           />
         )}
 
-        {/* Feedback de atalho */}
         {shortcutFeedback && (
           <ShortcutFeedback 
             shortcut={shortcutFeedback} 
@@ -692,7 +836,6 @@ const Sales = () => {
           {/* Coluna da Direita - Carrinho e Resumo */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 sticky top-4">
-              {/* Cabeçalho do Carrinho */}
               <div className="p-4 border-b border-gray-200">
                 <h2 className="font-semibold text-gray-900 flex items-center gap-2">
                   <ShoppingCart size={18} />
@@ -705,7 +848,6 @@ const Sales = () => {
                 </h2>
               </div>
 
-              {/* Seção Cliente e Cupom */}
               <div className="p-4 border-b border-gray-200 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -720,6 +862,7 @@ const Sales = () => {
                       <button
                         onClick={clearCustomer}
                         className="text-xs text-red-500 hover:text-red-700"
+                        disabled={isMutating}
                       >
                         Remover
                       </button>
@@ -730,6 +873,7 @@ const Sales = () => {
                       variant="outline"
                       onClick={() => setShowCustomerModal(true)}
                       shortcut={{ key: 'C', alt: true, description: 'Cliente' }}
+                      disabled={isMutating}
                     >
                       Identificar
                     </Button>
@@ -749,6 +893,7 @@ const Sales = () => {
                       <button
                         onClick={removeCoupon}
                         className="text-xs text-red-500 hover:text-red-700"
+                        disabled={isMutating}
                       >
                         Remover
                       </button>
@@ -759,7 +904,7 @@ const Sales = () => {
                       variant="outline"
                       onClick={() => setShowCouponModal(true)}
                       shortcut={{ key: 'U', alt: true, description: 'Cupom' }}
-                      disabled={!customer}
+                      disabled={!customer || isMutating}
                     >
                       Aplicar
                     </Button>
@@ -767,7 +912,6 @@ const Sales = () => {
                 </div>
               </div>
 
-              {/* Lista de Itens do Carrinho */}
               <CartSummary 
                 cart={cart} 
                 discount={discount}
@@ -778,9 +922,9 @@ const Sales = () => {
                 onCheckout={() => setShowPaymentModal(true)}
                 selectedItemIndex={selectedCartItemIndex}
                 onSelectItem={setSelectedCartItemIndex}
+                disabled={isMutating}
               />
 
-              {/* Rodapé com Total e Finalizar */}
               <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm">
@@ -804,11 +948,11 @@ const Sales = () => {
                   size="lg"
                   fullWidth
                   onClick={() => setShowPaymentModal(true)}
-                  disabled={cart.length === 0}
+                  disabled={cart.length === 0 || isMutating}
                   icon={CreditCard}
                   shortcut={{ key: 'Enter', ctrl: true, description: 'Finalizar' }}
                 >
-                  Finalizar Venda (Ctrl+Enter)
+                  {!isOnline ? 'Salvar Venda Offline' : 'Finalizar Venda'} (Ctrl+Enter)
                 </Button>
               </div>
             </div>
@@ -837,12 +981,13 @@ const Sales = () => {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg text-center" 
               onKeyPress={(e) => e.key === 'Enter' && searchCustomer()} 
               autoFocus
+              disabled={searchCustomerMutation.isPending}
             />
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setShowCustomerModal(false)} className="flex-1">
                 Cancelar (ESC)
               </Button>
-              <Button onClick={searchCustomer} className="flex-1">
+              <Button onClick={searchCustomer} loading={searchCustomerMutation.isPending} className="flex-1">
                 Buscar
               </Button>
             </div>
@@ -857,7 +1002,7 @@ const Sales = () => {
           setFormData={setQuickCustomerForm}
           errors={quickCustomerErrors}
           onSubmit={quickRegisterCustomer}
-          isSubmitting={isSubmittingCustomer}
+          isSubmitting={createCustomerMutation.isPending}
         />
 
         {/* Modal de Cupons */}
@@ -870,8 +1015,9 @@ const Sales = () => {
           couponCode={couponCode}
           setCouponCode={setCouponCode}
           couponError={couponError}
-          onApplyCoupon={validateCoupon}
+          onApplyCoupon={applyCoupon}
           onRemoveCoupon={removeCoupon}
+          isLoading={validateCouponMutation.isPending}
         />
 
         {/* Modal Finalizar Venda */}
@@ -886,7 +1032,8 @@ const Sales = () => {
           paymentMethod={paymentMethod}
           setPaymentMethod={setPaymentMethod}
           onConfirm={confirmPayment}
-          isSubmitting={isSubmitting}
+          isSubmitting={createSaleMutation.isPending}
+          isOnline={isOnline}
         />
 
         {/* Modal de Confirmação - Limpar Carrinho */}

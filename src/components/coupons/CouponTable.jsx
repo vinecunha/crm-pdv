@@ -1,7 +1,8 @@
+// src/components/coupons/CouponTable.jsx
 import React from 'react'
 import { Copy, Globe, Users, Percent, DollarSign } from 'lucide-react'
-import DataTable from '../ui/DataTable'
-import Badge from '../Badge'
+import DataTable from '../../components/ui/DataTable'
+import Badge from '../../components/Badge'
 import { formatCurrency, formatDate } from '../../utils/formatters'
 import { createAction } from '../../utils/actions'
 

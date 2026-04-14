@@ -17,11 +17,16 @@ const StockCountSessionsView = ({
 }) => {
   const filteredSessions = sessions.filter(s => {
     if (searchTerm) {
-      return s.name.toLowerCase().includes(searchTerm.toLowerCase())
+      const search = searchTerm.toLowerCase()
+      return s.name?.toLowerCase().includes(search) ||
+             s.description?.toLowerCase().includes(search) ||
+             s.responsible?.toLowerCase().includes(search)
     }
+    
     if (activeFilters.status) {
       return s.status === activeFilters.status
     }
+    
     return true
   })
 
@@ -44,7 +49,7 @@ const StockCountSessionsView = ({
     <>
       <div className="mb-6">
         <DataFilters
-          searchPlaceholder="Buscar balanços..."
+          searchPlaceholder="Buscar balanços por nome, descrição ou responsável..."
           searchValue={searchTerm}
           onSearchChange={setSearchTerm}
           filters={[
@@ -53,13 +58,15 @@ const StockCountSessionsView = ({
               label: 'Status',
               type: 'select',
               options: [
+                { value: '', label: 'Todos' },
                 { value: 'in_progress', label: 'Em Andamento' },
                 { value: 'completed', label: 'Concluídos' },
                 { value: 'cancelled', label: 'Cancelados' }
               ]
             }
           ]}
-          onFilterChange={setActiveFilters}
+          onFilterChange={(filters) => setActiveFilters({ status: filters.status })}
+          searchDebounceDelay={300} // ✅ Delay para busca de sessões
         />
       </div>
 

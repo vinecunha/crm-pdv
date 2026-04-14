@@ -75,4 +75,3 @@ const CouponStats = ({ coupons }) => {
 }
 
 export default CouponStats
-// export default

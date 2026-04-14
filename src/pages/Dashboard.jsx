@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { 
   Users, ShoppingCart, Package, TrendingUp, 
-  ArrowUp, ArrowDown, DollarSign, AlertCircle,
-  ChevronRight, Plus, UserPlus, CreditCard
+  ChevronRight, Plus, UserPlus, CreditCard,
+  DollarSign, AlertCircle
 } from 'lucide-react'
 import { formatCurrency, formatNumber, formatDate } from '../utils/formatters'
 import SectionErrorBoundary from '../components/SectionErrorBoundary'
@@ -17,220 +18,181 @@ import Badge from '../components/Badge'
 import { Line } from 'react-chartjs-2'
 import '../lib/chartConfig'
 
+// ============= API Function =============
+const fetchDashboardData = async () => {
+  const [
+    customersResult,
+    salesResult,
+    productsResult,
+    saleItemsResult
+  ] = await Promise.allSettled([
+    supabase.from('customers').select('id', { count: 'exact', head: true }),
+    supabase.from('sales').select('*').order('created_at', { ascending: false }),
+    supabase.from('products').select('*').eq('is_active', true),
+    supabase.from('sale_items').select(`
+      quantity,
+      product_id,
+      product:products(name),
+      created_at
+    `).order('created_at', { ascending: false }).limit(500)
+  ])
+
+  const customersCount = customersResult.status === 'fulfilled' && !customersResult.value.error
+    ? customersResult.value.count || 0
+    : 0
+
+  const sales = salesResult.status === 'fulfilled' && !salesResult.value.error
+    ? salesResult.value.data || []
+    : []
+
+  const products = productsResult.status === 'fulfilled' && !productsResult.value.error
+    ? productsResult.value.data || []
+    : []
+
+  const saleItems = saleItemsResult.status === 'fulfilled' && !saleItemsResult.value.error
+    ? saleItemsResult.value.data || []
+    : []
+
+  return { customersCount, sales, products, saleItems }
+}
+
+// ============= Componente Principal =============
 const Dashboard = () => {
-  const { profile, isAdmin, permissions } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [stats, setStats] = useState({
-    salesToday: { value: 0, change: 0, trend: 'up' },
-    salesMonth: { value: 0, change: 0, trend: 'up' },
-    products: { value: 0 },
-    customers: { value: 0 },
-    averageTicket: { value: 0, change: 0, trend: 'up' },
-    lowStockProducts: { value: 0 }
+  const { profile, permissions } = useAuth()
+
+  // ============= Query =============
+  const { 
+    data: rawData,
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['dashboard-data'],
+    queryFn: fetchDashboardData,
+    staleTime: 2 * 60 * 1000, // 2 minutos
   })
-  const [recentSales, setRecentSales] = useState([])
-  const [topProducts, setTopProducts] = useState([])
-  const [salesChartData, setSalesChartData] = useState({ labels: [], datasets: [] })
-  const [quickActions, setQuickActions] = useState([])
 
-  useEffect(() => {
-    if (profile) {
-      fetchDashboardData()
-      setupQuickActions()
-    }
-  }, [profile])
+  // ============= Dados Processados =============
+  const dashboardData = React.useMemo(() => {
+    if (!rawData) return null
 
-  const setupQuickActions = () => {
-    const actions = []
+    const { customersCount, sales, products, saleItems } = rawData
+
+    // Calcular datas
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
     
-    if (permissions.canViewSales) {
-      actions.push({
-        label: 'Nova Venda',
-        icon: ShoppingCart,
-        path: '/sales',
-        color: 'blue'
-      })
-    }
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
     
-    if (permissions.canViewCustomers) {
-      actions.push({
-        label: 'Novo Cliente',
-        icon: UserPlus,
-        path: '/customers',
-        color: 'green'
-      })
-    }
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+    const startOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+    const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0)
     
-    if (permissions.canViewProducts) {
-      actions.push({
-        label: 'Novo Produto',
-        icon: Plus,
-        path: '/products',
-        color: 'purple'
-      })
+    // Últimos 7 dias para o gráfico
+    const last7Days = []
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today)
+      date.setDate(date.getDate() - i)
+      last7Days.push(date)
     }
-    
-    if (permissions.canManageStock) {
-      actions.push({
-        label: 'Balanço',
-        icon: Package,
-        path: '/stock-count',
-        color: 'orange'
-      })
-    }
-    
-    setQuickActions(actions)
-  }
 
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true)
-      setError(null)
+    // Vendas por dia (últimos 7 dias)
+    const salesByDay = {}
+    last7Days.forEach(date => {
+      const key = date.toISOString().split('T')[0]
+      salesByDay[key] = 0
+    })
 
-      // Buscar dados em paralelo para melhor performance
-      const [
-        customersResult,
-        salesResult,
-        productsResult,
-        saleItemsResult
-      ] = await Promise.allSettled([
-        supabase.from('customers').select('id', { count: 'exact', head: true }),
-        supabase.from('sales').select('*').order('created_at', { ascending: false }),
-        supabase.from('products').select('*').eq('is_active', true),
-        supabase.from('sale_items').select(`
-          quantity,
-          product_id,
-          product:products(name),
-          created_at
-        `).order('created_at', { ascending: false }).limit(500)
-      ])
+    // Vendas de hoje e ontem
+    const salesToday = sales.filter(sale => new Date(sale.created_at) >= today)
+    const salesYesterday = sales.filter(sale => {
+      const saleDate = new Date(sale.created_at)
+      return saleDate >= yesterday && saleDate < today
+    })
 
-      // Processar clientes
-      const customersCount = customersResult.status === 'fulfilled' && !customersResult.value.error
-        ? customersResult.value.count || 0
-        : 0
+    const totalSalesToday = salesToday.reduce((sum, sale) => sum + (sale.final_amount || 0), 0)
+    const totalSalesYesterday = salesYesterday.reduce((sum, sale) => sum + (sale.final_amount || 0), 0)
 
-      // Processar vendas
-      const sales = salesResult.status === 'fulfilled' && !salesResult.value.error
-        ? salesResult.value.data || []
-        : []
+    // Vendas do mês
+    const salesThisMonth = sales.filter(sale => new Date(sale.created_at) >= startOfMonth)
+    const salesLastMonth = sales.filter(sale => {
+      const saleDate = new Date(sale.created_at)
+      return saleDate >= startOfLastMonth && saleDate <= endOfLastMonth
+    })
 
-      // Processar produtos
-      const products = productsResult.status === 'fulfilled' && !productsResult.value.error
-        ? productsResult.value.data || []
-        : []
+    const totalSalesMonth = salesThisMonth.reduce((sum, sale) => sum + (sale.final_amount || 0), 0)
+    const totalSalesLastMonth = salesLastMonth.reduce((sum, sale) => sum + (sale.final_amount || 0), 0)
 
-      // Processar itens de venda
-      const saleItems = saleItemsResult.status === 'fulfilled' && !saleItemsResult.value.error
-        ? saleItemsResult.value.data || []
-        : []
-
-      // Calcular datas
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      
-      const yesterday = new Date(today)
-      yesterday.setDate(yesterday.getDate() - 1)
-      
-      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-      const startOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1)
-      const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0)
-      
-      // Últimos 7 dias para o gráfico
-      const last7Days = []
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date(today)
-        date.setDate(date.getDate() - i)
-        last7Days.push(date)
+    // Preencher vendas por dia para o gráfico
+    salesThisMonth.forEach(sale => {
+      const dateKey = new Date(sale.created_at).toISOString().split('T')[0]
+      if (salesByDay[dateKey] !== undefined) {
+        salesByDay[dateKey] += sale.final_amount || 0
       }
+    })
 
-      // Vendas por dia (últimos 7 dias)
-      const salesByDay = {}
-      last7Days.forEach(date => {
-        const key = date.toISOString().split('T')[0]
-        salesByDay[key] = 0
-      })
+    // Ticket médio
+    const averageTicket = salesToday.length > 0 ? totalSalesToday / salesToday.length : 0
+    const averageTicketYesterday = salesYesterday.length > 0 ? totalSalesYesterday / salesYesterday.length : 0
 
-      // Vendas de hoje e ontem
-      const salesToday = sales.filter(sale => new Date(sale.created_at) >= today)
-      const salesYesterday = sales.filter(sale => {
-        const saleDate = new Date(sale.created_at)
-        return saleDate >= yesterday && saleDate < today
-      })
+    // Calcular variações
+    const salesChange = totalSalesYesterday > 0 
+      ? ((totalSalesToday - totalSalesYesterday) / totalSalesYesterday) * 100 
+      : 0
+    const monthChange = totalSalesLastMonth > 0
+      ? ((totalSalesMonth - totalSalesLastMonth) / totalSalesLastMonth) * 100
+      : 0
+    const ticketChange = averageTicketYesterday > 0
+      ? ((averageTicket - averageTicketYesterday) / averageTicketYesterday) * 100
+      : 0
 
-      const totalSalesToday = salesToday.reduce((sum, sale) => sum + (sale.final_amount || 0), 0)
-      const totalSalesYesterday = salesYesterday.reduce((sum, sale) => sum + (sale.final_amount || 0), 0)
+    // Produtos com estoque baixo
+    const lowStockProducts = products.filter(p => 
+      (p.stock_quantity || 0) <= (p.min_stock || 5)
+    )
 
-      // Vendas do mês
-      const salesThisMonth = sales.filter(sale => new Date(sale.created_at) >= startOfMonth)
-      const salesLastMonth = sales.filter(sale => {
-        const saleDate = new Date(sale.created_at)
-        return saleDate >= startOfLastMonth && saleDate <= endOfLastMonth
-      })
-
-      const totalSalesMonth = salesThisMonth.reduce((sum, sale) => sum + (sale.final_amount || 0), 0)
-      const totalSalesLastMonth = salesLastMonth.reduce((sum, sale) => sum + (sale.final_amount || 0), 0)
-
-      // Preencher vendas por dia para o gráfico
-      salesThisMonth.forEach(sale => {
-        const dateKey = new Date(sale.created_at).toISOString().split('T')[0]
-        if (salesByDay[dateKey] !== undefined) {
-          salesByDay[dateKey] += sale.final_amount || 0
+    // Produtos mais vendidos
+    const productSalesMap = {}
+    saleItems.forEach(item => {
+      const productId = item.product_id
+      const productName = item.product?.name || 'Produto'
+      if (!productSalesMap[productId]) {
+        productSalesMap[productId] = {
+          name: productName,
+          quantity: 0
         }
-      })
+      }
+      productSalesMap[productId].quantity += item.quantity || 0
+    })
 
-      // Ticket médio
-      const averageTicket = salesToday.length > 0 ? totalSalesToday / salesToday.length : 0
-      const averageTicketYesterday = salesYesterday.length > 0 ? totalSalesYesterday / salesYesterday.length : 0
+    const topProducts = Object.values(productSalesMap)
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 5)
 
-      // Calcular variações
-      const salesChange = totalSalesYesterday > 0 
-        ? ((totalSalesToday - totalSalesYesterday) / totalSalesYesterday) * 100 
-        : 0
-      const monthChange = totalSalesLastMonth > 0
-        ? ((totalSalesMonth - totalSalesLastMonth) / totalSalesLastMonth) * 100
-        : 0
-      const ticketChange = averageTicketYesterday > 0
-        ? ((averageTicket - averageTicketYesterday) / averageTicketYesterday) * 100
-        : 0
+    // Últimas vendas
+    const recentSales = sales.slice(0, 5).map(sale => ({
+      id: sale.id,
+      sale_number: sale.sale_number,
+      customer: sale.customer_name || 'Cliente não identificado',
+      amount: sale.final_amount || 0,
+      payment_method: sale.payment_method,
+      status: sale.status || 'completed',
+      date: sale.created_at
+    }))
 
-      // Produtos com estoque baixo
-      const lowStockProducts = products.filter(p => 
-        (p.stock_quantity || 0) <= (p.min_stock || 5)
-      )
-
-      // Produtos mais vendidos (corrigido - usando sale_items)
-      const productSalesMap = {}
-      saleItems.forEach(item => {
-        const productId = item.product_id
-        const productName = item.product?.name || 'Produto'
-        if (!productSalesMap[productId]) {
-          productSalesMap[productId] = {
-            name: productName,
-            quantity: 0
-          }
-        }
-        productSalesMap[productId].quantity += item.quantity || 0
-      })
-
-      const topProductsData = Object.values(productSalesMap)
-        .sort((a, b) => b.quantity - a.quantity)
-        .slice(0, 5)
-
-      // Últimas vendas
-      const recentSalesData = sales.slice(0, 5).map(sale => ({
-        id: sale.id,
-        sale_number: sale.sale_number,
-        customer: sale.customer_name || 'Cliente não identificado',
-        amount: sale.final_amount || 0,
-        payment_method: sale.payment_method,
-        status: sale.status || 'completed',
-        date: sale.created_at
-      }))
-
-      // Configurar dados do gráfico
-      setSalesChartData({
+    return {
+      stats: {
+        salesToday: { value: totalSalesToday, change: Math.abs(salesChange), trend: salesChange >= 0 ? 'up' : 'down' },
+        salesMonth: { value: totalSalesMonth, change: Math.abs(monthChange), trend: monthChange >= 0 ? 'up' : 'down' },
+        products: { value: products.length },
+        customers: { value: customersCount },
+        averageTicket: { value: averageTicket, change: Math.abs(ticketChange), trend: ticketChange >= 0 ? 'up' : 'down' },
+        lowStockProducts: { value: lowStockProducts.length }
+      },
+      recentSales,
+      topProducts,
+      chartData: {
         labels: last7Days.map(d => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })),
         datasets: [{
           label: 'Vendas (R$)',
@@ -240,40 +202,31 @@ const Dashboard = () => {
           tension: 0.4,
           fill: true
         }]
-      })
-
-      setStats({
-        salesToday: { 
-          value: totalSalesToday, 
-          change: Math.abs(salesChange), 
-          trend: salesChange >= 0 ? 'up' : 'down' 
-        },
-        salesMonth: { 
-          value: totalSalesMonth, 
-          change: Math.abs(monthChange), 
-          trend: monthChange >= 0 ? 'up' : 'down' 
-        },
-        products: { value: products.length },
-        customers: { value: customersCount },
-        averageTicket: { 
-          value: averageTicket, 
-          change: Math.abs(ticketChange), 
-          trend: ticketChange >= 0 ? 'up' : 'down' 
-        },
-        lowStockProducts: { value: lowStockProducts.length }
-      })
-
-      setRecentSales(recentSalesData)
-      setTopProducts(topProductsData)
-
-    } catch (error) {
-      console.error('Erro ao carregar dashboard:', error)
-      setError('Erro ao carregar dados do dashboard')
-    } finally {
-      setLoading(false)
+      }
     }
-  }
+  }, [rawData])
 
+  // ============= Quick Actions =============
+  const quickActions = React.useMemo(() => {
+    const actions = []
+    
+    if (permissions.canViewSales) {
+      actions.push({ label: 'Nova Venda', icon: ShoppingCart, path: '/sales', color: 'blue' })
+    }
+    if (permissions.canViewCustomers) {
+      actions.push({ label: 'Novo Cliente', icon: UserPlus, path: '/customers', color: 'green' })
+    }
+    if (permissions.canViewProducts) {
+      actions.push({ label: 'Novo Produto', icon: Plus, path: '/products', color: 'purple' })
+    }
+    if (permissions.canManageStock) {
+      actions.push({ label: 'Balanço', icon: Package, path: '/stock-count', color: 'orange' })
+    }
+    
+    return actions
+  }, [permissions])
+
+  // ============= Helpers =============
   const getStatusBadge = (status) => {
     const config = {
       completed: { label: 'Concluída', variant: 'success' },
@@ -285,12 +238,7 @@ const Dashboard = () => {
   }
 
   const getPaymentMethodLabel = (method) => {
-    const methods = {
-      cash: 'Dinheiro',
-      credit: 'Crédito',
-      debit: 'Débito',
-      pix: 'PIX'
-    }
+    const methods = { cash: 'Dinheiro', credit: 'Crédito', debit: 'Débito', pix: 'PIX' }
     return methods[method] || method
   }
 
@@ -314,23 +262,37 @@ const Dashboard = () => {
     }
   }
 
-  if (loading) {
+  // ============= Render =============
+  if (isLoading) {
     return <DataLoadingSkeleton type="cards" rows={4} />
   }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro ao carregar dashboard</h2>
+          <p className="text-gray-600 mb-4">{error.message}</p>
+          <Button onClick={() => refetch()}>Tentar novamente</Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!dashboardData) return null
+
+  const { stats, recentSales, topProducts, chartData } = dashboardData
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header com boas-vindas */}
+        {/* Header */}
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Visão Geral
-              </h1>
+              <h1 className="text-2xl font-bold text-gray-900">Visão Geral</h1>
             </div>
             
-            {/* Ações Rápidas */}
             <div className="flex gap-2">
               {quickActions.map((action, index) => {
                 const Icon = action.icon
@@ -346,14 +308,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Mensagem de erro */}
-        {error && (
-          <div className="mb-4">
-            <FeedbackMessage type="error" message={error} onClose={() => setError(null)} />
-          </div>
-        )}
-
-        {/* Cards de Estatísticas - Usando SummaryCard */}
+        {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <SectionErrorBoundary title="Erro nas vendas de hoje">
             <SummaryCard
@@ -361,7 +316,7 @@ const Dashboard = () => {
               value={formatCurrency(stats.salesToday.value)}
               icon={ShoppingCart}
               color="blue"
-              trend={stats.salesToday.trend === 'up' ? 'up' : 'down'}
+              trend={stats.salesToday.trend}
               subtitle={`${stats.salesToday.change.toFixed(1)}% vs ontem`}
             />
           </SectionErrorBoundary>
@@ -372,7 +327,7 @@ const Dashboard = () => {
               value={formatCurrency(stats.salesMonth.value)}
               icon={TrendingUp}
               color="green"
-              trend={stats.salesMonth.trend === 'up' ? 'up' : 'down'}
+              trend={stats.salesMonth.trend}
               subtitle={`${stats.salesMonth.change.toFixed(1)}% vs mês anterior`}
             />
           </SectionErrorBoundary>
@@ -383,7 +338,7 @@ const Dashboard = () => {
               value={formatCurrency(stats.averageTicket.value)}
               icon={CreditCard}
               color="purple"
-              trend={stats.averageTicket.trend === 'up' ? 'up' : 'down'}
+              trend={stats.averageTicket.trend}
               subtitle={`${stats.averageTicket.change.toFixed(1)}% vs ontem`}
             />
           </SectionErrorBoundary>
@@ -434,7 +389,7 @@ const Dashboard = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Vendas dos Últimos 7 Dias</h2>
             <div className="h-64">
-              <Line data={salesChartData} options={chartOptions} />
+              <Line data={chartData} options={chartOptions} />
             </div>
           </div>
         </SectionErrorBoundary>
@@ -445,10 +400,7 @@ const Dashboard = () => {
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">Últimas Vendas</h2>
-                <Link 
-                  to="/sales-list" 
-                  className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                >
+                <Link to="/sales-list" className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1">
                   Ver todas <ChevronRight size={16} />
                 </Link>
               </div>
@@ -474,9 +426,7 @@ const Dashboard = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-gray-900">
-                          {formatCurrency(sale.amount)}
-                        </p>
+                        <p className="font-semibold text-gray-900">{formatCurrency(sale.amount)}</p>
                         {getStatusBadge(sale.status)}
                       </div>
                     </div>
@@ -490,10 +440,7 @@ const Dashboard = () => {
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">Produtos Mais Vendidos</h2>
-                <Link 
-                  to="/reports" 
-                  className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                >
+                <Link to="/reports" className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1">
                   Relatórios <ChevronRight size={16} />
                 </Link>
               </div>

@@ -102,8 +102,8 @@ const PermissionsSettingsTab = () => {
       {feedback.show && <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">Função</label>
-        <div className="flex gap-2">
+        <h2 className="block font-medium text-gray-700 m-3">Função</h2>
+        <div className="flex gap-2 mx-3">
           {Object.entries(roleConfig).map(([role, config]) => {
             const Icon = config.icon
             return (

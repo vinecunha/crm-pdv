@@ -1,5 +1,6 @@
 import React from 'react'
 import { Package, Search } from 'lucide-react'
+import LazyImage from '../../ui/LazyImage'
 import { formatCurrency } from '../../../utils/formatters'
 
 const ProductGrid = ({ 
@@ -62,9 +63,24 @@ const ProductGrid = ({
             onClick={() => onAddToCart(product)}
             className="bg-white rounded-lg shadow-sm p-4 text-left hover:shadow-md transition-all hover:scale-105"
           >
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-              <Package size={24} className="text-blue-600" />
+            {/* Imagem do produto com LazyImage */}
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3 overflow-hidden">
+              {product.image_url ? (
+                <LazyImage
+                  src={product.image_url}
+                  alt={product.name}
+                  className="w-full h-full"
+                  fallback={
+                    <div className="w-full h-full bg-blue-100 flex items-center justify-center">
+                      <Package size={24} className="text-blue-600" />
+                    </div>
+                  }
+                />
+              ) : (
+                <Package size={24} className="text-blue-600" />
+              )}
             </div>
+            
             <h3 className="font-medium text-gray-900 text-sm truncate">{product.name}</h3>
             <p className="text-xs text-gray-500 mt-1">{product.code || 'Sem código'}</p>
             <div className="mt-2 flex justify-between items-center">

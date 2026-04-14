@@ -1,10 +1,30 @@
 import React from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Banknote, CreditCard, QrCode, DollarSign } from 'lucide-react'
 import DataTable from '../ui/DataTable'
 import { formatCurrency, formatNumber } from '../../utils/formatters'
 
-const PaymentMethodsTable = ({ data }) => {
-  if (!data?.length) return null
+// Função para buscar os dados da API
+const fetchPaymentMethods = async () => {
+  const response = await fetch('/api/payment-methods/summary')
+  if (!response.ok) throw new Error('Erro ao carregar formas de pagamento')
+  return response.json()
+}
+
+const PaymentMethodsTable = ({ initialData, enabled = true }) => {
+  const { 
+    data, 
+    isLoading, 
+    error,
+    refetch 
+  } = useQuery({
+    queryKey: ['payment-methods-summary'],
+    queryFn: fetchPaymentMethods,
+    initialData,
+    enabled,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    retry: 2
+  })
 
   const columns = [
     {
@@ -33,6 +53,45 @@ const PaymentMethodsTable = ({ data }) => {
       render: (row) => <div className="font-semibold text-green-600">{formatCurrency(row.total)}</div>
     }
   ]
+
+  // Estados de loading e erro
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <CreditCard size={20} />
+          Vendas por Meio de Pagamento
+        </h2>
+        <div className="animate-pulse space-y-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-12 bg-gray-200 rounded"></div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <CreditCard size={20} />
+          Vendas por Meio de Pagamento
+        </h2>
+        <div className="text-center text-red-600 py-8">
+          <p>Erro ao carregar dados: {error.message}</p>
+          <button 
+            onClick={() => refetch()}
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!data?.length) return null
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 mb-6">

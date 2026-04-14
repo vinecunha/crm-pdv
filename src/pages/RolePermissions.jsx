@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Shield, Save, RotateCcw, CheckCircle, XCircle,
   Lock, Unlock, Eye, AlertTriangle, Info
@@ -10,120 +11,187 @@ import FeedbackMessage from '../components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
 import Modal from '../components/ui/Modal'
 
+// ============= API Functions =============
+const fetchPermissions = async () => {
+  const [permsResult, rolePermsResult] = await Promise.all([
+    supabase.from('permissions').select('*').order('module').order('name'),
+    supabase.from('role_permissions').select('role_name, permission_id')
+  ])
+
+  if (permsResult.error) throw permsResult.error
+  if (rolePermsResult.error) throw rolePermsResult.error
+
+  // Agrupar permissões por módulo
+  const grouped = {}
+  permsResult.data?.forEach(p => {
+    const module = p.module || 'outros'
+    if (!grouped[module]) grouped[module] = []
+    grouped[module].push(p)
+  })
+
+  // Organizar por role
+  const roleMap = { admin: new Set(), gerente: new Set(), operador: new Set() }
+  rolePermsResult.data?.forEach(rp => {
+    if (roleMap[rp.role_name]) {
+      roleMap[rp.role_name].add(rp.permission_id)
+    }
+  })
+
+  const rolePermissions = {
+    admin: setToObject(roleMap.admin),
+    gerente: setToObject(roleMap.gerente),
+    operador: setToObject(roleMap.operador)
+  }
+
+  return { permissions: grouped, rolePermissions }
+}
+
+const setToObject = (set) => {
+  const obj = {}
+  set.forEach(id => obj[id] = true)
+  return obj
+}
+
+const saveRolePermissions = async ({ role, permissions }) => {
+  // Deletar permissões atuais
+  const { error: deleteError } = await supabase
+    .from('role_permissions')
+    .delete()
+    .eq('role_name', role)
+
+  if (deleteError) throw deleteError
+
+  // Inserir novas permissões
+  const insertData = Object.keys(permissions).map(permId => ({
+    role_name: role,
+    permission_id: parseInt(permId)
+  }))
+
+  if (insertData.length > 0) {
+    const { error: insertError } = await supabase
+      .from('role_permissions')
+      .insert(insertData)
+
+    if (insertError) throw insertError
+  }
+
+  return { role, permissions }
+}
+
+const resetRolePermissions = async ({ role, defaultPermissions }) => {
+  await supabase.from('role_permissions').delete().eq('role_name', role)
+
+  if (defaultPermissions.length > 0) {
+    const { error } = await supabase
+      .from('role_permissions')
+      .insert(defaultPermissions)
+
+    if (error) throw error
+  }
+
+  return { role }
+}
+
+// ============= Constantes =============
+const roleColors = {
+  admin: 'from-purple-600 to-purple-700',
+  gerente: 'from-blue-500 to-cyan-500',
+  operador: 'from-gray-500 to-gray-600'
+}
+
+const roleNames = {
+  admin: 'Administrador',
+  gerente: 'Gerente',
+  operador: 'Operador'
+}
+
+// ============= Componente Principal =============
 const RolePermissions = () => {
   const { profile, isAdmin } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [permissions, setPermissions] = useState([])
-  const [rolePermissions, setRolePermissions] = useState({})
+  const queryClient = useQueryClient()
+  
   const [selectedRole, setSelectedRole] = useState('admin')
   const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
-  const [hasChanges, setHasChanges] = useState(false)
   const [showResetModal, setShowResetModal] = useState(false)
+  const [localPermissions, setLocalPermissions] = useState({})
+  const [hasChanges, setHasChanges] = useState(false)
 
-  // Cores dos roles
-  const roleColors = {
-    admin: 'from-purple-600 to-purple-700',
-    gerente: 'from-blue-500 to-cyan-500',
-    operador: 'from-gray-500 to-gray-600'
-  }
+  // ============= Query =============
+  const { 
+    data,
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['permissions'],
+    queryFn: fetchPermissions,
+    staleTime: 30 * 60 * 1000, // 30 minutos
+    enabled: isAdmin,
+  })
 
-  const roleNames = {
-    admin: 'Administrador',
-    gerente: 'Gerente',
-    operador: 'Operador'
-  }
+  const permissions = data?.permissions || {}
+  const rolePermissions = data?.rolePermissions || {}
 
-  useEffect(() => {
+  // ============= Mutations =============
+  const saveMutation = useMutation({
+    mutationFn: saveRolePermissions,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['permissions'] })
+      showFeedback('success', `Permissões do ${roleNames[data.role]} salvas!`)
+      setHasChanges(false)
+    },
+    onError: (error) => {
+      showFeedback('error', 'Erro ao salvar permissões: ' + error.message)
+    }
+  })
+
+  const resetMutation = useMutation({
+    mutationFn: resetRolePermissions,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['permissions'] })
+      showFeedback('success', `Permissões do ${roleNames[data.role]} restauradas!`)
+      setShowResetModal(false)
+      setHasChanges(false)
+    },
+    onError: (error) => {
+      showFeedback('error', 'Erro ao restaurar permissões')
+    }
+  })
+
+  // ============= Efeitos =============
+  React.useEffect(() => {
+    if (rolePermissions[selectedRole]) {
+      setLocalPermissions({ ...rolePermissions[selectedRole] })
+      setHasChanges(false)
+    }
+  }, [selectedRole, rolePermissions])
+
+  React.useEffect(() => {
     if (!isAdmin) {
       window.location.href = '/dashboard'
-      return
     }
-    loadData()
   }, [isAdmin])
 
-  const loadData = async () => {
-    setLoading(true)
-    try {
-      // Carregar todas as permissões agrupadas por módulo
-      const { data: perms, error: permsError } = await supabase
-        .from('permissions')
-        .select('*')
-        .order('module', { ascending: true })
-        .order('name', { ascending: true })
-
-      if (permsError) throw permsError
-
-      // Agrupar por módulo
-      const grouped = {}
-      perms?.forEach(p => {
-        const module = p.module || 'outros'
-        if (!grouped[module]) {
-          grouped[module] = []
-        }
-        grouped[module].push(p)
-      })
-      setPermissions(grouped)
-
-      // Carregar permissões de todos os roles
-      const { data: rolePerms, error: roleError } = await supabase
-        .from('role_permissions')
-        .select('role_name, permission_id')
-
-      if (roleError) throw roleError
-
-      // Organizar por role (usando role_name)
-      const roleMap = { admin: new Set(), gerente: new Set(), operador: new Set() }
-      rolePerms?.forEach(rp => {
-        if (roleMap[rp.role_name]) {
-          roleMap[rp.role_name].add(rp.permission_id)
-        }
-      })
-      
-      // Converter Sets para objetos para facilitar verificação
-      setRolePermissions({
-        admin: setToObject(roleMap.admin),
-        gerente: setToObject(roleMap.gerente),
-        operador: setToObject(roleMap.operador)
-      })
-
-    } catch (error) {
-      console.error('Erro ao carregar dados:', error)
-      showFeedback('error', 'Erro ao carregar permissões')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const setToObject = (set) => {
-    const obj = {}
-    set.forEach(id => obj[id] = true)
-    return obj
-  }
-
+  // ============= Handlers =============
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
-    setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
+    setTimeout(() => setFeedback({ show: false }), 3000)
   }
 
   const handleTogglePermission = (permissionId) => {
-    // Proteção: admin sempre tem todas as permissões
     if (selectedRole === 'admin') {
       showFeedback('warning', 'Administrador sempre tem todas as permissões')
       return
     }
 
-    setRolePermissions(prev => {
-      const currentPerms = { ...prev[selectedRole] }
-      if (currentPerms[permissionId]) {
-        delete currentPerms[permissionId]
+    setLocalPermissions(prev => {
+      const newPerms = { ...prev }
+      if (newPerms[permissionId]) {
+        delete newPerms[permissionId]
       } else {
-        currentPerms[permissionId] = true
+        newPerms[permissionId] = true
       }
-      return {
-        ...prev,
-        [selectedRole]: currentPerms
-      }
+      return newPerms
     })
     setHasChanges(true)
   }
@@ -134,10 +202,10 @@ const RolePermissions = () => {
       return
     }
 
-    const allGranted = modulePermissions.every(p => rolePermissions[selectedRole]?.[p.id])
+    const allGranted = modulePermissions.every(p => localPermissions[p.id])
     
-    setRolePermissions(prev => {
-      const newPerms = { ...prev[selectedRole] }
+    setLocalPermissions(prev => {
+      const newPerms = { ...prev }
       modulePermissions.forEach(p => {
         if (allGranted) {
           delete newPerms[p.id]
@@ -145,130 +213,83 @@ const RolePermissions = () => {
           newPerms[p.id] = true
         }
       })
-      return {
-        ...prev,
-        [selectedRole]: newPerms
-      }
+      return newPerms
     })
     setHasChanges(true)
   }
 
-  const handleSave = async () => {
-    // Proteção extra: nunca salvar alterações para admin
+  const handleSave = () => {
     if (selectedRole === 'admin') {
       showFeedback('warning', 'Permissões do admin não podem ser alteradas')
       return
     }
 
-    setSaving(true)
-    try {
-      const currentPerms = rolePermissions[selectedRole] || {}
-      
-      // 1. Deletar todas as permissões atuais do role
-      const { error: deleteError } = await supabase
-        .from('role_permissions')
-        .delete()
-        .eq('role_name', selectedRole)
-
-      if (deleteError) throw deleteError
-
-      // 2. Inserir as novas permissões
-      const insertData = Object.keys(currentPerms).map(permId => ({
-        role_name: selectedRole,
-        permission_id: parseInt(permId)
-      }))
-
-      if (insertData.length > 0) {
-        const { error: insertError } = await supabase
-          .from('role_permissions')
-          .insert(insertData)
-
-        if (insertError) throw insertError
-      }
-
-      showFeedback('success', `Permissões do ${roleNames[selectedRole]} salvas com sucesso!`)
-      setHasChanges(false)
-      
-      // Recarregar dados para garantir sincronia
-      await loadData()
-
-    } catch (error) {
-      console.error('Erro ao salvar:', error)
-      showFeedback('error', 'Erro ao salvar permissões')
-    } finally {
-      setSaving(false)
-    }
+    saveMutation.mutate({
+      role: selectedRole,
+      permissions: localPermissions
+    })
   }
 
-  const handleReset = async () => {
-    setShowResetModal(false)
-    setSaving(true)
-    
-    try {
-      // Deletar permissões atuais do role
-      await supabase
-        .from('role_permissions')
-        .delete()
-        .eq('role_name', selectedRole)
+  const handleReset = () => {
+    const defaultPerms = getDefaultPermissions(selectedRole)
+    const insertData = defaultPerms.map(permName => {
+      const perm = Object.values(permissions).flat().find(p => p.name === permName)
+      return perm ? { role_name: selectedRole, permission_id: perm.id } : null
+    }).filter(Boolean)
 
-      // Recriar permissões padrão
-      const defaultPerms = getDefaultPermissions(selectedRole)
-      const insertData = defaultPerms.map(permName => {
-        const perm = Object.values(permissions).flat().find(p => p.name === permName)
-        return perm ? { role_name: selectedRole, permission_id: perm.id } : null
-      }).filter(Boolean)
+    resetMutation.mutate({
+      role: selectedRole,
+      defaultPermissions: insertData
+    })
+  }
 
-      if (insertData.length > 0) {
-        await supabase
-          .from('role_permissions')
-          .insert(insertData)
-      }
-
-      showFeedback('success', `Permissões do ${roleNames[selectedRole]} restauradas!`)
-      await loadData()
-      setHasChanges(false)
-
-    } catch (error) {
-      console.error('Erro ao resetar:', error)
-      showFeedback('error', 'Erro ao restaurar permissões')
-    } finally {
-      setSaving(false)
-    }
+  const handleDiscardChanges = () => {
+    setLocalPermissions({ ...rolePermissions[selectedRole] })
+    setHasChanges(false)
   }
 
   const getDefaultPermissions = (role) => {
     const defaults = {
       admin: Object.values(permissions).flat().map(p => p.name),
       gerente: [
-        'canViewDashboard',
-        'canViewSales', 'canCreateSales', 'canCancelSales', 'canViewSalesList', 'canApplyDiscount',
+        'canViewDashboard', 'canViewSales', 'canCreateSales', 'canCancelSales',
         'canViewProducts', 'canCreateProducts', 'canEditProducts', 'canManageStock',
-        'canViewCustomers', 'canCreateCustomers', 'canEditCustomers', 'canCommunicateWithCustomers',
+        'canViewCustomers', 'canCreateCustomers', 'canEditCustomers',
         'canViewCoupons', 'canCreateCoupons', 'canEditCoupons',
-        'canViewCashier', 'canCloseCashier',
-        'canViewReports', 'canExportReports'
+        'canViewCashier', 'canCloseCashier', 'canViewReports', 'canExportReports'
       ],
       operador: [
-        'canViewDashboard',
-        'canViewSales', 'canCreateSales',
-        'canViewProducts',
-        'canViewCustomers', 'canCreateCustomers'
+        'canViewDashboard', 'canViewSales', 'canCreateSales',
+        'canViewProducts', 'canViewCustomers', 'canCreateCustomers'
       ]
     }
     return defaults[role] || []
   }
 
   const getModuleStats = (modulePermissions) => {
-    const granted = modulePermissions.filter(p => rolePermissions[selectedRole]?.[p.id]).length
+    const granted = modulePermissions.filter(p => 
+      selectedRole === 'admin' ? true : localPermissions[p.id]
+    ).length
     const total = modulePermissions.length
     return { granted, total, allGranted: granted === total, someGranted: granted > 0 && granted < total }
   }
 
+  // ============= Render =============
   if (!isAdmin) return null
-
-  if (loading) {
-    return <DataLoadingSkeleton type="cards" rows={4} />
+  if (isLoading) return <DataLoadingSkeleton type="cards" rows={4} />
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro ao carregar permissões</h2>
+          <p className="text-gray-600 mb-4">{error.message}</p>
+          <Button onClick={() => refetch()}>Tentar novamente</Button>
+        </div>
+      </div>
+    )
   }
+
+  const isMutating = saveMutation.isPending || resetMutation.isPending
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -289,11 +310,11 @@ const RolePermissions = () => {
             <div className="flex gap-2">
               {hasChanges && (
                 <>
-                  <Button variant="outline" onClick={() => loadData()}>
+                  <Button variant="outline" onClick={handleDiscardChanges} disabled={isMutating}>
                     <RotateCcw size={16} className="mr-1" />
                     Descartar
                   </Button>
-                  <Button onClick={handleSave} loading={saving}>
+                  <Button onClick={handleSave} loading={saveMutation.isPending} disabled={isMutating}>
                     <Save size={16} className="mr-1" />
                     Salvar Alterações
                   </Button>
@@ -320,10 +341,7 @@ const RolePermissions = () => {
             {['admin', 'gerente', 'operador'].map(role => (
               <button
                 key={role}
-                onClick={() => {
-                  setSelectedRole(role)
-                  setHasChanges(false)
-                }}
+                onClick={() => setSelectedRole(role)}
                 className={`
                   flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all
                   ${selectedRole === role 
@@ -331,14 +349,12 @@ const RolePermissions = () => {
                     : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                   }
                 `}
+                disabled={isMutating}
               >
                 {role === 'admin' && <Lock size={16} />}
                 {role === 'gerente' && <Unlock size={16} />}
                 {role === 'operador' && <Eye size={16} />}
                 {roleNames[role]}
-                {role === 'admin' && (
-                  <span className="ml-1 text-xs opacity-75">(Todas)</span>
-                )}
               </button>
             ))}
           </div>
@@ -349,7 +365,6 @@ const RolePermissions = () => {
                 <Info size={16} />
                 <span>
                   <strong>Administrador</strong> possui automaticamente todas as permissões do sistema.
-                  Estas permissões não podem ser alteradas por questões de segurança.
                 </span>
               </p>
             </div>
@@ -363,20 +378,11 @@ const RolePermissions = () => {
             
             return (
               <div key={module} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                {/* Cabeçalho do Módulo */}
                 <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <h3 className="font-semibold text-gray-900 capitalize">
-                        {module === 'dashboard' ? 'Dashboard' :
-                         module === 'sales' ? 'Vendas' :
-                         module === 'products' ? 'Produtos' :
-                         module === 'customers' ? 'Clientes' :
-                         module === 'cashier' ? 'Caixa' :
-                         module === 'coupons' ? 'Cupons' :
-                         module === 'reports' ? 'Relatórios' :
-                         module === 'users' ? 'Usuários' :
-                         module === 'system' ? 'Sistema' : module}
+                        {module === 'dashboard' ? 'Dashboard' : module}
                       </h3>
                       <span className="text-xs text-gray-500">
                         {stats.granted}/{stats.total} permissões
@@ -387,13 +393,13 @@ const RolePermissions = () => {
                       <button
                         onClick={() => handleToggleAllModule(modulePermissions)}
                         className="text-sm text-blue-600 hover:text-blue-700"
+                        disabled={isMutating}
                       >
                         {stats.allGranted ? 'Desmarcar todos' : 'Marcar todos'}
                       </button>
                     )}
                   </div>
                   
-                  {/* Barra de progresso */}
                   {selectedRole !== 'admin' && (
                     <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
                       <div 
@@ -407,22 +413,21 @@ const RolePermissions = () => {
                   )}
                 </div>
                 
-                {/* Lista de Permissões */}
                 <div className="divide-y divide-gray-100">
                   {modulePermissions.map(permission => {
                     const granted = selectedRole === 'admin' 
                       ? true 
-                      : rolePermissions[selectedRole]?.[permission.id] || false
+                      : localPermissions[permission.id] || false
                     
                     return (
                       <div
                         key={permission.id}
                         className={`
                           px-6 py-3 flex items-center justify-between
-                          ${selectedRole !== 'admin' ? 'cursor-pointer hover:bg-gray-50' : ''}
+                          ${selectedRole !== 'admin' && !isMutating ? 'cursor-pointer hover:bg-gray-50' : ''}
                           transition-colors
                         `}
-                        onClick={() => selectedRole !== 'admin' && handleTogglePermission(permission.id)}
+                        onClick={() => selectedRole !== 'admin' && !isMutating && handleTogglePermission(permission.id)}
                       >
                         <div className="flex items-center gap-3">
                           <div className={`
@@ -467,27 +472,24 @@ const RolePermissions = () => {
           <div className="flex items-start gap-3">
             <AlertTriangle size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-amber-800">
-                ⚠️ Área Sensível
-              </p>
+              <p className="text-sm font-medium text-amber-800">⚠️ Área Sensível</p>
               <p className="text-xs text-amber-700 mt-1">
                 Alterações nas permissões afetam imediatamente o acesso dos usuários.
-                Certifique-se de entender o impacto antes de salvar.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Botões de ação fixos (quando há mudanças) */}
+        {/* Botões de ação fixos */}
         {hasChanges && (
           <div className="fixed bottom-6 right-6 flex gap-2 bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-            <Button variant="outline" size="sm" onClick={() => setShowResetModal(true)}>
+            <Button variant="outline" size="sm" onClick={() => setShowResetModal(true)} disabled={isMutating}>
               Restaurar Padrão
             </Button>
-            <Button variant="outline" size="sm" onClick={loadData}>
+            <Button variant="outline" size="sm" onClick={handleDiscardChanges} disabled={isMutating}>
               Descartar
             </Button>
-            <Button size="sm" onClick={handleSave} loading={saving}>
+            <Button size="sm" onClick={handleSave} loading={saveMutation.isPending} disabled={isMutating}>
               <Save size={14} className="mr-1" />
               Salvar
             </Button>
@@ -506,16 +508,13 @@ const RolePermissions = () => {
               <p className="text-sm text-yellow-800">
                 Tem certeza que deseja restaurar as permissões padrão para <strong>{roleNames[selectedRole]}</strong>?
               </p>
-              <p className="text-xs text-yellow-700 mt-2">
-                Esta ação irá sobrescrever todas as alterações feitas.
-              </p>
             </div>
             
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setShowResetModal(false)}>
                 Cancelar
               </Button>
-              <Button variant="danger" onClick={handleReset}>
+              <Button variant="danger" onClick={handleReset} loading={resetMutation.isPending}>
                 Restaurar
               </Button>
             </div>

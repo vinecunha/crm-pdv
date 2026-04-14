@@ -1,10 +1,39 @@
 import React from 'react'
-import { User } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { User, RefreshCw } from 'lucide-react'
 import DataTable from '../ui/DataTable'
 import { formatCurrency, formatNumber } from '../../utils/formatters'
 
-const UserSalesTable = ({ data }) => {
-  if (!data?.length) return null
+// Função para buscar os dados da API
+const fetchUserSales = async (filters) => {
+  const queryParams = new URLSearchParams(filters).toString()
+  const url = `/api/user-sales/performance${queryParams ? `?${queryParams}` : ''}`
+  
+  const response = await fetch(url)
+  if (!response.ok) throw new Error('Erro ao carregar desempenho dos operadores')
+  return response.json()
+}
+
+const UserSalesTable = ({ 
+  initialData, 
+  enabled = true, 
+  filters = {},
+  showRefreshButton = true 
+}) => {
+  const { 
+    data, 
+    isLoading, 
+    error,
+    refetch,
+    isFetching 
+  } = useQuery({
+    queryKey: ['user-sales-performance', filters],
+    queryFn: () => fetchUserSales(filters),
+    initialData,
+    enabled,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    retry: 2
+  })
 
   const columns = [
     {
@@ -44,12 +73,67 @@ const UserSalesTable = ({ data }) => {
     }
   ]
 
+  // Estados de loading e erro
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <User size={20} />
+            Desempenho por Operador
+          </h2>
+        </div>
+        <div className="animate-pulse space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-12 bg-gray-200 rounded"></div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <User size={20} />
+            Desempenho por Operador
+          </h2>
+        </div>
+        <div className="text-center text-red-600 py-8">
+          <p>Erro ao carregar dados: {error.message}</p>
+          <button 
+            onClick={() => refetch()}
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!data?.length) return null
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-        <User size={20} />
-        Desempenho por Operador
-      </h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <User size={20} />
+          Desempenho por Operador
+        </h2>
+        {showRefreshButton && (
+          <button
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50"
+            title="Atualizar dados"
+          >
+            <RefreshCw size={18} className={isFetching ? 'animate-spin' : ''} />
+          </button>
+        )}
+      </div>
       <DataTable columns={columns} data={data} pagination={false} striped />
     </div>
   )

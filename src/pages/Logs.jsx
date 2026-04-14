@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { RefreshCw, X, RotateCcw, Database, FileText } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -17,42 +18,159 @@ import DeletedRecordsTable from '../components/logs/DeletedRecordsTable'
 import DeletedRecordCard from '../components/logs/DeletedRecordCard'
 import RestoreConfirmModal from '../components/logs/RestoreConfirmModal'
 
+// ============= API Functions =============
+const fetchLogs = async ({ queryKey }) => {
+  const [, { filters, searchTerm }] = queryKey
+  
+  let query = supabase.from('system_logs').select('*').order('created_at', { ascending: false }).limit(1000)
+  
+  if (filters.action) query = query.eq('action', filters.action)
+  if (filters.entity_type) query = query.eq('entity_type', filters.entity_type)
+  if (filters.user_role) query = query.eq('user_role', filters.user_role)
+  if (filters.date_from) query = query.gte('created_at', filters.date_from)
+  if (filters.date_to) query = query.lte('created_at', `${filters.date_to} 23:59:59`)
+
+  const { data, error } = await query
+  if (error) throw error
+
+  let filteredData = data || []
+  if (searchTerm) {
+    const searchLower = searchTerm.toLowerCase()
+    filteredData = filteredData.filter(log =>
+      log.user_email?.toLowerCase().includes(searchLower) ||
+      log.action?.toLowerCase().includes(searchLower) ||
+      log.entity_type?.toLowerCase().includes(searchLower)
+    )
+  }
+  
+  return filteredData
+}
+
+const fetchDeletedRecords = async () => {
+  const [productsRes, customersRes] = await Promise.all([
+    supabase.from('products')
+      .select('*, deleter:deleted_by(email, full_name)')
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', { ascending: false }),
+    supabase.from('customers')
+      .select('*, deleter:deleted_by(email, full_name)')
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', { ascending: false })
+  ])
+
+  const products = (productsRes.data || []).map(p => ({ 
+    ...p, 
+    _type: 'product', 
+    _typeLabel: 'Produto' 
+  }))
+  
+  const customers = (customersRes.data || []).map(c => ({ 
+    ...c, 
+    _type: 'customer', 
+    _typeLabel: 'Cliente' 
+  }))
+
+  return [...products, ...customers].sort((a, b) => 
+    new Date(b.deleted_at) - new Date(a.deleted_at)
+  )
+}
+
+const restoreRecord = async ({ tableName, recordId }) => {
+  const { data, error } = await supabase.rpc('restore_record', {
+    p_table_name: tableName,
+    p_record_id: recordId
+  })
+  
+  if (error) throw error
+  return data
+}
+
+// ============= Componente Principal =============
 const Logs = () => {
   const { profile } = useAuth()
+  const queryClient = useQueryClient()
+  
   const [activeTab, setActiveTab] = useState('logs')
-  const [logs, setLogs] = useState([])
-  const [deletedRecords, setDeletedRecords] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [loadingDeleted, setLoadingDeleted] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filters, setFilters] = useState({})
   const [selectedLog, setSelectedLog] = useState(null)
   const [selectedRecord, setSelectedRecord] = useState(null)
   const [showRestoreModal, setShowRestoreModal] = useState(false)
-  const [isRestoring, setIsRestoring] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
-  const [stats, setStats] = useState({ total: 0, errors: 0, today: 0, uniqueUsers: 0 })
-  const [deletedStats, setDeletedStats] = useState({ products: 0, customers: 0, total: 0 })
 
   const isAdmin = profile?.role === 'admin'
   const isGerente = profile?.role === 'gerente'
   const canView = isAdmin || isGerente
   const canRestore = isAdmin
 
-  useEffect(() => {
-    if (canView) {
-      fetchLogs()
-      fetchDeletedRecords()
-    }
-  }, [filters, searchTerm])
+  // ============= Queries =============
+  const { 
+    data: logs = [], 
+    isLoading: loadingLogs,
+    error: logsError,
+    refetch: refetchLogs,
+    isFetching: isFetchingLogs
+  } = useQuery({
+    queryKey: ['logs', { filters, searchTerm }],
+    queryFn: fetchLogs,
+    enabled: canView && activeTab === 'logs',
+  })
 
+  const { 
+    data: deletedRecords = [], 
+    isLoading: loadingDeleted,
+    error: deletedError,
+    refetch: refetchDeleted,
+    isFetching: isFetchingDeleted
+  } = useQuery({
+    queryKey: ['deleted-records'],
+    queryFn: fetchDeletedRecords,
+    enabled: canView && activeTab === 'deleted',
+  })
+
+  // ============= Mutation =============
+  const restoreMutation = useMutation({
+    mutationFn: restoreRecord,
+    onSuccess: (_, variables) => {
+      showFeedback('success', `${variables.recordType} restaurado com sucesso!`)
+      queryClient.invalidateQueries({ queryKey: ['deleted-records'] })
+      queryClient.invalidateQueries({ queryKey: ['logs'] })
+      setShowRestoreModal(false)
+      setSelectedRecord(null)
+    },
+    onError: (error) => {
+      showFeedback('error', 'Erro ao restaurar: ' + error.message)
+    }
+  })
+
+  // ============= Estatísticas Calculadas =============
+  const logStats = React.useMemo(() => {
+    const today = new Date().toDateString()
+    return {
+      total: logs.length,
+      errors: logs.filter(l => l.action === 'ERROR').length,
+      today: logs.filter(l => new Date(l.created_at).toDateString() === today).length,
+      uniqueUsers: new Set(logs.map(l => l.user_email).filter(Boolean)).size
+    }
+  }, [logs])
+
+  const deletedStats = React.useMemo(() => {
+    const products = deletedRecords.filter(r => r._type === 'product').length
+    const customers = deletedRecords.filter(r => r._type === 'customer').length
+    return {
+      products,
+      customers,
+      total: deletedRecords.length
+    }
+  }, [deletedRecords])
+
+  // ============= Handlers =============
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false }), 3000)
   }
 
-  // ========== FUNÇÕES DOS LOGS ==========
   const getActionColor = (action) => {
     const colors = {
       CREATE: 'text-green-600 bg-green-100',
@@ -86,44 +204,6 @@ const Logs = () => {
     return logDate.toLocaleDateString('pt-BR')
   }
 
-  const fetchLogs = async () => {
-    setLoading(true)
-    try {
-      let query = supabase.from('system_logs').select('*').order('created_at', { ascending: false }).limit(1000)
-      if (filters.action) query = query.eq('action', filters.action)
-      if (filters.entity_type) query = query.eq('entity_type', filters.entity_type)
-      if (filters.user_role) query = query.eq('user_role', filters.user_role)
-      if (filters.date_from) query = query.gte('created_at', filters.date_from)
-      if (filters.date_to) query = query.lte('created_at', `${filters.date_to} 23:59:59`)
-
-      const { data, error } = await query
-      if (error) throw error
-
-      let filteredData = data || []
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase()
-        filteredData = filteredData.filter(log =>
-          log.user_email?.toLowerCase().includes(searchLower) ||
-          log.action?.toLowerCase().includes(searchLower) ||
-          log.entity_type?.toLowerCase().includes(searchLower)
-        )
-      }
-      setLogs(filteredData)
-
-      const today = new Date().toDateString()
-      setStats({
-        total: filteredData.length,
-        errors: filteredData.filter(l => l.action === 'ERROR').length,
-        today: filteredData.filter(l => new Date(l.created_at).toDateString() === today).length,
-        uniqueUsers: new Set(filteredData.map(l => l.user_email).filter(Boolean)).size
-      })
-    } catch (error) {
-      console.error('Erro ao buscar logs:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const exportLogs = async () => {
     setExporting(true)
     try {
@@ -149,57 +229,11 @@ const Logs = () => {
     }
   }
 
-  // ========== FUNÇÕES DOS REGISTROS DELETADOS ==========
-  const fetchDeletedRecords = async () => {
-    setLoadingDeleted(true)
-    try {
-      const [productsRes, customersRes] = await Promise.all([
-        supabase.from('products').select('*, deleter:deleted_by(email, full_name)').not('deleted_at', 'is', null).order('deleted_at', { ascending: false }),
-        supabase.from('customers').select('*, deleter:deleted_by(email, full_name)').not('deleted_at', 'is', null).order('deleted_at', { ascending: false })
-      ])
-
-      const products = productsRes.data || []
-      const customers = customersRes.data || []
-
-      const allDeleted = [
-        ...products.map(p => ({ ...p, _type: 'product', _typeLabel: 'Produto' })),
-        ...customers.map(c => ({ ...c, _type: 'customer', _typeLabel: 'Cliente' }))
-      ].sort((a, b) => new Date(b.deleted_at) - new Date(a.deleted_at))
-
-      setDeletedRecords(allDeleted)
-      setDeletedStats({
-        products: products.length,
-        customers: customers.length,
-        total: allDeleted.length
-      })
-    } catch (error) {
-      console.error('Erro ao buscar deletados:', error)
-    } finally {
-      setLoadingDeleted(false)
-    }
-  }
-
-  const handleRestore = async () => {
-    if (!selectedRecord) return
-
-    setIsRestoring(true)
-    try {
-      const { data, error } = await supabase.rpc('restore_record', {
-        p_table_name: selectedRecord._type === 'product' ? 'products' : 'customers',
-        p_record_id: selectedRecord.id
-      })
-
-      if (error) throw error
-
-      showFeedback('success', `${selectedRecord._typeLabel} restaurado com sucesso!`)
-      setShowRestoreModal(false)
-      setSelectedRecord(null)
-      fetchDeletedRecords()
-      fetchLogs()
-    } catch (error) {
-      showFeedback('error', 'Erro ao restaurar: ' + error.message)
-    } finally {
-      setIsRestoring(false)
+  const handleRefresh = () => {
+    if (activeTab === 'logs') {
+      refetchLogs()
+    } else {
+      refetchDeleted()
     }
   }
 
@@ -207,6 +241,19 @@ const Logs = () => {
     setSelectedRecord(record)
     setShowRestoreModal(true)
   }
+
+  const handleRestore = () => {
+    if (!selectedRecord) return
+    
+    restoreMutation.mutate({
+      tableName: selectedRecord._type === 'product' ? 'products' : 'customers',
+      recordId: selectedRecord.id,
+      recordType: selectedRecord._typeLabel
+    })
+  }
+
+  const isLoading = activeTab === 'logs' ? loadingLogs : loadingDeleted
+  const isFetching = activeTab === 'logs' ? isFetchingLogs : isFetchingDeleted
 
   if (!canView) {
     return (
@@ -237,13 +284,21 @@ const Logs = () => {
                 <Database className="text-blue-600" />
                 Auditoria do Sistema
               </h1>
-              <p className="text-gray-500 mt-1">Logs de atividades e registros excluídos</p>
+              <p className="text-gray-500 mt-1">
+                Logs de atividades e registros excluídos
+                {isFetching && (
+                  <span className="ml-2 inline-flex items-center text-xs text-gray-400">
+                    <RefreshCw size={12} className="animate-spin mr-1" />
+                    Atualizando...
+                  </span>
+                )}
+              </p>
             </div>
             <div className="flex gap-3">
               <Button 
                 variant="outline" 
-                onClick={activeTab === 'logs' ? fetchLogs : fetchDeletedRecords} 
-                loading={activeTab === 'logs' ? loading : loadingDeleted} 
+                onClick={handleRefresh} 
+                loading={isLoading} 
                 icon={RefreshCw}
               >
                 Atualizar
@@ -291,10 +346,10 @@ const Logs = () => {
           <>
             {/* Estatísticas */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <StatCard label="Total de Logs" value={stats.total} icon={FileText} variant="info" />
-              <StatCard label="Erros" value={stats.errors} icon={X} variant={stats.errors > 0 ? 'danger' : 'default'} />
-              <StatCard label="Hoje" value={stats.today} icon={RefreshCw} variant="success" />
-              <StatCard label="Usuários Ativos" value={stats.uniqueUsers} icon={FileText} variant="default" />
+              <StatCard label="Total de Logs" value={logStats.total} icon={FileText} variant="info" />
+              <StatCard label="Erros" value={logStats.errors} icon={X} variant={logStats.errors > 0 ? 'danger' : 'default'} />
+              <StatCard label="Hoje" value={logStats.today} icon={RefreshCw} variant="success" />
+              <StatCard label="Usuários Ativos" value={logStats.uniqueUsers} icon={FileText} variant="default" />
             </div>
 
             <LogFilters 
@@ -307,9 +362,9 @@ const Logs = () => {
               logsLength={logs.length} 
             />
 
-            {loading && <DataLoadingSkeleton />}
+            {loadingLogs && <DataLoadingSkeleton />}
 
-            {!loading && logs.length === 0 && (
+            {!loadingLogs && logs.length === 0 && (
               <DataEmptyState 
                 title="Nenhum log encontrado" 
                 description={searchTerm || Object.keys(filters).length > 0 ? "Tente ajustar os filtros" : "O sistema ainda não registrou atividades"} 
@@ -317,7 +372,7 @@ const Logs = () => {
               />
             )}
 
-            {!loading && logs.length > 0 && (
+            {!loadingLogs && logs.length > 0 && (
               <>
                 <div className="block lg:hidden">
                   <DataCards 
@@ -359,7 +414,6 @@ const Logs = () => {
         {/* Conteúdo da Aba Deletados */}
         {activeTab === 'deleted' && (
           <>
-            {/* Estatísticas de Deletados */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
               <StatCard label="Total Deletados" value={deletedStats.total} icon={Database} variant="warning" />
               <StatCard label="Produtos" value={deletedStats.products} icon={FileText} variant="info" />
@@ -408,7 +462,7 @@ const Logs = () => {
               onClose={() => setShowRestoreModal(false)} 
               record={selectedRecord} 
               onConfirm={handleRestore} 
-              isLoading={isRestoring} 
+              isLoading={restoreMutation.isPending} 
             />
           </>
         )}

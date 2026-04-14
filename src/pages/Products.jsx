@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, ClipboardList } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -18,15 +19,125 @@ import ProductDetailsModal from '../components/products/ProductDetailsModal'
 import ProductDeleteModal from '../components/products/ProductDeleteModal'
 import ProductTable from '../components/products/ProductTable'
 
+// ============= Constantes =============
+const units = [
+  { value: 'UN', label: 'Unidade' }, { value: 'KG', label: 'Quilograma' },
+  { value: 'G', label: 'Grama' }, { value: 'L', label: 'Litro' },
+  { value: 'ML', label: 'Mililitro' }, { value: 'CX', label: 'Caixa' },
+  { value: 'PC', label: 'Pacote' }, { value: 'M', label: 'Metro' }
+]
+
+const categories = [
+  'Alimentos', 'Bebidas', 'Limpeza', 'Higiene', 'Eletrônicos',
+  'Ferramentas', 'Vestuário', 'Papelaria', 'Moveis', 'Outros'
+]
+
+// ============= API Functions =============
+const fetchProducts = async ({ queryKey }) => {
+  const [, { canViewOnlyActive }] = queryKey
+  
+  let query = supabase.from('products').select('*').order('name', { ascending: true })
+  if (canViewOnlyActive) query = query.eq('is_active', true)
+  
+  const { data, error } = await query
+  if (error) throw error
+  return data || []
+}
+
+const generateNextCode = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('code, id')
+      .not('code', 'is', null)
+      .order('id', { ascending: false })
+      .limit(1)
+
+    if (error) throw error
+
+    if (data && data.length > 0 && data[0].code) {
+      const numericPart = data[0].code.replace(/\D/g, '')
+      if (numericPart) {
+        const nextNumber = parseInt(numericPart) + 1
+        return nextNumber.toString().padStart(3, '0')
+      }
+    }
+    
+    return '001'
+  } catch (error) {
+    console.error('Erro ao gerar código:', error)
+    return Date.now().toString().slice(-6)
+  }
+}
+
+const createProduct = async ({ productData, profile }) => {
+  const { error } = await supabase.from('products').insert([{ ...productData, created_by: profile?.id }])
+  
+  if (error) {
+    // Se der erro de código duplicado, tentar gerar um novo código
+    if (error.message?.includes('duplicate key') || error.message?.includes('code')) {
+      const newCode = await generateNextCode()
+      const { error: retryError } = await supabase
+        .from('products')
+        .insert([{ ...productData, code: newCode, created_by: profile?.id }])
+      if (retryError) throw retryError
+      return { ...productData, code: newCode }
+    }
+    throw error
+  }
+  
+  return productData
+}
+
+const updateProduct = async ({ id, productData, profile }) => {
+  const { error } = await supabase
+    .from('products')
+    .update({ ...productData, updated_by: profile?.id })
+    .eq('id', id)
+  
+  if (error) throw error
+  return { id, ...productData }
+}
+
+const deleteProduct = async (id) => {
+  const { error } = await supabase.from('products').delete().eq('id', id)
+  if (error) throw error
+  return id
+}
+
+const createProductEntry = async ({ entryData, profile }) => {
+  const { error } = await supabase
+    .from('product_entries')
+    .insert([{ ...entryData, created_by: profile?.id }])
+
+  if (error) {
+    let errorMessage = 'Erro ao registrar entrada'
+    if (error.message?.includes('foreign key')) errorMessage = 'Produto não encontrado'
+    else if (error.message?.includes('not-null')) errorMessage = 'Preencha todos os campos obrigatórios'
+    else errorMessage = error.message
+    throw new Error(errorMessage)
+  }
+  
+  return entryData
+}
+
+const fetchProductDetails = async (productId) => {
+  const [{ data: entries }, { data: movements }] = await Promise.all([
+    supabase.from('product_entries').select('*').eq('product_id', productId).order('entry_date', { ascending: false }),
+    supabase.from('stock_movements').select('*').eq('product_id', productId).order('created_at', { ascending: false }).limit(20)
+  ])
+  
+  return { entries: entries || [], movements: movements || [] }
+}
+
+// ============= Componente Principal =============
 const Products = () => {
   const { profile } = useAuth()
   const { logCreate, logUpdate, logDelete, logError, logAction } = useSystemLogs()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   
-  // Estados
-  const [products, setProducts] = useState([])
-  const [filteredProducts, setFilteredProducts] = useState([])
-  const [loading, setLoading] = useState(true)
+  // Estado local
   const [searchTerm, setSearchTerm] = useState('')
   const [activeFilters, setActiveFilters] = useState({})
   
@@ -36,8 +147,8 @@ const Products = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
-  const [selectedEntries, setSelectedEntries] = useState([])
-  const [selectedMovements, setSelectedMovements] = useState([])
+  const [viewingProductId, setViewingProductId] = useState(null)
+  const [entryModalError, setEntryModalError] = useState(null)
   
   // Formulários
   const [productForm, setProductForm] = useState({
@@ -54,8 +165,6 @@ const Products = () => {
   
   const [formErrors, setFormErrors] = useState({})
   const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [entryModalError, setEntryModalError] = useState(null)
   
   // Permissões
   const isAdmin = profile?.role === 'admin'
@@ -66,19 +175,7 @@ const Products = () => {
   const canViewAll = isAdmin || isManager
   const canViewOnlyActive = isOperator
 
-  // Constantes
-  const units = [
-    { value: 'UN', label: 'Unidade' }, { value: 'KG', label: 'Quilograma' },
-    { value: 'G', label: 'Grama' }, { value: 'L', label: 'Litro' },
-    { value: 'ML', label: 'Mililitro' }, { value: 'CX', label: 'Caixa' },
-    { value: 'PC', label: 'Pacote' }, { value: 'M', label: 'Metro' }
-  ]
-
-  const categories = [
-    'Alimentos', 'Bebidas', 'Limpeza', 'Higiene', 'Eletrônicos',
-    'Ferramentas', 'Vestuário', 'Papelaria', 'Moveis', 'Outros'
-  ]
-
+  // Configuração dos filtros
   const filters = [
     { key: 'category', label: 'Categoria', type: 'select', options: categories.map(cat => ({ value: cat, label: cat })) },
     { key: 'unit', label: 'Unidade', type: 'select', options: units },
@@ -86,85 +183,127 @@ const Products = () => {
     ...(canManageStock ? [{ key: 'low_stock', label: 'Estoque Baixo', type: 'select', options: [{ value: 'true', label: 'Apenas produtos com estoque baixo' }] }] : [])
   ]
 
-  // Effects
-  useEffect(() => {
-    logAction({ action: 'VIEW', entityType: 'product', details: { user_role: profile?.role } })
-    fetchProducts()
-  }, [])
+  // ============= Queries =============
+  const { 
+    data: products = [], 
+    isLoading,
+    error: productsError,
+    refetch: refetchProducts,
+    isFetching
+  } = useQuery({
+    queryKey: ['products', { canViewOnlyActive }],
+    queryFn: fetchProducts,
+    staleTime: 2 * 60 * 1000, // 2 minutos
+  })
 
-  useEffect(() => {
-    filterProducts()
-  }, [searchTerm, products, activeFilters])
+  const { 
+    data: productDetails,
+    isLoading: isLoadingDetails
+  } = useQuery({
+    queryKey: ['product-details', viewingProductId],
+    queryFn: () => fetchProductDetails(viewingProductId),
+    enabled: !!viewingProductId,
+  })
 
-  // Função para gerar próximo código sequencial
-  const generateNextCode = async () => {
-    try {
-      // Buscar o último código cadastrado (ordenado por ID)
-      const { data, error } = await supabase
-        .from('products')
-        .select('code, id')
-        .not('code', 'is', null)
-        .order('id', { ascending: false })
-        .limit(1)
-
-      if (error) throw error
-
-      if (data && data.length > 0 && data[0].code) {
-        const lastCode = data[0].code
-        // Extrair apenas os números do código
-        const numericPart = lastCode.replace(/\D/g, '')
-        
-        if (numericPart) {
-          const nextNumber = parseInt(numericPart) + 1
-          // Formatar com 3 dígitos (001, 002, ..., 999)
-          return nextNumber.toString().padStart(3, '0')
-        }
-      }
-      
-      // Se não houver produtos ou código numérico, começar com 001
-      return '001'
-    } catch (error) {
-      console.error('Erro ao gerar código:', error)
-      // Fallback: usar timestamp
-      return Date.now().toString().slice(-6)
-    }
-  }
-
-  // Funções de API
-  const fetchProducts = async () => {
-    setLoading(true)
-    try {
-      let query = supabase.from('products').select('*').order('name', { ascending: true })
-      if (canViewOnlyActive) query = query.eq('is_active', true)
-      
-      const { data, error } = await query
-      if (error) throw error
-      
-      setProducts(data || [])
-      setFilteredProducts(data || [])
-    } catch (error) {
-      showFeedback('error', 'Erro ao carregar produtos: ' + error.message)
-      await logError('product', error, { action: 'fetch_products' })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const filterProducts = () => {
-    let filtered = [...products]
+  // ============= Filtragem em Memória =============
+  const filteredProducts = React.useMemo(() => {
+    const productsArray = Array.isArray(products) ? products : []
+    let filtered = [...productsArray]
+    
     if (searchTerm.trim()) {
       const search = searchTerm.toLowerCase()
-      filtered = filtered.filter(p => p.name?.toLowerCase().includes(search) || p.code?.toLowerCase().includes(search))
+      filtered = filtered.filter(p => 
+        p.name?.toLowerCase().includes(search) || 
+        p.code?.toLowerCase().includes(search)
+      )
     }
-    if (activeFilters.category) filtered = filtered.filter(p => p.category === activeFilters.category)
-    if (activeFilters.unit) filtered = filtered.filter(p => p.unit === activeFilters.unit)
+    
+    if (activeFilters.category) {
+      filtered = filtered.filter(p => p.category === activeFilters.category)
+    }
+    
+    if (activeFilters.unit) {
+      filtered = filtered.filter(p => p.unit === activeFilters.unit)
+    }
+    
     if (activeFilters.is_active !== undefined && activeFilters.is_active !== '') {
       filtered = filtered.filter(p => p.is_active === (activeFilters.is_active === 'true'))
     }
-    if (activeFilters.low_stock === 'true') filtered = filtered.filter(p => p.stock_quantity <= p.min_stock)
-    setFilteredProducts(filtered)
-  }
+    
+    if (activeFilters.low_stock === 'true') {
+      filtered = filtered.filter(p => p.stock_quantity <= p.min_stock)
+    }
+    
+    return filtered
+  }, [products, searchTerm, activeFilters])
 
+  // ============= Mutations =============
+  const createMutation = useMutation({
+    mutationFn: createProduct,
+    onSuccess: async (data) => {
+      await logCreate('product', null, data)
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      showFeedback('success', 'Produto cadastrado com sucesso!')
+      setIsProductModalOpen(false)
+    },
+    onError: async (error) => {
+      showFeedback('error', error.message)
+      await logError('product', error, { action: 'create' })
+    }
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: updateProduct,
+    onSuccess: async (data) => {
+      await logUpdate('product', data.id, selectedProduct, data)
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      showFeedback('success', 'Produto atualizado com sucesso!')
+      setIsProductModalOpen(false)
+    },
+    onError: async (error) => {
+      showFeedback('error', error.message)
+      await logError('product', error, { action: 'update' })
+    }
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteProduct,
+    onSuccess: async (id) => {
+      await logDelete('product', id, selectedProduct)
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      showFeedback('success', 'Produto excluído com sucesso!')
+      setIsDeleteModalOpen(false)
+      setSelectedProduct(null)
+    },
+    onError: async (error) => {
+      showFeedback('error', error.message)
+      await logError('product', error, { action: 'delete' })
+    }
+  })
+
+  const entryMutation = useMutation({
+    mutationFn: createProductEntry,
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      if (viewingProductId) {
+        queryClient.invalidateQueries({ queryKey: ['product-details', viewingProductId] })
+      }
+      showFeedback('success', 'Entrada de estoque registrada com sucesso!')
+      setIsEntryModalOpen(false)
+      setEntryModalError(null)
+    },
+    onError: async (error) => {
+      setEntryModalError(error.message)
+      await logError('product_entry', error, { action: 'create_entry' })
+    }
+  })
+
+  // ============= Efeitos =============
+  useEffect(() => {
+    logAction({ action: 'VIEW', entityType: 'product', details: { user_role: profile?.role } })
+  }, [])
+
+  // ============= Handlers =============
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
@@ -189,10 +328,7 @@ const Products = () => {
       })
     } else {
       setSelectedProduct(null)
-      
-      // Gerar próximo código automaticamente
       const nextCode = await generateNextCode()
-      
       setProductForm({
         code: nextCode,
         name: '',
@@ -231,14 +367,9 @@ const Products = () => {
     setIsEntryModalOpen(true)
   }
 
-  const handleViewDetails = async (product) => {
+  const handleViewDetails = (product) => {
     setSelectedProduct(product)
-    const [{ data: entries }, { data: movements }] = await Promise.all([
-      supabase.from('product_entries').select('*').eq('product_id', product.id).order('entry_date', { ascending: false }),
-      supabase.from('stock_movements').select('*').eq('product_id', product.id).order('created_at', { ascending: false }).limit(20)
-    ])
-    setSelectedEntries(entries || [])
-    setSelectedMovements(movements || [])
+    setViewingProductId(product.id)
     setIsViewModalOpen(true)
   }
 
@@ -271,132 +402,85 @@ const Products = () => {
     if (formErrors[name]) setFormErrors(prev => ({ ...prev, [name]: '' }))
   }
 
-  const handleSubmitProduct = async () => {
+  const handleSubmitProduct = () => {
     if (!validateProductForm()) return
     
-    setIsSubmitting(true)
-    try {
-      const productData = {
-        code: productForm.code,
-        name: productForm.name,
-        description: productForm.description || null,
-        category: productForm.category || null,
-        unit: productForm.unit,
-        price: parseFloat(productForm.price) || 0,
-        min_stock: parseFloat(productForm.min_stock) || 0,
-        max_stock: parseFloat(productForm.max_stock) || 0,
-        location: productForm.location || null,
-        brand: productForm.brand || null,
-        weight: productForm.weight ? parseFloat(productForm.weight) : null,
-        is_active: productForm.is_active,
-        updated_by: profile?.id
-      }
+    const productData = {
+      code: productForm.code,
+      name: productForm.name,
+      description: productForm.description || null,
+      category: productForm.category || null,
+      unit: productForm.unit,
+      price: parseFloat(productForm.price) || 0,
+      min_stock: parseFloat(productForm.min_stock) || 0,
+      max_stock: parseFloat(productForm.max_stock) || 0,
+      location: productForm.location || null,
+      brand: productForm.brand || null,
+      weight: productForm.weight ? parseFloat(productForm.weight) : null,
+      is_active: productForm.is_active,
+    }
 
-      if (selectedProduct) {
-        const { error } = await supabase.from('products').update(productData).eq('id', selectedProduct.id)
-        if (error) throw error
-        await logUpdate('product', selectedProduct.id, selectedProduct, productData)
-        showFeedback('success', 'Produto atualizado com sucesso!')
-      } else {
-        productData.created_by = profile?.id
-        const { error } = await supabase.from('products').insert([productData])
-        if (error) {
-          // Se der erro de código duplicado, tentar gerar um novo código
-          if (error.message?.includes('duplicate key') || error.message?.includes('code')) {
-            const newCode = await generateNextCode()
-            productData.code = newCode
-            const { error: retryError } = await supabase.from('products').insert([productData])
-            if (retryError) throw retryError
-          } else {
-            throw error
-          }
-        }
-        await logCreate('product', null, productData)
-        showFeedback('success', 'Produto cadastrado com sucesso!')
-      }
-      
-      setIsProductModalOpen(false)
-      await fetchProducts()
-    } catch (error) {
-      showFeedback('error', error.message)
-      await logError('product', error, { action: selectedProduct ? 'update' : 'create' })
-    } finally {
-      setIsSubmitting(false)
+    if (selectedProduct) {
+      updateMutation.mutate({ 
+        id: selectedProduct.id, 
+        productData, 
+        profile 
+      })
+    } else {
+      createMutation.mutate({ 
+        productData, 
+        profile 
+      })
     }
   }
 
-  const handleSubmitEntry = async () => {
+  const handleSubmitEntry = () => {
     if (!validateEntryForm()) return
     
-    setIsSubmitting(true)
-    setEntryModalError(null)
+    const quantity = parseFloat(entryForm.quantity)
+    const unitCost = parseFloat(entryForm.unit_cost)
+    const totalCost = quantity * unitCost
     
-    try {
-      const quantity = parseFloat(entryForm.quantity)
-      const unitCost = parseFloat(entryForm.unit_cost)
-      const totalCost = quantity * unitCost
-      
-      const entryData = {
-        product_id: selectedProduct.id,
-        invoice_number: entryForm.invoice_number,
-        quantity: quantity,
-        unit_cost: unitCost,
-        total_cost: totalCost,
-        invoice_series: entryForm.invoice_series || null,
-        supplier_name: entryForm.supplier_name || null,
-        supplier_cnpj: entryForm.supplier_cnpj?.replace(/\D/g, '') || null,
-        batch_number: entryForm.batch_number || null,
-        manufacture_date: entryForm.manufacture_date || null,
-        expiration_date: entryForm.expiration_date || null,
-        entry_date: new Date().toISOString().split('T')[0],
-        notes: entryForm.notes || null,
-        created_by: profile?.id
-      }
-
-      const { error } = await supabase.from('product_entries').insert([entryData])
-
-      if (error) {
-        let errorMessage = 'Erro ao registrar entrada'
-        if (error.message?.includes('foreign key')) errorMessage = 'Produto não encontrado'
-        else if (error.message?.includes('not-null')) errorMessage = 'Preencha todos os campos obrigatórios'
-        else errorMessage = error.message
-        
-        setEntryModalError(errorMessage)
-        return
-      }
-      
-      showFeedback('success', 'Entrada de estoque registrada com sucesso!')
-      setIsEntryModalOpen(false)
-      setEntryModalError(null)
-      await fetchProducts()
-      
-    } catch (error) {
-      setEntryModalError(error.message || 'Erro ao registrar entrada')
-      await logError('product_entry', error, { action: 'create_entry' })
-    } finally {
-      setIsSubmitting(false)
+    const entryData = {
+      product_id: selectedProduct.id,
+      invoice_number: entryForm.invoice_number,
+      quantity: quantity,
+      unit_cost: unitCost,
+      total_cost: totalCost,
+      invoice_series: entryForm.invoice_series || null,
+      supplier_name: entryForm.supplier_name || null,
+      supplier_cnpj: entryForm.supplier_cnpj?.replace(/\D/g, '') || null,
+      batch_number: entryForm.batch_number || null,
+      manufacture_date: entryForm.manufacture_date || null,
+      expiration_date: entryForm.expiration_date || null,
+      entry_date: new Date().toISOString().split('T')[0],
+      notes: entryForm.notes || null,
     }
+
+    entryMutation.mutate({ entryData, profile })
   }
 
-  const handleDeleteProduct = async () => {
-    setIsSubmitting(true)
-    try {
-      const { error } = await supabase.from('products').delete().eq('id', selectedProduct.id)
-      if (error) throw error
-      
-      await logDelete('product', selectedProduct.id, selectedProduct)
-      showFeedback('success', 'Produto excluído com sucesso!')
-      setIsDeleteModalOpen(false)
-      setSelectedProduct(null)
-      await fetchProducts()
-    } catch (error) {
-      showFeedback('error', error.message)
-    } finally {
-      setIsSubmitting(false)
-    }
+  const handleDeleteProduct = () => {
+    deleteMutation.mutate(selectedProduct.id)
   }
 
-  if (loading) return <DataLoadingSkeleton />
+  const isMutating = createMutation.isPending || updateMutation.isPending || 
+                     deleteMutation.isPending || entryMutation.isPending
+
+  // ============= Render =============
+  if (productsError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro ao carregar produtos</h2>
+          <p className="text-gray-600 mb-4">{productsError.message}</p>
+          <Button onClick={() => refetchProducts()}>Tentar novamente</Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (isLoading) return <DataLoadingSkeleton />
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -407,18 +491,34 @@ const Products = () => {
             <h1 className="text-2xl font-bold text-gray-900">Gestão de Estoque</h1>
             <p className="text-gray-600 mt-1">
               Gerencie produtos, entradas e controle de estoque
-              {!loading && products.length > 0 && <span className="ml-2 text-blue-600">({products.length} produtos)</span>}
+              {!isLoading && products.length > 0 && (
+                <span className="ml-2 text-blue-600">
+                  ({products.length} produtos)
+                  {isFetching && (
+                    <span className="ml-2 text-xs text-gray-400">atualizando...</span>
+                  )}
+                </span>
+              )}
             </p>
           </div>
           
           <div className="flex gap-2">
             {canManageStock && (
-              <Button onClick={() => navigate('/stock-count')} variant="outline" icon={ClipboardList}>
+              <Button 
+                onClick={() => navigate('/stock-count')} 
+                variant="outline" 
+                icon={ClipboardList}
+                disabled={isMutating}
+              >
                 Balanço
               </Button>
             )}
             {canEdit && (
-              <Button onClick={() => handleOpenProductModal()} icon={Plus}>
+              <Button 
+                onClick={() => handleOpenProductModal()} 
+                icon={Plus}
+                disabled={isMutating}
+              >
                 Novo Produto
               </Button>
             )}
@@ -426,7 +526,13 @@ const Products = () => {
         </div>
 
         {/* Feedback */}
-        {feedback.show && <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />}
+        {feedback.show && (
+          <FeedbackMessage 
+            type={feedback.type} 
+            message={feedback.message} 
+            onClose={() => setFeedback({ show: false })} 
+          />
+        )}
 
         {/* Filtros */}
         <div className="mb-6">
@@ -436,23 +542,31 @@ const Products = () => {
             onSearchChange={setSearchTerm}
             filters={filters}
             onFilterChange={setActiveFilters}
+            searchDebounceDelay={300}
           />
         </div>
 
         {/* Tabela ou Empty State */}
-        {filteredProducts.length === 0 && !loading ? (
+        {filteredProducts.length === 0 ? (
           <DataEmptyState
             title="Nenhum produto encontrado"
             description={searchTerm ? "Tente buscar por outro termo" : "Comece cadastrando seu primeiro produto"}
-            action={canEdit ? { label: "Cadastrar Produto", icon: <Plus size={18} />, onClick: () => handleOpenProductModal() } : null}
+            action={canEdit ? { 
+              label: "Cadastrar Produto", 
+              icon: <Plus size={18} />, 
+              onClick: () => handleOpenProductModal() 
+            } : null}
           />
         ) : (
           <ProductTable
             products={filteredProducts}
-            loading={loading}
+            loading={isLoading}
             onViewDetails={handleViewDetails}
             onEdit={handleOpenProductModal}
-            onDelete={(product) => { setSelectedProduct(product); setIsDeleteModalOpen(true) }}
+            onDelete={(product) => { 
+              setSelectedProduct(product)
+              setIsDeleteModalOpen(true) 
+            }}
             onRegisterEntry={handleOpenEntryModal}
             canEdit={canEdit}
             canManageStock={canManageStock}
@@ -465,7 +579,7 @@ const Products = () => {
         {/* Modal de Produto */}
         <Modal 
           isOpen={isProductModalOpen} 
-          onClose={() => !isSubmitting && setIsProductModalOpen(false)} 
+          onClose={() => !isMutating && setIsProductModalOpen(false)} 
           title={selectedProduct ? 'Editar Produto' : 'Novo Produto'} 
           size="lg"
         >
@@ -475,7 +589,7 @@ const Products = () => {
             onChange={handleProductChange}
             onSubmit={handleSubmitProduct}
             onCancel={() => setIsProductModalOpen(false)}
-            isSubmitting={isSubmitting}
+            isSubmitting={createMutation.isPending || updateMutation.isPending}
             isEditing={!!selectedProduct}
             units={units}
             categories={categories}
@@ -485,7 +599,7 @@ const Products = () => {
         {/* Modal de Entrada */}
         <Modal 
           isOpen={isEntryModalOpen} 
-          onClose={() => !isSubmitting && setIsEntryModalOpen(false)} 
+          onClose={() => !isMutating && setIsEntryModalOpen(false)} 
           title={`Registrar Entrada - ${selectedProduct?.name}`} 
           size="lg"
           error={entryModalError}
@@ -496,7 +610,7 @@ const Products = () => {
             onChange={handleEntryChange}
             onSubmit={handleSubmitEntry}
             onCancel={() => setIsEntryModalOpen(false)}
-            isSubmitting={isSubmitting}
+            isSubmitting={entryMutation.isPending}
             productName={selectedProduct?.name}
             showFeedback={showFeedback} 
           />
@@ -505,11 +619,15 @@ const Products = () => {
         {/* Modal de Detalhes */}
         <ProductDetailsModal
           isOpen={isViewModalOpen}
-          onClose={() => setIsViewModalOpen(false)}
+          onClose={() => {
+            setIsViewModalOpen(false)
+            setViewingProductId(null)
+          }}
           product={selectedProduct}
-          entries={selectedEntries}
-          movements={selectedMovements}
+          entries={productDetails?.entries || []}
+          movements={productDetails?.movements || []}
           units={units}
+          isLoading={isLoadingDetails}
         />
 
         {/* Modal de Exclusão */}
@@ -518,7 +636,7 @@ const Products = () => {
           onClose={() => setIsDeleteModalOpen(false)}
           product={selectedProduct}
           onConfirm={handleDeleteProduct}
-          isSubmitting={isSubmitting}
+          isSubmitting={deleteMutation.isPending}
         />
       </div>
     </div>

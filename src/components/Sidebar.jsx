@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useCompany } from '../hooks/useCompany'
+import PrefetchLink from './PrefetchLink' // ✅ Adicionado
 import {
   LogOut,
   X,
@@ -55,17 +56,17 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
 
   // Menus baseados nas permissões
   const allMenuItems = [
-    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', permission: 'canViewDashboard', description: 'Visão geral' },
-    { path: '/sales', icon: ShoppingBag, label: 'PDV', permission: 'canViewSales', description: 'Ponto de venda' },
-    { path: '/cashier', icon: Calculator, label: 'Fechar Caixa', permission: 'canViewSales', description: 'Conciliação de vendas' },
-    { path: '/sales-list', icon: ClipboardList, label: 'Gestão de Vendas', permission: 'canViewSales', description: 'Histórico e cancelamentos' }, 
-    { path: '/coupons', icon: Ticket, label: 'Cupons', permission: 'canViewCoupons', description: 'Gerenciar cupons' },
-    { path: '/products', icon: Package, label: 'Produtos', permission: 'canViewProducts', description: 'Gerenciar produtos' },
-    { path: '/customers', icon: Users, label: 'Clientes', permission: 'canViewCustomers', description: 'Gerenciar clientes' },
-    { path: '/reports', icon: BarChart3, label: 'Relatórios', permission: 'canViewReports', description: 'Análises e métricas' },
-    { path: '/users', icon: UserCircle, label: 'Usuários', permission: 'canViewUsers', description: 'Gerenciar usuários' },
-    { path: '/logs', icon: FileText, label: 'Logs', permission: 'canViewLogs', description: 'Histórico do sistema' },
-    { path: '/settings', icon: Settings, label: 'Configurações', permission: 'canViewSettings', description: 'Preferências do sistema' },
+    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', permission: 'canViewDashboard', description: 'Visão geral', prefetch: true },
+    { path: '/sales', icon: ShoppingBag, label: 'PDV', permission: 'canViewSales', description: 'Ponto de venda', prefetch: true },
+    { path: '/cashier', icon: Calculator, label: 'Fechar Caixa', permission: 'canViewSales', description: 'Conciliação de vendas', prefetch: false },
+    { path: '/sales-list', icon: ClipboardList, label: 'Gestão de Vendas', permission: 'canViewSales', description: 'Histórico e cancelamentos', prefetch: true },
+    { path: '/coupons', icon: Ticket, label: 'Cupons', permission: 'canViewCoupons', description: 'Gerenciar cupons', prefetch: true },
+    { path: '/products', icon: Package, label: 'Produtos', permission: 'canViewProducts', description: 'Gerenciar produtos', prefetch: true },
+    { path: '/customers', icon: Users, label: 'Clientes', permission: 'canViewCustomers', description: 'Gerenciar clientes', prefetch: true },
+    { path: '/reports', icon: BarChart3, label: 'Relatórios', permission: 'canViewReports', description: 'Análises e métricas', prefetch: false },
+    { path: '/users', icon: UserCircle, label: 'Usuários', permission: 'canViewUsers', description: 'Gerenciar usuários', prefetch: true },
+    { path: '/logs', icon: FileText, label: 'Logs', permission: 'canViewLogs', description: 'Histórico do sistema', prefetch: true },
+    { path: '/settings', icon: Settings, label: 'Configurações', permission: 'canViewSettings', description: 'Preferências do sistema', prefetch: true },
   ]
 
   const menuItems = allMenuItems.filter(item => permissions[item.permission])
@@ -216,11 +217,15 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
                   background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`
                 } : {}
 
+                // ✅ Usar PrefetchLink em vez de Link
+                const LinkComponent = item.prefetch ? PrefetchLink : Link
+
                 return (
-                  <Link
+                  <LinkComponent
                     key={item.path}
                     to={item.path}
                     onClick={() => setIsMobileOpen(false)}
+                    prefetch={item.prefetch}
                     className={`
                       flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
                       ${isActive ? 'text-white shadow-lg' : 'text-gray-600 hover:bg-gray-50'}
@@ -239,7 +244,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
                     {isActive && (
                       <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                     )}
-                  </Link>
+                  </LinkComponent>
                 )
               })}
             </div>
@@ -373,10 +378,14 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
               background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`
             } : {}
 
+            // ✅ Usar PrefetchLink em vez de Link
+            const LinkComponent = item.prefetch ? PrefetchLink : Link
+
             return (
               <div key={item.path} className="relative group">
-                <Link
+                <LinkComponent
                   to={item.path}
+                  prefetch={item.prefetch}
                   className={`
                     flex items-center rounded-xl transition-all duration-200
                     ${collapsed ? 'justify-center p-3' : 'gap-3 px-4 py-3'}
@@ -399,7 +408,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
                   {!collapsed && isActive && (
                     <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                   )}
-                </Link>
+                </LinkComponent>
                 
                 {collapsed && (
                   <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
@@ -455,5 +464,8 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     </>
   )
 }
+
+// ✅ Importar Link do react-router-dom para o logo
+import { Link } from 'react-router-dom'
 
 export default Sidebar

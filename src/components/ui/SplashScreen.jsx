@@ -1,10 +1,12 @@
 import React from 'react'
+import LazyImage from './LazyImage'
 
 const SplashScreen = ({ 
   size = 'md',
   fullScreen = false,
   message = 'Carregando...',
-  transparent = false
+  transparent = false,
+  logoSrc = '/brasalino-pollo.png'
 }) => {
   const sizes = {
     sm: 'h-6 w-6',
@@ -24,12 +26,29 @@ const SplashScreen = ({
     lg: 'border-4'
   }
 
+  const logoSizes = {
+    sm: 'h-8 w-8',
+    md: 'h-12 w-12',
+    lg: 'h-20 w-20'
+  }
+
   const content = (
     <div className="flex flex-col items-center justify-center gap-4">
+      {/* Logo com LazyImage */}
+      <LazyImage
+        src={logoSrc}
+        alt="Logo"
+        className={`${logoSizes[size]} object-contain`}
+        fallback={
+          <div className={`${logoSizes[size]} bg-gray-200 animate-pulse rounded-full`} />
+        }
+      />
+      
       <div className="relative">
         <div className={`${sizes[size]} ${spinnerSizes[size]} border-gray-200 rounded-full`}></div>
         <div className={`${sizes[size]} ${spinnerSizes[size]} border-blue-500 rounded-full border-t-transparent animate-spin absolute top-0 left-0`}></div>
       </div>
+      
       {message && (
         <p className={`${textSizes[size]} text-gray-600 font-medium animate-pulse`}>
           {message}

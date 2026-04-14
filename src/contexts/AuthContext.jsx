@@ -113,11 +113,24 @@ export function AuthProvider({ children }) {
         roleColor: 'from-purple-600 to-purple-700',
         canViewDashboard: true,
         canViewSales: true,
+        canCreateSales: true,
+        canCancelSales: true,
+        canApplyDiscount: true,
         canViewProducts: true,
+        canCreateProducts: true,
+        canEditProducts: true,
         canManageStock: true,
         canViewCustomers: true,
+        canCreateCustomers: true,
+        canEditCustomers: true,
+        canCommunicateWithCustomers: true,
         canViewCoupons: true,
+        canCreateCoupons: true,
+        canEditCoupons: true,
+        canViewCashier: true,
+        canCloseCashier: true,
         canViewReports: true,
+        canExportReports: true,
         canViewUsers: true,
         canViewLogs: true,
         canViewSettings: true,
@@ -127,13 +140,27 @@ export function AuthProvider({ children }) {
         roleColor: 'from-blue-500 to-cyan-500',
         canViewDashboard: true,
         canViewSales: true,
+        canCreateSales: true,
+        canCancelSales: true,
+        canApplyDiscount: true,
+        canViewSalesList: true,
         canViewProducts: true,
+        canCreateProducts: true,
+        canEditProducts: true,
         canManageStock: true,
         canViewCustomers: true,
+        canCreateCustomers: true,
+        canEditCustomers: true,
+        canCommunicateWithCustomers: true,
         canViewCoupons: true,
+        canCreateCoupons: true,
+        canEditCoupons: true,
+        canViewCashier: true,
+        canCloseCashier: true,
         canViewReports: true,
+        canExportReports: true,
         canViewUsers: false,
-        canViewLogs: false,
+        canViewLogs: true,
         canViewSettings: false,
       },
       operador: {
@@ -141,9 +168,25 @@ export function AuthProvider({ children }) {
         roleColor: 'from-gray-500 to-gray-600',
         canViewDashboard: true,
         canViewSales: true,
-        canViewProducts: false,
-        canViewCustomers: false,
+        canCreateSales: true,
+        canCancelSales: false,
+        canApplyDiscount: false,
+        canViewSalesList: false,
+        canViewProducts: true,
+        canCreateProducts: false,
+        canEditProducts: false,
+        canManageStock: false,
+        canViewCustomers: true,
+        canCreateCustomers: true,
+        canEditCustomers: false,
+        canCommunicateWithCustomers: false,
+        canViewCoupons: false,
+        canCreateCoupons: false,
+        canEditCoupons: false,
+        canViewCashier: false,
+        canCloseCashier: false,
         canViewReports: false,
+        canExportReports: false,
         canViewUsers: false,
         canViewLogs: false,
         canViewSettings: false,
@@ -241,15 +284,14 @@ export function AuthProvider({ children }) {
     }
     
     if (forceDBFetch) {
-      fetchFullProfileFromDB(userData.id).then(dbProfile => {
-        if (dbProfile) {
-          setProfile(prev => ({ ...prev, ...dbProfile }))
-          secureStorage.set('profile', { ...jwtProfile, ...dbProfile })
-          logger.log('🔄 Profile atualizado com dados do banco')
-        }
-      }).catch(err => {
-        logger.warn('⚠️ Não foi possível buscar dados complementares:', err.message)
-      })
+      const dbProfile = await fetchFullProfileFromDB(userData.id)
+      if (dbProfile) {
+        const mergedProfile = { ...jwtProfile, ...dbProfile }
+        setProfile(mergedProfile)
+        secureStorage.set('profile', mergedProfile)
+        logger.log('🔄 Profile atualizado com dados do banco')
+        return mergedProfile
+      }
     }
     
     return jwtProfile
@@ -328,6 +370,9 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  // ==============================
+  // LOGIN
+  // ==============================
   const login = async (email, password) => {
     try {
       const rateLimit = checkLoginRateLimit()
@@ -357,12 +402,12 @@ export function AuthProvider({ children }) {
         throw error
       }
       
-      // 2. VERIFICAR STATUS DO USUÁRIO (ADICIONAR ESTE BLOCO)
+      // 2. VERIFICAR STATUS DO USUÁRIO
       if (data.user) {
         logger.log('🔒 Verificando status do usuário...')
         
         // Verificar status diretamente no banco (mais confiável)
-        const { data: profile, error: profileError } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('status')
           .eq('id', data.user.id)
@@ -370,12 +415,12 @@ export function AuthProvider({ children }) {
         
         if (profileError) {
           logger.error('❌ Erro ao buscar status:', profileError)
-        } else if (profile) {
-          logger.log('📊 Status do usuário:', profile.status)
+        } else if (profileData) {
+          logger.log('📊 Status do usuário:', profileData.status)
           
-          if (profile.status && profile.status !== 'active') {
+          if (profileData.status && profileData.status !== 'active') {
             // Usuário bloqueado - fazer logout
-            logger.warn('❌ Acesso negado. Status:', profile.status)
+            logger.warn('❌ Acesso negado. Status:', profileData.status)
             await supabase.auth.signOut()
             await recordLoginAttempt(false, email)
             
@@ -384,15 +429,15 @@ export function AuthProvider({ children }) {
               'blocked': 'Usuário bloqueado. Contate o administrador.',
               'locked': 'Conta bloqueada por excesso de tentativas. Contate o administrador.'
             }
-            throw new Error(messages[profile.status] || 'Acesso negado.')
+            throw new Error(messages[profileData.status] || 'Acesso negado.')
           }
         }
         
         // 3. Status OK - continuar
         logger.log('✅ Status verificado, acesso permitido')
         await recordLoginAttempt(true)
-        await syncProfile(data.user, true)
         setUser(data.user)
+        await syncProfile(data.user, true)
       }
       
       setLoading(false)
@@ -556,7 +601,7 @@ export function AuthProvider({ children }) {
   }, [isRefreshing])
 
   // ==============================
-  // EFFECT PRINCIPAL - INICIALIZAÇÃO
+  // EFFECT PRINCIPAL - INICIALIZAÇÃO (CORRIGIDO)
   // ==============================
   useEffect(() => {
     if (initialized.current) return
@@ -566,30 +611,42 @@ export function AuthProvider({ children }) {
 
     const initializeAuth = async () => {
       try {
+        // 1. Carregar cache primeiro (para UI rápida)
         const cachedProfile = secureStorage.get('profile')
         if (cachedProfile) {
           logger.log('✅ Cache seguro encontrado, exibindo imediatamente')
           setProfile(cachedProfile)
         }
         
+        // 2. Verificar sessão real
         logger.log('🔍 Verificando sessão no Supabase...')
         const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) throw error
         
         if (session?.user) {
-          logger.log('✅ Sessão encontrada')
+          logger.log('✅ Sessão encontrada para:', session.user.email)
           setUser(session.user)
+          
+          // ✅ AGUARDAR o perfil ser carregado do banco
           await syncProfile(session.user, true)
+          logger.log('✅ Perfil sincronizado com sucesso')
         } else {
           logger.log('❌ Sem sessão ativa')
           secureStorage.remove('profile')
           secureStorage.remove('user_role')
           setProfile(null)
+          setUser(null)
         }
       } catch (err) {
-        logger.error('Erro na inicialização:', err.message)
+        logger.error('❌ Erro na inicialização:', err.message)
+        setUser(null)
+        setProfile(null)
+        secureStorage.remove('profile')
+        secureStorage.remove('user_role')
       } finally {
+        // ✅ Só finalizar loading depois de tudo pronto
+        logger.log('✅ Inicialização concluída, loading = false')
         setLoading(false)
       }
     }
@@ -606,19 +663,22 @@ export function AuthProvider({ children }) {
           secureStorage.remove(LOGIN_ATTEMPTS_KEY)
           setUser(null)
           setProfile(null)
-          setLoading(false)
           return
         }
         
         if (event === 'SIGNED_IN' && session?.user) {
           setUser(session.user)
           await syncProfile(session.user, true)
-          setLoading(false)
         }
         
         if (event === 'TOKEN_REFRESHED' && session?.user) {
           setUser(session.user)
           await syncProfile(session.user, false)
+        }
+        
+        if (event === 'USER_UPDATED' && session?.user) {
+          setUser(session.user)
+          await syncProfile(session.user, true)
         }
         
         if (event === 'TOKEN_REFRESH_FAILED') {

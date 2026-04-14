@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, lazy, Suspense } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   BarChart3, ShoppingCart, Package, Users, Store,
   FileSpreadsheet, RefreshCw, Printer, UserCheck
 } from 'lucide-react'
-import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import Button from '../components/ui/Button'
 import FeedbackMessage from '../components/ui/FeedbackMessage'
@@ -11,19 +11,45 @@ import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
 import useSystemLogs from '../hooks/useSystemLogs'
 import TabButton from '../components/reports/TabButton'
 import DateRangeFilter from '../components/reports/DateRangeFilter'
-import SalesReport from '../components/reports/SalesReport'
-import OperatorPerformance from '../components/reports/OperatorPerformance'
 
-// Lazy load para relatórios menos usados
-const ProductsReport = React.lazy(() => import('../components/reports/ProductsReport'))
-const CustomersReport = React.lazy(() => import('../components/reports/CustomersReport'))
-const StockReport = React.lazy(() => import('../components/reports/StockReport'))
+// ✅ Lazy load para TODOS os relatórios (cada um é pesado)
+const SalesReport = lazy(() => import(
+  /* webpackChunkName: "reports" */
+  /* webpackPrefetch: false */
+  '../components/reports/SalesReport'
+))
+const OperatorPerformance = lazy(() => import(
+  /* webpackChunkName: "reports" */
+  '../components/reports/OperatorPerformance'
+))
+const ProductsReport = lazy(() => import(
+  /* webpackChunkName: "reports" */
+  '../components/reports/ProductsReport'
+))
+const CustomersReport = lazy(() => import(
+  /* webpackChunkName: "reports" */
+  '../components/reports/CustomersReport'
+))
+const StockReport = lazy(() => import(
+  /* webpackChunkName: "reports" */
+  '../components/reports/StockReport'
+))
 
+// ============= Constantes =============
+const tabs = [
+  { id: 'sales', label: 'Vendas', icon: ShoppingCart },
+  { id: 'operators', label: 'Operadores', icon: UserCheck },
+  { id: 'products', label: 'Produtos', icon: Package },
+  { id: 'customers', label: 'Clientes', icon: Users },
+  { id: 'stock', label: 'Estoque', icon: Store }
+]
+
+// ============= Componente Principal =============
 const Reports = () => {
   const { profile } = useAuth()
-  const { logAction, logError } = useSystemLogs()
+  const { logAction } = useSystemLogs()
+  const queryClient = useQueryClient()
   
-  const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('sales')
   const [dateRange, setDateRange] = useState('month')
   const [customDateRange, setCustomDateRange] = useState({
@@ -31,45 +57,83 @@ const Reports = () => {
     end: new Date().toISOString().split('T')[0]
   })
   const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
-  
   const [categoryFilter, setCategoryFilter] = useState('')
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('')
+  const [isExporting, setIsExporting] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
+  // ============= Efeitos =============
   useEffect(() => {
     logAction({
       action: 'VIEW',
       entityType: 'report',
       details: { component: 'Reports', user_role: profile?.role }
     })
-    setLoading(false)
   }, [])
 
+  // ============= Handlers =============
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 4000)
   }
 
-  const handleExport = (format = 'csv') => {
-    showFeedback('info', `Exportando relatório em ${format.toUpperCase()}...`)
-    logAction({ action: 'EXPORT', entityType: 'report', details: { format, tab: activeTab } })
+  const handleExport = async (format = 'csv') => {
+    setIsExporting(true)
+    
+    try {
+      showFeedback('info', `Preparando relatório em ${format.toUpperCase()}...`)
+      
+      await queryClient.invalidateQueries({ 
+        queryKey: ['report', activeTab] 
+      })
+      
+      setTimeout(() => {
+        logAction({ 
+          action: 'EXPORT', 
+          entityType: 'report', 
+          details: { format, tab: activeTab } 
+        })
+        showFeedback('success', `Relatório exportado em ${format.toUpperCase()}!`)
+        setIsExporting(false)
+      }, 1000)
+      
+    } catch (error) {
+      console.error('Erro ao exportar:', error)
+      showFeedback('error', 'Erro ao exportar relatório')
+      setIsExporting(false)
+    }
   }
 
-  const handleRefresh = () => {
-    window.location.reload()
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    
+    try {
+      await queryClient.invalidateQueries({ queryKey: ['report'] })
+      await queryClient.invalidateQueries({ queryKey: ['report', activeTab] })
+      showFeedback('success', 'Dados atualizados com sucesso!')
+    } catch (error) {
+      console.error('Erro ao atualizar:', error)
+      showFeedback('error', 'Erro ao atualizar dados')
+    } finally {
+      setIsRefreshing(false)
+    }
   }
 
-  const tabs = [
-    { id: 'sales', label: 'Vendas', icon: ShoppingCart },
-    { id: 'operators', label: 'Operadores', icon: UserCheck },
-    { id: 'products', label: 'Produtos', icon: Package },
-    { id: 'customers', label: 'Clientes', icon: Users },
-    { id: 'stock', label: 'Estoque', icon: Store }
-  ]
-
-  if (loading) {
-    return <DataLoadingSkeleton type="cards" rows={4} />
+  const handlePrint = () => {
+    logAction({ action: 'PRINT', entityType: 'report', details: { tab: activeTab } })
+    window.print()
   }
 
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId)
+    
+    queryClient.prefetchQuery({
+      queryKey: ['report', tabId, { dateRange, customDateRange }],
+      staleTime: 5 * 60 * 1000,
+    })
+  }
+
+  // ============= Render =============
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -87,13 +151,24 @@ const Reports = () => {
             </div>
             
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => window.print()} icon={Printer}>
+              <Button variant="outline" onClick={handlePrint} icon={Printer}>
                 Imprimir
               </Button>
-              <Button variant="outline" onClick={() => handleExport('csv')} icon={FileSpreadsheet}>
+              <Button 
+                variant="outline" 
+                onClick={() => handleExport('csv')} 
+                icon={FileSpreadsheet}
+                loading={isExporting}
+                disabled={isExporting}
+              >
                 Exportar
               </Button>
-              <Button onClick={handleRefresh} icon={RefreshCw}>
+              <Button 
+                onClick={handleRefresh} 
+                icon={RefreshCw}
+                loading={isRefreshing}
+                disabled={isRefreshing}
+              >
                 Atualizar
               </Button>
             </div>
@@ -117,7 +192,7 @@ const Reports = () => {
               <TabButton
                 key={tab.id}
                 active={activeTab === tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 icon={tab.icon}
               >
                 {tab.label}
@@ -139,47 +214,43 @@ const Reports = () => {
           setCategoryFilter={setCategoryFilter}
         />
 
-        {/* Conteúdo da Tab */}
+        {/* Conteúdo da Tab - Com Suspense para cada relatório */}
         <div className="space-y-6">
-          {activeTab === 'sales' && (
-            <SalesReport
-              dateRange={dateRange}
-              customDateRange={customDateRange}
-              paymentMethodFilter={paymentMethodFilter}
-            />
-          )}
+          <Suspense fallback={<DataLoadingSkeleton type="cards" rows={3} />}>
+            {activeTab === 'sales' && (
+              <SalesReport
+                dateRange={dateRange}
+                customDateRange={customDateRange}
+                paymentMethodFilter={paymentMethodFilter}
+              />
+            )}
 
-          {activeTab === 'operators' && (
-            <OperatorPerformance
-              dateRange={dateRange}
-              customDateRange={customDateRange}
-              paymentMethodFilter={paymentMethodFilter}
-            />
-          )}
+            {activeTab === 'operators' && (
+              <OperatorPerformance
+                dateRange={dateRange}
+                customDateRange={customDateRange}
+                paymentMethodFilter={paymentMethodFilter}
+              />
+            )}
 
-          {activeTab === 'products' && (
-            <React.Suspense fallback={<DataLoadingSkeleton type="cards" rows={3} />}>
+            {activeTab === 'products' && (
               <ProductsReport
                 dateRange={dateRange}
                 customDateRange={customDateRange}
               />
-            </React.Suspense>
-          )}
+            )}
 
-          {activeTab === 'customers' && (
-            <React.Suspense fallback={<DataLoadingSkeleton type="cards" rows={3} />}>
+            {activeTab === 'customers' && (
               <CustomersReport
                 dateRange={dateRange}
                 customDateRange={customDateRange}
               />
-            </React.Suspense>
-          )}
+            )}
 
-          {activeTab === 'stock' && (
-            <React.Suspense fallback={<DataLoadingSkeleton type="cards" rows={3} />}>
+            {activeTab === 'stock' && (
               <StockReport categoryFilter={categoryFilter} />
-            </React.Suspense>
-          )}
+            )}
+          </Suspense>
         </div>
       </div>
     </div>

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
-import { secureStorage } from '../utils/secureStorage' // ADICIONAR IMPORT
+import { secureStorage } from '../utils/secureStorage'
 import {
-  User, Save, RotateCcw, Shield, Key
+  User, Save, RotateCcw, Shield
 } from 'lucide-react'
 import Button from '../components/ui/Button'
 import FeedbackMessage from '../components/ui/FeedbackMessage'
@@ -13,16 +14,61 @@ import ProfileInfoForm from '../components/profile/ProfileInfoForm'
 import SecuritySection from '../components/profile/SecuritySection'
 import ChangePasswordModal from '../components/profile/ChangePasswordModal'
 
+// ============= API Functions =============
+const fetchProfile = async (userId) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+const updateProfile = async ({ userId, profileData }) => {
+  const updateData = {
+    display_name: profileData.display_name || null,
+    phone: profileData.phone || null,
+    avatar_url: profileData.avatar_url || null,
+    address: profileData.address || null,
+    city: profileData.city || null,
+    state: profileData.state || null,
+    zip_code: profileData.zip_code || null,
+    birth_date: profileData.birth_date || null,
+    document: profileData.document || null,
+    updated_at: new Date().toISOString()
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update(updateData)
+    .eq('id', userId)
+
+  if (error) throw error
+
+  // Buscar perfil atualizado
+  const { data: freshProfile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single()
+
+  return freshProfile
+}
+
+// ============= Componente Principal =============
 const Profile = () => {
-  const { profile, user, refreshSession, changePassword, logout } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
+  const { profile, user, changePassword, logout } = useAuth()
+  const queryClient = useQueryClient()
+  
   const [activeTab, setActiveTab] = useState('profile')
+  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
   
   const [formData, setFormData] = useState({
     full_name: '',
-    display_name: '', // ADICIONAR
+    display_name: '',
     email: '',
     phone: '',
     avatar_url: '',
@@ -36,48 +82,59 @@ const Profile = () => {
   
   const [hasChanges, setHasChanges] = useState(false)
   const [formErrors, setFormErrors] = useState({})
-  const [showPasswordModal, setShowPasswordModal] = useState(false)
 
+  // ============= Query =============
+  const { 
+    data: profileData,
+    isLoading,
+    error: profileError,
+    refetch
+  } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: () => fetchProfile(user?.id),
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  })
+
+  // ============= Mutation =============
+  const updateMutation = useMutation({
+    mutationFn: updateProfile,
+    onSuccess: (freshProfile) => {
+      // Atualizar cache do React Query
+      queryClient.setQueryData(['profile', user?.id], freshProfile)
+      
+      // Atualizar secureStorage
+      secureStorage.set('profile', freshProfile)
+      
+      showFeedback('success', 'Perfil atualizado com sucesso!')
+      setHasChanges(false)
+    },
+    onError: (error) => {
+      console.error('Erro ao salvar perfil:', error)
+      showFeedback('error', 'Erro ao salvar perfil: ' + error.message)
+    }
+  })
+
+  // ============= Efeitos =============
   useEffect(() => {
-    if (profile) {
-      loadProfileData()
+    if (profileData) {
+      setFormData({
+        full_name: profileData.full_name || '',
+        display_name: profileData.display_name || '',
+        email: profileData.email || user?.email || '',
+        phone: profileData.phone || '',
+        avatar_url: profileData.avatar_url || '',
+        address: profileData.address || '',
+        city: profileData.city || '',
+        state: profileData.state || '',
+        zip_code: profileData.zip_code || '',
+        birth_date: profileData.birth_date || '',
+        document: profileData.document || ''
+      })
     }
-  }, [profile])
+  }, [profileData, user])
 
-  const loadProfileData = async () => {
-    setLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user?.id)
-        .single()
-
-      if (error) throw error
-
-      if (data) {
-        setFormData({
-          full_name: data.full_name || '',
-          display_name: data.display_name || '', // ADICIONAR
-          email: data.email || user?.email || '',
-          phone: data.phone || '',
-          avatar_url: data.avatar_url || '',
-          address: data.address || '',
-          city: data.city || '',
-          state: data.state || '',
-          zip_code: data.zip_code || '',
-          birth_date: data.birth_date || '',
-          document: data.document || ''
-        })
-      }
-    } catch (error) {
-      console.error('Erro ao carregar perfil:', error)
-      showFeedback('error', 'Erro ao carregar dados do perfil')
-    } finally {
-      setLoading(false)
-    }
-  }
-
+  // ============= Handlers =============
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
@@ -108,61 +165,33 @@ const Profile = () => {
     return Object.keys(errors).length === 0
   }
 
-  const handleSaveProfile = async () => {
+  const handleSaveProfile = () => {
     if (!validateForm()) return
     
-    setSaving(true)
-    try {
-      const updateData = {
-        display_name: formData.display_name || null,
-        phone: formData.phone || null,
-        avatar_url: formData.avatar_url || null,
-        address: formData.address || null,
-        city: formData.city || null,
-        state: formData.state || null,
-        zip_code: formData.zip_code || null,
-        birth_date: formData.birth_date || null,
-        document: formData.document || null,
-        updated_at: new Date().toISOString()
-      }
+    updateMutation.mutate({
+      userId: user?.id,
+      profileData: formData
+    })
+  }
 
-      console.log('📝 Salvando perfil:', updateData)
-
-      const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', user?.id)
-
-      if (error) throw error
-
-      console.log('✅ Perfil salvo no banco')
-
-      // Recarregar o perfil do banco
-      const { data: freshProfile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user?.id)
-        .single()
-
-      if (freshProfile) {
-        // Atualizar secureStorage
-        secureStorage.set('profile', freshProfile)
-        console.log('✅ SecureStorage atualizado')
-      }
-
-      // Recarregar a página para atualizar todos os componentes
-      showFeedback('success', 'Perfil atualizado! Recarregando...')
-      
-      setTimeout(() => {
-        window.location.reload()
-      }, 1000)
-
-    } catch (error) {
-      console.error('Erro ao salvar perfil:', error)
-      showFeedback('error', 'Erro ao salvar perfil: ' + error.message)
-    } finally {
-      setSaving(false)
+  const handleCancelChanges = () => {
+    if (profileData) {
+      setFormData({
+        full_name: profileData.full_name || '',
+        display_name: profileData.display_name || '',
+        email: profileData.email || user?.email || '',
+        phone: profileData.phone || '',
+        avatar_url: profileData.avatar_url || '',
+        address: profileData.address || '',
+        city: profileData.city || '',
+        state: profileData.state || '',
+        zip_code: profileData.zip_code || '',
+        birth_date: profileData.birth_date || '',
+        document: profileData.document || ''
+      })
     }
+    setHasChanges(false)
+    setFormErrors({})
   }
 
   const handleAvatarUpdate = (newAvatarUrl) => {
@@ -187,6 +216,7 @@ const Profile = () => {
     }, 2000)
   }
 
+  // ============= Constantes =============
   const tabs = [
     { id: 'profile', label: 'Perfil', icon: User },
     { id: 'security', label: 'Segurança', icon: Shield }
@@ -207,7 +237,20 @@ const Profile = () => {
   // Nome de exibição para o avatar
   const displayNameForAvatar = formData.display_name || formData.full_name || 'Usuário'
 
-  if (loading) {
+  // ============= Render =============
+  if (profileError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro ao carregar perfil</h2>
+          <p className="text-gray-600 mb-4">{profileError.message}</p>
+          <Button onClick={() => refetch()}>Tentar novamente</Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (isLoading) {
     return <DataLoadingSkeleton type="cards" rows={3} />
   }
 
@@ -235,6 +278,7 @@ const Profile = () => {
         )}
 
         <div className="flex flex-col lg:flex-row gap-6">
+          {/* Sidebar */}
           <div className="lg:w-72 flex-shrink-0">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
               <AvatarUploader
@@ -263,14 +307,14 @@ const Profile = () => {
               <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-gray-100">
                 <div className="text-center">
                   <p className="text-lg font-semibold text-gray-900">
-                    {profile?.login_count || 0}
+                    {profileData?.login_count || 0}
                   </p>
                   <p className="text-xs text-gray-500">Logins</p>
                 </div>
                 <div className="text-center">
                   <p className="text-lg font-semibold text-gray-900">
-                    {profile?.last_login 
-                      ? new Date(profile.last_login).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+                    {profileData?.last_login 
+                      ? new Date(profileData.last_login).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
                       : '-'}
                   </p>
                   <p className="text-xs text-gray-500">Último acesso</p>
@@ -278,6 +322,7 @@ const Profile = () => {
               </div>
             </div>
 
+            {/* Tabs Navigation */}
             <div className="mt-4 bg-white rounded-lg shadow-sm border border-gray-200 p-2">
               <nav className="space-y-1">
                 {tabs.map((tab) => {
@@ -303,6 +348,7 @@ const Profile = () => {
             </div>
           </div>
 
+          {/* Main Content */}
           <div className="flex-1">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               {activeTab === 'profile' && (
@@ -315,15 +361,23 @@ const Profile = () => {
                     formData={formData}
                     formErrors={formErrors}
                     onChange={handleInputChange}
+                    disabled={updateMutation.isPending}
                   />
 
                   {hasChanges && (
                     <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
-                      <Button variant="outline" onClick={loadProfileData}>
+                      <Button 
+                        variant="outline" 
+                        onClick={handleCancelChanges}
+                        disabled={updateMutation.isPending}
+                      >
                         <RotateCcw size={16} className="mr-1" />
                         Cancelar
                       </Button>
-                      <Button onClick={handleSaveProfile} loading={saving}>
+                      <Button 
+                        onClick={handleSaveProfile} 
+                        loading={updateMutation.isPending}
+                      >
                         <Save size={16} className="mr-1" />
                         Salvar Alterações
                       </Button>

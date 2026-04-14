@@ -31,6 +31,7 @@ const CustomerFilters = ({
       onSearchChange={setSearchTerm}
       filters={filters}
       onFilterChange={onFilterChange}
+      searchDebounceDelay={400} // ✅ Delay específico para clientes
     />
   )
 }

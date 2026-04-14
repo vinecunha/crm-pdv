@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Image as ImageIcon, X, Save } from 'lucide-react'
 import Button from '../ui/Button'
+import LazyImage from '../ui/LazyImage'
 
 const CompanySettingsTab = ({ settings, setSettings, onSave, saving }) => {
   const [availableLogos] = useState([
@@ -26,11 +27,15 @@ const CompanySettingsTab = ({ settings, setSettings, onSave, saving }) => {
           <div className="flex flex-col sm:flex-row items-start gap-6">
             <div className="w-32 h-32 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
               {settings.company_logo_url ? (
-                <img 
-                  src={settings.company_logo_url} 
-                  alt="Logo" 
+                <LazyImage
+                  src={settings.company_logo_url}
+                  alt={settings.company_name || 'Logo'}
                   className="max-w-full max-h-full object-contain"
-                  onError={(e) => { e.target.src = '/brasalino-pollo.png' }}
+                  fallback={
+                    <div className="w-full h-full flex items-center justify-center">
+                      <ImageIcon className="w-8 h-8 text-gray-400" />
+                    </div>
+                  }
                 />
               ) : (
                 <ImageIcon className="w-8 h-8 text-gray-400" />
@@ -109,7 +114,6 @@ const CompanySettingsTab = ({ settings, setSettings, onSave, saving }) => {
               onChange={(e) => handleChange('phone', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
               placeholder="(00) 0000-0000"
-              mask="phone"
             />
           </div>
           <div>

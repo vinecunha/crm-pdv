@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react'
+import React, { useEffect, useRef, useCallback } from 'react'
 
 /**
  * Hook para gerenciar atalhos de teclado

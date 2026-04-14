@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { 
   Eye, Ban, Printer, Search, Filter, RefreshCw,
   FileText, DollarSign, Ticket, Download
@@ -13,9 +14,61 @@ import Badge from '../components/Badge'
 import { formatCurrency, formatNumber, formatDateTime } from '../utils/formatters'
 import useSystemLogs from '../hooks/useSystemLogs'
 import useLogger from '../hooks/useLogger'
+import useDebounce from '../hooks/useDebounce'
 import CancelSaleModal from '../components/sales/management/CancelSaleModal'
 
-// Componentes internos modernizados
+// ============= API Functions =============
+const fetchSales = async ({ queryKey }) => {
+  const [, { searchTerm, filters }] = queryKey
+  
+  let query = supabase.from('sales').select('*').order('created_at', { ascending: false })
+  
+  if (searchTerm?.trim()) {
+    query = query.or(`sale_number.ilike.%${searchTerm}%,customer_name.ilike.%${searchTerm}%,customer_phone.ilike.%${searchTerm}%`)
+  }
+  if (filters?.status && filters.status !== 'all') {
+    query = query.eq('status', filters.status)
+  }
+  if (filters?.start_date) {
+    query = query.gte('created_at', filters.start_date)
+  }
+  if (filters?.end_date) {
+    query = query.lte('created_at', filters.end_date)
+  }
+  if (filters?.payment_method && filters.payment_method !== 'all') {
+    query = query.eq('payment_method', filters.payment_method)
+  }
+  
+  const { data, error } = await query
+  if (error) throw error
+  return data || []
+}
+
+const fetchSaleItems = async (saleId) => {
+  const { data, error } = await supabase
+    .from('sale_items')
+    .select('*')
+    .eq('sale_id', saleId)
+    .order('created_at', { ascending: true })
+  
+  if (error) throw error
+  return data || []
+}
+
+const cancelSaleWithApproval = async ({ saleNumber, cancelledBy, approvedBy, reason, notes }) => {
+  const { error } = await supabase.rpc('cancel_sale_with_approval', {
+    p_sale_number: saleNumber,
+    p_cancelled_by: cancelledBy,
+    p_approved_by: approvedBy,
+    p_cancellation_reason: reason,
+    p_cancellation_notes: notes || null
+  })
+  
+  if (error) throw error
+  return { saleNumber }
+}
+
+// ============= Componentes Internos =============
 const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) => {
   const variants = {
     default: 'bg-white border-gray-200',
@@ -51,14 +104,17 @@ const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) =
   )
 }
 
+// ============= Componente Principal =============
 const SalesList = () => {
   const { profile } = useAuth()
   const { logAction } = useSystemLogs()
   const { logComponentAction, logComponentError } = useLogger('SalesList')
+  const queryClient = useQueryClient()
   
-  const [sales, setSales] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
+  // Estados para busca com debounce
+  const [localSearchTerm, setLocalSearchTerm] = useState('')
+  const debouncedSearchTerm = useDebounce(localSearchTerm, 400)
+  
   const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState({
     status: 'all',
@@ -67,105 +123,63 @@ const SalesList = () => {
     end_date: ''
   })
   
-  // Modais
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [selectedSale, setSelectedSale] = useState(null)
-  const [saleItems, setSaleItems] = useState([])
   const [cancelReason, setCancelReason] = useState('')
   const [cancelNotes, setCancelNotes] = useState('')
   const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Verificar permissões baseadas na role do banco
   const canCancelDirectly = profile?.role === 'admin' || profile?.role === 'gerente'
-  const canRequestCancellation = profile?.role === 'operador' // Operador pode solicitar com aprovação
+  const canRequestCancellation = profile?.role === 'operador'
 
   const paymentIcons = { cash: '💵', credit_card: '💳', debit_card: '🏧', pix: '📱' }
   const paymentLabels = { cash: 'Dinheiro', credit_card: 'Crédito', debit_card: 'Débito', pix: 'PIX' }
 
-  useEffect(() => {
-    logComponentAction('ACCESS_PAGE', null, { page: 'sales_list', user_email: profile?.email })
-    fetchSales()
-  }, [])
+  // ============= Queries =============
+  const { 
+    data: sales = [], 
+    isLoading,
+    error,
+    refetch,
+    isFetching
+  } = useQuery({
+    queryKey: ['sales', { searchTerm: debouncedSearchTerm, filters }],
+    queryFn: fetchSales,
+    staleTime: 2 * 60 * 1000,
+  })
 
-  useEffect(() => { fetchSales() }, [searchTerm, filters])
+  const { 
+    data: saleItems = [],
+    isLoading: isLoadingItems
+  } = useQuery({
+    queryKey: ['sale-items', selectedSale?.id],
+    queryFn: () => fetchSaleItems(selectedSale?.id),
+    enabled: !!selectedSale?.id && showDetailsModal,
+  })
 
-  const showFeedback = (type, message) => {
-    setFeedback({ show: true, type, message })
-    setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
-  }
-
-  const fetchSales = async () => {
-    setLoading(true)
-    try {
-      let query = supabase.from('sales').select('*').order('created_at', { ascending: false })
-      if (searchTerm.trim()) {
-        query = query.or(`sale_number.ilike.%${searchTerm}%,customer_name.ilike.%${searchTerm}%,customer_phone.ilike.%${searchTerm}%`)
-      }
-      if (filters.status && filters.status !== 'all') query = query.eq('status', filters.status)
-      if (filters.start_date) query = query.gte('created_at', filters.start_date)
-      if (filters.end_date) query = query.lte('created_at', filters.end_date)
-      if (filters.payment_method && filters.payment_method !== 'all') query = query.eq('payment_method', filters.payment_method)
-      
-      const { data, error } = await query
-      if (error) throw error
-      setSales(data || [])
-    } catch (error) {
-      showFeedback('error', 'Erro ao carregar vendas')
-      await logComponentError(error, { action: 'fetch_sales' })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const viewSaleDetails = async (sale) => {
-    setSelectedSale(sale)
-    setShowDetailsModal(true)
-    try {
-      const { data } = await supabase.from('sale_items').select('*').eq('sale_id', sale.id).order('created_at', { ascending: true })
-      setSaleItems(data || [])
-      await logComponentAction('VIEW_SALE_DETAILS', sale.id, { sale_number: sale.sale_number })
-    } catch (error) {
-      showFeedback('error', 'Erro ao carregar detalhes')
-    }
-  }
-
-  // Função de cancelamento COM aprovação
-  const handleCancelWithApproval = async (approvalData) => {
-    const { approvedBy, approverName, approverRole } = approvalData
-    
-    setIsSubmitting(true)
-    try {
-      // Chamar RPC com dados de aprovação
-      const { error } = await supabase.rpc('cancel_sale_with_approval', {
-        p_sale_number: selectedSale.sale_number,
-        p_cancelled_by: profile?.id,
-        p_approved_by: approvedBy,
-        p_cancellation_reason: cancelReason,
-        p_cancellation_notes: cancelNotes || null
-      })
-      
-      if (error) throw error
-      
+  // ============= Mutation =============
+  const cancelMutation = useMutation({
+    mutationFn: cancelSaleWithApproval,
+    onSuccess: async (data, variables) => {
       await logAction({ 
         action: 'CANCEL_SALE', 
         entityType: 'sale', 
-        entityId: selectedSale.id, 
+        entityId: selectedSale?.id, 
         details: { 
-          sale_number: selectedSale.sale_number, 
-          reason: cancelReason,
+          sale_number: data.saleNumber, 
+          reason: variables.reason,
           cancelled_by: profile?.email,
-          cancelled_by_role: profile?.role,
-          approved_by: approverName,
-          approver_role: approverRole
+          approved_by: variables.approvedBy
         }, 
         severity: 'WARNING' 
       })
       
+      queryClient.invalidateQueries({ queryKey: ['sales'] })
+      
       const message = canCancelDirectly 
-        ? `Venda ${selectedSale.sale_number} cancelada!`
-        : `Venda ${selectedSale.sale_number} cancelada com aprovação de ${approverName}!`
+        ? `Venda ${data.saleNumber} cancelada!`
+        : `Venda ${data.saleNumber} cancelada com aprovação!`
       
       showFeedback('success', message)
       setShowCancelModal(false)
@@ -173,19 +187,52 @@ const SalesList = () => {
       setSelectedSale(null)
       setCancelReason('')
       setCancelNotes('')
-      await fetchSales()
-      
-    } catch (error) {
+    },
+    onError: async (error) => {
       showFeedback('error', `Erro ao cancelar: ${error.message}`)
       await logComponentError(error, { action: 'cancel_sale' })
-    } finally {
-      setIsSubmitting(false)
     }
+  })
+
+  // ============= Efeitos =============
+  React.useEffect(() => {
+    logComponentAction('ACCESS_PAGE', null, { page: 'sales_list', user_email: profile?.email })
+  }, [])
+
+  // ============= Handlers =============
+  const showFeedback = (type, message) => {
+    setFeedback({ show: true, type, message })
+    setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
   }
 
-  const getSalesSummary = () => {
-    const completed = sales.filter(s => s.status === 'completed')
-    const cancelled = sales.filter(s => s.status === 'cancelled')
+  const viewSaleDetails = (sale) => {
+    setSelectedSale(sale)
+    setShowDetailsModal(true)
+    logComponentAction('VIEW_SALE_DETAILS', sale.id, { sale_number: sale.sale_number })
+  }
+
+  const handleCancelWithApproval = (approvalData) => {
+    cancelMutation.mutate({
+      saleNumber: selectedSale.sale_number,
+      cancelledBy: profile?.id,
+      approvedBy: approvalData.approvedBy,
+      approverName: approvalData.approverName,
+      approverRole: approvalData.approverRole,
+      reason: cancelReason,
+      notes: cancelNotes
+    })
+  }
+
+  const handleExport = () => {
+    showFeedback('info', 'Exportação em desenvolvimento')
+  }
+
+  // ============= Dados Calculados =============
+  const summary = React.useMemo(() => {
+    const salesArray = Array.isArray(sales) ? sales : []
+    const completed = salesArray.filter(s => s.status === 'completed')
+    const cancelled = salesArray.filter(s => s.status === 'cancelled')
+    
     return {
       totalAmount: completed.reduce((sum, s) => sum + (s.final_amount || 0), 0),
       totalDiscount: completed.reduce((sum, s) => sum + (s.discount_amount || 0), 0),
@@ -196,11 +243,9 @@ const SalesList = () => {
         ? completed.reduce((sum, s) => sum + (s.final_amount || 0), 0) / completed.length 
         : 0
     }
-  }
+  }, [sales])
 
-  const summary = getSalesSummary()
-
-  // Configuração das colunas para DataTable
+  // ============= Colunas da Tabela =============
   const columns = [
     {
       key: 'sale_number',
@@ -268,7 +313,6 @@ const SalesList = () => {
     }
   ]
 
-  // Ações - Condicional baseado na role
   const actions = [
     {
       label: 'Ver detalhes',
@@ -276,7 +320,6 @@ const SalesList = () => {
       onClick: viewSaleDetails,
       className: 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
     },
-    // Mostrar botão de cancelar apenas para admin, gerente OU operador (com aprovação)
     ...(canCancelDirectly || canRequestCancellation ? [{
       label: canCancelDirectly ? 'Cancelar' : 'Solicitar Cancelamento',
       icon: <Ban size={16} />,
@@ -299,12 +342,24 @@ const SalesList = () => {
     }
   ]
 
-  if (loading && sales.length === 0) return <DataLoadingSkeleton />
+  // ============= Render =============
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro ao carregar vendas</h2>
+          <p className="text-gray-600 mb-4">{error.message}</p>
+          <Button onClick={() => refetch()}>Tentar novamente</Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (isLoading && sales.length === 0) return <DataLoadingSkeleton />
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Feedback */}
         {feedback.show && (
           <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />
         )}
@@ -314,13 +369,18 @@ const SalesList = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Gestão de Vendas</h1>
-              <p className="text-gray-500 mt-1">Visualize, cancele e gerencie todas as vendas realizadas</p>
+              <p className="text-gray-500 mt-1">
+                Visualize, cancele e gerencie todas as vendas realizadas
+                {isFetching && (
+                  <span className="ml-2 text-xs text-gray-400">atualizando...</span>
+                )}
+              </p>
             </div>
             <div className="flex gap-3">
-              <Button variant="outline" onClick={fetchSales} loading={loading} icon={RefreshCw}>
+              <Button variant="outline" onClick={() => refetch()} loading={isLoading} icon={RefreshCw}>
                 Atualizar
               </Button>
-              <Button variant="outline" icon={Download}>
+              <Button variant="outline" onClick={handleExport} icon={Download}>
                 Exportar
               </Button>
             </div>
@@ -329,13 +389,37 @@ const SalesList = () => {
 
         {/* Cards de Resumo */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <StatCard label="Total de Vendas" value={formatNumber(summary.totalCount)} sublabel={`${summary.completedCount} concluídas`} icon={FileText} variant="info" />
-          <StatCard label="Faturamento" value={formatCurrency(summary.totalAmount)} sublabel={`Ticket: ${formatCurrency(summary.averageTicket)}`} icon={DollarSign} variant="success" />
-          <StatCard label="Descontos" value={formatCurrency(summary.totalDiscount)} sublabel={`${((summary.totalDiscount / summary.totalAmount) * 100 || 0).toFixed(1)}%`} icon={Ticket} variant="purple" />
-          <StatCard label="Cancelamentos" value={formatNumber(summary.cancelledCount)} sublabel={`${((summary.cancelledCount / summary.totalCount) * 100 || 0).toFixed(1)}%`} icon={Ban} variant={summary.cancelledCount > 0 ? 'warning' : 'default'} />
+          <StatCard 
+            label="Total de Vendas" 
+            value={formatNumber(summary.totalCount)} 
+            sublabel={`${summary.completedCount} concluídas`} 
+            icon={FileText} 
+            variant="info" 
+          />
+          <StatCard 
+            label="Faturamento" 
+            value={formatCurrency(summary.totalAmount)} 
+            sublabel={`Ticket: ${formatCurrency(summary.averageTicket)}`} 
+            icon={DollarSign} 
+            variant="success" 
+          />
+          <StatCard 
+            label="Descontos" 
+            value={formatCurrency(summary.totalDiscount)} 
+            sublabel={`${((summary.totalDiscount / summary.totalAmount) * 100 || 0).toFixed(1)}%`} 
+            icon={Ticket} 
+            variant="purple" 
+          />
+          <StatCard 
+            label="Cancelamentos" 
+            value={formatNumber(summary.cancelledCount)} 
+            sublabel={`${((summary.cancelledCount / summary.totalCount) * 100 || 0).toFixed(1)}%`} 
+            icon={Ban} 
+            variant={summary.cancelledCount > 0 ? 'warning' : 'default'} 
+          />
         </div>
 
-        {/* Barra de Busca e Filtros */}
+        {/* Barra de Busca e Filtros - COM DEBOUNCE */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex-1 min-w-[250px] relative">
@@ -343,10 +427,16 @@ const SalesList = () => {
               <input
                 type="text"
                 placeholder="Buscar por nº venda, cliente ou telefone..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={localSearchTerm}
+                onChange={(e) => setLocalSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
+              {/* Indicador de busca em andamento */}
+              {localSearchTerm !== debouncedSearchTerm && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
             </div>
             <Button variant="outline" onClick={() => setShowFilters(!showFilters)} icon={Filter}>
               Filtros {Object.values(filters).some(v => v && v !== 'all') && '•'}
@@ -355,26 +445,44 @@ const SalesList = () => {
 
           {showFilters && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4 pt-4 border-t border-gray-100">
-              <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} className="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+              <select 
+                value={filters.status} 
+                onChange={(e) => setFilters({ ...filters, status: e.target.value })} 
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              >
                 <option value="all">Todos os status</option>
                 <option value="completed">Concluídas</option>
                 <option value="cancelled">Canceladas</option>
                 <option value="pending">Pendentes</option>
               </select>
-              <select value={filters.payment_method} onChange={(e) => setFilters({ ...filters, payment_method: e.target.value })} className="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+              <select 
+                value={filters.payment_method} 
+                onChange={(e) => setFilters({ ...filters, payment_method: e.target.value })} 
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              >
                 <option value="all">Todas as formas</option>
                 <option value="cash">Dinheiro</option>
                 <option value="credit_card">Crédito</option>
                 <option value="debit_card">Débito</option>
                 <option value="pix">PIX</option>
               </select>
-              <input type="date" value={filters.start_date} onChange={(e) => setFilters({ ...filters, start_date: e.target.value })} className="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-              <input type="date" value={filters.end_date} onChange={(e) => setFilters({ ...filters, end_date: e.target.value })} className="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+              <input 
+                type="date" 
+                value={filters.start_date} 
+                onChange={(e) => setFilters({ ...filters, start_date: e.target.value })} 
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm" 
+              />
+              <input 
+                type="date" 
+                value={filters.end_date} 
+                onChange={(e) => setFilters({ ...filters, end_date: e.target.value })} 
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm" 
+              />
             </div>
           )}
         </div>
 
-        {/* Tabela com DataTable */}
+        {/* Tabela */}
         <DataTable
           columns={columns}
           data={sales}
@@ -418,20 +526,39 @@ const SalesList = () => {
 
                 <div>
                   <p className="text-xs text-gray-500 font-medium mb-2">ITENS</p>
-                  <div className="space-y-2">
-                    {saleItems.map((item, i) => (
-                      <div key={i} className="flex justify-between py-2 border-b border-gray-100 last:border-0">
-                        <span className="text-gray-700">{item.product_name} x{item.quantity}</span>
-                        <span className="font-medium">{formatCurrency(item.total_price)}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {isLoadingItems ? (
+                    <div className="text-center py-4">
+                      <RefreshCw size={20} className="animate-spin mx-auto text-gray-400" />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {saleItems.map((item, i) => (
+                        <div key={i} className="flex justify-between py-2 border-b border-gray-100 last:border-0">
+                          <span className="text-gray-700">{item.product_name} x{item.quantity}</span>
+                          <span className="font-medium">{formatCurrency(item.total_price)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="border-t pt-3 space-y-1">
-                  <div className="flex justify-between"><span className="text-gray-500">Subtotal</span><span>{formatCurrency(selectedSale.total_amount)}</span></div>
-                  {selectedSale.discount_amount > 0 && <div className="flex justify-between"><span className="text-green-600">Desconto</span><span className="text-green-600">-{formatCurrency(selectedSale.discount_amount)}</span></div>}
-                  <div className="flex justify-between font-bold pt-2 border-t"><span>Total</span><span className="text-green-600">{formatCurrency(selectedSale.final_amount)}</span></div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Subtotal</span>
+                    <span>{formatCurrency(selectedSale.total_amount)}</span>
+                  </div>
+                  {selectedSale.discount_amount > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-green-600">
+                        Desconto {selectedSale.coupon_code && `(${selectedSale.coupon_code})`}
+                      </span>
+                      <span className="text-green-600">-{formatCurrency(selectedSale.discount_amount)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-bold pt-2 border-t">
+                    <span>Total</span>
+                    <span className="text-green-600">{formatCurrency(selectedSale.final_amount)}</span>
+                  </div>
                 </div>
               </div>
 
@@ -446,6 +573,7 @@ const SalesList = () => {
                       setCancelNotes('')
                       setShowCancelModal(true) 
                     }}
+                    disabled={cancelMutation.isPending}
                   >
                     {canCancelDirectly ? 'Cancelar Venda' : 'Solicitar Cancelamento'}
                   </Button>
@@ -455,17 +583,17 @@ const SalesList = () => {
           </div>
         )}
 
-        {/* Modal de Cancelamento com Aprovação */}
+        {/* Modal de Cancelamento */}
         <CancelSaleModal
           isOpen={showCancelModal}
-          onClose={() => !isSubmitting && setShowCancelModal(false)}
+          onClose={() => !cancelMutation.isPending && setShowCancelModal(false)}
           sale={selectedSale}
           cancelReason={cancelReason}
           setCancelReason={setCancelReason}
           cancelNotes={cancelNotes}
           setCancelNotes={setCancelNotes}
           onConfirm={handleCancelWithApproval}
-          isSubmitting={isSubmitting}
+          isSubmitting={cancelMutation.isPending}
           currentUser={profile}
         />
       </div>

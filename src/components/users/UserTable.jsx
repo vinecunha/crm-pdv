@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import { Edit2, Trash2, Shield, CheckCircle, Lock } from 'lucide-react'
-import DataTable from '../ui/DataTable'
+import { useTableStrategy } from '../../hooks/useTableStrategy'
 import UserRoleBadge from './UserRoleBadge'
 import Badge from '../Badge'
 import { formatDate } from '../../utils/formatters'
-import { createAction, actionColors } from '../../utils/actions'
+import { createAction } from '../../utils/actions'
 
 const UserTable = ({ 
   users, 
@@ -16,6 +16,7 @@ const UserTable = ({
   canDelete,
   isAdmin 
 }) => {
+  const TableComponent = useTableStrategy(users, 50)
   const [openMenuId, setOpenMenuId] = useState(null)
 
   const getStatusBadge = (status) => {
@@ -34,8 +35,10 @@ const UserTable = ({
       key: 'full_name',
       header: 'Nome',
       sortable: true,
+      width: '25%',
+      minWidth: '180px',
       render: (row) => (
-        <div className="font-medium text-gray-900">
+        <div className="font-medium text-gray-900 truncate">
           {row.display_name || row.full_name || row.email?.split('@')[0]}
           {row.id === currentUserId && (
             <span className="ml-2 text-xs text-green-600">(Você)</span>
@@ -47,30 +50,34 @@ const UserTable = ({
       key: 'email',
       header: 'Email',
       sortable: true,
-      render: (row) => <div className="text-sm text-gray-500">{row.email}</div>
+      width: '25%',
+      minWidth: '200px',
+      render: (row) => <div className="text-sm text-gray-500 truncate">{row.email}</div>
     },
     {
       key: 'role',
       header: 'Papel',
       sortable: true,
+      width: '120px',
       render: (row) => <UserRoleBadge role={row.role} size="sm" />
     },
     {
       key: 'status',
       header: 'Status',
       sortable: true,
+      width: '120px',
       render: (row) => getStatusBadge(row.status || 'active')
     },
     {
       key: 'created_at',
       header: 'Criado em',
       sortable: true,
+      width: '120px',
       render: (row) => <div className="text-sm text-gray-500">{formatDate(row.created_at)}</div>
     }
   ]
 
   const actions = [
-    // Status Dropdown (ação customizada)
     {
       label: 'Status',
       icon: <Shield size={16} />,
@@ -88,7 +95,7 @@ const UserTable = ({
 
   return (
     <>
-      <DataTable
+      <TableComponent
         columns={columns}
         data={users}
         actions={actions}
@@ -96,13 +103,9 @@ const UserTable = ({
         emptyMessage="Nenhum usuário encontrado"
         striped
         hover
-        pagination
-        itemsPerPageOptions={[20, 50, 100]}
-        defaultItemsPerPage={20}
         showTotalItems
       />
       
-      {/* Dropdown de Status (renderizado fora da tabela) */}
       {openMenuId && (
         <StatusDropdown
           user={users.find(u => u.id === openMenuId)}
@@ -114,7 +117,6 @@ const UserTable = ({
   )
 }
 
-// Componente de Dropdown de Status
 const StatusDropdown = ({ user, onClose, onUpdateStatus }) => {
   const handleSelect = (newStatus) => {
     onUpdateStatus(user, newStatus)

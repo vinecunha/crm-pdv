@@ -1,11 +1,10 @@
 import React from 'react'
-import { User, Phone, Ticket, Banknote, CreditCard, QrCode, CheckCircle, Clock, Ban, RefreshCw } from 'lucide-react'
-import DataTable from '../ui/DataTable'
+import { User, Phone, Ticket, Banknote, CreditCard, QrCode, Ban } from 'lucide-react'
+import { useTableStrategy } from '../../hooks/useTableStrategy'
 import Badge from '../Badge'
 import { formatCurrency, formatDateTime } from '../../utils/formatters'
 import { createAction } from '../../utils/actions'
 
-// Componentes auxiliares
 const CheckCircleIcon = ({ size }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <circle cx="12" cy="12" r="10" />
@@ -30,6 +29,8 @@ const RefreshCwIcon = ({ size }) => (
 )
 
 const SalesTable = ({ sales, onViewDetails, onCancel, onPrint }) => {
+  const TableComponent = useTableStrategy(sales, 100)
+
   const getStatusBadge = (status) => {
     const statusConfig = {
       completed: { variant: 'success', icon: CheckCircleIcon, text: 'Concluída' },
@@ -63,6 +64,7 @@ const SalesTable = ({ sales, onViewDetails, onCancel, onPrint }) => {
       key: 'sale_number',
       header: 'Nº Venda',
       sortable: true,
+      width: '130px',
       render: (row) => (
         <div>
           <div className="text-sm font-medium text-gray-900">#{row.sale_number}</div>
@@ -79,6 +81,7 @@ const SalesTable = ({ sales, onViewDetails, onCancel, onPrint }) => {
       key: 'created_at',
       header: 'Data/Hora',
       sortable: true,
+      width: '160px',
       render: (row) => (
         <div>
           <div className="text-sm text-gray-900">{formatDateTime(row.created_at)}</div>
@@ -90,15 +93,17 @@ const SalesTable = ({ sales, onViewDetails, onCancel, onPrint }) => {
       key: 'customer_name',
       header: 'Cliente',
       sortable: true,
+      width: '20%',
+      minWidth: '180px',
       render: (row) => (
         <div className="flex items-center gap-2">
-          <User size={14} className="text-gray-400" />
-          <div>
-            <div className="text-sm text-gray-900">{row.customer_name || 'Cliente não identificado'}</div>
+          <User size={14} className="text-gray-400 flex-shrink-0" />
+          <div className="min-w-0">
+            <div className="text-sm text-gray-900 truncate">{row.customer_name || 'Cliente não identificado'}</div>
             {row.customer_phone && (
               <div className="text-xs text-gray-500 flex items-center gap-1">
                 <Phone size={10} />
-                {row.customer_phone}
+                <span className="truncate">{row.customer_phone}</span>
               </div>
             )}
           </div>
@@ -109,6 +114,7 @@ const SalesTable = ({ sales, onViewDetails, onCancel, onPrint }) => {
       key: 'final_amount',
       header: 'Total',
       sortable: true,
+      width: '130px',
       render: (row) => (
         <div>
           <div className="text-sm font-semibold text-gray-900">{formatCurrency(row.final_amount)}</div>
@@ -122,6 +128,7 @@ const SalesTable = ({ sales, onViewDetails, onCancel, onPrint }) => {
       key: 'payment_method',
       header: 'Pagamento',
       sortable: true,
+      width: '130px',
       render: (row) => (
         <div className="flex items-center gap-1">
           {getPaymentMethodIcon(row.payment_method)}
@@ -133,6 +140,7 @@ const SalesTable = ({ sales, onViewDetails, onCancel, onPrint }) => {
       key: 'status',
       header: 'Status',
       sortable: true,
+      width: '130px',
       render: (row) => getStatusBadge(row.status)
     }
   ]
@@ -146,7 +154,7 @@ const SalesTable = ({ sales, onViewDetails, onCancel, onPrint }) => {
   ]
 
   return (
-    <DataTable
+    <TableComponent
       columns={columns}
       data={sales}
       actions={actions}
@@ -154,9 +162,6 @@ const SalesTable = ({ sales, onViewDetails, onCancel, onPrint }) => {
       emptyMessage="Nenhuma venda encontrada"
       striped
       hover
-      pagination
-      itemsPerPageOptions={[20, 50, 100]}
-      defaultItemsPerPage={20}
       showTotalItems
     />
   )

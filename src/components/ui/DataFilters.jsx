@@ -1,17 +1,34 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Search, Filter, X } from 'lucide-react'
+import useDebounce from '../../hooks/useDebounce'
 
 const DataFilters = ({
   searchPlaceholder = "Buscar...",
   searchValue,
   onSearchChange,
-  filters = [],        // Array de configurações de filtros
+  filters = [],
   onFilterChange,
   showFilters = true,
-  className = ""
+  className = "",
+  searchDebounceDelay = 300
 }) => {
+  // ✅ Agora useState vai funcionar
   const [isFiltersVisible, setIsFiltersVisible] = React.useState(false)
   const [localFilters, setLocalFilters] = React.useState({})
+  
+  // Estado local para busca com debounce
+  const [localSearch, setLocalSearch] = React.useState(searchValue)
+  const debouncedSearch = useDebounce(localSearch, searchDebounceDelay)
+
+  // Sincronizar busca debounced com o pai
+  React.useEffect(() => {
+    onSearchChange(debouncedSearch)
+  }, [debouncedSearch, onSearchChange])
+
+  // Sincronizar quando searchValue externo mudar
+  React.useEffect(() => {
+    setLocalSearch(searchValue)
+  }, [searchValue])
 
   React.useEffect(() => {
     if (filters.length > 0) {
@@ -49,10 +66,16 @@ const DataFilters = ({
           <input
             type="text"
             placeholder={searchPlaceholder}
-            value={searchValue}
-            onChange={(e) => onSearchChange(e.target.value)}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
+          {/* Indicador de busca em andamento */}
+          {localSearch !== debouncedSearch && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
         </div>
         
         {showFilters && filters.length > 0 && (
