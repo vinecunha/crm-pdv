@@ -4,7 +4,7 @@ import DataEmptyState from '../ui/DataEmptyState'
 import StockCountProgressBar from './StockCountProgressBar'
 import StockCountItemCard from './StockCountItemCard'
 import Button from '../ui/Button'
-import { Plus } from 'lucide-react'
+import { Plus } from '../../lib/icons'
 
 const StockCountCountingView = ({
   items,

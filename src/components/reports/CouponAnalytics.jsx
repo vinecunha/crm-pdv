@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { 
   Ticket, Percent, Target, Gift, Star, Zap, TrendingUp,
   Users, Award, AlertCircle, ChevronRight, ShoppingBag, Eye
-} from 'lucide-react'
+} from '../../lib/icons'
 import { supabase } from '../../lib/supabase'
 import { formatCurrency, formatNumber } from '../../utils/formatters'
 import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'

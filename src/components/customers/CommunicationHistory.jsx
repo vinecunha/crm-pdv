@@ -1,5 +1,5 @@
 import React from 'react'
-import { History, MessageSquare } from 'lucide-react'
+import { History, MessageSquare } from '../../lib/icons'
 import { formatDateTime } from '../../utils/formatters'
 
 const CommunicationHistory = ({ history, channels }) => {

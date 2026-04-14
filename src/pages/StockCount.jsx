@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ClipboardList, Plus, RotateCcw, Keyboard } from 'lucide-react'
+import { ClipboardList, Plus, RotateCcw, Keyboard } from '../lib/icons'
 import Button from '../components/ui/Button'
 import FeedbackMessage from '../components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
@@ -9,6 +9,7 @@ import useSystemLogs from '../hooks/useSystemLogs'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import useStockCountShortcuts from '../hooks/useStockCountShortcuts'
 import ShortcutFeedback from '../components/ui/ShortcutFeedback'
+import logger from '../utils/logger'
 
 import StockCountSessionsView from '../components/stock-count/StockCountSessionsView'
 import StockCountCountingView from '../components/stock-count/StockCountCountingView'
@@ -21,10 +22,17 @@ import SessionDetailsModal from '../components/stock-count/SessionDetailsModal'
 
 // ============= API Functions =============
 const fetchCountSessions = async () => {
+  logger.log('🔄 fetchCountSessions executado')
   const { data, error } = await supabase
     .from('stock_count_sessions')
     .select(`*, items:stock_count_items(count)`)
     .order('created_at', { ascending: false })
+
+  logger.log('📦 Resposta do Supabase (sessions):', { 
+    dataLength: data?.length, 
+    error: error?.message,
+    firstItem: data?.[0]
+  })
 
   if (error) throw error
   return data || []
@@ -229,6 +237,9 @@ const StockCount = () => {
   } = useQuery({
     queryKey: ['stock-count-sessions'],
     queryFn: fetchCountSessions,
+    enabled: true,        
+    staleTime: 0,         
+    refetchOnMount: true, 
   })
 
   const { 

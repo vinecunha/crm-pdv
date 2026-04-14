@@ -3,7 +3,7 @@ import DataCards from '../ui/DataCards'
 import DataFilters from '../ui/DataFilters'
 import DataEmptyState from '../ui/DataEmptyState'
 import StockCountSessionCard from './StockCountSessionCard'
-import { Plus } from 'lucide-react'
+import { Plus } from '../../lib/icons'
 
 const StockCountSessionsView = ({
   sessions,
@@ -15,7 +15,9 @@ const StockCountSessionsView = ({
   onViewDetails,
   onNewSession
 }) => {
-  const filteredSessions = sessions.filter(s => {
+  const safeSessions = Array.isArray(sessions) ? sessions : []
+  
+  const filteredSessions = safeSessions.filter(s => {
     if (searchTerm) {
       const search = searchTerm.toLowerCase()
       return s.name?.toLowerCase().includes(search) ||
@@ -30,7 +32,7 @@ const StockCountSessionsView = ({
     return true
   })
 
-  if (sessions.length === 0) {
+  if (safeSessions.length === 0) {
     return (
       <DataEmptyState
         title="Nenhum balanço realizado"
@@ -66,7 +68,7 @@ const StockCountSessionsView = ({
             }
           ]}
           onFilterChange={(filters) => setActiveFilters({ status: filters.status })}
-          searchDebounceDelay={300} // ✅ Delay para busca de sessões
+          searchDebounceDelay={300}
         />
       </div>
 

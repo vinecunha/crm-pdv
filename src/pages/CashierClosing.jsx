@@ -4,7 +4,7 @@ import {
   CheckCircle, FileText, Calendar, Users, RefreshCw,
   TrendingUp, ChevronRight, Eye, Printer, Save, Calculator,
   AlertCircle, X, DollarSign
-} from 'lucide-react'
+} from '../lib/icons'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import FeedbackMessage from '../components/ui/FeedbackMessage'

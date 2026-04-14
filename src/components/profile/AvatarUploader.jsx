@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Camera, Upload, AlertCircle } from 'lucide-react'
+import { Camera, Upload, AlertCircle } from '../../lib/icons'
 import { compressAvatar, isImageFile, validateImageSize } from '../../utils/imageCompression'
 import Button from '../ui/Button'
 import Modal from '../ui/Modal'
@@ -43,7 +43,6 @@ const AvatarUploader = ({ user, avatarUrl, fullName, displayName, onAvatarUpdate
 
     setSaving(true)
     try {
-      // ✅ COMPRIMIR ANTES DO UPLOAD
       const compressedFile = await compressAvatar(file)
       
       const fileExt = compressedFile.name.split('.').pop()

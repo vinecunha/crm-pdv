@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search, Filter, X } from 'lucide-react'
+import { Search, Filter, X } from '../../lib/icons'
 import useDebounce from '../../hooks/useDebounce'
 
 const DataFilters = ({
@@ -12,7 +12,6 @@ const DataFilters = ({
   className = "",
   searchDebounceDelay = 300
 }) => {
-  // ✅ Agora useState vai funcionar
   const [isFiltersVisible, setIsFiltersVisible] = React.useState(false)
   const [localFilters, setLocalFilters] = React.useState({})
   

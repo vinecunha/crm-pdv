@@ -1,5 +1,5 @@
 import React from 'react'
-import { Mail, User, Lock, Shield } from 'lucide-react'
+import { Mail, User, Lock, Shield } from '../../lib/icons'
 import FormInput from './FormInput'
 import Button from '../ui/Button'
 

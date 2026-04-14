@@ -1,5 +1,5 @@
 import React from 'react'
-import { Package, DollarSign, Hash } from 'lucide-react'
+import { Package, DollarSign, Hash } from '../../lib/icons'
 import FormInput from '../forms/FormInput'
 import Button from '../ui/Button'
 

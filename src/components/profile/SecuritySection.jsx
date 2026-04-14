@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Key, Shield, AlertCircle } from 'lucide-react'
+import { Key, Shield, AlertCircle } from '../../lib/icons'
 import Button from '../ui/Button'
 import ChangePasswordModal from './ChangePasswordModal'
 

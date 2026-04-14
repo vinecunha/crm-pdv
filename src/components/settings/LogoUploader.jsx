@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Upload, X, Image as ImageIcon } from 'lucide-react'
+import { Upload, X, Image as ImageIcon } from '../../lib/icons'
 import { compressLogo, isImageFile, validateImageSize } from '../../utils/imageCompression'
 import LazyImage from '../ui/LazyImage'
 
@@ -33,7 +33,6 @@ const LogoUploader = ({ currentLogo, onLogoChange, disabled }) => {
 
     setUploading(true)
     try {
-      // ✅ COMPRIMIR LOGO
       const compressedFile = await compressLogo(file)
       
       // Converter para base64 ou fazer upload

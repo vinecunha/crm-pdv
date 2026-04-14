@@ -1,5 +1,5 @@
 import React from 'react'
-import { ShoppingCart } from 'lucide-react'
+import { ShoppingCart } from '../../lib/icons'
 import { formatCurrency, formatDateTime } from '../../utils/formatters'
 
 const RecentPurchases = ({ purchases }) => {

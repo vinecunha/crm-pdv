@@ -5,12 +5,6 @@ import { secureStorage } from '../utils/secureStorage'
 import { sanitizeInput } from '../utils/sanitize' 
 import { logger } from '../utils/logger' 
 
-const logger = {
-  log: (...args) => import.meta.env.DEV && logger.log(...args),
-  warn: (...args) => import.meta.env.DEV && console.warn(...args),
-  error: (...args) => console.error(...args),
-}
-
 const AuthContext = createContext(null)
 
 const LOGIN_ATTEMPTS_KEY = 'login_attempts'
@@ -262,7 +256,6 @@ export function AuthProvider({ children }) {
       const rateLimit = checkLoginRateLimit()
       if (rateLimit.blocked) throw new Error(rateLimit.message)
       
-      // ✅ Sanitizar email
       const safeEmail = sanitizeInput(email)
       
       if (!safeEmail || !safeEmail.includes('@')) throw new Error('Email inválido')
@@ -324,7 +317,6 @@ export function AuthProvider({ children }) {
       const passwordValidation = validatePasswordStrength(password)
       if (!passwordValidation.valid) throw new Error(passwordValidation.message)
       
-      // ✅ Sanitizar entradas
       const safeEmail = sanitizeInput(email)
       const safeFullName = sanitizeInput(fullName)
       
@@ -372,7 +364,7 @@ export function AuthProvider({ children }) {
 
   const resetPassword = async (email) => {
     try {
-      const safeEmail = sanitizeInput(email) // ✅ Sanitizar
+      const safeEmail = sanitizeInput(email)
       
       const { data, error } = await supabase.auth.resetPasswordForEmail(
         safeEmail.trim().toLowerCase(),

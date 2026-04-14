@@ -1,5 +1,5 @@
 import React from 'react'
-import { XCircle, Clock, Shield } from 'lucide-react'
+import { XCircle, Clock, Shield } from '../../lib/icons'
 
 const StatCard = ({ label, value, icon: Icon, color }) => {
   const colors = {

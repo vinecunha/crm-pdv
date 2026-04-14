@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { AlertCircle, CheckCircle, Info, X, AlertTriangle } from 'lucide-react'
+import { AlertCircle, CheckCircle, Info, X, AlertTriangle } from '../../lib/icons'
 
 const FeedbackMessage = ({ 
   type = 'success', // 'success', 'error', 'warning', 'info'

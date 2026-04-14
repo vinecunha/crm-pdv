@@ -1,5 +1,5 @@
 import React from 'react'
-import { User, Phone, X } from 'lucide-react'
+import { User, Phone, X } from '../../lib/icons'
 
 const CustomerSelector = ({ customer, onClear, onOpenModal }) => {
   if (!customer) {

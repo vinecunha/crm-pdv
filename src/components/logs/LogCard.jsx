@@ -1,5 +1,5 @@
 import React from 'react'
-import { Eye, ChevronRight } from 'lucide-react'
+import { Eye, ChevronRight } from '../../lib/icons'
 
 const LogCard = ({ log, onViewDetails, getActionColor, getActionLabel, formatDateCard }) => {
   return (

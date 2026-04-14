@@ -1,5 +1,5 @@
 import React from 'react'
-import { AlertCircle, AlertTriangle } from '../../utils/icons'
+import { AlertCircle, AlertTriangle } from '../../lib/icons'
 
 const ErrorAlert = ({ error, remainingAttempts }) => {
   if (!error) return null

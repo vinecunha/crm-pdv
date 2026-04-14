@@ -1,5 +1,5 @@
 import React from 'react'
-import { Download } from 'lucide-react'
+import { Download } from '../../lib/icons'
 import Button from '../ui/Button'
 import DataFilters from '../ui/DataFilters'
 
@@ -66,7 +66,7 @@ const LogFilters = ({
             filters={filterConfigs}
             onFilterChange={setFilters}
             showFilters={true}
-            searchDebounceDelay={500} // ✅ Maior delay para logs
+            searchDebounceDelay={500}
             className="space-y-0"
           />
         </div>

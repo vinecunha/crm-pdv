@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Phone, MapPin, Calendar, Hash, User, AtSign, Search } from 'lucide-react'
+import { Phone, MapPin, Calendar, Hash, User, AtSign, Search } from '../../lib/icons'
 import FormInput from '../forms/FormInput'
 
 const ProfileInfoForm = ({ formData, formErrors, onChange, showFeedback }) => {

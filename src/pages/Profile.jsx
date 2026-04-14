@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 import { secureStorage } from '../utils/secureStorage'
 import {
   User, Save, RotateCcw, Shield
-} from 'lucide-react'
+} from '../lib/icons'
 import { sanitizeObject } from '../utils/sanitize'
 import Button from '../components/ui/Button'
 import FeedbackMessage from '../components/ui/FeedbackMessage'
@@ -28,7 +28,7 @@ const fetchProfile = async (userId) => {
 }
 
 const updateProfile = async ({ userId, profileData }) => {
-  const safeData = sanitizeObject(profileData) // ✅ Sanitizar
+  const safeData = sanitizeObject(profileData) 
   
   const updateData = {
     display_name: safeData.display_name || null,

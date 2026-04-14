@@ -1,5 +1,5 @@
 import React from 'react'
-import { RotateCcw, Package, User } from 'lucide-react'
+import { RotateCcw, Package, User } from '../../lib/icons'
 import Badge from '../Badge'
 import Button from '../ui/Button'
 import { formatDateTime } from '../../utils/formatters'

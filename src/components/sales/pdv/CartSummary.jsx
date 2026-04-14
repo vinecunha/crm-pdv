@@ -1,5 +1,6 @@
 import React from 'react'
-import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react'
+import { Trash2, Plus, Minus, ShoppingBag } from '../../../lib/icons'
+import { formatCurrency } from '../../../utils/formatters'
 import Button from '../../ui/Button'
 
 const CartSummary = ({ 
@@ -11,12 +12,6 @@ const CartSummary = ({
   selectedItemIndex = 0,
   onSelectItem
 }) => {
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value || 0)
-  }
 
   if (cart.length === 0) {
     return (

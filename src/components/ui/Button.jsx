@@ -1,5 +1,5 @@
 import React from 'react'
-import { Loader } from 'lucide-react'
+import { Loader } from '../../lib/icons'
 
 // Componente para exibir o atalho do teclado
 const ShortcutBadge = ({ shortcut }) => {

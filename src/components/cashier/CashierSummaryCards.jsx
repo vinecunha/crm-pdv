@@ -1,5 +1,5 @@
 import React from 'react'
-import { DollarSign, TrendingDown, XCircle, TrendingUp } from '../../utils/icons'
+import { DollarSign, TrendingDown, XCircle, TrendingUp } from '../../lib/icons'
 import { formatCurrency, formatNumber } from '../../utils/formatters'
 
 const CashierSummaryCards = ({ summary }) => {

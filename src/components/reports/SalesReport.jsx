@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import {
   ShoppingCart, DollarSign, TrendingUp, Percent,
   CreditCard
-} from 'lucide-react'
+} from '../../lib/icons'
 import { supabase } from '../../lib/supabase'
 import { formatCurrency, formatNumber, formatDateTime } from '../../utils/formatters'
 import SummaryCard from './SummaryCard'

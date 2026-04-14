@@ -12,7 +12,7 @@ import {
   User,
   Settings,
   LogOut
-} from '../utils/icons'
+} from '../lib/icons'
 import NotificationsPanel from './NotificationsPanel'
 
 const Header = ({ collapsed }) => {

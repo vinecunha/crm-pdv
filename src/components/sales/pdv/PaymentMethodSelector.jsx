@@ -1,5 +1,5 @@
 import React from 'react'
-import { Banknote } from 'lucide-react'
+import { Banknote } from '../../../lib/icons'
 
 // Ícone de Cartão de Crédito (SVG customizado)
 const CreditCardIcon = () => (

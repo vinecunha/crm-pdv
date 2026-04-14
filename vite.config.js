@@ -12,9 +12,9 @@ export default defineConfig({
         "default-src 'self'",
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co",
         "style-src 'self' 'unsafe-inline'",
-        "img-src 'self' data: https: blob:",
+        "img-src 'self' data: https: blob:", 
         "font-src 'self' data:",
-        "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+        "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.ipify.org",
         "frame-ancestors 'none'",
         "base-uri 'self'",
         "form-action 'self'"
@@ -25,9 +25,7 @@ export default defineConfig({
       'Referrer-Policy': 'strict-origin-when-cross-origin',
       'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
       'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Resource-Policy': 'same-origin'
+      'Cross-Origin-Resource-Policy': 'cross-origin',
     }
   },
   
@@ -46,7 +44,7 @@ export default defineConfig({
         // Agrupamento manual de chunks
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['lucide-react'],
+          ui: ['./src/lib/icons.js'],
           data: ['@tanstack/react-query', '@supabase/supabase-js'],
           charts: ['chart.js', 'react-chartjs-2'],
           virtual: ['@tanstack/react-virtual'],
@@ -109,7 +107,9 @@ export default defineConfig({
       'react-router-dom',
       '@tanstack/react-query',
       '@supabase/supabase-js',
-      'lucide-react',
+      './src/lib/icons.js',
+      'chart.js',
+      'react-chartjs-2',
       'dompurify',
       'browser-image-compression'
     ],

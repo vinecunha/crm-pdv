@@ -1,10 +1,7 @@
-import { logger } from '../utils/logger'
-
 const DB_NAME = 'pdv-offline-db'
-const DB_VERSION = 1
+const DB_VERSION = 2 
 const STORE_NAME = 'pendingSales'
 
-// Abrir IndexedDB
 const openDB = () => {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION)
@@ -14,19 +11,52 @@ const openDB = () => {
     
     request.onupgradeneeded = (event) => {
       const db = event.target.result
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        const store = db.createObjectStore(STORE_NAME, { 
-          keyPath: 'id', 
-          autoIncrement: true 
-        })
+      
+      if (db.objectStoreNames.contains(STORE_NAME)) {
+        db.deleteObjectStore(STORE_NAME)
+      }
+      
+      const store = db.createObjectStore(STORE_NAME, { 
+        keyPath: 'id', 
+        autoIncrement: true 
+      })
+      
+      if (!store.indexNames.contains('createdAt')) {
         store.createIndex('createdAt', 'createdAt')
+      }
+      if (!store.indexNames.contains('synced')) {
         store.createIndex('synced', 'synced')
       }
     }
   })
 }
 
-// Salvar venda para sincronizar depois
+export const getPendingSales = async () => {
+  try {
+    const db = await openDB()
+    const transaction = db.transaction([STORE_NAME], 'readonly')
+    const store = transaction.objectStore(STORE_NAME)
+    
+    const request = store.getAll()
+    
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => {
+        const pending = request.result.filter(sale => sale.synced === false)
+        resolve(pending)
+      }
+      request.onerror = () => reject(request.error)
+    })
+  } catch (error) {
+    console.error('❌ Erro ao buscar vendas pendentes:', error)
+    return []
+  }
+}
+
+export const getPendingSalesCount = async () => {
+  const pending = await getPendingSales()
+  return pending.length
+}
+
 export const saveSaleOffline = async (saleData) => {
   try {
     const db = await openDB()
@@ -44,7 +74,7 @@ export const saveSaleOffline = async (saleData) => {
     
     return new Promise((resolve, reject) => {
       request.onsuccess = () => {
-        logger.log('✅ Venda salva offline:', request.result)
+        console.log('✅ Venda salva offline:', request.result)
         resolve(request.result)
       }
       request.onerror = () => reject(request.error)
@@ -55,27 +85,6 @@ export const saveSaleOffline = async (saleData) => {
   }
 }
 
-// Buscar vendas pendentes
-export const getPendingSales = async () => {
-  try {
-    const db = await openDB()
-    const transaction = db.transaction([STORE_NAME], 'readonly')
-    const store = transaction.objectStore(STORE_NAME)
-    const index = store.index('synced')
-    
-    const request = index.getAll(IDBKeyRange.only(false))
-    
-    return new Promise((resolve, reject) => {
-      request.onsuccess = () => resolve(request.result)
-      request.onerror = () => reject(request.error)
-    })
-  } catch (error) {
-    console.error('❌ Erro ao buscar vendas pendentes:', error)
-    return []
-  }
-}
-
-// Marcar venda como sincronizada
 export const markSaleAsSynced = async (localId) => {
   try {
     const db = await openDB()
@@ -90,16 +99,10 @@ export const markSaleAsSynced = async (localId) => {
         sale.synced = true
         sale.syncedAt = new Date().toISOString()
         store.put(sale)
-        logger.log('✅ Venda marcada como sincronizada:', localId)
+        console.log('✅ Venda marcada como sincronizada:', localId)
       }
     }
   } catch (error) {
     console.error('❌ Erro ao marcar como sincronizada:', error)
   }
-}
-
-// Obter contagem de vendas pendentes
-export const getPendingSalesCount = async () => {
-  const pending = await getPendingSales()
-  return pending.length
 }

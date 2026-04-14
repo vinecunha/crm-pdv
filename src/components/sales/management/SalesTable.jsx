@@ -1,5 +1,5 @@
 import React from 'react'
-import { User, Phone, Ticket, Banknote, CreditCard, QrCode, Ban } from 'lucide-react'
+import { User, Phone, Ticket, Banknote, CreditCard, QrCode, Ban } from '../../lib/icons'
 import { useTableStrategy } from '../../hooks/useTableStrategy'
 import Badge from '../Badge'
 import { formatCurrency, formatDateTime } from '../../utils/formatters'

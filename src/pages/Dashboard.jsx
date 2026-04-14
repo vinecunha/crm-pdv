@@ -7,7 +7,7 @@ import {
   Users, ShoppingCart, Package, TrendingUp, 
   ChevronRight, Plus, UserPlus, CreditCard,
   DollarSign, AlertCircle
-} from 'lucide-react'
+} from '../lib/icons'
 import { formatCurrency, formatNumber, formatDate } from '../utils/formatters'
 import SectionErrorBoundary from '../components/SectionErrorBoundary'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'

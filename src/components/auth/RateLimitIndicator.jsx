@@ -1,5 +1,5 @@
 import React from 'react'
-import { Clock } from '../../utils/icons'
+import { Clock } from '../../lib/icons'
 
 export const BlockedAlert = ({ timeRemaining, formatTimeRemaining }) => {
   return (

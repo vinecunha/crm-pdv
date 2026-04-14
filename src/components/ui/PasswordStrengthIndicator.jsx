@@ -1,5 +1,5 @@
 import React from 'react'
-import { CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { CheckCircle, XCircle, AlertCircle } from '../../lib/icons'
 import { usePasswordStrength } from '../../contexts/AuthContext'
 
 const PasswordStrengthIndicator = ({ password }) => {

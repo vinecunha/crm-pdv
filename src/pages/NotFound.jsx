@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Home, ArrowLeft, Search, AlertCircle, Building } from 'lucide-react'
+import { Home, ArrowLeft, Search, AlertCircle, Building } from '../lib/icons'
 import { supabase } from '../lib/supabase'
 
 const NotFound = () => {

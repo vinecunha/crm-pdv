@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { FileText, Building, Calendar, Box, DollarSign, Search } from 'lucide-react'
+import { FileText, Building, Calendar, Box, DollarSign, Search } from '../../lib/icons'
 import FormInput from '../forms/FormInput'
 import Button from '../ui/Button'
 

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Unlock, Clock, CheckCircle } from 'lucide-react'
+import { Unlock, Clock, CheckCircle } from '../../lib/icons'
 import DataTable from '../ui/DataTable'
 import Badge from '../Badge'
 import { formatDateTime } from '../../utils/formatters'

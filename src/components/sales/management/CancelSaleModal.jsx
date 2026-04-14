@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { AlertCircle, Shield, Eye, EyeOff, Search } from 'lucide-react'
+import { AlertCircle, Shield, Eye, EyeOff, Search } from '../../../lib/icons'
 import Modal from '../../ui/Modal'
 import Button from '../../ui/Button'
 import { formatCurrency } from '../../../utils/formatters'

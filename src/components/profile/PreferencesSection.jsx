@@ -1,6 +1,6 @@
 // components/profile/PreferencesSection.jsx - Versão Simplificada
 import React from 'react'
-import { Settings, Clock } from 'lucide-react'
+import { Settings, Clock } from '../../lib/icons'
 
 const PreferencesSection = () => {
   return (

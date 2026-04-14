@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, User, Mail, Phone, MapPin, AtSign, Hash, Copy, Check, MessageCircle, Send, Smartphone, AlertCircle } from 'lucide-react'
+import { ArrowLeft, User, Mail, Phone, MapPin, AtSign, Hash, Copy, Check, MessageCircle, Send, Smartphone, AlertCircle } from '../lib/icons'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import useSystemLogs from '../hooks/useSystemLogs'

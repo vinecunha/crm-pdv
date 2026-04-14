@@ -1,5 +1,5 @@
 import React from 'react'
-import { User, Lock, LogIn, Clock } from '../../utils/icons'
+import { User, Lock, LogIn, Clock } from '../../lib/icons'
 
 const LoginForm = ({ 
   email, 

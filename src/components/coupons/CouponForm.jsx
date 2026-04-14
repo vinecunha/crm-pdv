@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search } from 'lucide-react'
+import { Search } from '../../lib/icons'
 
 const CouponForm = ({ 
   formData, 

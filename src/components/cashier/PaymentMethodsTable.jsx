@@ -1,6 +1,6 @@
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Banknote, CreditCard, QrCode, DollarSign } from 'lucide-react'
+import { Banknote, CreditCard, QrCode, DollarSign } from '../../utils'
 import DataTable from '../ui/DataTable'
 import { formatCurrency, formatNumber } from '../../utils/formatters'
 

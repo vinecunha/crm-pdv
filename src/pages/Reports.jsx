@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import {
   BarChart3, ShoppingCart, Package, Users, Store,
   FileSpreadsheet, RefreshCw, Printer, UserCheck
-} from 'lucide-react'
+} from '../lib/icons'
 import { useAuth } from '../contexts/AuthContext'
 import Button from '../components/ui/Button'
 import FeedbackMessage from '../components/ui/FeedbackMessage'
@@ -12,7 +12,6 @@ import useSystemLogs from '../hooks/useSystemLogs'
 import TabButton from '../components/reports/TabButton'
 import DateRangeFilter from '../components/reports/DateRangeFilter'
 
-// ✅ Lazy load para TODOS os relatórios (cada um é pesado)
 const SalesReport = lazy(() => import(
   /* webpackChunkName: "reports" */
   /* webpackPrefetch: false */

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { RefreshCw, X, RotateCcw, Database, FileText } from 'lucide-react'
+import { RefreshCw, X, RotateCcw, Database, FileText } from '../lib/icons'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Search, Filter, X } from 'lucide-react'
+import { Search, Filter, X } from '../../lib/icons'
 import Button from '../ui/Button'
 
 const CouponFilters = ({ searchTerm, setSearchTerm, filters, setFilters }) => {

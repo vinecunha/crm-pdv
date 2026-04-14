@@ -1,6 +1,6 @@
 // src/components/coupons/CouponTable.jsx
 import React from 'react'
-import { Copy, Globe, Users, Percent, DollarSign } from 'lucide-react'
+import { Copy, Globe, Users, Percent, DollarSign } from '../../lib/icons'
 import DataTable from '../../components/ui/DataTable'
 import Badge from '../../components/Badge'
 import { formatCurrency, formatDate } from '../../utils/formatters'

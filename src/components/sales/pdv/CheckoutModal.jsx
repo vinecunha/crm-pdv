@@ -1,5 +1,6 @@
 import React from 'react'
-import { CreditCard, Banknote, QrCode, Smartphone } from 'lucide-react'
+import { CreditCard, Banknote, QrCode, Smartphone } from '../../../lib/icons'
+import { formatCurrency } from '../../../utils/formatters'
 import Modal from '../../ui/Modal'
 import Button from '../../ui/Button'
 
@@ -24,12 +25,6 @@ const CheckoutModal = ({
   onConfirm,
   isSubmitting
 }) => {
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value || 0)
-  }
 
   return (
     <Modal

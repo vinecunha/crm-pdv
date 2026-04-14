@@ -1,6 +1,6 @@
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { User, RefreshCw } from 'lucide-react'
+import { User, RefreshCw } from '../../lib/icons'
 import DataTable from '../ui/DataTable'
 import { formatCurrency, formatNumber } from '../../utils/formatters'
 

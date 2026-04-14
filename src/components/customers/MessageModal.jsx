@@ -1,5 +1,5 @@
 import React from 'react'
-import { FileText } from 'lucide-react'
+import { FileText } from '../../lib/icons'
 import Modal from '../ui/Modal'
 import FormInput from '../forms/FormInput'
 import Button from '../ui/Button'

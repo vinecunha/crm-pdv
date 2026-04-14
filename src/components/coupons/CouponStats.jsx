@@ -1,5 +1,5 @@
 import React from 'react'
-import { Ticket, CheckCircle, Globe, Users } from 'lucide-react'
+import { Ticket, CheckCircle, Globe, Users } from '../../lib/icons'
 
 const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) => {
   const variants = {

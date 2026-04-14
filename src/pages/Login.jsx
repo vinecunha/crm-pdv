@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Mail, Lock } from 'lucide-react'
+import { Mail, Lock } from '../lib/icons'
 import { useAuth } from '../contexts/AuthContext'
 import { useRateLimit } from '../hooks/useRateLimit'
 import { supabase } from '../lib/supabase'

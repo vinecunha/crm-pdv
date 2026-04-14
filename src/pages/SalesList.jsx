@@ -1,10 +1,10 @@
+// src/pages/SalesList.jsx
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { 
   Eye, Ban, Printer, Search, Filter, RefreshCw,
-  FileText, DollarSign, Ticket, Download
-} from 'lucide-react'
-import { supabase } from '../lib/supabase'
+  FileText, DollarSign, Ticket, Download, XCircle, CheckCircle, Clock
+} from '../lib/icons'
 import { useAuth } from '../contexts/AuthContext'
 import FeedbackMessage from '../components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
@@ -17,56 +17,8 @@ import useLogger from '../hooks/useLogger'
 import useDebounce from '../hooks/useDebounce'
 import CancelSaleModal from '../components/sales/management/CancelSaleModal'
 
-// ============= API Functions =============
-const fetchSales = async ({ queryKey }) => {
-  const [, { searchTerm, filters }] = queryKey
-  
-  let query = supabase.from('sales').select('*').order('created_at', { ascending: false })
-  
-  if (searchTerm?.trim()) {
-    query = query.or(`sale_number.ilike.%${searchTerm}%,customer_name.ilike.%${searchTerm}%,customer_phone.ilike.%${searchTerm}%`)
-  }
-  if (filters?.status && filters.status !== 'all') {
-    query = query.eq('status', filters.status)
-  }
-  if (filters?.start_date) {
-    query = query.gte('created_at', filters.start_date)
-  }
-  if (filters?.end_date) {
-    query = query.lte('created_at', filters.end_date)
-  }
-  if (filters?.payment_method && filters.payment_method !== 'all') {
-    query = query.eq('payment_method', filters.payment_method)
-  }
-  
-  const { data, error } = await query
-  if (error) throw error
-  return data || []
-}
 
-const fetchSaleItems = async (saleId) => {
-  const { data, error } = await supabase
-    .from('sale_items')
-    .select('*')
-    .eq('sale_id', saleId)
-    .order('created_at', { ascending: true })
-  
-  if (error) throw error
-  return data || []
-}
-
-const cancelSaleWithApproval = async ({ saleNumber, cancelledBy, approvedBy, reason, notes }) => {
-  const { error } = await supabase.rpc('cancel_sale_with_approval', {
-    p_sale_number: saleNumber,
-    p_cancelled_by: cancelledBy,
-    p_approved_by: approvedBy,
-    p_cancellation_reason: reason,
-    p_cancellation_notes: notes || null
-  })
-  
-  if (error) throw error
-  return { saleNumber }
-}
+import * as salesListService from '../services/salesListService'
 
 // ============= Componentes Internos =============
 const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) => {
@@ -111,7 +63,6 @@ const SalesList = () => {
   const { logComponentAction, logComponentError } = useLogger('SalesList')
   const queryClient = useQueryClient()
   
-  // Estados para busca com debounce
   const [localSearchTerm, setLocalSearchTerm] = useState('')
   const debouncedSearchTerm = useDebounce(localSearchTerm, 400)
   
@@ -145,7 +96,7 @@ const SalesList = () => {
     isFetching
   } = useQuery({
     queryKey: ['sales', { searchTerm: debouncedSearchTerm, filters }],
-    queryFn: fetchSales,
+    queryFn: () => salesListService.fetchSales(debouncedSearchTerm, filters),
     staleTime: 2 * 60 * 1000,
   })
 
@@ -154,13 +105,14 @@ const SalesList = () => {
     isLoading: isLoadingItems
   } = useQuery({
     queryKey: ['sale-items', selectedSale?.id],
-    queryFn: () => fetchSaleItems(selectedSale?.id),
+    queryFn: () => salesListService.fetchSaleItems(selectedSale?.id),
     enabled: !!selectedSale?.id && showDetailsModal,
   })
 
   // ============= Mutation =============
   const cancelMutation = useMutation({
-    mutationFn: cancelSaleWithApproval,
+    mutationFn: ({ saleNumber, cancelledBy, approvedBy, reason, notes }) => 
+      salesListService.cancelSaleWithApproval(saleNumber, cancelledBy, approvedBy, reason, notes),
     onSuccess: async (data, variables) => {
       await logAction({ 
         action: 'CANCEL_SALE', 
@@ -216,16 +168,12 @@ const SalesList = () => {
       saleNumber: selectedSale.sale_number,
       cancelledBy: profile?.id,
       approvedBy: approvalData.approvedBy,
-      approverName: approvalData.approverName,
-      approverRole: approvalData.approverRole,
       reason: cancelReason,
       notes: cancelNotes
     })
   }
 
-  const handleExport = () => {
-    showFeedback('info', 'Exportação em desenvolvimento')
-  }
+  const handleExport = () => showFeedback('info', 'Exportação em desenvolvimento')
 
   // ============= Dados Calculados =============
   const summary = React.useMemo(() => {
@@ -238,7 +186,7 @@ const SalesList = () => {
       totalDiscount: completed.reduce((sum, s) => sum + (s.discount_amount || 0), 0),
       completedCount: completed.length,
       cancelledCount: cancelled.length,
-      totalCount: sales.length,
+      totalCount: salesArray.length,
       averageTicket: completed.length > 0 
         ? completed.reduce((sum, s) => sum + (s.final_amount || 0), 0) / completed.length 
         : 0
@@ -291,9 +239,7 @@ const SalesList = () => {
       render: (row) => (
         <div className="text-right">
           <p className="font-semibold text-gray-900">{formatCurrency(row.final_amount)}</p>
-          {row.discount_amount > 0 && (
-            <p className="text-xs text-green-600">-{formatCurrency(row.discount_amount)}</p>
-          )}
+          {row.discount_amount > 0 && <p className="text-xs text-green-600">-{formatCurrency(row.discount_amount)}</p>}
         </div>
       )
     },
@@ -303,9 +249,9 @@ const SalesList = () => {
       sortable: true,
       render: (row) => {
         const config = {
-          completed: { label: 'Concluída', variant: 'success' },
-          cancelled: { label: 'Cancelada', variant: 'danger' },
-          pending: { label: 'Pendente', variant: 'warning' }
+          completed: { label: 'Concluída', variant: 'success', icon: CheckCircle },
+          cancelled: { label: 'Cancelada', variant: 'danger', icon: XCircle },
+          pending: { label: 'Pendente', variant: 'warning', icon: Clock }
         }
         const c = config[row.status] || config.completed
         return <Badge variant={c.variant}>{c.label}</Badge>
@@ -314,32 +260,15 @@ const SalesList = () => {
   ]
 
   const actions = [
-    {
-      label: 'Ver detalhes',
-      icon: <Eye size={16} />,
-      onClick: viewSaleDetails,
-      className: 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
-    },
+    { label: 'Ver detalhes', icon: <Eye size={16} />, onClick: viewSaleDetails, className: 'text-gray-500 hover:text-blue-600 hover:bg-blue-50' },
     ...(canCancelDirectly || canRequestCancellation ? [{
       label: canCancelDirectly ? 'Cancelar' : 'Solicitar Cancelamento',
       icon: <Ban size={16} />,
-      onClick: (row) => { 
-        setSelectedSale(row)
-        setCancelReason('')
-        setCancelNotes('')
-        setShowCancelModal(true) 
-      },
-      className: canCancelDirectly 
-        ? 'text-gray-500 hover:text-red-600 hover:bg-red-50' 
-        : 'text-gray-500 hover:text-orange-600 hover:bg-orange-50',
+      onClick: (row) => { setSelectedSale(row); setCancelReason(''); setCancelNotes(''); setShowCancelModal(true) },
+      className: canCancelDirectly ? 'text-gray-500 hover:text-red-600 hover:bg-red-50' : 'text-gray-500 hover:text-orange-600 hover:bg-orange-50',
       disabled: (row) => row.status !== 'completed'
     }] : []),
-    {
-      label: 'Imprimir',
-      icon: <Printer size={16} />,
-      onClick: () => showFeedback('info', 'Impressão em desenvolvimento'),
-      className: 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-    }
+    { label: 'Imprimir', icon: <Printer size={16} />, onClick: () => showFeedback('info', 'Impressão em desenvolvimento'), className: 'text-gray-500 hover:text-gray-700 hover:bg-gray-100' }
   ]
 
   // ============= Render =============
@@ -360,153 +289,55 @@ const SalesList = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {feedback.show && (
-          <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />
-        )}
+        {feedback.show && <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />}
 
-        {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Gestão de Vendas</h1>
-              <p className="text-gray-500 mt-1">
-                Visualize, cancele e gerencie todas as vendas realizadas
-                {isFetching && (
-                  <span className="ml-2 text-xs text-gray-400">atualizando...</span>
-                )}
-              </p>
+              <p className="text-gray-500 mt-1">Visualize, cancele e gerencie todas as vendas realizadas{isFetching && <span className="ml-2 text-xs text-gray-400">atualizando...</span>}</p>
             </div>
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => refetch()} loading={isLoading} icon={RefreshCw}>
-                Atualizar
-              </Button>
-              <Button variant="outline" onClick={handleExport} icon={Download}>
-                Exportar
-              </Button>
+              <Button variant="outline" onClick={() => refetch()} loading={isLoading} icon={RefreshCw}>Atualizar</Button>
+              <Button variant="outline" onClick={handleExport} icon={Download}>Exportar</Button>
             </div>
           </div>
         </div>
 
-        {/* Cards de Resumo */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <StatCard 
-            label="Total de Vendas" 
-            value={formatNumber(summary.totalCount)} 
-            sublabel={`${summary.completedCount} concluídas`} 
-            icon={FileText} 
-            variant="info" 
-          />
-          <StatCard 
-            label="Faturamento" 
-            value={formatCurrency(summary.totalAmount)} 
-            sublabel={`Ticket: ${formatCurrency(summary.averageTicket)}`} 
-            icon={DollarSign} 
-            variant="success" 
-          />
-          <StatCard 
-            label="Descontos" 
-            value={formatCurrency(summary.totalDiscount)} 
-            sublabel={`${((summary.totalDiscount / summary.totalAmount) * 100 || 0).toFixed(1)}%`} 
-            icon={Ticket} 
-            variant="purple" 
-          />
-          <StatCard 
-            label="Cancelamentos" 
-            value={formatNumber(summary.cancelledCount)} 
-            sublabel={`${((summary.cancelledCount / summary.totalCount) * 100 || 0).toFixed(1)}%`} 
-            icon={Ban} 
-            variant={summary.cancelledCount > 0 ? 'warning' : 'default'} 
-          />
+          <StatCard label="Total de Vendas" value={formatNumber(summary.totalCount)} sublabel={`${summary.completedCount} concluídas`} icon={FileText} variant="info" />
+          <StatCard label="Faturamento" value={formatCurrency(summary.totalAmount)} sublabel={`Ticket: ${formatCurrency(summary.averageTicket)}`} icon={DollarSign} variant="success" />
+          <StatCard label="Descontos" value={formatCurrency(summary.totalDiscount)} sublabel={`${((summary.totalDiscount / summary.totalAmount) * 100 || 0).toFixed(1)}%`} icon={Ticket} variant="purple" />
+          <StatCard label="Cancelamentos" value={formatNumber(summary.cancelledCount)} sublabel={`${((summary.cancelledCount / summary.totalCount) * 100 || 0).toFixed(1)}%`} icon={Ban} variant={summary.cancelledCount > 0 ? 'warning' : 'default'} />
         </div>
 
-        {/* Barra de Busca e Filtros - COM DEBOUNCE */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex-1 min-w-[250px] relative">
               <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Buscar por nº venda, cliente ou telefone..."
-                value={localSearchTerm}
-                onChange={(e) => setLocalSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-              {/* Indicador de busca em andamento */}
-              {localSearchTerm !== debouncedSearchTerm && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                </div>
-              )}
+              <input type="text" placeholder="Buscar por nº venda, cliente ou telefone..." value={localSearchTerm} onChange={(e) => setLocalSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+              {localSearchTerm !== debouncedSearchTerm && <div className="absolute right-3 top-1/2 -translate-y-1/2"><div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>}
             </div>
-            <Button variant="outline" onClick={() => setShowFilters(!showFilters)} icon={Filter}>
-              Filtros {Object.values(filters).some(v => v && v !== 'all') && '•'}
-            </Button>
+            <Button variant="outline" onClick={() => setShowFilters(!showFilters)} icon={Filter}>Filtros {Object.values(filters).some(v => v && v !== 'all') && '•'}</Button>
           </div>
-
           {showFilters && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4 pt-4 border-t border-gray-100">
-              <select 
-                value={filters.status} 
-                onChange={(e) => setFilters({ ...filters, status: e.target.value })} 
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-              >
-                <option value="all">Todos os status</option>
-                <option value="completed">Concluídas</option>
-                <option value="cancelled">Canceladas</option>
-                <option value="pending">Pendentes</option>
-              </select>
-              <select 
-                value={filters.payment_method} 
-                onChange={(e) => setFilters({ ...filters, payment_method: e.target.value })} 
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-              >
-                <option value="all">Todas as formas</option>
-                <option value="cash">Dinheiro</option>
-                <option value="credit_card">Crédito</option>
-                <option value="debit_card">Débito</option>
-                <option value="pix">PIX</option>
-              </select>
-              <input 
-                type="date" 
-                value={filters.start_date} 
-                onChange={(e) => setFilters({ ...filters, start_date: e.target.value })} 
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm" 
-              />
-              <input 
-                type="date" 
-                value={filters.end_date} 
-                onChange={(e) => setFilters({ ...filters, end_date: e.target.value })} 
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm" 
-              />
+              <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} className="px-3 py-2 border border-gray-300 rounded-lg text-sm"><option value="all">Todos</option><option value="completed">Concluídas</option><option value="cancelled">Canceladas</option><option value="pending">Pendentes</option></select>
+              <select value={filters.payment_method} onChange={(e) => setFilters({ ...filters, payment_method: e.target.value })} className="px-3 py-2 border border-gray-300 rounded-lg text-sm"><option value="all">Todas</option><option value="cash">Dinheiro</option><option value="credit_card">Crédito</option><option value="debit_card">Débito</option><option value="pix">PIX</option></select>
+              <input type="date" value={filters.start_date} onChange={(e) => setFilters({ ...filters, start_date: e.target.value })} className="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+              <input type="date" value={filters.end_date} onChange={(e) => setFilters({ ...filters, end_date: e.target.value })} className="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
             </div>
           )}
         </div>
 
-        {/* Tabela */}
-        <DataTable
-          columns={columns}
-          data={sales}
-          actions={actions}
-          onRowClick={viewSaleDetails}
-          emptyMessage="Nenhuma venda encontrada"
-          striped
-          hover
-          pagination
-          itemsPerPageOptions={[20, 50, 100]}
-          defaultItemsPerPage={20}
-          showTotalItems
-        />
+        <DataTable columns={columns} data={sales} actions={actions} onRowClick={viewSaleDetails} emptyMessage="Nenhuma venda encontrada" striped hover pagination itemsPerPageOptions={[20, 50, 100]} defaultItemsPerPage={20} showTotalItems />
 
-        {/* Modal de Detalhes */}
         {showDetailsModal && selectedSale && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/30" onClick={() => setShowDetailsModal(false)} />
             <div className="relative bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                <div>
-                  <h3 className="text-lg font-semibold">Detalhes da Venda #{selectedSale.sale_number}</h3>
-                  <p className="text-sm text-gray-500">{formatDateTime(selectedSale.created_at)}</p>
-                </div>
+                <div><h3 className="text-lg font-semibold">Detalhes da Venda #{selectedSale.sale_number}</h3><p className="text-sm text-gray-500">{formatDateTime(selectedSale.created_at)}</p></div>
                 <button onClick={() => setShowDetailsModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
               </div>
               
@@ -514,88 +345,46 @@ const SalesList = () => {
                 <div className="bg-blue-50 rounded-lg p-4">
                   <p className="text-xs text-blue-600 font-medium mb-2">CLIENTE</p>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-medium">
-                      {selectedSale.customer_name?.charAt(0) || 'C'}
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{selectedSale.customer_name || 'Cliente não identificado'}</p>
-                      {selectedSale.customer_phone && <p className="text-sm text-gray-500">{selectedSale.customer_phone}</p>}
-                    </div>
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-medium">{selectedSale.customer_name?.charAt(0) || 'C'}</div>
+                    <div><p className="font-medium text-gray-900">{selectedSale.customer_name || 'Cliente não identificado'}</p>{selectedSale.customer_phone && <p className="text-sm text-gray-500">{selectedSale.customer_phone}</p>}</div>
                   </div>
                 </div>
+
+                {selectedSale.status === 'cancelled' && (
+                  <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+                    <p className="text-xs text-red-600 font-medium mb-3 flex items-center gap-1"><XCircle size={14} />INFORMAÇÕES DE CANCELAMENTO</p>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div><p className="text-gray-500 text-xs">Data/Hora</p><p className="font-medium text-gray-900">{formatDateTime(selectedSale.cancelled_at)}</p></div>
+                      <div><p className="text-gray-500 text-xs">Cancelado por</p><p className="font-medium text-gray-900">{selectedSale.cancelled_by_user?.full_name || selectedSale.cancelled_by_user?.email || 'Sistema'}</p></div>
+                      <div className="col-span-2"><p className="text-gray-500 text-xs">Motivo</p><p className="font-medium text-gray-900">{selectedSale.cancellation_reason || '-'}</p></div>
+                      {selectedSale.cancellation_notes && <div className="col-span-2"><p className="text-gray-500 text-xs">Observações</p><p className="text-gray-700">{selectedSale.cancellation_notes}</p></div>}
+                      {selectedSale.approved_by_user && <div className="col-span-2 border-t border-red-200 pt-3 mt-1"><p className="text-gray-500 text-xs">Aprovado por</p><p className="font-medium text-gray-900">{selectedSale.approved_by_user.full_name || selectedSale.approved_by_user.email}<span className="ml-2 text-xs text-gray-500">({selectedSale.approved_by === selectedSale.cancelled_by ? 'Auto-aprovado' : 'Aprovador'})</span></p></div>}
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <p className="text-xs text-gray-500 font-medium mb-2">ITENS</p>
-                  {isLoadingItems ? (
-                    <div className="text-center py-4">
-                      <RefreshCw size={20} className="animate-spin mx-auto text-gray-400" />
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {saleItems.map((item, i) => (
-                        <div key={i} className="flex justify-between py-2 border-b border-gray-100 last:border-0">
-                          <span className="text-gray-700">{item.product_name} x{item.quantity}</span>
-                          <span className="font-medium">{formatCurrency(item.total_price)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  {isLoadingItems ? <div className="text-center py-4"><RefreshCw size={20} className="animate-spin mx-auto text-gray-400" /></div> : <div className="space-y-2">{saleItems.map((item, i) => <div key={i} className="flex justify-between py-2 border-b border-gray-100 last:border-0"><span className="text-gray-700">{item.product_name} x{item.quantity}</span><span className="font-medium">{formatCurrency(item.total_price)}</span></div>)}</div>}
                 </div>
 
                 <div className="border-t pt-3 space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Subtotal</span>
-                    <span>{formatCurrency(selectedSale.total_amount)}</span>
-                  </div>
-                  {selectedSale.discount_amount > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-green-600">
-                        Desconto {selectedSale.coupon_code && `(${selectedSale.coupon_code})`}
-                      </span>
-                      <span className="text-green-600">-{formatCurrency(selectedSale.discount_amount)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between font-bold pt-2 border-t">
-                    <span>Total</span>
-                    <span className="text-green-600">{formatCurrency(selectedSale.final_amount)}</span>
-                  </div>
+                  <div className="flex justify-between"><span className="text-gray-500">Subtotal</span><span>{formatCurrency(selectedSale.total_amount)}</span></div>
+                  {selectedSale.discount_amount > 0 && <div className="flex justify-between"><span className="text-green-600">Desconto {selectedSale.coupon_code && `(${selectedSale.coupon_code})`}</span><span className="text-green-600">-{formatCurrency(selectedSale.discount_amount)}</span></div>}
+                  <div className="flex justify-between font-bold pt-2 border-t"><span>Total</span><span className="text-green-600">{formatCurrency(selectedSale.final_amount)}</span></div>
                 </div>
+                <div className="text-xs text-gray-400 border-t pt-3"><p>Venda realizada por: {selectedSale.created_by_user?.full_name || selectedSale.created_by_user?.email || 'Sistema'}</p></div>
               </div>
 
               <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
                 <Button variant="outline" onClick={() => setShowDetailsModal(false)}>Fechar</Button>
-                {selectedSale.status === 'completed' && (canCancelDirectly || canRequestCancellation) && (
-                  <Button 
-                    variant="danger" 
-                    onClick={() => { 
-                      setShowDetailsModal(false)
-                      setCancelReason('')
-                      setCancelNotes('')
-                      setShowCancelModal(true) 
-                    }}
-                    disabled={cancelMutation.isPending}
-                  >
-                    {canCancelDirectly ? 'Cancelar Venda' : 'Solicitar Cancelamento'}
-                  </Button>
-                )}
+                {selectedSale.status === 'completed' && (canCancelDirectly || canRequestCancellation) && <Button variant="danger" onClick={() => { setShowDetailsModal(false); setCancelReason(''); setCancelNotes(''); setShowCancelModal(true) }} disabled={cancelMutation.isPending}>{canCancelDirectly ? 'Cancelar Venda' : 'Solicitar Cancelamento'}</Button>}
               </div>
             </div>
           </div>
         )}
 
-        {/* Modal de Cancelamento */}
-        <CancelSaleModal
-          isOpen={showCancelModal}
-          onClose={() => !cancelMutation.isPending && setShowCancelModal(false)}
-          sale={selectedSale}
-          cancelReason={cancelReason}
-          setCancelReason={setCancelReason}
-          cancelNotes={cancelNotes}
-          setCancelNotes={setCancelNotes}
-          onConfirm={handleCancelWithApproval}
-          isSubmitting={cancelMutation.isPending}
-          currentUser={profile}
-        />
+        <CancelSaleModal isOpen={showCancelModal} onClose={() => !cancelMutation.isPending && setShowCancelModal(false)} sale={selectedSale} cancelReason={cancelReason} setCancelReason={setCancelReason} cancelNotes={cancelNotes} setCancelNotes={setCancelNotes} onConfirm={handleCancelWithApproval} isSubmitting={cancelMutation.isPending} currentUser={profile} />
       </div>
     </div>
   )

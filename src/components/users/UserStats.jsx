@@ -1,5 +1,5 @@
 import React from 'react'
-import { Users, Shield, UserPlus, Calendar } from 'lucide-react'
+import { Users, Shield, UserPlus, Calendar } from '../../lib/icons'
 
 const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) => {
   const variants = {

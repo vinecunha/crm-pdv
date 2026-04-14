@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { User, Mail, Phone, Calendar, MapPin, Hash, Search } from 'lucide-react'
+import { User, Mail, Phone, Calendar, MapPin, Hash, Search } from '../../lib/icons'
 import FormInput from '../forms/FormInput'
 import Button from '../ui/Button'
 

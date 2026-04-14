@@ -1,6 +1,7 @@
 // components/sales/pdv/CouponSelector.jsx
 import React from 'react'
-import { Ticket, X, Percent, DollarSign } from 'lucide-react'
+import { Ticket, X, Percent, DollarSign } from '../../../lib/icons'
+import { formatCurrency } from '../../../utils/formatters'
 import Modal from '../../ui/Modal'
 import Button from '../../ui/Button'
 
@@ -14,13 +15,7 @@ const CouponSelector = ({
   onApplyCoupon,
   onRemoveCoupon
 }) => {
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value || 0)
-  }
-
+  
   return (
     <Modal
       isOpen={isOpen}

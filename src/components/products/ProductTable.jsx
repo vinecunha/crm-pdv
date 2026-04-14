@@ -1,5 +1,5 @@
 import React from 'react'
-import { Package, ArchiveX, AlertTriangle, TrendingUp, CheckCircle } from 'lucide-react'
+import { Package, ArchiveX, AlertTriangle, TrendingUp, CheckCircle } from '../../lib/icons'
 import { useTableStrategy } from '../../hooks/useTableStrategy'
 import Badge from '../Badge'
 import { formatCurrency, formatNumber } from '../../utils/formatters'

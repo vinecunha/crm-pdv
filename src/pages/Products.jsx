@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, ClipboardList } from 'lucide-react'
+import { Plus, ClipboardList } from '../lib/icons'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import useSystemLogs from '../hooks/useSystemLogs'
-import { sanitizeObject } from '../utils/sanitize'
+
+
+import * as productService from '../services/productService'
 
 import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
@@ -19,122 +20,6 @@ import ProductEntryForm from '../components/products/ProductEntryForm'
 import ProductDetailsModal from '../components/products/ProductDetailsModal'
 import ProductDeleteModal from '../components/products/ProductDeleteModal'
 import ProductTable from '../components/products/ProductTable'
-
-// ============= Constantes =============
-const units = [
-  { value: 'UN', label: 'Unidade' }, { value: 'KG', label: 'Quilograma' },
-  { value: 'G', label: 'Grama' }, { value: 'L', label: 'Litro' },
-  { value: 'ML', label: 'Mililitro' }, { value: 'CX', label: 'Caixa' },
-  { value: 'PC', label: 'Pacote' }, { value: 'M', label: 'Metro' }
-]
-
-const categories = [
-  'Alimentos', 'Bebidas', 'Limpeza', 'Higiene', 'Eletrônicos',
-  'Ferramentas', 'Vestuário', 'Papelaria', 'Moveis', 'Outros'
-]
-
-// ============= API Functions =============
-const fetchProducts = async ({ queryKey }) => {
-  const [, { canViewOnlyActive }] = queryKey
-  
-  let query = supabase.from('products').select('*').order('name', { ascending: true })
-  if (canViewOnlyActive) query = query.eq('is_active', true)
-  
-  const { data, error } = await query
-  if (error) throw error
-  return data || []
-}
-
-const generateNextCode = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('products')
-      .select('code, id')
-      .not('code', 'is', null)
-      .order('id', { ascending: false })
-      .limit(1)
-
-    if (error) throw error
-
-    if (data && data.length > 0 && data[0].code) {
-      const numericPart = data[0].code.replace(/\D/g, '')
-      if (numericPart) {
-        const nextNumber = parseInt(numericPart) + 1
-        return nextNumber.toString().padStart(3, '0')
-      }
-    }
-    
-    return '001'
-  } catch (error) {
-    console.error('Erro ao gerar código:', error)
-    return Date.now().toString().slice(-6)
-  }
-}
-
-const createProduct = async ({ productData, profile }) => {
-  const safeData = sanitizeObject(productData) // ✅ Sanitizar
-  
-  const { error } = await supabase.from('products').insert([{ ...safeData, created_by: profile?.id }])
-  
-  if (error) {
-    if (error.message?.includes('duplicate key') || error.message?.includes('code')) {
-      const newCode = await generateNextCode()
-      const { error: retryError } = await supabase
-        .from('products')
-        .insert([{ ...safeData, code: newCode, created_by: profile?.id }])
-      if (retryError) throw retryError
-      return { ...safeData, code: newCode }
-    }
-    throw error
-  }
-  
-  return safeData
-}
-
-const updateProduct = async ({ id, productData, profile }) => {
-  const safeData = sanitizeObject(productData) // ✅ Sanitizar
-  
-  const { error } = await supabase
-    .from('products')
-    .update({ ...safeData, updated_by: profile?.id })
-    .eq('id', id)
-  
-  if (error) throw error
-  return { id, ...safeData }
-}
-
-const deleteProduct = async (id) => {
-  const { error } = await supabase.from('products').delete().eq('id', id)
-  if (error) throw error
-  return id
-}
-
-const createProductEntry = async ({ entryData, profile }) => {
-  const safeData = sanitizeObject(entryData) // ✅ Sanitizar
-  
-  const { error } = await supabase
-    .from('product_entries')
-    .insert([{ ...safeData, created_by: profile?.id }])
-
-  if (error) {
-    let errorMessage = 'Erro ao registrar entrada'
-    if (error.message?.includes('foreign key')) errorMessage = 'Produto não encontrado'
-    else if (error.message?.includes('not-null')) errorMessage = 'Preencha todos os campos obrigatórios'
-    else errorMessage = error.message
-    throw new Error(errorMessage)
-  }
-  
-  return safeData
-}
-
-const fetchProductDetails = async (productId) => {
-  const [{ data: entries }, { data: movements }] = await Promise.all([
-    supabase.from('product_entries').select('*').eq('product_id', productId).order('entry_date', { ascending: false }),
-    supabase.from('stock_movements').select('*').eq('product_id', productId).order('created_at', { ascending: false }).limit(20)
-  ])
-  
-  return { entries: entries || [], movements: movements || [] }
-}
 
 // ============= Componente Principal =============
 const Products = () => {
@@ -183,8 +68,8 @@ const Products = () => {
 
   // Configuração dos filtros
   const filters = [
-    { key: 'category', label: 'Categoria', type: 'select', options: categories.map(cat => ({ value: cat, label: cat })) },
-    { key: 'unit', label: 'Unidade', type: 'select', options: units },
+    { key: 'category', label: 'Categoria', type: 'select', options: productService.categories.map(cat => ({ value: cat, label: cat })) },
+    { key: 'unit', label: 'Unidade', type: 'select', options: productService.units },
     { key: 'is_active', label: 'Status', type: 'select', options: [{ value: 'true', label: 'Ativo' }, { value: 'false', label: 'Inativo' }] },
     ...(canManageStock ? [{ key: 'low_stock', label: 'Estoque Baixo', type: 'select', options: [{ value: 'true', label: 'Apenas produtos com estoque baixo' }] }] : [])
   ]
@@ -198,8 +83,8 @@ const Products = () => {
     isFetching
   } = useQuery({
     queryKey: ['products', { canViewOnlyActive }],
-    queryFn: fetchProducts,
-    staleTime: 2 * 60 * 1000, // 2 minutos
+    queryFn: () => productService.fetchProducts(canViewOnlyActive),
+    staleTime: 2 * 60 * 1000,
   })
 
   const { 
@@ -207,7 +92,7 @@ const Products = () => {
     isLoading: isLoadingDetails
   } = useQuery({
     queryKey: ['product-details', viewingProductId],
-    queryFn: () => fetchProductDetails(viewingProductId),
+    queryFn: () => productService.fetchProductDetails(viewingProductId),
     enabled: !!viewingProductId,
   })
 
@@ -224,18 +109,11 @@ const Products = () => {
       )
     }
     
-    if (activeFilters.category) {
-      filtered = filtered.filter(p => p.category === activeFilters.category)
-    }
-    
-    if (activeFilters.unit) {
-      filtered = filtered.filter(p => p.unit === activeFilters.unit)
-    }
-    
+    if (activeFilters.category) filtered = filtered.filter(p => p.category === activeFilters.category)
+    if (activeFilters.unit) filtered = filtered.filter(p => p.unit === activeFilters.unit)
     if (activeFilters.is_active !== undefined && activeFilters.is_active !== '') {
       filtered = filtered.filter(p => p.is_active === (activeFilters.is_active === 'true'))
     }
-    
     if (activeFilters.low_stock === 'true') {
       filtered = filtered.filter(p => p.stock_quantity <= p.min_stock)
     }
@@ -245,7 +123,7 @@ const Products = () => {
 
   // ============= Mutations =============
   const createMutation = useMutation({
-    mutationFn: createProduct,
+    mutationFn: (data) => productService.createProduct(data, profile),
     onSuccess: async (data) => {
       await logCreate('product', null, data)
       queryClient.invalidateQueries({ queryKey: ['products'] })
@@ -259,7 +137,7 @@ const Products = () => {
   })
 
   const updateMutation = useMutation({
-    mutationFn: updateProduct,
+    mutationFn: ({ id, data }) => productService.updateProduct(id, data, profile),
     onSuccess: async (data) => {
       await logUpdate('product', data.id, selectedProduct, data)
       queryClient.invalidateQueries({ queryKey: ['products'] })
@@ -273,7 +151,7 @@ const Products = () => {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: deleteProduct,
+    mutationFn: productService.deleteProduct,
     onSuccess: async (id) => {
       await logDelete('product', id, selectedProduct)
       queryClient.invalidateQueries({ queryKey: ['products'] })
@@ -288,7 +166,7 @@ const Products = () => {
   })
 
   const entryMutation = useMutation({
-    mutationFn: createProductEntry,
+    mutationFn: (data) => productService.createProductEntry(data, profile),
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
       if (viewingProductId) {
@@ -305,7 +183,7 @@ const Products = () => {
   })
 
   // ============= Efeitos =============
-  useEffect(() => {
+  React.useEffect(() => {
     logAction({ action: 'VIEW', entityType: 'product', details: { user_role: profile?.role } })
   }, [])
 
@@ -319,34 +197,18 @@ const Products = () => {
     if (product) {
       setSelectedProduct(product)
       setProductForm({
-        code: product.code || '',
-        name: product.name || '',
-        description: product.description || '',
-        category: product.category || '',
-        unit: product.unit || 'UN',
-        price: product.price || '',
-        min_stock: product.min_stock || '',
-        max_stock: product.max_stock || '',
-        location: product.location || '',
-        brand: product.brand || '',
-        weight: product.weight || '',
+        code: product.code || '', name: product.name || '', description: product.description || '',
+        category: product.category || '', unit: product.unit || 'UN', price: product.price || '',
+        min_stock: product.min_stock || '', max_stock: product.max_stock || '',
+        location: product.location || '', brand: product.brand || '', weight: product.weight || '',
         is_active: product.is_active !== false
       })
     } else {
       setSelectedProduct(null)
-      const nextCode = await generateNextCode()
+      const nextCode = await productService.generateNextCode()
       setProductForm({
-        code: nextCode,
-        name: '',
-        description: '',
-        category: '',
-        unit: 'UN',
-        price: '',
-        min_stock: '',
-        max_stock: '',
-        location: '',
-        brand: '',
-        weight: '',
+        code: nextCode, name: '', description: '', category: '', unit: 'UN',
+        price: '', min_stock: '', max_stock: '', location: '', brand: '', weight: '',
         is_active: true
       })
     }
@@ -357,16 +219,9 @@ const Products = () => {
   const handleOpenEntryModal = (product) => {
     setSelectedProduct(product)
     setEntryForm({
-      invoice_number: '',
-      invoice_series: '',
-      supplier_name: '',
-      supplier_cnpj: '',
-      batch_number: '',
-      manufacture_date: '',
-      expiration_date: '',
-      quantity: '',
-      unit_cost: product.cost_price || '',
-      notes: ''
+      invoice_number: '', invoice_series: '', supplier_name: '', supplier_cnpj: '',
+      batch_number: '', manufacture_date: '', expiration_date: '',
+      quantity: '', unit_cost: product.cost_price || '', notes: ''
     })
     setFormErrors({})
     setEntryModalError(null)
@@ -412,31 +267,18 @@ const Products = () => {
     if (!validateProductForm()) return
     
     const productData = {
-      code: productForm.code,
-      name: productForm.name,
-      description: productForm.description || null,
-      category: productForm.category || null,
-      unit: productForm.unit,
-      price: parseFloat(productForm.price) || 0,
-      min_stock: parseFloat(productForm.min_stock) || 0,
-      max_stock: parseFloat(productForm.max_stock) || 0,
-      location: productForm.location || null,
-      brand: productForm.brand || null,
-      weight: productForm.weight ? parseFloat(productForm.weight) : null,
+      code: productForm.code, name: productForm.name, description: productForm.description || null,
+      category: productForm.category || null, unit: productForm.unit,
+      price: parseFloat(productForm.price) || 0, min_stock: parseFloat(productForm.min_stock) || 0,
+      max_stock: parseFloat(productForm.max_stock) || 0, location: productForm.location || null,
+      brand: productForm.brand || null, weight: productForm.weight ? parseFloat(productForm.weight) : null,
       is_active: productForm.is_active,
     }
 
     if (selectedProduct) {
-      updateMutation.mutate({ 
-        id: selectedProduct.id, 
-        productData, 
-        profile 
-      })
+      updateMutation.mutate({ id: selectedProduct.id, data: productData })
     } else {
-      createMutation.mutate({ 
-        productData, 
-        profile 
-      })
+      createMutation.mutate(productData)
     }
   }
 
@@ -450,9 +292,7 @@ const Products = () => {
     const entryData = {
       product_id: selectedProduct.id,
       invoice_number: entryForm.invoice_number,
-      quantity: quantity,
-      unit_cost: unitCost,
-      total_cost: totalCost,
+      quantity, unitCost, totalCost,
       invoice_series: entryForm.invoice_series || null,
       supplier_name: entryForm.supplier_name || null,
       supplier_cnpj: entryForm.supplier_cnpj?.replace(/\D/g, '') || null,
@@ -463,12 +303,10 @@ const Products = () => {
       notes: entryForm.notes || null,
     }
 
-    entryMutation.mutate({ entryData, profile })
+    entryMutation.mutate(entryData)
   }
 
-  const handleDeleteProduct = () => {
-    deleteMutation.mutate(selectedProduct.id)
-  }
+  const handleDeleteProduct = () => deleteMutation.mutate(selectedProduct.id)
 
   const isMutating = createMutation.isPending || updateMutation.isPending || 
                      deleteMutation.isPending || entryMutation.isPending
@@ -491,7 +329,6 @@ const Products = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
         <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Gestão de Estoque</h1>
@@ -500,9 +337,7 @@ const Products = () => {
               {!isLoading && products.length > 0 && (
                 <span className="ml-2 text-blue-600">
                   ({products.length} produtos)
-                  {isFetching && (
-                    <span className="ml-2 text-xs text-gray-400">atualizando...</span>
-                  )}
+                  {isFetching && <span className="ml-2 text-xs text-gray-400">atualizando...</span>}
                 </span>
               )}
             </p>
@@ -510,37 +345,22 @@ const Products = () => {
           
           <div className="flex gap-2">
             {canManageStock && (
-              <Button 
-                onClick={() => navigate('/stock-count')} 
-                variant="outline" 
-                icon={ClipboardList}
-                disabled={isMutating}
-              >
+              <Button onClick={() => navigate('/stock-count')} variant="outline" icon={ClipboardList} disabled={isMutating}>
                 Balanço
               </Button>
             )}
             {canEdit && (
-              <Button 
-                onClick={() => handleOpenProductModal()} 
-                icon={Plus}
-                disabled={isMutating}
-              >
+              <Button onClick={() => handleOpenProductModal()} icon={Plus} disabled={isMutating}>
                 Novo Produto
               </Button>
             )}
           </div>
         </div>
 
-        {/* Feedback */}
         {feedback.show && (
-          <FeedbackMessage 
-            type={feedback.type} 
-            message={feedback.message} 
-            onClose={() => setFeedback({ show: false })} 
-          />
+          <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />
         )}
 
-        {/* Filtros */}
         <div className="mb-6">
           <DataFilters
             searchPlaceholder="Buscar por nome, código, categoria ou marca..."
@@ -552,16 +372,11 @@ const Products = () => {
           />
         </div>
 
-        {/* Tabela ou Empty State */}
         {filteredProducts.length === 0 ? (
           <DataEmptyState
             title="Nenhum produto encontrado"
             description={searchTerm ? "Tente buscar por outro termo" : "Comece cadastrando seu primeiro produto"}
-            action={canEdit ? { 
-              label: "Cadastrar Produto", 
-              icon: <Plus size={18} />, 
-              onClick: () => handleOpenProductModal() 
-            } : null}
+            action={canEdit ? { label: "Cadastrar Produto", icon: <Plus size={18} />, onClick: () => handleOpenProductModal() } : null}
           />
         ) : (
           <ProductTable
@@ -569,80 +384,40 @@ const Products = () => {
             loading={isLoading}
             onViewDetails={handleViewDetails}
             onEdit={handleOpenProductModal}
-            onDelete={(product) => { 
-              setSelectedProduct(product)
-              setIsDeleteModalOpen(true) 
-            }}
+            onDelete={(product) => { setSelectedProduct(product); setIsDeleteModalOpen(true) }}
             onRegisterEntry={handleOpenEntryModal}
-            canEdit={canEdit}
-            canManageStock={canManageStock}
-            canViewAll={canViewAll}
-            canViewOnlyActive={canViewOnlyActive}
-            units={units}
+            canEdit={canEdit} canManageStock={canManageStock}
+            canViewAll={canViewAll} canViewOnlyActive={canViewOnlyActive}
+            units={productService.units}
           />
         )}
 
-        {/* Modal de Produto */}
-        <Modal 
-          isOpen={isProductModalOpen} 
-          onClose={() => !isMutating && setIsProductModalOpen(false)} 
-          title={selectedProduct ? 'Editar Produto' : 'Novo Produto'} 
-          size="lg"
-        >
+        <Modal isOpen={isProductModalOpen} onClose={() => !isMutating && setIsProductModalOpen(false)} title={selectedProduct ? 'Editar Produto' : 'Novo Produto'} size="lg">
           <ProductForm
-            formData={productForm}
-            formErrors={formErrors}
-            onChange={handleProductChange}
-            onSubmit={handleSubmitProduct}
-            onCancel={() => setIsProductModalOpen(false)}
+            formData={productForm} formErrors={formErrors} onChange={handleProductChange}
+            onSubmit={handleSubmitProduct} onCancel={() => setIsProductModalOpen(false)}
             isSubmitting={createMutation.isPending || updateMutation.isPending}
-            isEditing={!!selectedProduct}
-            units={units}
-            categories={categories}
+            isEditing={!!selectedProduct} units={productService.units} categories={productService.categories}
           />
         </Modal>
 
-        {/* Modal de Entrada */}
-        <Modal 
-          isOpen={isEntryModalOpen} 
-          onClose={() => !isMutating && setIsEntryModalOpen(false)} 
-          title={`Registrar Entrada - ${selectedProduct?.name}`} 
-          size="lg"
-          error={entryModalError}
-        >
+        <Modal isOpen={isEntryModalOpen} onClose={() => !isMutating && setIsEntryModalOpen(false)} title={`Registrar Entrada - ${selectedProduct?.name}`} size="lg" error={entryModalError}>
           <ProductEntryForm
-            formData={entryForm}
-            formErrors={formErrors}
-            onChange={handleEntryChange}
-            onSubmit={handleSubmitEntry}
-            onCancel={() => setIsEntryModalOpen(false)}
-            isSubmitting={entryMutation.isPending}
-            productName={selectedProduct?.name}
-            showFeedback={showFeedback} 
+            formData={entryForm} formErrors={formErrors} onChange={handleEntryChange}
+            onSubmit={handleSubmitEntry} onCancel={() => setIsEntryModalOpen(false)}
+            isSubmitting={entryMutation.isPending} productName={selectedProduct?.name} showFeedback={showFeedback}
           />
         </Modal>
 
-        {/* Modal de Detalhes */}
         <ProductDetailsModal
-          isOpen={isViewModalOpen}
-          onClose={() => {
-            setIsViewModalOpen(false)
-            setViewingProductId(null)
-          }}
-          product={selectedProduct}
-          entries={productDetails?.entries || []}
-          movements={productDetails?.movements || []}
-          units={units}
-          isLoading={isLoadingDetails}
+          isOpen={isViewModalOpen} onClose={() => { setIsViewModalOpen(false); setViewingProductId(null) }}
+          product={selectedProduct} entries={productDetails?.entries || []} movements={productDetails?.movements || []}
+          units={productService.units} isLoading={isLoadingDetails}
         />
 
-        {/* Modal de Exclusão */}
         <ProductDeleteModal
-          isOpen={isDeleteModalOpen}
-          onClose={() => setIsDeleteModalOpen(false)}
-          product={selectedProduct}
-          onConfirm={handleDeleteProduct}
-          isSubmitting={deleteMutation.isPending}
+          isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)}
+          product={selectedProduct} onConfirm={handleDeleteProduct} isSubmitting={deleteMutation.isPending}
         />
       </div>
     </div>

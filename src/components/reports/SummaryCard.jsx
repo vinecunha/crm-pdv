@@ -1,5 +1,5 @@
 import React from 'react'
-import { TrendingUp, TrendingDown } from 'lucide-react'
+import { TrendingUp, TrendingDown } from '../../lib/icons'
 
 const SummaryCard = ({ title, value, icon: Icon, color, trend, subtitle, alert }) => {
   const colors = {

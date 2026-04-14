@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { X, AlertCircle } from 'lucide-react'
+import { X, AlertCircle } from '../../lib/icons'
 
 const Modal = ({ 
   isOpen, 

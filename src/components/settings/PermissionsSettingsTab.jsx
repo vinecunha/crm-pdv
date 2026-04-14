@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Lock, Key, UserCheck, Save, RotateCcw, CheckCircle } from 'lucide-react'
+import { Lock, Key, UserCheck, Save, RotateCcw, CheckCircle } from '../../lib/icons'
 import { supabase } from '../../lib/supabase'
 import FeedbackMessage from '../ui/FeedbackMessage'
 import Button from '../ui/Button'

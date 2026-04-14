@@ -1,5 +1,5 @@
 import React from 'react'
-import { FileText, AlertCircle, Activity, Clock } from 'lucide-react'
+import { FileText, AlertCircle, Activity, Clock } from '../../lib/icons'
 import StatCard from '../ui/StatCard'
 
 const LogStats = ({ logs }) => {

@@ -1,5 +1,5 @@
 import React from 'react'
-import { User, Ticket, Printer, Ban } from 'lucide-react'
+import { User, Ticket, Printer, Ban } from '../../lib/icons'
 import Modal from '../../ui/Modal'
 import Button from '../../ui/Button'
 import { formatCurrency, formatDateTime } from '../../../utils/formatters'

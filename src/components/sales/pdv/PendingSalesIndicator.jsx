@@ -1,6 +1,6 @@
 // src/components/sales/PendingSalesIndicator.jsx
 import React, { useEffect, useState } from 'react'
-import { CloudOff, RefreshCw } from 'lucide-react'
+import { CloudOff, RefreshCw } from '../../../lib/icons'
 import { getPendingSalesCount } from '../../../utils/offlineStorage'
 import { useNetworkStatus } from '../../../hooks/useNetworkStatus'
 

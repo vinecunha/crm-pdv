@@ -1,5 +1,5 @@
 import React from 'react'
-import { Package, Users, FileText, ShoppingCart, AlertCircle, Unlock, Trash2  } from 'lucide-react'
+import { Package, Users, FileText, ShoppingCart, AlertCircle, Unlock, Trash2  } from '../../lib/icons'
 
 const iconMap = {
   users: Users,

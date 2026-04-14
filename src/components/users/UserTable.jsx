@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Edit2, Trash2, Shield, CheckCircle, Lock } from 'lucide-react'
+import { Edit2, Trash2, Shield, CheckCircle, Lock } from '../../lib/icons'
 import { useTableStrategy } from '../../hooks/useTableStrategy'
 import UserRoleBadge from './UserRoleBadge'
 import Badge from '../Badge'
@@ -32,10 +32,21 @@ const UserTable = ({
 
   const columns = [
     {
+      key: 'registration_number',
+      header: 'Matrícula',
+      sortable: true,
+      width: '130px',
+      render: (row) => (
+        <span className="font-mono text-sm text-gray-600">
+          {row.registration_number || '-'}
+        </span>
+      )
+    },
+    {
       key: 'full_name',
       header: 'Nome',
       sortable: true,
-      width: '25%',
+      width: '22%',
       minWidth: '180px',
       render: (row) => (
         <div className="font-medium text-gray-900 truncate">
@@ -50,7 +61,7 @@ const UserTable = ({
       key: 'email',
       header: 'Email',
       sortable: true,
-      width: '25%',
+      width: '22%',
       minWidth: '200px',
       render: (row) => <div className="text-sm text-gray-500 truncate">{row.email}</div>
     },

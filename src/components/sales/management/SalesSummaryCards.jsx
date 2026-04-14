@@ -1,5 +1,5 @@
 import React from 'react'
-import { FileText, DollarSign, Ticket, Ban } from 'lucide-react'
+import { FileText, DollarSign, Ticket, Ban } from '../../lib/icons'
 import { formatCurrency } from '../../../utils/formatters'
 
 const SalesSummaryCards = ({ summary }) => {

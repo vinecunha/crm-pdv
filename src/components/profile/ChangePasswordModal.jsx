@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff } from '../../lib/icons'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
 import PasswordStrengthIndicator from '../ui/PasswordStrengthIndicator'

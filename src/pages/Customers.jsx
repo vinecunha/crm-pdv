@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useMemo } from 'react'
+// src/pages/Customers.jsx
+import React, { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { UserPlus, RefreshCw } from 'lucide-react'
+import { UserPlus, RefreshCw } from '../lib/icons'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useReactQuery } from '../hooks/useReactQuery'
 import useSystemLogs from '../hooks/useSystemLogs'
-import { sanitizeObject } from '../utils/sanitize'
+
+
+import * as customerService from '../services/customerService'
 
 import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
@@ -18,58 +20,6 @@ import CustomerForm from '../components/customers/CustomerForm'
 import CustomerDeleteModal from '../components/customers/CustomerDeleteModal'
 import CustomerTable from '../components/customers/CustomerTable'
 import CustomerFilters from '../components/customers/CustomerFilters'
-
-// ============= API Functions =============
-const fetchCustomers = async () => {
-  const { data, error } = await supabase
-    .from('customers')
-    .select('*')
-    .order('name')
-  
-  if (error) throw error
-  return data || []
-}
-
-const createCustomer = async (customerData) => {
-  const safeData = sanitizeObject(customerData) // ✅ Sanitizar
-  
-  const { data, error } = await supabase
-    .from('customers')
-    .insert([{ 
-      ...safeData,
-      total_purchases: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }])
-    .select()
-    .single()
-  
-  if (error) throw error
-  return data
-}
-
-const updateCustomer = async ({ id, customerData }) => {
-  const safeData = sanitizeObject(customerData) // ✅ Sanitizar
-  
-  const { data, error } = await supabase
-    .from('customers')
-    .update({ 
-      ...safeData,
-      updated_at: new Date().toISOString() 
-    })
-    .eq('id', id)
-    .select()
-    .single()
-  
-  if (error) throw error
-  return data
-}
-
-const deleteCustomer = async (id) => {
-  const { error } = await supabase.from('customers').delete().eq('id', id)
-  if (error) throw error
-  return id
-}
 
 // ============= Componente Principal =============
 const Customers = () => {
@@ -101,7 +51,7 @@ const Customers = () => {
     isFetching
   } = useQuery({
     queryKey: ['customers'],
-    queryFn: fetchCustomers,
+    queryFn: customerService.fetchCustomers,
     staleTime: 0,
     refetchOnMount: true,
   })
@@ -135,7 +85,7 @@ const Customers = () => {
 
   // ============= Mutations =============
   const createMutation = useMutation({
-    mutationFn: createCustomer,
+    mutationFn: customerService.createCustomer,
     onSuccess: async (data) => {
       await logCreate('customer', data.id, data)
       await invalidateQueries(['customers'])
@@ -144,24 +94,13 @@ const Customers = () => {
       setIsModalOpen(false)
     },
     onError: async (error) => {
-      console.error('Erro ao salvar cliente:', error)
-      
-      let errorMessage = 'Erro ao salvar cliente'
-      if (error.message?.includes('duplicate key') || error.message?.includes('email')) {
-        errorMessage = 'Este e-mail já está cadastrado'
-      } else if (error.message?.includes('phone')) {
-        errorMessage = 'Este telefone já está cadastrado'
-      } else {
-        errorMessage = error.message
-      }
-      
-      showFeedback('error', errorMessage)
+      showFeedback('error', error.message)
       await logError('customer', error, { action: 'create' })
     }
   })
 
   const updateMutation = useMutation({
-    mutationFn: updateCustomer,
+    mutationFn: ({ id, data }) => customerService.updateCustomer(id, data),
     onSuccess: async (data) => {
       await logUpdate('customer', data.id, selectedCustomer, data)
       await invalidateQueries(['customers'])
@@ -170,24 +109,13 @@ const Customers = () => {
       setIsModalOpen(false)
     },
     onError: async (error) => {
-      console.error('Erro ao atualizar cliente:', error)
-      
-      let errorMessage = 'Erro ao atualizar cliente'
-      if (error.message?.includes('duplicate key') || error.message?.includes('email')) {
-        errorMessage = 'Este e-mail já está cadastrado'
-      } else if (error.message?.includes('phone')) {
-        errorMessage = 'Este telefone já está cadastrado'
-      } else {
-        errorMessage = error.message
-      }
-      
-      showFeedback('error', errorMessage)
+      showFeedback('error', error.message)
       await logError('customer', error, { action: 'update' })
     }
   })
 
   const deleteMutation = useMutation({
-    mutationFn: deleteCustomer,
+    mutationFn: customerService.deleteCustomer,
     onSuccess: async (id) => {
       await logDelete('customer', id, selectedCustomer)
       await invalidateQueries(['customers'])
@@ -202,7 +130,7 @@ const Customers = () => {
   })
 
   // ============= Efeitos =============
-  useEffect(() => {
+  React.useEffect(() => {
     logAction({ 
       action: 'VIEW', 
       entityType: 'customer', 
@@ -219,29 +147,16 @@ const Customers = () => {
   const validateForm = () => {
     const errors = {}
     
-    if (!formData.name?.trim()) {
-      errors.name = 'Nome é obrigatório'
-    } else if (formData.name.length < 3) {
-      errors.name = 'Nome deve ter pelo menos 3 caracteres'
-    }
+    if (!formData.name?.trim()) errors.name = 'Nome é obrigatório'
+    else if (formData.name.length < 3) errors.name = 'Nome deve ter pelo menos 3 caracteres'
     
-    if (!formData.email?.trim()) {
-      errors.email = 'E-mail é obrigatório'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'E-mail inválido'
-    }
+    if (!formData.email?.trim()) errors.email = 'E-mail é obrigatório'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'E-mail inválido'
     
-    if (!formData.phone?.trim()) {
-      errors.phone = 'Telefone é obrigatório'
-    }
+    if (!formData.phone?.trim()) errors.phone = 'Telefone é obrigatório'
     
-    if (formData.document && formData.document.replace(/\D/g, '').length < 11) {
-      errors.document = 'Documento inválido'
-    }
-    
-    if (formData.zip_code && formData.zip_code.replace(/\D/g, '').length < 8) {
-      errors.zip_code = 'CEP inválido'
-    }
+    if (formData.document && formData.document.replace(/\D/g, '').length < 11) errors.document = 'Documento inválido'
+    if (formData.zip_code && formData.zip_code.replace(/\D/g, '').length < 8) errors.zip_code = 'CEP inválido'
     
     setFormErrors(errors)
     return Object.keys(errors).length === 0
@@ -277,10 +192,7 @@ const Customers = () => {
     }
 
     if (selectedCustomer) {
-      updateMutation.mutate({ 
-        id: selectedCustomer.id, 
-        customerData 
-      })
+      updateMutation.mutate({ id: selectedCustomer.id, data: customerData })
     } else {
       createMutation.mutate(customerData)
     }
@@ -299,9 +211,7 @@ const Customers = () => {
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro ao carregar clientes</h2>
           <p className="text-gray-600 mb-4">{customersError.message}</p>
-          <Button onClick={() => refetchCustomers()} icon={RefreshCw}>
-            Tentar novamente
-          </Button>
+          <Button onClick={() => refetchCustomers()} icon={RefreshCw}>Tentar novamente</Button>
         </div>
       </div>
     )
@@ -325,79 +235,46 @@ const Customers = () => {
               )}
             </p>
           </div>
-          <Button 
-            onClick={() => handleOpenModal()} 
-            icon={UserPlus}
-            disabled={isMutating}
-          >
+          <Button onClick={() => handleOpenModal()} icon={UserPlus} disabled={isMutating}>
             Novo Cliente
           </Button>
         </div>
 
         {feedback.show && (
-          <FeedbackMessage 
-            type={feedback.type} 
-            message={feedback.message} 
-            onClose={() => setFeedback({ show: false })} 
-          />
+          <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />
         )}
 
         <div className="mb-6">
-          <CustomerFilters 
-            searchTerm={searchTerm} 
-            setSearchTerm={setSearchTerm} 
-            onFilterChange={setActiveFilters} 
-          />
+          <CustomerFilters searchTerm={searchTerm} setSearchTerm={setSearchTerm} onFilterChange={setActiveFilters} />
         </div>
 
         {filteredCustomers.length === 0 ? (
           <DataEmptyState 
             title="Nenhum cliente encontrado" 
             description={searchTerm ? "Tente buscar por outro termo" : "Comece cadastrando seu primeiro cliente"} 
-            action={
-              <Button onClick={() => handleOpenModal()} disabled={isMutating}>
-                Cadastrar Cliente
-              </Button>
-            } 
+            action={<Button onClick={() => handleOpenModal()} disabled={isMutating}>Cadastrar Cliente</Button>} 
           />
         ) : (
           <CustomerTable 
             customers={filteredCustomers} 
             onEdit={handleOpenModal} 
-            onDelete={(c) => { 
-              setSelectedCustomer(c)
-              setIsDeleteModalOpen(true) 
-            }} 
+            onDelete={(c) => { setSelectedCustomer(c); setIsDeleteModalOpen(true) }} 
             onCommunicate={(c) => navigate(`/customers/${c.id}/communication`)} 
           />
         )}
 
-        <Modal 
-          isOpen={isModalOpen} 
-          onClose={() => !isMutating && setIsModalOpen(false)} 
-          title={selectedCustomer ? 'Editar Cliente' : 'Novo Cliente'} 
-          size="lg"
-        >
+        <Modal isOpen={isModalOpen} onClose={() => !isMutating && setIsModalOpen(false)} title={selectedCustomer ? 'Editar Cliente' : 'Novo Cliente'} size="lg">
           <CustomerForm 
-            formData={formData} 
-            formErrors={formErrors} 
-            onChange={(e) => { 
-              const { name, value } = e.target
-              setFormData(prev => ({ ...prev, [name]: value })) 
-            }} 
-            onSubmit={handleSubmit} 
-            onCancel={() => setIsModalOpen(false)} 
-            isSubmitting={createMutation.isPending || updateMutation.isPending} 
-            isEditing={!!selectedCustomer} 
+            formData={formData} formErrors={formErrors} 
+            onChange={(e) => { const { name, value } = e.target; setFormData(prev => ({ ...prev, [name]: value })) }} 
+            onSubmit={handleSubmit} onCancel={() => setIsModalOpen(false)} 
+            isSubmitting={createMutation.isPending || updateMutation.isPending} isEditing={!!selectedCustomer} 
           />
         </Modal>
 
         <CustomerDeleteModal 
-          isOpen={isDeleteModalOpen} 
-          onClose={() => setIsDeleteModalOpen(false)} 
-          customer={selectedCustomer} 
-          onConfirm={handleDelete} 
-          isSubmitting={deleteMutation.isPending} 
+          isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} 
+          customer={selectedCustomer} onConfirm={handleDelete} isSubmitting={deleteMutation.isPending} 
         />
       </div>
     </div>

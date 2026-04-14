@@ -1,6 +1,7 @@
-import React from 'react'
-import { Mail, User, Lock, Shield } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Mail, User, Lock, Shield, Hash } from '../../lib/icons'
 import Button from '../ui/Button'
+import * as userService from '../../services/userService'
 
 const UserForm = ({ 
   editingUser, 
@@ -11,6 +12,27 @@ const UserForm = ({
   isSubmitting,
   canChangeRole 
 }) => {
+  const [generatingCode, setGeneratingCode] = useState(false)
+
+  // Gerar matrícula automaticamente ao abrir para novo usuário
+  useEffect(() => {
+    if (!editingUser && !formData.registration_number) {
+      handleGenerateRegistration()
+    }
+  }, [editingUser])
+
+  const handleGenerateRegistration = async () => {
+    setGeneratingCode(true)
+    try {
+      const registration = await userService.generateRegistrationNumber()
+      setFormData(prev => ({ ...prev, registration_number: registration }))
+    } catch (error) {
+      console.error('Erro ao gerar matrícula:', error)
+    } finally {
+      setGeneratingCode(false)
+    }
+  }
+
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
@@ -24,6 +46,44 @@ const UserForm = ({
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
+      {/* Matrícula */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Matrícula
+        </label>
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              name="registration_number"
+              value={formData.registration_number || ''}
+              onChange={handleChange}
+              placeholder="FUNC000001"
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-50 font-mono"
+              disabled={!!editingUser || generatingCode}
+              readOnly={!editingUser}
+            />
+          </div>
+          {!editingUser && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleGenerateRegistration}
+              loading={generatingCode}
+              disabled={generatingCode}
+            >
+              Gerar
+            </Button>
+          )}
+        </div>
+        <p className="text-xs text-gray-500 mt-1">
+          {editingUser 
+            ? 'Matrícula do funcionário (não pode ser alterada)' 
+            : 'Matrícula gerada automaticamente'}
+        </p>
+      </div>
+
       {!editingUser && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>

@@ -31,13 +31,23 @@ const Sales = lazy(() => import(
   /* webpackPrefetch: true */
   './pages/Sales'
 ))
+
+// Módulo Gestão de Vendas
 const SalesList = lazy(() => import(
   /* webpackChunkName: "pdv" */
   './pages/SalesList'
 ))
+
+//Módulo Fechamento de Caixa
 const CashierClosing = lazy(() => import(
   /* webpackChunkName: "pdv" */
   './pages/CashierClosing'
+))
+
+// Módulo Budget (orçamento)
+const Budgets = lazy(() => import(
+  /* webpackChunkName: "pdv" */
+  './pages/budgets'
 ))
 
 // Módulo Produtos (gestão de estoque)
@@ -145,6 +155,16 @@ function App() {
                         <PrivateLayout>
                           <SectionErrorBoundary title="Erro no PDV">
                             <Sales />
+                          </SectionErrorBoundary>
+                        </PrivateLayout>
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="/budgets" element={
+                      <ProtectedRoute requiredPermission="canViewSales">
+                        <PrivateLayout>
+                          <SectionErrorBoundary title="Erro no Orçamento">
+                            <Budgets />
                           </SectionErrorBoundary>
                         </PrivateLayout>
                       </ProtectedRoute>

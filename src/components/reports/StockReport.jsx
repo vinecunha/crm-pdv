@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Package, DollarSign, AlertCircle, XCircle, TrendingUp, Archive } from 'lucide-react'
+import { Package, DollarSign, AlertCircle, XCircle, TrendingUp, Archive } from '../../lib/icons'
 import { supabase } from '../../lib/supabase'
 import { formatCurrency, formatNumber, formatDateTime } from '../../utils/formatters'
 import SummaryCard from './SummaryCard'

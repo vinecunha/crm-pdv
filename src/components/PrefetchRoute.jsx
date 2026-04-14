@@ -99,7 +99,6 @@ const PrefetchRoute = ({ children }) => {
   const prefetchInProgress = useRef(false)
 
   useEffect(() => {
-    // ✅ NÃO bloquear a renderização - usar setTimeout 0 para executar depois
     const timer = setTimeout(() => {
       if (prefetchInProgress.current) return
       
@@ -135,12 +134,11 @@ const PrefetchRoute = ({ children }) => {
       }
 
       prefetchForRoute()
-    }, 50) // ✅ Delay pequeno para não competir com a renderização
+    }, 50)
 
     return () => clearTimeout(timer)
   }, [location.pathname, queryClient])
 
-  // ✅ Sempre retorna children imediatamente, sem bloquear
   return children
 }
 

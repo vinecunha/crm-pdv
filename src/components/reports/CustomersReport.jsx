@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { 
   Users, UserPlus, Award, TrendingUp, Phone, Mail, ShoppingBag,
   Ticket
-} from 'lucide-react'
+} from '../../lib/icons'
 import { supabase } from '../../lib/supabase'
 import { formatCurrency, formatNumber, formatDate } from '../../utils/formatters'
 import SummaryCard from './SummaryCard'

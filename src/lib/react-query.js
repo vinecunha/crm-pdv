@@ -79,7 +79,7 @@ if (typeof window !== 'undefined') {
       queryClient,
       persister,
       maxAge: 24 * 60 * 60 * 1000,
-      buster: process.env.npm_package_version || '1.0.0',
+      buster: import.meta.env.npm_package_version || '1.0.0',
       dehydrateOptions: {
         shouldDehydrateQuery: (query) => {
           if (query.state.status !== 'success') return false

@@ -1,5 +1,5 @@
 import React from 'react'
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw } from '../../lib/icons'
 import DataTable from '../ui/DataTable'
 import Badge from '../Badge'
 import Button from '../ui/Button'

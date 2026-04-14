@@ -1,4 +1,8 @@
-import { logger } from '../src/utils/logger' 
+const logger = {
+  log: (...args) => console.log('[SW]', ...args),
+  warn: (...args) => console.warn('[SW]', ...args),
+  error: (...args) => console.error('[SW]', ...args),
+}
 
 const CACHE_NAME = 'pdv-cache-v1';
 const API_CACHE_NAME = 'pdv-api-cache-v1';

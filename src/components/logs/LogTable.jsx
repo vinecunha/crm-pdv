@@ -1,5 +1,5 @@
 import React from 'react'
-import { Eye } from 'lucide-react'
+import { Eye } from '../../lib/icons'
 import { useTableStrategy } from '../../hooks/useTableStrategy'
 import { formatDateTime } from '../../utils/formatters'
 

@@ -1,5 +1,5 @@
 import React from 'react'
-import { User, Phone } from 'lucide-react'
+import { User, Phone } from '../../lib/icons'
 import { useTableStrategy } from '../../hooks/useTableStrategy'
 import Badge from '../Badge'
 import { formatCurrency, formatDate } from '../../utils/formatters'

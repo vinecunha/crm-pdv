@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useCompany } from '../hooks/useCompany'
-import PrefetchLink from './PrefetchLink' // ✅ Adicionado
+import PrefetchLink from './PrefetchLink'
 import {
   LogOut,
   X,
@@ -20,7 +20,7 @@ import {
   Ticket,
   Calculator,
   User
-} from '../utils/icons'
+} from '../lib/icons'
 
 const Sidebar = ({ collapsed, setCollapsed }) => {
   const { 
@@ -37,16 +37,13 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
   const navigate = useNavigate()
   const [isMobileOpen, setIsMobileOpen] = useState(false)
 
-  // Usar dados do banco ou fallback
   const companyName = company?.company_name || 'Empresa'
   const logoSrc = company?.company_logo_url || '/logomarca.png'
   const primaryColor = getCompanyColor('primary') || '#2563eb'
   const secondaryColor = getCompanyColor('secondary') || '#7c3aed'
 
-  // Avatar do usuário
   const avatarUrl = profile?.avatar_url
   
-  // Usar display_name com fallback para full_name
   const displayName = profile?.display_name?.trim() || 
                       profile?.full_name?.trim().split(' ')[0] || 
                       profile?.email?.split('@')[0] || 
@@ -54,14 +51,15 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
   
   const userInitial = displayName.charAt(0).toUpperCase()
 
-  // Menus baseados nas permissões
   const allMenuItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', permission: 'canViewDashboard', description: 'Visão geral', prefetch: true },
     { path: '/sales', icon: ShoppingBag, label: 'PDV', permission: 'canViewSales', description: 'Ponto de venda', prefetch: true },
+    { path: '/budgets', icon: FileText, label: 'Orçamentos', permission: 'canViewSales', description: 'Gerenciar orçamentos', prefetch: true },
     { path: '/cashier', icon: Calculator, label: 'Fechar Caixa', permission: 'canViewSales', description: 'Conciliação de vendas', prefetch: false },
     { path: '/sales-list', icon: ClipboardList, label: 'Gestão de Vendas', permission: 'canViewSales', description: 'Histórico e cancelamentos', prefetch: true },
     { path: '/coupons', icon: Ticket, label: 'Cupons', permission: 'canViewCoupons', description: 'Gerenciar cupons', prefetch: true },
     { path: '/products', icon: Package, label: 'Produtos', permission: 'canViewProducts', description: 'Gerenciar produtos', prefetch: true },
+    { path: '/stock-count', icon: ClipboardList, label: 'Balanço', permission: 'canManageStock', description: 'Contagem de estoque', prefetch: true },
     { path: '/customers', icon: Users, label: 'Clientes', permission: 'canViewCustomers', description: 'Gerenciar clientes', prefetch: true },
     { path: '/reports', icon: BarChart3, label: 'Relatórios', permission: 'canViewReports', description: 'Análises e métricas', prefetch: false },
     { path: '/users', icon: UserCircle, label: 'Usuários', permission: 'canViewUsers', description: 'Gerenciar usuários', prefetch: true },
@@ -70,6 +68,14 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
   ]
 
   const menuItems = allMenuItems.filter(item => permissions[item.permission])
+
+  const isActiveRoute = (path) => {
+    if (path === '/dashboard') return location.pathname === '/dashboard'
+    if (path === '/sales') return location.pathname === '/sales'
+    if (path === '/budgets') return location.pathname === '/budgets'
+    // Para outras rotas, verifica se começa com o path (para subrotas como /customers/:id/communication)
+    return location.pathname.startsWith(path)
+  }
 
   const getRoleName = () => {
     if (roleName) return roleName
@@ -89,7 +95,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     setIsMobileOpen(false)
   }
 
-  // Componente do Avatar (reutilizável)
   const AvatarDisplay = ({ size = 'md', showStatus = true }) => {
     const sizeClasses = {
       sm: 'w-8 h-8',
@@ -153,7 +158,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     )
   }
 
-  // Loading combinado
   if (authLoading || companyLoading) {
     return (
       <>
@@ -212,12 +216,11 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
             <div className="flex-1 overflow-y-auto p-4 space-y-2">
               {menuItems.map((item) => {
                 const Icon = item.icon
-                const isActive = location.pathname === item.path
+                const isActive = isActiveRoute(item.path)
                 const gradientStyle = isActive ? {
                   background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`
                 } : {}
 
-                // ✅ Usar PrefetchLink em vez de Link
                 const LinkComponent = item.prefetch ? PrefetchLink : Link
 
                 return (
@@ -250,7 +253,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
             </div>
 
             <div className="p-4 border-t border-gray-100">
-              {/* ÁREA DO USUÁRIO CLICÁVEL - MOBILE */}
               <div 
                 onClick={handleProfileClick}
                 className="flex items-center gap-3 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl mb-3 cursor-pointer hover:shadow-md transition-all group"
@@ -259,9 +261,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
                   <AvatarDisplay size="md" showStatus={true} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">
-                    {displayName}
-                  </p>
+                  <p className="text-sm font-medium text-gray-900">{displayName}</p>
                   <p className="text-xs text-gray-500">{getRoleName()}</p>
                 </div>
                 <User className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
@@ -314,9 +314,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
               />
               {!collapsed && (
                 <div className="flex-1">
-                  <h2 className="font-bold text-gray-900 text-lg leading-tight">
-                    {companyName}
-                  </h2>
+                  <h2 className="font-bold text-gray-900 text-lg leading-tight">{companyName}</h2>
                   <p className="text-xs text-gray-500">Gestão Integrada</p>
                 </div>
               )}
@@ -340,9 +338,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
                 <AvatarDisplay size="md" showStatus={true} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">
-                  {displayName}
-                </p>
+                <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
                 <div className="flex items-center gap-1">
                   <p className="text-xs text-gray-500">{getRoleName()}</p>
                 </div>
@@ -354,15 +350,10 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
 
         {collapsed && !authLoading && (
           <div className="flex justify-center mt-4">
-            <button
-              onClick={handleProfileClick}
-              className="relative group"
-              title="Meu Perfil"
-            >
+            <button onClick={handleProfileClick} className="relative group" title="Meu Perfil">
               <div className="hover:scale-105 transition-transform">
                 <AvatarDisplay size="md" showStatus={true} />
               </div>
-              
               <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
                 {displayName}
               </div>
@@ -373,12 +364,11 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
           {menuItems.map((item) => {
             const Icon = item.icon
-            const isActive = location.pathname === item.path
+            const isActive = isActiveRoute(item.path)
             const gradientStyle = isActive ? {
               background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`
             } : {}
 
-            // ✅ Usar PrefetchLink em vez de Link
             const LinkComponent = item.prefetch ? PrefetchLink : Link
 
             return (
@@ -397,12 +387,8 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
                   <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500'} transition-transform group-hover:scale-110`} />
                   {!collapsed && (
                     <div className="flex-1 text-left">
-                      <p className={`font-medium ${isActive ? 'text-white' : 'text-gray-700'}`}>
-                        {item.label}
-                      </p>
-                      <p className={`text-xs ${isActive ? 'text-white/80' : 'text-gray-400'}`}>
-                        {item.description}
-                      </p>
+                      <p className={`font-medium ${isActive ? 'text-white' : 'text-gray-700'}`}>{item.label}</p>
+                      <p className={`text-xs ${isActive ? 'text-white/80' : 'text-gray-400'}`}>{item.description}</p>
                     </div>
                   )}
                   {!collapsed && isActive && (
@@ -431,9 +417,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
             title={collapsed ? 'Sair' : ''}
           >
             <LogOut className="w-5 h-5 transition-transform group-hover:scale-110" />
-            {!collapsed && (
-              <span className="font-medium">Sair do sistema</span>
-            )}
+            {!collapsed && <span className="font-medium">Sair do sistema</span>}
           </button>
         </div>
       </div>
@@ -443,29 +427,15 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
           from { opacity: 0; }
           to { opacity: 1; }
         }
-        
         @keyframes slideInRight {
-          from {
-            transform: translateX(-100%);
-          }
-          to {
-            transform: translateX(0);
-          }
+          from { transform: translateX(-100%); }
+          to { transform: translateX(0); }
         }
-        
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-        
-        .animate-slideInRight {
-          animation: slideInRight 0.3s ease-out;
-        }
+        .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
+        .animate-slideInRight { animation: slideInRight 0.3s ease-out; }
       `}</style>
     </>
   )
 }
-
-// ✅ Importar Link do react-router-dom para o logo
-import { Link } from 'react-router-dom'
 
 export default Sidebar

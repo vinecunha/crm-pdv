@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Key, Shield, AlertCircle, LogOut } from 'lucide-react'
+import { Key, Shield, AlertCircle, LogOut } from '../../lib/icons'
 import Button from '../ui/Button'
 import { useAuth } from '../../contexts/AuthContext'
 

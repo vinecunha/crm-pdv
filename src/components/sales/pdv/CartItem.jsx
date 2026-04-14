@@ -1,5 +1,5 @@
 import React from 'react'
-import { Minus, Plus, Trash2, Package } from 'lucide-react'
+import { Minus, Plus, Trash2, Package } from '../../../lib/icons'
 import { formatCurrency } from '../../../utils/formatters'
 
 const CartItem = ({ 

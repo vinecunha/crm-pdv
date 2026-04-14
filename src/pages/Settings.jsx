@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Shield } from 'lucide-react'
+import { Shield } from '../lib/icons'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { sanitizeObject } from '../utils/sanitize'
@@ -39,7 +39,7 @@ const fetchCompanySettings = async () => {
 }
 
 const saveCompanySettings = async (settings) => {
-  const safeData = sanitizeObject(settings) // ✅ Sanitizar
+  const safeData = sanitizeObject(settings) 
   
   const { error } = await supabase
     .from('company_settings')
@@ -71,7 +71,7 @@ const Settings = () => {
     queryKey: ['company-settings'],
     queryFn: fetchCompanySettings,
     enabled: isAdmin,
-    staleTime: 30 * 60 * 1000,
+    staleTime: 0,
   })
 
   // ============= Mutation =============

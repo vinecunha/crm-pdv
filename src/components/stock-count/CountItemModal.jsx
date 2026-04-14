@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import { Calculator, CheckCircle, AlertTriangle, Package, Hash, Calendar } from 'lucide-react'
+import { Calculator, CheckCircle, AlertTriangle, Package, Hash, Calendar } from '../../lib/icons'
 import Modal from '../ui/Modal'
 import FormInput from '../forms/FormInput'
 import Button from '../ui/Button'

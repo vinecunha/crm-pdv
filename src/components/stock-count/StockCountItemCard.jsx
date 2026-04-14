@@ -1,5 +1,5 @@
 import React from 'react'
-import { Package, CheckCircle, AlertTriangle } from 'lucide-react'
+import { Package, CheckCircle, AlertTriangle } from '../../lib/icons'
 
 const StockCountItemCard = ({ item, onClick }) => {
   const isCounted = item.counted_quantity !== null

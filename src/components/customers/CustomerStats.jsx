@@ -1,5 +1,5 @@
 import React from 'react'
-import { ShoppingCart, DollarSign, TrendingUp, Calendar } from 'lucide-react'
+import { ShoppingCart, DollarSign, TrendingUp, Calendar } from '../../lib/icons'
 import { formatCurrency, formatDate } from '../../utils/formatters'
 
 const CustomerStats = ({ stats }) => {

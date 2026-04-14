@@ -1,6 +1,6 @@
 // src/components/ui/DataTable.jsx
 import React, { useState, useEffect } from 'react'
-import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from '../../lib/icons'
 
 const DataTable = ({ 
   columns,
@@ -17,12 +17,11 @@ const DataTable = ({
   showTotalItems = true
 }) => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
-  const [sortedData, setSortedData] = useState([]) // ✅ Inicializar como array vazio
+  const [sortedData, setSortedData] = useState([])
   
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(defaultItemsPerPage)
 
-  // ✅ Garantir que data é sempre um array
   const safeData = Array.isArray(data) ? data : []
 
   // Resetar página quando os dados mudarem
@@ -52,7 +51,6 @@ const DataTable = ({
     setSortedData(sorted)
   }, [safeData, sortConfig])
 
-  // ✅ Calcular paginação com segurança
   const totalItems = sortedData?.length || 0
   const totalPages = Math.ceil(totalItems / itemsPerPage) || 0
   const indexOfLastItem = currentPage * itemsPerPage

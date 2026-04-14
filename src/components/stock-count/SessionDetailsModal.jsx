@@ -1,9 +1,9 @@
 // src/components/stock-count/SessionDetailsModal.jsx
 import React from 'react'
-import { X, CheckCircle, AlertTriangle, Clock, Package, DollarSign, Calendar, User, MapPin, FileText, PackageSearch } from 'lucide-react'
+import { X, CheckCircle, AlertTriangle, Clock, Package, DollarSign, Calendar, User, MapPin, FileText, PackageSearch } from '../../lib/icons'
 import Button from '../ui/Button'
 import Badge from '../Badge'
-import StatCard from '../ui/StatCard' // ✅ Importa seu StatCard existente
+import StatCard from '../ui/StatCard'
 import { formatCurrency, formatDateTime, formatNumber } from '../../utils/formatters'
 import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
 

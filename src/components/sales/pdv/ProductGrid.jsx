@@ -1,5 +1,5 @@
 import React from 'react'
-import { Package, Search } from 'lucide-react'
+import { Package, Search } from '../../../lib/icons'
 import LazyImage from '../../ui/LazyImage'
 import { formatCurrency } from '../../../utils/formatters'
 
