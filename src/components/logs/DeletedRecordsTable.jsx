@@ -1,78 +1,135 @@
+// src/components/logs/DeletedRecordsTable.jsx
 import React from 'react'
-import { RotateCcw } from '../../lib/icons'
-import DataTable from '../ui/DataTable'
-import Badge from '../Badge'
-import Button from '../ui/Button'
+import { RotateCcw, Eye } from '../../lib/icons'
+import { useTableStrategy } from '../../hooks/useTableStrategy'
 import { formatDateTime } from '../../utils/formatters'
 
-const DeletedRecordsTable = ({ records, onRestore, canRestore }) => {
+// ✅ MAPEAMENTO DE LABELS
+const DEFAULT_ACTION_LABELS = {
+  'restore': 'Restaurar',
+  'view': 'Ver detalhes',
+}
+
+// ✅ Componente de Legenda
+const ActionsLegend = ({ actions }) => {
+  if (!actions || actions.length === 0) return null
+
+  const validActions = actions.filter(action => action && action.show !== false)
+  if (validActions.length === 0) return null
+
+  const actionItems = validActions.map(action => {
+    let label = ''
+    if (typeof action.label === 'string') {
+      label = action.label
+    } else if (action.id) {
+      label = DEFAULT_ACTION_LABELS[action.id] || action.id
+    } else {
+      label = 'Ação'
+    }
+    label = label.charAt(0).toUpperCase() + label.slice(1)
+    return { label, icon: action.icon }
+  }).filter(item => item.label && item.label !== 'Ação')
+
+  if (actionItems.length === 0) return null
+
+  const renderMiniIcon = (IconComponent) => {
+    if (!IconComponent) return null
+    try {
+      if (React.isValidElement(IconComponent)) return React.cloneElement(IconComponent, { size: 11 })
+      if (typeof IconComponent === 'function') return <IconComponent size={11} />
+      return null
+    } catch { return null }
+  }
+
+  return (
+    <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2 ml-1">
+      <span className="font-medium">Ações:</span>
+      {actionItems.map((item, index) => (
+        <React.Fragment key={index}>
+          <div className="flex items-center gap-0.5 hover:text-gray-600 transition-colors">
+            {item.icon && renderMiniIcon(item.icon)}
+            <span className="whitespace-nowrap">{item.label}</span>
+          </div>
+          {index < actionItems.length - 1 && <span className="text-gray-300">•</span>}
+        </React.Fragment>
+      ))}
+    </div>
+  )
+}
+
+const DeletedRecordsTable = ({ records, onRestore, canRestore, onViewDetails }) => {
+  const TableComponent = useTableStrategy(records, 100)
+
   const columns = [
     {
-      key: '_type',
+      key: '_typeLabel',
       header: 'Tipo',
-      render: (row) => (
-        <Badge variant={row._type === 'product' ? 'info' : 'purple'}>
-          {row._typeLabel}
-        </Badge>
-      )
+      sortable: true,
+      width: '100px',
+      render: (row) => <span className={`px-2 py-1 text-xs rounded-full ${row._type === 'product' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>{row._typeLabel}</span>
     },
     {
       key: 'name',
-      header: 'Nome/Descrição',
-      render: (row) => (
-        <div>
-          <p className="font-medium text-gray-900">
-            {row.name || row.full_name || row.code || '-'}
-          </p>
-          {row._type === 'product' && row.code && (
-            <p className="text-xs text-gray-500">Código: {row.code}</p>
-          )}
-          {row._type === 'customer' && row.email && (
-            <p className="text-xs text-gray-500">{row.email}</p>
-          )}
-        </div>
-      )
+      header: 'Nome',
+      sortable: true,
+      width: '25%',
+      render: (row) => <span className="font-medium text-gray-900">{row.name}</span>
     },
     {
       key: 'deleted_at',
-      header: 'Excluído em',
-      render: (row) => (
-        <span className="text-sm text-gray-600">{formatDateTime(row.deleted_at)}</span>
-      )
+      header: 'Deletado em',
+      sortable: true,
+      width: '160px',
+      render: (row) => <div className="text-sm text-gray-500">{formatDateTime(row.deleted_at)}</div>
     },
     {
-      key: 'deleted_by',
-      header: 'Excluído por',
+      key: 'deleter',
+      header: 'Deletado por',
+      width: '180px',
+      render: (row) => <div className="text-sm text-gray-600">{row.deleter?.full_name || row.deleter?.email || 'Sistema'}</div>
+    },
+    {
+      key: 'actions',
+      header: '',
+      width: '80px',
       render: (row) => (
-        <span className="text-sm text-gray-600">
-          {row.deleter?.full_name || row.deleter?.email || '-'}
-        </span>
+        <div className="flex items-center gap-2">
+          {onViewDetails && (
+            <button onClick={(e) => { e.stopPropagation(); onViewDetails(row) }} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="Ver detalhes">
+              <Eye size={16} className="text-gray-500" />
+            </button>
+          )}
+          {canRestore && (
+            <button onClick={(e) => { e.stopPropagation(); onRestore(row) }} className="p-2 hover:bg-green-50 rounded-lg transition-colors" title="Restaurar">
+              <RotateCcw size={16} className="text-green-600" />
+            </button>
+          )}
+        </div>
       )
     }
   ]
 
-  const actions = canRestore ? [
-    {
-      label: 'Restaurar',
-      icon: <RotateCcw size={16} />,
-      onClick: onRestore,
-      className: 'text-green-600 hover:text-green-800 hover:bg-green-50'
-    }
-  ] : []
+  // ✅ Ações com id para a legenda
+  const actions = [
+    { id: 'view', label: 'Ver detalhes', icon: Eye, show: !!onViewDetails },
+    { id: 'restore', label: 'Restaurar', icon: RotateCcw, show: canRestore }
+  ].filter(a => a.show)
 
   return (
-    <DataTable
-      columns={columns}
-      data={records}
-      actions={actions}
-      emptyMessage="Nenhum registro deletado"
-      striped
-      hover
-      pagination
-      itemsPerPageOptions={[20, 50, 100]}
-      defaultItemsPerPage={20}
-      showTotalItems
-    />
+    <div className="space-y-4">
+      {/* ✅ LEGENDA ADICIONADA MANUALMENTE */}
+      <ActionsLegend actions={actions} />
+
+      <TableComponent
+        columns={columns}
+        data={records}
+        onRowClick={onViewDetails}
+        emptyMessage="Nenhum registro deletado encontrado"
+        striped
+        hover
+        showTotalItems
+      />
+    </div>
   )
 }
 

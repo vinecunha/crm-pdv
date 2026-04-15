@@ -148,6 +148,7 @@ const CouponTable = ({
 
   const actions = [
     {
+      id: 'campaign',
       label: 'Campanha',
       icon: Send, 
       onClick: onSendCampaign,
@@ -155,12 +156,14 @@ const CouponTable = ({
       className: 'text-green-600 hover:text-green-700 hover:bg-green-50'
     },
     {
+      id: 'edit',
       label: 'Editar',
       icon: Edit, 
       onClick: onEdit,
       className: 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
     },
     {
+      id: 'customers',
       label: 'Clientes',
       icon: UserPlus, 
       onClick: onManageCustomers,
@@ -168,6 +171,7 @@ const CouponTable = ({
       className: 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
     },
     {
+      id: 'toggle', 
       label: (row) => row?.is_active ? 'Desativar' : 'Ativar',
       icon: Power, 
       onClick: onToggleStatus,
@@ -176,6 +180,7 @@ const CouponTable = ({
         : 'text-green-600 hover:text-green-700 hover:bg-green-50'
     },
     {
+      id: 'delete', 
       label: 'Excluir',
       icon: Trash2,
        onClick: (row) => onDelete(row),

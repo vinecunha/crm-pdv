@@ -1,7 +1,60 @@
+// src/components/logs/LogTable.jsx
 import React from 'react'
 import { Eye } from '../../lib/icons'
 import { useTableStrategy } from '../../hooks/useTableStrategy'
 import { formatDateTime } from '../../utils/formatters'
+
+// ✅ MAPEAMENTO DE LABELS (idêntico ao DataTable)
+const DEFAULT_ACTION_LABELS = {
+  'view': 'Ver detalhes',
+}
+
+// ✅ Componente de Legenda IDÊNTICO ao do DataTable
+const ActionsLegend = ({ actions }) => {
+  if (!actions || actions.length === 0) return null
+
+  const validActions = actions.filter(action => action && action.show !== false)
+  if (validActions.length === 0) return null
+
+  const actionItems = validActions.map(action => {
+    let label = ''
+    if (typeof action.label === 'string') {
+      label = action.label
+    } else if (action.id) {
+      label = DEFAULT_ACTION_LABELS[action.id] || action.id
+    } else {
+      label = 'Ação'
+    }
+    label = label.charAt(0).toUpperCase() + label.slice(1)
+    return { label, icon: action.icon }
+  }).filter(item => item.label && item.label !== 'Ação')
+
+  if (actionItems.length === 0) return null
+
+  const renderMiniIcon = (IconComponent) => {
+    if (!IconComponent) return null
+    try {
+      if (React.isValidElement(IconComponent)) return React.cloneElement(IconComponent, { size: 11 })
+      if (typeof IconComponent === 'function') return <IconComponent size={11} />
+      return null
+    } catch { return null }
+  }
+
+  return (
+    <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2 ml-1">
+      <span className="font-medium">Ações:</span>
+      {actionItems.map((item, index) => (
+        <React.Fragment key={index}>
+          <div className="flex items-center gap-0.5 hover:text-gray-600 transition-colors">
+            {item.icon && renderMiniIcon(item.icon)}
+            <span className="whitespace-nowrap">{item.label}</span>
+          </div>
+          {index < actionItems.length - 1 && <span className="text-gray-300">•</span>}
+        </React.Fragment>
+      ))}
+    </div>
+  )
+}
 
 const LogTable = ({ logs, onViewDetails, getActionColor, getActionLabel }) => {
   const TableComponent = useTableStrategy(logs, 100)
@@ -51,37 +104,41 @@ const LogTable = ({ logs, onViewDetails, getActionColor, getActionLabel }) => {
       render: (row) => <div className="text-xs font-mono text-gray-500">{row.ip_address || '-'}</div>
     },
     {
-      key: 'details',
+      key: 'actions',
       header: '',
       width: '60px',
       render: (row) => (
-        <button onClick={() => onViewDetails(row)} className="text-blue-600 hover:text-blue-800">
-          <Eye size={16} />
+        <button 
+          onClick={(e) => { e.stopPropagation(); onViewDetails(row) }} 
+          className="p-2 hover:bg-blue-50 rounded-lg transition-colors group" 
+          title="Ver detalhes"
+        >
+          <Eye size={16} className="text-blue-500 group-hover:text-blue-600" />
         </button>
       )
     }
   ]
 
+  // ✅ Ações com id para a legenda
   const actions = [
-    {
-      label: 'Ver detalhes',
-      icon: <Eye size={16} />,
-      onClick: onViewDetails,
-      className: 'text-blue-600 hover:text-blue-800 hover:bg-blue-50'
-    }
+    { id: 'view', label: 'Ver detalhes', icon: Eye }
   ]
 
   return (
-    <TableComponent
-      columns={columns}
-      data={logs}
-      actions={actions}
-      onRowClick={onViewDetails}
-      emptyMessage="Nenhum log encontrado"
-      striped
-      hover
-      showTotalItems
-    />
+    <div className="space-y-4">
+      {/* ✅ LEGENDA ADICIONADA MANUALMENTE */}
+      <ActionsLegend actions={actions} />
+
+      <TableComponent
+        columns={columns}
+        data={logs}
+        onRowClick={onViewDetails}
+        emptyMessage="Nenhum log encontrado"
+        striped
+        hover
+        showTotalItems
+      />
+    </div>
   )
 }
 

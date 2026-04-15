@@ -257,9 +257,9 @@ const Budgets = () => {
   ]
 
   const actions = [
-    { label: 'Ver detalhes', icon: <Eye size={16} />, onClick: handleViewDetails, className: 'text-gray-500 hover:text-blue-600 hover:bg-blue-50' },
-    { label: 'Aprovar', icon: <CheckCircle size={16} />, onClick: handleApproveClick, className: 'text-green-600 hover:bg-green-50', disabled: (row) => row.status !== 'pending' },
-    { label: 'Rejeitar', icon: <XCircle size={16} />, onClick: handleRejectClick, className: 'text-red-600 hover:bg-red-50', disabled: (row) => row.status !== 'pending' }
+    { id: 'details', label: 'Ver detalhes', icon: Eye, onClick: handleViewDetails, className: 'text-gray-500 hover:text-blue-600 hover:bg-blue-50' },
+    { id: 'approve', label: 'Aprovar', icon: CheckCircle, onClick: handleApproveClick, className: 'text-green-600 hover:bg-green-50', disabled: (row) => row.status !== 'pending' },
+    { id: 'reject', label: 'Rejeitar', icon: XCircle, onClick: handleRejectClick, className: 'text-red-600 hover:bg-red-50', disabled: (row) => row.status !== 'pending' }
   ]
 
   const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
