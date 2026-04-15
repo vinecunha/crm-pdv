@@ -1,38 +1,44 @@
-# Dependências
-node_modules/
-/.pnp
-.pnp.js
+# Backups e dados do banco (NUNCA subir para o GitHub)
+*.backup.sql
+*backup*.sql
+*data*.sql
+*production*.sql
+*prod*.sql
+dump*.sql
+seed_production*.sql
+supabase/seeds/production/
+supabase/seeds/real_data/
 
-# Build
-/dist
-/build
-/.vite
+# Migrations com dados sensíveis (verificar antes de subir)
+# supabase/migrations/*_data.sql
 
-# Ambiente
-.env
-.env.local
+# Configurações locais do Supabase
+supabase/config.toml
+supabase/.branches/
+supabase/.temp/
+supabase/logs/
+
+# Chaves, tokens e certificados
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+secrets/
+keys/
+
+# Arquivos de ambiente específicos
+.env.production
+.env.staging
 .env.development.local
 .env.test.local
 .env.production.local
 
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+# Logs do Supabase CLI
+supabase-debug*.log
 
-# Editor
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-
-# Supabase
-.supabase/
-
-# Outros
-*.log
-.temp/
-tmp/
+# Arquivos temporários de exportação
+export/
+temp/
+*.tmp
