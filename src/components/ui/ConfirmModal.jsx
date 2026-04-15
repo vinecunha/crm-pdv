@@ -51,6 +51,7 @@ const ConfirmModal = ({
       onClose={onClose}
       title={title}
       size={size}
+      zIndex={100}
     >
       <div className="space-y-4">
         <div className="flex items-start gap-3">

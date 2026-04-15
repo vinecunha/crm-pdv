@@ -543,8 +543,6 @@ const Coupons = () => {
           onSuccess={(result) => {
             showFeedback('success', `✅ Campanha enviada para ${result.successCount} cliente(s)!`)
             queryClient.invalidateQueries({ queryKey: ['coupons'] })
-            setShowCampaignModal(false)
-            setSelectedCouponForCampaign(null)
           }}
         />
 

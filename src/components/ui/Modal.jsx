@@ -9,7 +9,8 @@ const Modal = ({
   size = 'md', 
   isLoading = false,
   error = null,      
-  onRetry = null    
+  onRetry = null,
+  zIndex = 50
 }) => {
   useEffect(() => {
     if (isOpen) {

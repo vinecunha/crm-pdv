@@ -184,16 +184,11 @@ const PixPaymentModal = ({
     }
   }
 
-  // ── Fechar só se não estiver pendente ─────────────────────────────────────
-  const handleClose = () => {
-    if (status !== 'pending') onClose()
-  }
-
   // ─────────────────────────────────────────────────────────────────────────
   return (
     <Modal
       isOpen={isOpen}
-      onClose={handleClose}
+      onClose={onClose}
       title="Pagamento via PIX"
       size="md"
       showCloseButton={status !== 'pending'}
