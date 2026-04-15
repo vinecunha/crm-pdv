@@ -39,11 +39,27 @@ const Login = () => {
 
   const fetchCompanySettings = async () => {
     try {
-      const { data, error } = await supabase.from('company_settings').select('*').limit(1).single()
+      const { data, error } = await supabase
+        .from('company_settings')
+        .select('*')
+        .limit(1)
+        .single()
+      
       if (error) throw error
-      setCompanySettings(data || { company_name: 'Sistema', primary_color: '#2563eb', secondary_color: '#7c3aed', company_logo_url: null })
+      
+      setCompanySettings(data || { 
+        company_name: 'Sistema', 
+        primary_color: '#2563eb', 
+        secondary_color: '#7c3aed', 
+        company_logo_url: null 
+      })
     } catch {
-      setCompanySettings({ company_name: 'Sistema', primary_color: '#2563eb', secondary_color: '#7c3aed', company_logo_url: null })
+      setCompanySettings({ 
+        company_name: 'Sistema', 
+        primary_color: '#2563eb', 
+        secondary_color: '#7c3aed', 
+        company_logo_url: null 
+      })
     } finally {
       setLoadingSettings(false)
     }
@@ -53,10 +69,13 @@ const Login = () => {
     try {
       const { error } = await supabase.rpc('update_user_login_info', { user_id: userId })
       if (error) {
-        await supabase.from('profiles').update({ 
-          last_login: new Date().toISOString(),
-          login_count: supabase.raw('COALESCE(login_count, 0) + 1')
-        }).eq('id', userId)
+        await supabase
+          .from('profiles')
+          .update({ 
+            last_login: new Date().toISOString(),
+            login_count: supabase.raw('COALESCE(login_count, 0) + 1')
+          })
+          .eq('id', userId)
       }
     } catch (error) {
       console.warn('Erro ao atualizar last_login:', error)
@@ -105,12 +124,17 @@ const Login = () => {
   const companyName = companySettings?.company_name || 'Sistema'
   const logoUrl = companySettings?.company_logo_url
 
-  const gradientStyle = { background: `linear-gradient(135deg, ${primaryColor}15, ${secondaryColor}15)` }
+  const gradientStyle = { 
+    background: `linear-gradient(135deg, ${primaryColor}15, ${secondaryColor}15)` 
+  }
 
-  if (authLoading) {
+  if (authLoading || loadingSettings) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={gradientStyle}>
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: primaryColor }} />
+        <div 
+          className="animate-spin rounded-full h-10 w-10 border-b-2" 
+          style={{ borderColor: primaryColor }} 
+        />
       </div>
     )
   }
@@ -119,24 +143,33 @@ const Login = () => {
     return null
   }
 
-  if (loadingSettings) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={gradientStyle}>
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: primaryColor }} />
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={gradientStyle}>
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
-        <LoginHeader companyName={companyName} logoUrl={logoUrl} primaryColor={primaryColor} />
+        <LoginHeader 
+          companyName={companyName} 
+          logoUrl={logoUrl} 
+          primaryColor={primaryColor} 
+        />
 
         <div className="space-y-6">
-          {isBlocked && <BlockedAlert timeRemaining={timeRemaining} formatTimeRemaining={formatTimeRemaining} />}
-          <ErrorAlert error={error} remainingAttempts={remainingAttempts} />
+          {isBlocked && (
+            <BlockedAlert 
+              timeRemaining={timeRemaining} 
+              formatTimeRemaining={formatTimeRemaining} 
+            />
+          )}
+          
+          <ErrorAlert 
+            error={error} 
+            remainingAttempts={remainingAttempts} 
+          />
+          
           {!isBlocked && !error && (
-            <AttemptsIndicator remainingAttempts={remainingAttempts} primaryColor={primaryColor} />
+            <AttemptsIndicator 
+              remainingAttempts={remainingAttempts} 
+              primaryColor={primaryColor} 
+            />
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -152,7 +185,6 @@ const Login = () => {
               icon={Mail}
               autoComplete="email"
               autoFocus
-              shortcut={formShortcuts.EMAIL_FOCUS}
             />
 
             <FormInput
@@ -166,7 +198,6 @@ const Login = () => {
               disabled={loading || isBlocked}
               icon={Lock}
               autoComplete="current-password"
-              shortcut={formShortcuts.PASSWORD_FOCUS}
             />
 
             <Button
@@ -186,16 +217,12 @@ const Login = () => {
               Entrar
             </Button>
           </form>
-
-          {/* Dica de atalhos */}
-          <div className="text-center text-xs text-gray-400">
-            <kbd className="px-1.5 py-0.5 bg-gray-100 border rounded">Ctrl+E</kbd> Email • 
-            <kbd className="px-1.5 py-0.5 bg-gray-100 border rounded ml-1">Ctrl+P</kbd> Senha • 
-            <kbd className="px-1.5 py-0.5 bg-gray-100 border rounded ml-1">Enter</kbd> Entrar
-          </div>
         </div>
 
-        <LoginFooter companyName={companyName} cnpj={companySettings?.cnpj} />
+        <LoginFooter 
+          companyName={companyName} 
+          cnpj={companySettings?.cnpj} 
+        />
       </div>
     </div>
   )

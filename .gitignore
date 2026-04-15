@@ -29,6 +29,7 @@ secrets/
 keys/
 
 # Arquivos de ambiente específicos
+.env
 .env.production
 .env.staging
 .env.development.local

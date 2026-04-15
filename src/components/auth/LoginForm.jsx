@@ -1,5 +1,5 @@
 import React from 'react'
-import { User, Lock, LogIn, Clock } from '../../lib/icons'
+import { Mail, Lock, LogIn, Clock } from '../../lib/icons'
 
 const LoginForm = ({ 
   email, 
@@ -15,14 +15,19 @@ const LoginForm = ({
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Email
+        </label>
         <div className="relative">
-          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg transition-all"
+            className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg transition-all focus:outline-none"
+            style={{
+              '--tw-ring-color': `${primaryColor}20`
+            }}
             onFocus={(e) => {
               e.target.style.borderColor = primaryColor
               e.target.style.boxShadow = `0 0 0 2px ${primaryColor}20`
@@ -39,14 +44,16 @@ const LoginForm = ({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Senha
+        </label>
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg transition-all"
+            className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg transition-all focus:outline-none"
             onFocus={(e) => {
               e.target.style.borderColor = primaryColor
               e.target.style.boxShadow = `0 0 0 2px ${primaryColor}20`
@@ -68,7 +75,6 @@ const LoginForm = ({
         className="w-full text-white font-medium py-2.5 px-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:shadow-lg"
         style={{
           backgroundColor: primaryColor,
-          '--tw-shadow-color': `${primaryColor}40`
         }}
         onMouseEnter={(e) => e.target.style.backgroundColor = secondaryColor}
         onMouseLeave={(e) => e.target.style.backgroundColor = primaryColor}

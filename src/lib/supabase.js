@@ -11,3 +11,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storageKey: 'brasalino-auth-token'
   }
 })
+
+if (import.meta.env.DEV) {
+  window.supabase = supabase
+}
