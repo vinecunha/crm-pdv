@@ -1,1040 +1,1763 @@
+SELECT 
+  jsonb_agg(
+    jsonb_build_object(
+      'Tabela', tablename,
+      'Política', policyname,
+      'Comando', cmd,
+      'Roles', roles,
+      'USING', qual,
+      'WITH_CHECK', with_check
+    )
+    ORDER BY tablename, policyname
+  ) AS policies_json
+FROM pg_policies
+WHERE schemaname = 'public';
+
 [
   {
-    "Tabela": "budget_items",
-    "Política": "Usuários autenticados podem criar itens de orçamento",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "budget_items",
-    "Política": "Usuários autenticados podem ver itens de orçamento",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "budgets",
-    "Política": "Usuários autenticados podem atualizar orçamentos",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "budgets",
-    "Política": "Usuários autenticados podem criar orçamentos",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "budgets",
-    "Política": "Usuários autenticados podem ver orçamentos",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "cashier_closing",
-    "Política": "Usuários autenticados podem criar fechamentos",
-    "Comando": "INSERT",
-    "Roles": "{public}"
-  },
-  {
-    "Tabela": "cashier_closing",
-    "Política": "Usuários autenticados podem ver fechamentos",
-    "Comando": "SELECT",
-    "Roles": "{public}"
-  },
-  {
-    "Tabela": "companies",
-    "Política": "Anon não pode modificar empresa",
-    "Comando": "ALL",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "companies",
-    "Política": "Anon pode ver empresa",
-    "Comando": "SELECT",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "companies",
-    "Política": "Apenas admins podem criar empresa",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "companies",
-    "Política": "Apenas admins podem editar empresa",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "companies",
-    "Política": "Apenas service_role pode deletar empresas",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "companies",
-    "Política": "Ninguém pode deletar empresa",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "companies",
-    "Política": "Service role acesso total",
-    "Comando": "ALL",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "companies",
-    "Política": "Service role tem acesso total",
-    "Comando": "ALL",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "companies",
-    "Política": "Todos podem ver empresas",
-    "Comando": "SELECT",
-    "Roles": "{anon,authenticated}"
-  },
-  {
-    "Tabela": "companies",
-    "Política": "Usuários autenticados podem atualizar empresas",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "companies",
-    "Política": "Usuários autenticados podem criar empresas",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "companies",
-    "Política": "Usuários podem ver dados da empresa",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "company_settings",
-    "Política": "Anon não pode modificar configurações",
-    "Comando": "ALL",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "company_settings",
-    "Política": "Anon pode ver configurações públicas",
-    "Comando": "SELECT",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "company_settings",
-    "Política": "Apenas admins podem criar configuração",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "company_settings",
-    "Política": "Apenas admins podem editar configurações",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "company_settings",
-    "Política": "Ninguém pode deletar configuração",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "company_settings",
-    "Política": "Service role acesso total",
-    "Comando": "ALL",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "company_settings",
-    "Política": "Service role pode criar configuração inicial",
-    "Comando": "INSERT",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "company_settings",
-    "Política": "Usuários podem ver configurações",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "coupon_allowed_customers",
-    "Política": "Admins e gerentes podem associar clientes a cupons",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "coupon_allowed_customers",
-    "Política": "Admins e gerentes podem remover associações",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "coupon_allowed_customers",
-    "Política": "Anon não pode acessar cupons permitidos",
-    "Comando": "ALL",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "coupon_allowed_customers",
-    "Política": "Apenas admins podem atualizar associações",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "coupon_allowed_customers",
-    "Política": "Service role acesso total",
-    "Comando": "ALL",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "coupon_allowed_customers",
-    "Política": "Usuários podem ver cupons permitidos por cliente",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "coupons",
-    "Política": "Admins e gerentes podem atualizar cupons",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "coupons",
-    "Política": "Admins e gerentes podem criar cupons",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "coupons",
-    "Política": "Admins e gerentes podem ver todos os cupons",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "coupons",
-    "Política": "Anon não pode modificar cupons",
-    "Comando": "ALL",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "coupons",
-    "Política": "Anon pode ver cupons globais ativos",
-    "Comando": "SELECT",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "coupons",
-    "Política": "Ninguém pode deletar cupons fisicamente",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "coupons",
-    "Política": "Service role acesso total",
-    "Comando": "ALL",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "coupons",
-    "Política": "Usuários podem ver cupons ativos e não deletados",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "coupons",
-    "Política": "Validar limite de uso ao criar",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "customer_communications",
-    "Política": "Admins e gerentes podem atualizar comunicações",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "customer_communications",
-    "Política": "Anon não pode acessar comunicações",
-    "Comando": "ALL",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "customer_communications",
-    "Política": "Auto preencher sent_by",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "customer_communications",
-    "Política": "Ninguém pode deletar comunicações",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "customer_communications",
-    "Política": "Operadores veem apenas comunicações enviadas",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "customer_communications",
-    "Política": "Remetente pode atualizar status da sua comunicação",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "customer_communications",
-    "Política": "Service role acesso total",
-    "Comando": "ALL",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "customer_communications",
-    "Política": "Usuários podem registrar comunicações",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "customer_communications",
-    "Política": "Usuários podem ver comunicações",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "customer_coupons",
-    "Política": "Anon não pode acessar histórico de cupons",
-    "Comando": "ALL",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "customer_coupons",
-    "Política": "Apenas admins podem atualizar registro de uso",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "customer_coupons",
-    "Política": "Ninguém pode deletar histórico de cupons",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "customer_coupons",
-    "Política": "Service role acesso total",
-    "Comando": "ALL",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "customer_coupons",
-    "Política": "Usuários podem registrar uso de cupons",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "customer_coupons",
-    "Política": "Usuários podem ver uso de cupons",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "customers",
-    "Política": "Admins e gerentes podem ver todos os clientes",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "customers",
-    "Política": "Anon não pode acessar clientes",
-    "Comando": "ALL",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "customers",
-    "Política": "Anon pode verificar se email existe",
-    "Comando": "SELECT",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "customers",
-    "Política": "Apenas admins podem inativar clientes",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "customers",
-    "Política": "Ninguém pode deletar clientes fisicamente",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "customers",
-    "Política": "Permitir select para todos",
-    "Comando": "SELECT",
-    "Roles": "{public}"
-  },
-  {
-    "Tabela": "customers",
-    "Política": "Service role acesso total",
-    "Comando": "ALL",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "customers",
-    "Política": "Usuários podem atualizar clientes ativos",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "customers",
-    "Política": "Usuários podem cadastrar clientes",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "customers",
-    "Política": "Usuários podem ver clientes ativos",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "login_attempts",
-    "Política": "Admin pode atualizar tentativas",
-    "Comando": "UPDATE",
-    "Roles": "{public}"
-  },
-  {
-    "Tabela": "login_attempts",
-    "Política": "Admin pode ver tentativas",
-    "Comando": "SELECT",
-    "Roles": "{public}"
-  },
-  {
-    "Tabela": "login_attempts",
-    "Política": "Sistema pode inserir tentativas",
-    "Comando": "INSERT",
-    "Roles": "{public}"
-  },
-  {
-    "Tabela": "notifications",
-    "Política": "Admins e gerentes podem ver todas notificações",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "notifications",
-    "Política": "Admins podem deletar qualquer notificação",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "notifications",
-    "Política": "Admins podem gerenciar todas notificações",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "notifications",
-    "Política": "Anon não pode acessar notificações",
-    "Comando": "ALL",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "notifications",
-    "Política": "Service role acesso total",
-    "Comando": "ALL",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "notifications",
-    "Política": "Sistema pode criar notificações",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "notifications",
-    "Política": "Usuário pode deletar suas notificações",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "notifications",
-    "Política": "Usuário pode marcar suas notificações como lidas",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "notifications",
-    "Política": "Usuário vê apenas suas notificações",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "permissions",
-    "Política": "Anon não pode modificar permissões",
-    "Comando": "ALL",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "permissions",
-    "Política": "Anon pode ver catálogo de permissões",
-    "Comando": "SELECT",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "permissions",
-    "Política": "Apenas admins podem atualizar permissões",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "permissions",
-    "Política": "Apenas admins podem criar permissões",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "permissions",
-    "Política": "Apenas admins podem deletar permissões",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "permissions",
-    "Política": "Service role acesso total",
-    "Comando": "ALL",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "permissions",
-    "Política": "Usuários podem ver catálogo de permissões",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "pix_charges",
-    "Política": "Anon pode ver status de cobrança",
-    "Comando": "SELECT",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "pix_charges",
-    "Política": "Ninguém pode deletar cobranças PIX",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "pix_charges",
-    "Política": "Service role acesso total",
-    "Comando": "ALL",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "pix_charges",
-    "Política": "Usuários podem atualizar cobranças PIX",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "pix_charges",
-    "Política": "Usuários podem criar cobranças PIX",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "pix_charges",
-    "Política": "Usuários podem ver cobranças PIX",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "product_entries",
-    "Política": "Anon não pode acessar entradas",
-    "Comando": "ALL",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "product_entries",
-    "Política": "Apenas admins e gerentes veem custos",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "product_entries",
-    "Política": "Apenas admins podem atualizar entradas",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "product_entries",
-    "Política": "Auto preencher created_by",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "product_entries",
-    "Política": "Ninguém pode deletar entradas",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "product_entries",
-    "Política": "Service role acesso total",
-    "Comando": "ALL",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "product_entries",
-    "Política": "Usuários com permissão podem registrar entradas",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "product_entries",
-    "Política": "Usuários podem ver entradas de produtos",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "product_entries",
-    "Política": "Validar dados da entrada",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "products",
-    "Política": "Usuários com permissão podem atualizar produtos",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "profiles",
-    "Política": "Admins atualizam qualquer perfil",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "profiles",
-    "Política": "Apenas admins criam perfis",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "profiles",
-    "Política": "Ninguém deleta perfis",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "profiles",
-    "Política": "Service role acesso total profiles",
-    "Comando": "ALL",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "profiles",
-    "Política": "Usuário atualiza seu perfil",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "profiles",
-    "Política": "Usuário vê seu próprio perfil",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "profiles",
-    "Política": "Usuários veem todos os perfis",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "profiles",
-    "Política": "admin_can_view_all_documents",
-    "Comando": "SELECT",
-    "Roles": "{public}"
-  },
-  {
-    "Tabela": "profiles",
-    "Política": "users_can_update_own_profile",
-    "Comando": "UPDATE",
-    "Roles": "{public}"
-  },
-  {
-    "Tabela": "profiles",
-    "Política": "users_can_view_own_profile",
-    "Comando": "SELECT",
-    "Roles": "{public}"
-  },
-  {
-    "Tabela": "rate_limits",
-    "Política": "Service role can manage rate limits",
-    "Comando": "ALL",
-    "Roles": "{public}"
-  },
-  {
-    "Tabela": "role_permissions",
-    "Política": "Anon não pode modificar associações",
-    "Comando": "ALL",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "role_permissions",
-    "Política": "Anon pode ver permissões das roles",
-    "Comando": "SELECT",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "role_permissions",
-    "Política": "Apenas admins podem atribuir permissões",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "role_permissions",
-    "Política": "Apenas admins podem atualizar associações",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "role_permissions",
-    "Política": "Apenas admins podem remover permissões",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "role_permissions",
-    "Política": "Service role acesso total",
-    "Comando": "ALL",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "role_permissions",
-    "Política": "Usuários podem ver permissões das roles",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "sale_items",
-    "Política": "Admins podem remover qualquer item",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "sale_items",
-    "Política": "Apenas admins podem atualizar itens de venda",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "sale_items",
-    "Política": "Usuários podem inserir itens em vendas",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "sale_items",
-    "Política": "Usuários podem remover itens de vendas pendentes",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "sale_items",
-    "Política": "Usuários podem ver itens de vendas",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "sales",
-    "Política": "Anon não pode acessar vendas",
-    "Comando": "ALL",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "sales",
-    "Política": "Apenas admins podem aprovar vendas",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "sales",
-    "Política": "Apenas admins podem cancelar vendas",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "sales",
-    "Política": "Ninguém pode deletar vendas",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "sales",
-    "Política": "Service role acesso total",
-    "Comando": "ALL",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "sales",
-    "Política": "Usuários podem atualizar vendas ativas",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "sales",
-    "Política": "Usuários podem criar vendas",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "sales",
-    "Política": "Usuários podem ver vendas",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "stock_count_items",
-    "Política": "Admins podem deletar itens",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "stock_count_items",
-    "Política": "Anon não pode acessar itens de contagem",
-    "Comando": "ALL",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "stock_count_items",
-    "Política": "Ninguém pode deletar itens de contagem",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "stock_count_items",
-    "Política": "Service role acesso total",
-    "Comando": "ALL",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "stock_count_items",
-    "Política": "Usuários com permissão podem adicionar itens",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "stock_count_items",
-    "Política": "Usuários podem atualizar itens em contagem",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "stock_count_items",
-    "Política": "Usuários podem finalizar contagem de item",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "stock_count_items",
-    "Política": "Usuários podem ver itens de contagem",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "stock_count_sessions",
-    "Política": "Admins podem deletar sessões canceladas",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "stock_count_sessions",
-    "Política": "Anon não pode acessar sessões de contagem",
-    "Comando": "ALL",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "stock_count_sessions",
-    "Política": "Apenas admins podem cancelar sessões",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "stock_count_sessions",
-    "Política": "Ninguém pode deletar sessões de contagem",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "stock_count_sessions",
-    "Política": "Service role acesso total",
-    "Comando": "ALL",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "stock_count_sessions",
-    "Política": "Usuários com permissão podem criar sessões",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "stock_count_sessions",
-    "Política": "Usuários podem atualizar sessões em andamento",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "stock_count_sessions",
-    "Política": "Usuários podem finalizar sessões",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "stock_count_sessions",
-    "Política": "Usuários podem ver sessões de contagem",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "stock_movements",
-    "Política": "Admins podem deletar movimentações manuais",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "stock_movements",
-    "Política": "Anon não pode acessar movimentações",
-    "Comando": "ALL",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "stock_movements",
-    "Política": "Ninguém pode atualizar movimentações",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "stock_movements",
-    "Política": "Ninguém pode deletar movimentações",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "stock_movements",
-    "Política": "Service role acesso total",
-    "Comando": "ALL",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "stock_movements",
-    "Política": "Sistema e autorizados podem registrar movimentações",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "stock_movements",
-    "Política": "Usuários podem ver movimentações de estoque",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "system_logs",
-    "Política": "Admins podem deletar logs antigos",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "system_logs",
-    "Política": "Admins podem ver todos os logs",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "system_logs",
-    "Política": "Anon não pode acessar logs",
-    "Comando": "ALL",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "system_logs",
-    "Política": "Gerentes podem ver logs de operadores",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "system_logs",
-    "Política": "Ninguém pode atualizar logs",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "system_logs",
-    "Política": "Service role acesso total",
-    "Comando": "ALL",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "system_logs",
-    "Política": "Sistema pode inserir logs",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "system_logs",
-    "Política": "Usuários podem ver seus próprios logs",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "system_settings",
-    "Política": "Admins podem deletar configurações",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "system_settings",
-    "Política": "Anon não pode modificar configurações",
-    "Comando": "ALL",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "system_settings",
-    "Política": "Anon pode ver configurações",
-    "Comando": "SELECT",
-    "Roles": "{anon}"
-  },
-  {
-    "Tabela": "system_settings",
-    "Política": "Apenas admins podem atualizar configurações",
-    "Comando": "UPDATE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "system_settings",
-    "Política": "Apenas admins podem criar configurações",
-    "Comando": "INSERT",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "system_settings",
-    "Política": "Ninguém pode deletar configurações",
-    "Comando": "DELETE",
-    "Roles": "{authenticated}"
-  },
-  {
-    "Tabela": "system_settings",
-    "Política": "Service role acesso total",
-    "Comando": "ALL",
-    "Roles": "{service_role}"
-  },
-  {
-    "Tabela": "system_settings",
-    "Política": "Usuários podem ver configurações do sistema",
-    "Comando": "SELECT",
-    "Roles": "{authenticated}"
+    "policies_json": [
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "budget_items",
+        "Comando": "INSERT",
+        "Política": "Usuários autenticados podem criar itens de orçamento",
+        "WITH_CHECK": "(budget_id IN ( SELECT budgets.id\n   FROM budgets\n  WHERE (budgets.created_by = auth.uid())))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "budget_items",
+        "Comando": "SELECT",
+        "Política": "Usuários autenticados podem ver itens de orçamento",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "((auth.uid() = created_by) OR (auth.uid() IN ( SELECT profiles.id\n   FROM profiles\n  WHERE (profiles.role = ANY (ARRAY['admin'::text, 'gerente'::text])))))",
+        "Tabela": "budgets",
+        "Comando": "UPDATE",
+        "Política": "Usuários autenticados podem atualizar orçamentos",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "budgets",
+        "Comando": "INSERT",
+        "Política": "Usuários autenticados podem criar orçamentos",
+        "WITH_CHECK": "(auth.uid() = created_by)"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "budgets",
+        "Comando": "SELECT",
+        "Política": "Usuários autenticados podem ver orçamentos",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "public"
+        ],
+        "USING": null,
+        "Tabela": "cashier_closing",
+        "Comando": "INSERT",
+        "Política": "Usuários autenticados podem criar fechamentos",
+        "WITH_CHECK": "(auth.role() = 'authenticated'::text)"
+      },
+      {
+        "Roles": [
+          "public"
+        ],
+        "USING": "(auth.role() = 'authenticated'::text)",
+        "Tabela": "cashier_closing",
+        "Comando": "SELECT",
+        "Política": "Usuários autenticados podem ver fechamentos",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "false",
+        "Tabela": "companies",
+        "Comando": "ALL",
+        "Política": "Anon não pode modificar empresa",
+        "WITH_CHECK": "false"
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "((status)::text = 'active'::text)",
+        "Tabela": "companies",
+        "Comando": "SELECT",
+        "Política": "Anon pode ver empresa",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "companies",
+        "Comando": "INSERT",
+        "Política": "Apenas admins podem criar empresa",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",
+        "Tabela": "companies",
+        "Comando": "UPDATE",
+        "Política": "Apenas admins podem editar empresa",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "false",
+        "Tabela": "companies",
+        "Comando": "DELETE",
+        "Política": "Apenas service_role pode deletar empresas",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "false",
+        "Tabela": "companies",
+        "Comando": "DELETE",
+        "Política": "Ninguém pode deletar empresa",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": "true",
+        "Tabela": "companies",
+        "Comando": "ALL",
+        "Política": "Service role acesso total",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": "true",
+        "Tabela": "companies",
+        "Comando": "ALL",
+        "Política": "Service role tem acesso total",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "anon",
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "companies",
+        "Comando": "SELECT",
+        "Política": "Todos podem ver empresas",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "companies",
+        "Comando": "UPDATE",
+        "Política": "Usuários autenticados podem atualizar empresas",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "companies",
+        "Comando": "INSERT",
+        "Política": "Usuários autenticados podem criar empresas",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "companies",
+        "Comando": "SELECT",
+        "Política": "Usuários podem ver dados da empresa",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "false",
+        "Tabela": "company_settings",
+        "Comando": "ALL",
+        "Política": "Anon não pode modificar configurações",
+        "WITH_CHECK": "false"
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "true",
+        "Tabela": "company_settings",
+        "Comando": "SELECT",
+        "Política": "Anon pode ver configurações públicas",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "company_settings",
+        "Comando": "INSERT",
+        "Política": "Apenas admins podem criar configuração",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",
+        "Tabela": "company_settings",
+        "Comando": "UPDATE",
+        "Política": "Apenas admins podem editar configurações",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "false",
+        "Tabela": "company_settings",
+        "Comando": "DELETE",
+        "Política": "Ninguém pode deletar configuração",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": "true",
+        "Tabela": "company_settings",
+        "Comando": "ALL",
+        "Política": "Service role acesso total",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": null,
+        "Tabela": "company_settings",
+        "Comando": "INSERT",
+        "Política": "Service role pode criar configuração inicial",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "company_settings",
+        "Comando": "SELECT",
+        "Política": "Usuários podem ver configurações",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text])))))",
+        "Tabela": "coupon_allowed_customers",
+        "Comando": "ALL",
+        "Política": "Admins e gerentes podem gerenciar associações",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text])))))"
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "false",
+        "Tabela": "coupon_allowed_customers",
+        "Comando": "ALL",
+        "Política": "Anon não pode acessar cupons permitidos",
+        "WITH_CHECK": "false"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",
+        "Tabela": "coupon_allowed_customers",
+        "Comando": "UPDATE",
+        "Política": "Apenas admins podem atualizar associações",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))"
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": "true",
+        "Tabela": "coupon_allowed_customers",
+        "Comando": "ALL",
+        "Política": "Service role acesso total",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "coupon_allowed_customers",
+        "Comando": "SELECT",
+        "Política": "Todos autenticados podem ver associações",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text])))))",
+        "Tabela": "coupons",
+        "Comando": "UPDATE",
+        "Política": "Admins e gerentes podem atualizar cupons",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text])))))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "coupons",
+        "Comando": "INSERT",
+        "Política": "Admins e gerentes podem criar cupons",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text])))))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",
+        "Tabela": "coupons",
+        "Comando": "DELETE",
+        "Política": "Admins podem deletar cupons",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "false",
+        "Tabela": "coupons",
+        "Comando": "ALL",
+        "Política": "Anon não pode modificar cupons",
+        "WITH_CHECK": "false"
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "((is_active = true) AND (deleted_at IS NULL))",
+        "Tabela": "coupons",
+        "Comando": "SELECT",
+        "Política": "Anon pode ver cupons ativos",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": "true",
+        "Tabela": "coupons",
+        "Comando": "ALL",
+        "Política": "Service role acesso total",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "coupons",
+        "Comando": "SELECT",
+        "Política": "Todos autenticados podem ver cupons",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "coupons",
+        "Comando": "INSERT",
+        "Política": "Validar limite de uso ao criar",
+        "WITH_CHECK": "(((usage_limit IS NULL) OR (usage_limit > 0)) AND ((max_discount IS NULL) OR (max_discount >= (0)::numeric)) AND ((min_purchase IS NULL) OR (min_purchase >= (0)::numeric)))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text])))))",
+        "Tabela": "customer_communications",
+        "Comando": "UPDATE",
+        "Política": "Admins e gerentes podem atualizar comunicações",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text])))))"
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "false",
+        "Tabela": "customer_communications",
+        "Comando": "ALL",
+        "Política": "Anon não pode acessar comunicações",
+        "WITH_CHECK": "false"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "customer_communications",
+        "Comando": "INSERT",
+        "Política": "Auto preencher sent_by",
+        "WITH_CHECK": "((sent_by = auth.uid()) OR (sent_by IS NULL))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "false",
+        "Tabela": "customer_communications",
+        "Comando": "DELETE",
+        "Política": "Ninguém pode deletar comunicações",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(((status)::text = 'sent'::text) OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text]))))))",
+        "Tabela": "customer_communications",
+        "Comando": "SELECT",
+        "Política": "Operadores veem apenas comunicações enviadas",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "((sent_by = auth.uid()) AND ((status)::text = ANY ((ARRAY['pending'::character varying, 'failed'::character varying])::text[])))",
+        "Tabela": "customer_communications",
+        "Comando": "UPDATE",
+        "Política": "Remetente pode atualizar status da sua comunicação",
+        "WITH_CHECK": "((sent_by = auth.uid()) AND ((status)::text = ANY ((ARRAY['sent'::character varying, 'failed'::character varying])::text[])))"
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": "true",
+        "Tabela": "customer_communications",
+        "Comando": "ALL",
+        "Política": "Service role acesso total",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "customer_communications",
+        "Comando": "INSERT",
+        "Política": "Usuários podem registrar comunicações",
+        "WITH_CHECK": "(((channel)::text = ANY ((ARRAY['email'::character varying, 'sms'::character varying, 'whatsapp'::character varying, 'phone'::character varying, 'push'::character varying, 'internal'::character varying])::text[])) AND ((status)::text = ANY ((ARRAY['pending'::character varying, 'sent'::character varying, 'failed'::character varying, 'cancelled'::character varying])::text[])))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "customer_communications",
+        "Comando": "SELECT",
+        "Política": "Usuários podem ver comunicações",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "false",
+        "Tabela": "customer_coupons",
+        "Comando": "ALL",
+        "Política": "Anon não pode acessar histórico de cupons",
+        "WITH_CHECK": "false"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",
+        "Tabela": "customer_coupons",
+        "Comando": "UPDATE",
+        "Política": "Apenas admins podem atualizar registro de uso",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "false",
+        "Tabela": "customer_coupons",
+        "Comando": "DELETE",
+        "Política": "Ninguém pode deletar histórico de cupons",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": "true",
+        "Tabela": "customer_coupons",
+        "Comando": "ALL",
+        "Política": "Service role acesso total",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "customer_coupons",
+        "Comando": "INSERT",
+        "Política": "Usuários podem registrar uso de cupons",
+        "WITH_CHECK": "((EXISTS ( SELECT 1\n   FROM coupons c\n  WHERE ((c.id = customer_coupons.coupon_id) AND (c.deleted_at IS NULL) AND (c.is_active = true) AND ((c.valid_from IS NULL) OR (c.valid_from <= now())) AND ((c.valid_to IS NULL) OR (c.valid_to >= now())) AND ((c.usage_limit IS NULL) OR (c.used_count < c.usage_limit))))) AND (EXISTS ( SELECT 1\n   FROM customers cust\n  WHERE (cust.id = customer_coupons.customer_id))) AND ((sale_id IS NULL) OR (EXISTS ( SELECT 1\n   FROM sales s\n  WHERE (s.id = customer_coupons.sale_id)))))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "customer_coupons",
+        "Comando": "SELECT",
+        "Política": "Usuários podem ver uso de cupons",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text])))))",
+        "Tabela": "customers",
+        "Comando": "SELECT",
+        "Política": "Admins e gerentes podem ver todos os clientes",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "false",
+        "Tabela": "customers",
+        "Comando": "ALL",
+        "Política": "Anon não pode acessar clientes",
+        "WITH_CHECK": "false"
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "((deleted_at IS NULL) AND ((status)::text = 'active'::text))",
+        "Tabela": "customers",
+        "Comando": "SELECT",
+        "Política": "Anon pode verificar se email existe",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(deleted_at IS NULL)",
+        "Tabela": "customers",
+        "Comando": "UPDATE",
+        "Política": "Apenas admins podem inativar clientes",
+        "WITH_CHECK": "\nCASE\n    WHEN ((status)::text = 'inactive'::text) THEN (EXISTS ( SELECT 1\n       FROM profiles\n      WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text])))))\n    ELSE true\nEND"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "false",
+        "Tabela": "customers",
+        "Comando": "DELETE",
+        "Política": "Ninguém pode deletar clientes fisicamente",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "public"
+        ],
+        "USING": "true",
+        "Tabela": "customers",
+        "Comando": "SELECT",
+        "Política": "Permitir select para todos",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": "true",
+        "Tabela": "customers",
+        "Comando": "ALL",
+        "Política": "Service role acesso total",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "((deleted_at IS NULL) AND ((status)::text = 'active'::text))",
+        "Tabela": "customers",
+        "Comando": "UPDATE",
+        "Política": "Usuários podem atualizar clientes ativos",
+        "WITH_CHECK": "((deleted_at IS NULL) AND ((status)::text = ANY ((ARRAY['active'::character varying, 'inactive'::character varying])::text[])))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "customers",
+        "Comando": "INSERT",
+        "Política": "Usuários podem cadastrar clientes",
+        "WITH_CHECK": "((deleted_at IS NULL) AND (email IS NOT NULL) AND (name IS NOT NULL))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "((deleted_at IS NULL) AND ((status)::text = 'active'::text))",
+        "Tabela": "customers",
+        "Comando": "SELECT",
+        "Política": "Usuários podem ver clientes ativos",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "public"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",
+        "Tabela": "login_attempts",
+        "Comando": "UPDATE",
+        "Política": "Admin pode atualizar tentativas",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "public"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",
+        "Tabela": "login_attempts",
+        "Comando": "SELECT",
+        "Política": "Admin pode ver tentativas",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "public"
+        ],
+        "USING": null,
+        "Tabela": "login_attempts",
+        "Comando": "INSERT",
+        "Política": "Sistema pode inserir tentativas",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text])))))",
+        "Tabela": "notifications",
+        "Comando": "SELECT",
+        "Política": "Admins e gerentes podem ver todas notificações",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",
+        "Tabela": "notifications",
+        "Comando": "DELETE",
+        "Política": "Admins podem deletar qualquer notificação",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",
+        "Tabela": "notifications",
+        "Comando": "UPDATE",
+        "Política": "Admins podem gerenciar todas notificações",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))"
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "false",
+        "Tabela": "notifications",
+        "Comando": "ALL",
+        "Política": "Anon não pode acessar notificações",
+        "WITH_CHECK": "false"
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": "true",
+        "Tabela": "notifications",
+        "Comando": "ALL",
+        "Política": "Service role acesso total",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "notifications",
+        "Comando": "INSERT",
+        "Política": "Sistema pode criar notificações",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text])))))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "((user_id = auth.uid()) AND (read = true))",
+        "Tabela": "notifications",
+        "Comando": "DELETE",
+        "Política": "Usuário pode deletar suas notificações",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "((user_id = auth.uid()) AND (read = false))",
+        "Tabela": "notifications",
+        "Comando": "UPDATE",
+        "Política": "Usuário pode marcar suas notificações como lidas",
+        "WITH_CHECK": "((user_id = auth.uid()) AND (read = true) AND (read_at IS NOT NULL))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(user_id = auth.uid())",
+        "Tabela": "notifications",
+        "Comando": "SELECT",
+        "Política": "Usuário vê apenas suas notificações",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "false",
+        "Tabela": "permissions",
+        "Comando": "ALL",
+        "Política": "Anon não pode modificar permissões",
+        "WITH_CHECK": "false"
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "true",
+        "Tabela": "permissions",
+        "Comando": "SELECT",
+        "Política": "Anon pode ver catálogo de permissões",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",
+        "Tabela": "permissions",
+        "Comando": "UPDATE",
+        "Política": "Apenas admins podem atualizar permissões",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "permissions",
+        "Comando": "INSERT",
+        "Política": "Apenas admins podem criar permissões",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",
+        "Tabela": "permissions",
+        "Comando": "DELETE",
+        "Política": "Apenas admins podem deletar permissões",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": "true",
+        "Tabela": "permissions",
+        "Comando": "ALL",
+        "Política": "Service role acesso total",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "permissions",
+        "Comando": "SELECT",
+        "Política": "Usuários podem ver catálogo de permissões",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "true",
+        "Tabela": "pix_charges",
+        "Comando": "SELECT",
+        "Política": "Anon pode ver status de cobrança",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "false",
+        "Tabela": "pix_charges",
+        "Comando": "DELETE",
+        "Política": "Ninguém pode deletar cobranças PIX",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": "true",
+        "Tabela": "pix_charges",
+        "Comando": "ALL",
+        "Política": "Service role acesso total",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "pix_charges",
+        "Comando": "UPDATE",
+        "Política": "Usuários podem atualizar cobranças PIX",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "pix_charges",
+        "Comando": "INSERT",
+        "Política": "Usuários podem criar cobranças PIX",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "pix_charges",
+        "Comando": "SELECT",
+        "Política": "Usuários podem ver cobranças PIX",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "false",
+        "Tabela": "product_entries",
+        "Comando": "ALL",
+        "Política": "Anon não pode acessar entradas",
+        "WITH_CHECK": "false"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text])))))",
+        "Tabela": "product_entries",
+        "Comando": "SELECT",
+        "Política": "Apenas admins e gerentes veem custos",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",
+        "Tabela": "product_entries",
+        "Comando": "UPDATE",
+        "Política": "Apenas admins podem atualizar entradas",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "product_entries",
+        "Comando": "INSERT",
+        "Política": "Auto preencher created_by",
+        "WITH_CHECK": "((created_by = auth.uid()) OR (created_by IS NULL))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "false",
+        "Tabela": "product_entries",
+        "Comando": "DELETE",
+        "Política": "Ninguém pode deletar entradas",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": "true",
+        "Tabela": "product_entries",
+        "Comando": "ALL",
+        "Política": "Service role acesso total",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "product_entries",
+        "Comando": "INSERT",
+        "Política": "Usuários com permissão podem registrar entradas",
+        "WITH_CHECK": "((EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text]))))) OR has_permission('products.manage_stock'::text))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "product_entries",
+        "Comando": "SELECT",
+        "Política": "Usuários podem ver entradas de produtos",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "product_entries",
+        "Comando": "INSERT",
+        "Política": "Validar dados da entrada",
+        "WITH_CHECK": "((quantity > (0)::numeric) AND (unit_cost >= (0)::numeric) AND (total_cost = (quantity * unit_cost)) AND (invoice_number IS NOT NULL) AND ((invoice_number)::text <> ''::text) AND ((expiration_date IS NULL) OR (expiration_date > manufacture_date)))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "((EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text]))))) OR (deleted_at IS NULL))",
+        "Tabela": "products",
+        "Comando": "SELECT",
+        "Política": "Admins e gerentes podem ver todos os produtos",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "anon",
+          "authenticated"
+        ],
+        "USING": "((deleted_at IS NULL) AND (is_active = true))",
+        "Tabela": "products",
+        "Comando": "SELECT",
+        "Política": "Todos podem ver produtos ativos",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "((EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text]))))) OR has_permission('products.update'::text))",
+        "Tabela": "products",
+        "Comando": "UPDATE",
+        "Política": "Usuários podem atualizar produtos",
+        "WITH_CHECK": "((EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text]))))) OR has_permission('products.update'::text))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "products",
+        "Comando": "INSERT",
+        "Política": "Usuários podem inserir produtos",
+        "WITH_CHECK": "((EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text]))))) OR has_permission('products.create'::text))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles profiles_1\n  WHERE ((profiles_1.id = auth.uid()) AND (profiles_1.role = 'admin'::text))))",
+        "Tabela": "profiles",
+        "Comando": "UPDATE",
+        "Política": "Admins atualizam qualquer perfil",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "profiles",
+        "Comando": "INSERT",
+        "Política": "Apenas admins criam perfis",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles profiles_1\n  WHERE ((profiles_1.id = auth.uid()) AND (profiles_1.role = 'admin'::text))))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "false",
+        "Tabela": "profiles",
+        "Comando": "DELETE",
+        "Política": "Ninguém deleta perfis",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": "true",
+        "Tabela": "profiles",
+        "Comando": "ALL",
+        "Política": "Service role acesso total profiles",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(id = auth.uid())",
+        "Tabela": "profiles",
+        "Comando": "UPDATE",
+        "Política": "Usuário atualiza seu perfil",
+        "WITH_CHECK": "(id = auth.uid())"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(id = auth.uid())",
+        "Tabela": "profiles",
+        "Comando": "SELECT",
+        "Política": "Usuário vê seu próprio perfil",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "profiles",
+        "Comando": "SELECT",
+        "Política": "Usuários veem todos os perfis",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "public"
+        ],
+        "USING": "(is_admin() OR (auth.uid() = id))",
+        "Tabela": "profiles",
+        "Comando": "SELECT",
+        "Política": "admin_can_view_all_documents",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "public"
+        ],
+        "USING": "(auth.uid() = id)",
+        "Tabela": "profiles",
+        "Comando": "UPDATE",
+        "Política": "users_can_update_own_profile",
+        "WITH_CHECK": "(auth.uid() = id)"
+      },
+      {
+        "Roles": [
+          "public"
+        ],
+        "USING": "(auth.uid() = id)",
+        "Tabela": "profiles",
+        "Comando": "SELECT",
+        "Política": "users_can_view_own_profile",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "public"
+        ],
+        "USING": "true",
+        "Tabela": "rate_limits",
+        "Comando": "ALL",
+        "Política": "Service role can manage rate limits",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "false",
+        "Tabela": "role_permissions",
+        "Comando": "ALL",
+        "Política": "Anon não pode modificar associações",
+        "WITH_CHECK": "false"
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "true",
+        "Tabela": "role_permissions",
+        "Comando": "SELECT",
+        "Política": "Anon pode ver permissões das roles",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "role_permissions",
+        "Comando": "INSERT",
+        "Política": "Apenas admins podem atribuir permissões",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",
+        "Tabela": "role_permissions",
+        "Comando": "UPDATE",
+        "Política": "Apenas admins podem atualizar associações",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",
+        "Tabela": "role_permissions",
+        "Comando": "DELETE",
+        "Política": "Apenas admins podem remover permissões",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": "true",
+        "Tabela": "role_permissions",
+        "Comando": "ALL",
+        "Política": "Service role acesso total",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "role_permissions",
+        "Comando": "SELECT",
+        "Política": "Usuários podem ver permissões das roles",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",
+        "Tabela": "sale_items",
+        "Comando": "DELETE",
+        "Política": "Admins podem remover qualquer item",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "((EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text]))))) AND (EXISTS ( SELECT 1\n   FROM sales s\n  WHERE ((s.id = sale_items.sale_id) AND ((s.status)::text = ANY ((ARRAY['pending'::character varying, 'open'::character varying])::text[]))))))",
+        "Tabela": "sale_items",
+        "Comando": "UPDATE",
+        "Política": "Apenas admins podem atualizar itens de venda",
+        "WITH_CHECK": "((EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text]))))) AND (quantity > (0)::numeric) AND (unit_price >= (0)::numeric) AND (total_price = (quantity * unit_price)))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "sale_items",
+        "Comando": "INSERT",
+        "Política": "Usuários podem inserir itens em vendas",
+        "WITH_CHECK": "((EXISTS ( SELECT 1\n   FROM sales s\n  WHERE ((s.id = sale_items.sale_id) AND ((s.status)::text = ANY ((ARRAY['pending'::character varying, 'open'::character varying])::text[]))))) AND (EXISTS ( SELECT 1\n   FROM products p\n  WHERE ((p.id = sale_items.product_id) AND (p.is_active = true) AND (p.deleted_at IS NULL)))) AND (quantity > (0)::numeric) AND (unit_price >= (0)::numeric) AND (total_price = (quantity * unit_price)))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "((EXISTS ( SELECT 1\n   FROM sales s\n  WHERE ((s.id = sale_items.sale_id) AND ((s.status)::text = ANY ((ARRAY['pending'::character varying, 'open'::character varying])::text[]))))) AND ((EXISTS ( SELECT 1\n   FROM sales s\n  WHERE ((s.id = sale_items.sale_id) AND (s.created_by = auth.uid())))) OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text])))))))",
+        "Tabela": "sale_items",
+        "Comando": "DELETE",
+        "Política": "Usuários podem remover itens de vendas pendentes",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "sale_items",
+        "Comando": "SELECT",
+        "Política": "Usuários podem ver itens de vendas",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "false",
+        "Tabela": "sales",
+        "Comando": "ALL",
+        "Política": "Anon não pode acessar vendas",
+        "WITH_CHECK": "false"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(((status)::text = 'pending'::text) AND (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text]))))))",
+        "Tabela": "sales",
+        "Comando": "UPDATE",
+        "Política": "Apenas admins podem aprovar vendas",
+        "WITH_CHECK": "(((status)::text = 'completed'::text) AND (approved_by = auth.uid()))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(((status)::text <> ALL ((ARRAY['cancelled'::character varying, 'refunded'::character varying])::text[])) AND (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text]))))))",
+        "Tabela": "sales",
+        "Comando": "UPDATE",
+        "Política": "Apenas admins podem cancelar vendas",
+        "WITH_CHECK": "(((status)::text = 'cancelled'::text) AND (cancelled_at IS NOT NULL) AND (cancelled_by = auth.uid()) AND (cancellation_reason IS NOT NULL))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "false",
+        "Tabela": "sales",
+        "Comando": "DELETE",
+        "Política": "Ninguém pode deletar vendas",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": "true",
+        "Tabela": "sales",
+        "Comando": "ALL",
+        "Política": "Service role acesso total",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(((status)::text <> ALL ((ARRAY['cancelled'::character varying, 'refunded'::character varying])::text[])) AND ((created_by = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text])))))))",
+        "Tabela": "sales",
+        "Comando": "UPDATE",
+        "Política": "Usuários podem atualizar vendas ativas",
+        "WITH_CHECK": "(((status)::text <> ALL ((ARRAY['cancelled'::character varying, 'refunded'::character varying])::text[])) AND ((created_by = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text])))))))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "sales",
+        "Comando": "INSERT",
+        "Política": "Usuários podem criar vendas",
+        "WITH_CHECK": "((created_by = auth.uid()) AND (total_amount >= (0)::numeric) AND (final_amount >= (0)::numeric) AND ((status)::text = ANY ((ARRAY['pending'::character varying, 'completed'::character varying])::text[])) AND ((payment_status)::text = ANY ((ARRAY['pending'::character varying, 'paid'::character varying, 'cancelled'::character varying])::text[])))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "sales",
+        "Comando": "SELECT",
+        "Política": "Usuários podem ver vendas",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "((EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text)))) AND ((status)::text = 'pending'::text))",
+        "Tabela": "stock_count_items",
+        "Comando": "DELETE",
+        "Política": "Admins podem deletar itens",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "false",
+        "Tabela": "stock_count_items",
+        "Comando": "ALL",
+        "Política": "Anon não pode acessar itens de contagem",
+        "WITH_CHECK": "false"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "false",
+        "Tabela": "stock_count_items",
+        "Comando": "DELETE",
+        "Política": "Ninguém pode deletar itens de contagem",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": "true",
+        "Tabela": "stock_count_items",
+        "Comando": "ALL",
+        "Política": "Service role acesso total",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "stock_count_items",
+        "Comando": "INSERT",
+        "Política": "Usuários com permissão podem adicionar itens",
+        "WITH_CHECK": "((EXISTS ( SELECT 1\n   FROM stock_count_sessions scs\n  WHERE ((scs.id = stock_count_items.count_session_id) AND ((scs.status)::text = 'open'::text)))) AND ((EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text]))))) OR has_permission('inventory.adjust'::text)))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "((EXISTS ( SELECT 1\n   FROM stock_count_sessions scs\n  WHERE ((scs.id = stock_count_items.count_session_id) AND ((scs.status)::text = 'open'::text)))) AND ((status)::text = ANY ((ARRAY['pending'::character varying, 'in_progress'::character varying])::text[])))",
+        "Tabela": "stock_count_items",
+        "Comando": "UPDATE",
+        "Política": "Usuários podem atualizar itens em contagem",
+        "WITH_CHECK": "((EXISTS ( SELECT 1\n   FROM stock_count_sessions scs\n  WHERE ((scs.id = stock_count_items.count_session_id) AND ((scs.status)::text = 'open'::text)))) AND ((counted_quantity IS NULL) OR (counted_quantity >= (0)::numeric)) AND (((status)::text <> 'counted'::text) OR ((counted_quantity IS NOT NULL) AND (counted_by IS NOT NULL) AND (counted_at IS NOT NULL))))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(((status)::text = ANY ((ARRAY['pending'::character varying, 'in_progress'::character varying])::text[])) AND (EXISTS ( SELECT 1\n   FROM stock_count_sessions scs\n  WHERE ((scs.id = stock_count_items.count_session_id) AND ((scs.status)::text = 'open'::text)))))",
+        "Tabela": "stock_count_items",
+        "Comando": "UPDATE",
+        "Política": "Usuários podem finalizar contagem de item",
+        "WITH_CHECK": "(((status)::text = 'counted'::text) AND (counted_quantity IS NOT NULL) AND (counted_by = auth.uid()) AND (counted_at IS NOT NULL) AND (difference = (COALESCE(counted_quantity, (0)::numeric) - system_quantity)))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "stock_count_items",
+        "Comando": "SELECT",
+        "Política": "Usuários podem ver itens de contagem",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "((EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text)))) AND ((status)::text = 'cancelled'::text) AND (cancelled_at < (now() - '30 days'::interval)))",
+        "Tabela": "stock_count_sessions",
+        "Comando": "DELETE",
+        "Política": "Admins podem deletar sessões canceladas",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "false",
+        "Tabela": "stock_count_sessions",
+        "Comando": "ALL",
+        "Política": "Anon não pode acessar sessões de contagem",
+        "WITH_CHECK": "false"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(((status)::text = 'in_progress'::text) AND (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text]))))))",
+        "Tabela": "stock_count_sessions",
+        "Comando": "UPDATE",
+        "Política": "Apenas admins podem cancelar sessões",
+        "WITH_CHECK": "(((status)::text = 'cancelled'::text) AND (cancelled_at IS NOT NULL) AND (cancelled_by = auth.uid()))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "false",
+        "Tabela": "stock_count_sessions",
+        "Comando": "DELETE",
+        "Política": "Ninguém pode deletar sessões de contagem",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": "true",
+        "Tabela": "stock_count_sessions",
+        "Comando": "ALL",
+        "Política": "Service role acesso total",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "stock_count_sessions",
+        "Comando": "INSERT",
+        "Política": "Usuários com permissão podem criar sessões",
+        "WITH_CHECK": "(((EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text]))))) OR has_permission('inventory.adjust'::text)) AND (created_by = auth.uid()) AND (name IS NOT NULL) AND ((name)::text <> ''::text) AND (responsible IS NOT NULL) AND ((status)::text = 'in_progress'::text))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(((status)::text = 'in_progress'::text) AND ((created_by = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text])))))))",
+        "Tabela": "stock_count_sessions",
+        "Comando": "UPDATE",
+        "Política": "Usuários podem atualizar sessões em andamento",
+        "WITH_CHECK": "((status)::text = ANY ((ARRAY['in_progress'::character varying, 'completed'::character varying, 'cancelled'::character varying])::text[]))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(((status)::text = 'in_progress'::text) AND ((created_by = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text])))))))",
+        "Tabela": "stock_count_sessions",
+        "Comando": "UPDATE",
+        "Política": "Usuários podem finalizar sessões",
+        "WITH_CHECK": "(((status)::text = 'completed'::text) AND (completed_at IS NOT NULL) AND (completed_by = auth.uid()))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "stock_count_sessions",
+        "Comando": "SELECT",
+        "Política": "Usuários podem ver sessões de contagem",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "((EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text)))) AND ((reference_type)::text = 'manual'::text) AND (created_at > (now() - '01:00:00'::interval)))",
+        "Tabela": "stock_movements",
+        "Comando": "DELETE",
+        "Política": "Admins podem deletar movimentações manuais",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "false",
+        "Tabela": "stock_movements",
+        "Comando": "ALL",
+        "Política": "Anon não pode acessar movimentações",
+        "WITH_CHECK": "false"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "false",
+        "Tabela": "stock_movements",
+        "Comando": "UPDATE",
+        "Política": "Ninguém pode atualizar movimentações",
+        "WITH_CHECK": "false"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "false",
+        "Tabela": "stock_movements",
+        "Comando": "DELETE",
+        "Política": "Ninguém pode deletar movimentações",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": "true",
+        "Tabela": "stock_movements",
+        "Comando": "ALL",
+        "Política": "Service role acesso total",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "stock_movements",
+        "Comando": "INSERT",
+        "Política": "Sistema e autorizados podem registrar movimentações",
+        "WITH_CHECK": "((((reference_type)::text = ANY ((ARRAY['sale'::character varying, 'product_entry'::character varying, 'stock_count'::character varying, 'adjustment'::character varying])::text[])) AND (created_by IS NOT NULL)) OR (((reference_type)::text = 'manual'::text) AND ((EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'manager'::text]))))) OR has_permission('inventory.adjust'::text)) AND (quantity <> (0)::numeric) AND (quantity_before >= (0)::numeric) AND (quantity_after >= (0)::numeric) AND ((quantity_after - quantity_before) = quantity) AND (created_by = auth.uid())))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "stock_movements",
+        "Comando": "SELECT",
+        "Política": "Usuários podem ver movimentações de estoque",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "((EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text)))) AND (created_at < (now() - '90 days'::interval)))",
+        "Tabela": "system_logs",
+        "Comando": "DELETE",
+        "Política": "Admins podem deletar logs antigos",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",
+        "Tabela": "system_logs",
+        "Comando": "SELECT",
+        "Política": "Admins podem ver todos os logs",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "false",
+        "Tabela": "system_logs",
+        "Comando": "ALL",
+        "Política": "Anon não pode acessar logs",
+        "WITH_CHECK": "false"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "((EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'manager'::text)))) AND ((user_role <> 'admin'::text) OR (user_id = auth.uid())))",
+        "Tabela": "system_logs",
+        "Comando": "SELECT",
+        "Política": "Gerentes podem ver logs de operadores",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "false",
+        "Tabela": "system_logs",
+        "Comando": "UPDATE",
+        "Política": "Ninguém pode atualizar logs",
+        "WITH_CHECK": "false"
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": "true",
+        "Tabela": "system_logs",
+        "Comando": "ALL",
+        "Política": "Service role acesso total",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "system_logs",
+        "Comando": "INSERT",
+        "Política": "Sistema pode inserir logs",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(user_id = auth.uid())",
+        "Tabela": "system_logs",
+        "Comando": "SELECT",
+        "Política": "Usuários podem ver seus próprios logs",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",
+        "Tabela": "system_settings",
+        "Comando": "DELETE",
+        "Política": "Admins podem deletar configurações",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "false",
+        "Tabela": "system_settings",
+        "Comando": "ALL",
+        "Política": "Anon não pode modificar configurações",
+        "WITH_CHECK": "false"
+      },
+      {
+        "Roles": [
+          "anon"
+        ],
+        "USING": "true",
+        "Tabela": "system_settings",
+        "Comando": "SELECT",
+        "Política": "Anon pode ver configurações",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",
+        "Tabela": "system_settings",
+        "Comando": "UPDATE",
+        "Política": "Apenas admins podem atualizar configurações",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "system_settings",
+        "Comando": "INSERT",
+        "Política": "Apenas admins podem criar configurações",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "false",
+        "Tabela": "system_settings",
+        "Comando": "DELETE",
+        "Política": "Ninguém pode deletar configurações",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "service_role"
+        ],
+        "USING": "true",
+        "Tabela": "system_settings",
+        "Comando": "ALL",
+        "Política": "Service role acesso total",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "system_settings",
+        "Comando": "SELECT",
+        "Política": "Usuários podem ver configurações do sistema",
+        "WITH_CHECK": null
+      }
+    ]
   }
 ]

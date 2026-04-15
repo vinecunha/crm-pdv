@@ -12,7 +12,8 @@ const CouponCustomersModal = ({
   setAllowedCustomers,
   customers,
   onAddCustomer,
-  onRemoveCustomer 
+  onRemoveCustomer,
+  loading  
 }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredCustomers, setFilteredCustomers] = useState([])
@@ -72,7 +73,7 @@ const CouponCustomersModal = ({
                   <Button
                     size="sm"
                     variant={isAllowed ? 'outline' : 'primary'}
-                    disabled={isAllowed}
+                    disabled={isAllowed || loading} 
                     onClick={() => onAddCustomer(customer)}
                   >
                     {isAllowed ? 'Já adicionado' : 'Adicionar'}
@@ -100,6 +101,7 @@ const CouponCustomersModal = ({
                   <button
                     onClick={() => onRemoveCustomer(ac.customer_id)}
                     className="text-red-600 hover:text-red-800 p-1"
+                    disabled={loading}
                   >
                     <UserMinus size={18} />
                   </button>

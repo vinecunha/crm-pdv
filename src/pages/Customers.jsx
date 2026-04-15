@@ -6,30 +6,33 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useReactQuery } from '../hooks/useReactQuery'
 import useSystemLogs from '../hooks/useSystemLogs'
-
-
-import * as customerService from '../services/customerService'
+import { supabase } from '../lib/supabase'
 
 import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
 import FeedbackMessage from '../components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
 import DataEmptyState from '../components/ui/DataEmptyState'
+import ConfirmModal from '../components/ui/ConfirmModal'
+import CampaignModal from '../components/customers/CampaignModal'
+import RFVLegend from '../components/customers/RFVLegend'
 
 import CustomerForm from '../components/customers/CustomerForm'
 import CustomerDeleteModal from '../components/customers/CustomerDeleteModal'
 import CustomerTable from '../components/customers/CustomerTable'
 import CustomerFilters from '../components/customers/CustomerFilters'
 
+import * as customerService from '../services/customerService'
+
 // ============= Componente Principal =============
 const Customers = () => {
-  const { profile } = useAuth()
+  const { profile, user } = useAuth()
   const { logCreate, logUpdate, logDelete, logError, logAction } = useSystemLogs()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { invalidateQueries } = useReactQuery()
   
-  // Estado local
+  // Estado local - Clientes
   const [searchTerm, setSearchTerm] = useState('')
   const [activeFilters, setActiveFilters] = useState({})
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -41,6 +44,11 @@ const Customers = () => {
   })
   const [formErrors, setFormErrors] = useState({})
   const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
+
+  // Estado local - Campanhas
+  const [showCampaignModal, setShowCampaignModal] = useState(false)
+  const [showBirthdayConfirmModal, setShowBirthdayConfirmModal] = useState(false)
+  const [campaignLoading, setCampaignLoading] = useState(false)
 
   // ============= Queries =============
   const { 
@@ -83,7 +91,7 @@ const Customers = () => {
     return filtered
   }, [customers, searchTerm, activeFilters])
 
-  // ============= Mutations =============
+  // ============= Mutations - Clientes =============
   const createMutation = useMutation({
     mutationFn: customerService.createCustomer,
     onSuccess: async (data) => {
@@ -138,7 +146,7 @@ const Customers = () => {
     })
   }, [])
 
-  // ============= Handlers =============
+  // ============= Handlers - Clientes =============
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
@@ -202,6 +210,198 @@ const Customers = () => {
     deleteMutation.mutate(selectedCustomer.id)
   }
 
+  // ============= Handlers - Campanhas =============
+  
+  /**
+   * Função chamada quando o usuário clica no botão de campanha na tabela
+   */
+  const handleSendCampaign = (customer) => {
+    setSelectedCustomer(customer)
+    
+    // Verificar se é aniversariante
+    const today = new Date()
+    const birth = customer.birth_date ? new Date(customer.birth_date) : null
+    const isBirthday = birth && 
+      birth.getMonth() === today.getMonth() && 
+      birth.getDate() === today.getDate()
+    
+    if (isBirthday) {
+      // Abrir modal de confirmação para aniversariante
+      setShowBirthdayConfirmModal(true)
+    } else {
+      // Abrir modal de campanha normal (para inativos/VIP)
+      setShowCampaignModal(true)
+    }
+  }
+
+  /**
+   * Enviar campanha de aniversário (com cupom de 10% OFF)
+   */
+  const handleSendBirthdayCampaign = async () => {
+    if (!selectedCustomer) return
+    
+    setCampaignLoading(true)
+    try {
+      // 1. Buscar ou criar cupom de aniversário
+      const { data: birthdayCoupon } = await supabase
+        .from('coupons')
+        .select('*')
+        .eq('code', 'ANIVERSARIO')
+        .single()
+      
+      let couponId = birthdayCoupon?.id
+      
+      if (!birthdayCoupon) {
+        // Criar cupom de aniversário se não existir
+        const { data: newCoupon } = await supabase
+          .from('coupons')
+          .insert({
+            code: 'ANIVERSARIO',
+            name: 'Cupom de Aniversário',
+            description: '10% de desconto para aniversariantes',
+            discount_type: 'percent',
+            discount_value: 10,
+            max_discount: 50,
+            min_purchase: 50,
+            is_global: false,
+            is_active: true,
+            usage_limit: 1,
+            valid_from: new Date().toISOString(),
+            valid_to: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            created_by: user?.id
+          })
+          .select()
+          .single()
+        
+        couponId = newCoupon?.id
+      }
+      
+      // 2. Associar cupom ao cliente
+      if (couponId) {
+        await supabase
+          .from('coupon_allowed_customers')
+          .upsert({
+            coupon_id: couponId,
+            customer_id: selectedCustomer.id
+          }, { onConflict: 'coupon_id,customer_id' })
+      }
+      
+      // 3. Registrar comunicação
+      await supabase
+        .from('customer_communications')
+        .insert({
+          customer_id: selectedCustomer.id,
+          channel: 'whatsapp',
+          subject: 'Feliz Aniversário! 🎉',
+          content: `Olá ${selectedCustomer.name}, feliz aniversário! 🎂\n\nComo presente, você ganhou um cupom de 10% OFF para usar em sua próxima compra!\n\nCupom: ANIVERSARIO\nValidade: 30 dias\n\nAproveite!`,
+          status: 'sent',
+          sent_by: user?.id
+        })
+      
+      // 4. Criar notificação
+      await supabase.rpc('create_notification', {
+        p_user_id: user?.id,
+        p_title: '🎂 Campanha de Aniversário',
+        p_message: `Cupom ANIVERSARIO enviado para ${selectedCustomer.name}`,
+        p_type: 'success',
+        p_entity_type: 'customer',
+        p_entity_id: selectedCustomer.id.toString()
+      })
+      
+      await logAction({
+        action: 'SEND_BIRTHDAY_CAMPAIGN',
+        entityType: 'customer',
+        entityId: selectedCustomer.id,
+        details: { 
+          customer_name: selectedCustomer.name, 
+          coupon: 'ANIVERSARIO' 
+        }
+      })
+      
+      showFeedback('success', `🎉 Campanha de aniversário enviada para ${selectedCustomer.name}!`)
+      
+    } catch (error) {
+      console.error('Erro ao enviar campanha de aniversário:', error)
+      showFeedback('error', 'Erro ao enviar campanha: ' + error.message)
+      await logError('customer', error, { action: 'send_birthday_campaign' })
+    } finally {
+      setCampaignLoading(false)
+      setShowBirthdayConfirmModal(false)
+      setSelectedCustomer(null)
+    }
+  }
+
+  /**
+   * Enviar campanha personalizada (para inativos/VIP)
+   */
+  const handleSendCustomCampaign = async (message, couponCode) => {
+    if (!selectedCustomer) return
+    
+    setCampaignLoading(true)
+    try {
+      // 1. Se tiver cupom, associar ao cliente
+      if (couponCode) {
+        const { data: coupon } = await supabase
+          .from('coupons')
+          .select('id')
+          .eq('code', couponCode)
+          .single()
+        
+        if (coupon) {
+          await supabase
+            .from('coupon_allowed_customers')
+            .upsert({
+              coupon_id: coupon.id,
+              customer_id: selectedCustomer.id
+            }, { onConflict: 'coupon_id,customer_id' })
+        }
+      }
+      
+      // 2. Registrar comunicação
+      await supabase
+        .from('customer_communications')
+        .insert({
+          customer_id: selectedCustomer.id,
+          channel: 'whatsapp',
+          subject: 'Oferta Especial 💙',
+          content: message,
+          status: 'sent',
+          sent_by: user?.id
+        })
+      
+      // 3. Criar notificação
+      await supabase.rpc('create_notification', {
+        p_user_id: user?.id,
+        p_title: '📧 Campanha Enviada',
+        p_message: `Campanha enviada para ${selectedCustomer.name}`,
+        p_type: 'success',
+        p_entity_type: 'customer',
+        p_entity_id: selectedCustomer.id.toString()
+      })
+      
+      await logAction({
+        action: 'SEND_CAMPAIGN',
+        entityType: 'customer',
+        entityId: selectedCustomer.id,
+        details: { 
+          customer_name: selectedCustomer.name, 
+          coupon: couponCode || 'nenhum' 
+        }
+      })
+      
+      showFeedback('success', `✅ Campanha enviada para ${selectedCustomer.name}!`)
+      
+    } catch (error) {
+      console.error('Erro ao enviar campanha:', error)
+      showFeedback('error', 'Erro ao enviar campanha: ' + error.message)
+      await logError('customer', error, { action: 'send_campaign' })
+    } finally {
+      setCampaignLoading(false)
+      setShowCampaignModal(false)
+      setSelectedCustomer(null)
+    }
+  }
+
   const isMutating = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending
 
   // ============= Render =============
@@ -235,17 +435,28 @@ const Customers = () => {
               )}
             </p>
           </div>
-          <Button onClick={() => handleOpenModal()} icon={UserPlus} disabled={isMutating}>
-            Novo Cliente
-          </Button>
+          <div className="flex items-center gap-3">
+              <RFVLegend /> {/* <- Adicione aqui */}
+              <Button onClick={() => handleOpenModal()} icon={UserPlus} disabled={isMutating}>
+                Novo Cliente
+              </Button>
+            </div>
         </div>
 
         {feedback.show && (
-          <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />
+          <FeedbackMessage 
+            type={feedback.type} 
+            message={feedback.message} 
+            onClose={() => setFeedback({ show: false })} 
+          />
         )}
 
         <div className="mb-6">
-          <CustomerFilters searchTerm={searchTerm} setSearchTerm={setSearchTerm} onFilterChange={setActiveFilters} />
+          <CustomerFilters 
+            searchTerm={searchTerm} 
+            setSearchTerm={setSearchTerm} 
+            onFilterChange={setActiveFilters} 
+          />
         </div>
 
         {filteredCustomers.length === 0 ? (
@@ -260,21 +471,73 @@ const Customers = () => {
             onEdit={handleOpenModal} 
             onDelete={(c) => { setSelectedCustomer(c); setIsDeleteModalOpen(true) }} 
             onCommunicate={(c) => navigate(`/customers/${c.id}/communication`)} 
+            onSendCampaign={handleSendCampaign}
           />
         )}
 
-        <Modal isOpen={isModalOpen} onClose={() => !isMutating && setIsModalOpen(false)} title={selectedCustomer ? 'Editar Cliente' : 'Novo Cliente'} size="lg">
+        {/* Modal de Cadastro/Edição */}
+        <Modal 
+          isOpen={isModalOpen} 
+          onClose={() => !isMutating && setIsModalOpen(false)} 
+          title={selectedCustomer ? 'Editar Cliente' : 'Novo Cliente'} 
+          size="lg"
+        >
           <CustomerForm 
-            formData={formData} formErrors={formErrors} 
-            onChange={(e) => { const { name, value } = e.target; setFormData(prev => ({ ...prev, [name]: value })) }} 
-            onSubmit={handleSubmit} onCancel={() => setIsModalOpen(false)} 
-            isSubmitting={createMutation.isPending || updateMutation.isPending} isEditing={!!selectedCustomer} 
+            formData={formData} 
+            formErrors={formErrors} 
+            onChange={(e) => { 
+              const { name, value } = e.target
+              setFormData(prev => ({ ...prev, [name]: value })) 
+            }} 
+            onSubmit={handleSubmit} 
+            onCancel={() => setIsModalOpen(false)} 
+            isSubmitting={createMutation.isPending || updateMutation.isPending} 
+            isEditing={!!selectedCustomer} 
           />
         </Modal>
 
+        {/* Modal de Exclusão */}
         <CustomerDeleteModal 
-          isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} 
-          customer={selectedCustomer} onConfirm={handleDelete} isSubmitting={deleteMutation.isPending} 
+          isOpen={isDeleteModalOpen} 
+          onClose={() => setIsDeleteModalOpen(false)} 
+          customer={selectedCustomer} 
+          onConfirm={handleDelete} 
+          isSubmitting={deleteMutation.isPending} 
+        />
+
+        {/* Modal de Confirmação - Aniversariante */}
+        <ConfirmModal
+          isOpen={showBirthdayConfirmModal}
+          onClose={() => {
+            setShowBirthdayConfirmModal(false)
+            setSelectedCustomer(null)
+          }}
+          onConfirm={handleSendBirthdayCampaign}
+          title="🎂 Campanha de Aniversário"
+          message={
+            <div className="space-y-2">
+              <p>Deseja enviar um cupom de <strong>10% OFF</strong> para <strong>{selectedCustomer?.name}</strong>?</p>
+              <p className="text-sm text-gray-500">
+                O cliente receberá o cupom <strong>ANIVERSARIO</strong> válido por 30 dias.
+              </p>
+            </div>
+          }
+          confirmText="Enviar Cupom"
+          cancelText="Cancelar"
+          variant="success"
+          loading={campaignLoading}
+        />
+
+        {/* Modal de Campanha Personalizada */}
+        <CampaignModal
+          isOpen={showCampaignModal}
+          onClose={() => {
+            setShowCampaignModal(false)
+            setSelectedCustomer(null)
+          }}
+          onSend={handleSendCustomCampaign}
+          customer={selectedCustomer}
+          loading={campaignLoading}
         />
       </div>
     </div>

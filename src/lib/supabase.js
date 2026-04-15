@@ -9,7 +9,19 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     detectSessionInUrl: true,
     storageKey: 'brasalino-auth-token'
-  }
+  },
+  global: {
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    },
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
 })
 
 if (import.meta.env.DEV) {

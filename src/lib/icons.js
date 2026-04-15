@@ -76,6 +76,7 @@ export {
   Truck,
   Minus,
   Smartphone,
+  Send,
   HelpCircle,
 } from 'lucide-react'
 
@@ -127,5 +128,10 @@ export {
   AtSign,
   Snowflake,
   Sun,
-  ShieldCheck
+  ShieldCheck,
+  MessageSquare,
+  Pen,
+  Power,
+  CheckSquare,
+  Square
 } from 'lucide-react'

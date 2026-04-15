@@ -222,6 +222,7 @@ create table public.customer_communications (
   sent_by uuid null,
   created_at timestamp with time zone null default now(),
   updated_at timestamp with time zone null default now(),
+  details jsonb null,
   constraint customer_communications_pkey primary key (id),
   constraint customer_communications_customer_id_fkey foreign KEY (customer_id) references customers (id) on delete CASCADE,
   constraint customer_communications_sent_by_fkey foreign KEY (sent_by) references auth.users (id)
@@ -232,6 +233,8 @@ create index IF not exists idx_customer_communications_customer_id on public.cus
 create index IF not exists idx_customer_communications_channel on public.customer_communications using btree (channel) TABLESPACE pg_default;
 
 create index IF not exists idx_customer_communications_created_at on public.customer_communications using btree (created_at desc) TABLESPACE pg_default;
+
+create index IF not exists idx_customer_communications_details on public.customer_communications using gin (details) TABLESPACE pg_default;
 
 create trigger update_customer_communications_updated_at BEFORE
 update on customer_communications for EACH row
@@ -270,6 +273,10 @@ create table public.customers (
   updated_at timestamp with time zone null default now(),
   deleted_at timestamp with time zone null,
   deleted_by uuid null,
+  rfv_score character(3) null,
+  rfv_recency integer null,
+  rfv_frequency integer null,
+  rfv_monetary numeric(10, 2) null,
   constraint customers_pkey primary key (id),
   constraint customers_email_key unique (email),
   constraint customers_deleted_by_fkey foreign KEY (deleted_by) references auth.users (id),

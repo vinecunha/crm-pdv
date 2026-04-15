@@ -1,11 +1,22 @@
 import { supabase } from '../lib/supabase'
 import { sanitizeObject } from '../utils/sanitize'
+import logger from '../utils/logger'
 
 /**
- * Buscar todos os cupons
+ * Buscar todos os cupons - COM FORÇA DE REFRESH
  */
-export const fetchCoupons = async (searchTerm = '', filters = {}) => {
-  let query = supabase.from('coupons').select('*').order('created_at', { ascending: false })
+export const fetchCoupons = async (searchTerm = '', filters = {}, forceRefresh = false) => {
+  logger.log('🔄 [couponService] Buscando cupons', { searchTerm, filters, forceRefresh })
+  
+  let query = supabase
+    .from('coupons')
+    .select('*')
+    .order('created_at', { ascending: false })
+  
+  // ✅ Se forceRefresh = true, adiciona um parâmetro único para quebrar cache
+  if (forceRefresh) {
+    query = query.limit(1000).order('created_at', { ascending: false })
+  }
   
   if (searchTerm?.trim()) {
     query = query.or(`code.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%`)
@@ -21,7 +32,35 @@ export const fetchCoupons = async (searchTerm = '', filters = {}) => {
   }
   
   const { data, error } = await query
-  if (error) throw error
+  
+  if (error) {
+    logger.error('❌ [couponService] Erro ao buscar cupons', { error: error.message })
+    throw error
+  }
+  
+  logger.log('✅ [couponService] Cupons encontrados:', data?.length || 0)
+  return data || []
+}
+
+/**
+ * Buscar cupons ativos (para o CampaignModal)
+ */
+export const fetchActiveCoupons = async () => {
+  logger.log('🔄 [couponService] Buscando cupons ativos')
+  
+  const { data, error } = await supabase
+    .from('coupons')
+    .select('*')
+    .eq('is_active', true)
+    .gte('valid_to', new Date().toISOString())
+    .order('code')
+  
+  if (error) {
+    logger.error('❌ [couponService] Erro ao buscar cupons ativos', { error: error.message })
+    throw error
+  }
+  
+  logger.log('✅ [couponService] Cupons ativos encontrados:', data?.length || 0)
   return data || []
 }
 
@@ -112,11 +151,23 @@ export const updateCoupon = async (id, couponData, allowedCustomers, profile) =>
 /**
  * Excluir cupom
  */
-export const deleteCoupon = async (id) => {
-  const { error } = await supabase.from('coupons').delete().eq('id', id)
-  if (error) throw error
-  return id
-}
+  export const deleteCoupon = async (id) => {
+    logger.log('🗑️ deleteCoupon chamado com ID:', id)
+    
+    const { data, error } = await supabase
+      .from('coupons')
+      .delete()
+      .eq('id', id)
+      .select()
+    
+    if (error) {
+      logger.error('❌ Erro no deleteCoupon:', error)
+      throw error
+    }
+    
+    logger.log('✅ deleteCoupon sucesso:', data)
+    return data
+  }
 
 /**
  * Alternar status do cupom
