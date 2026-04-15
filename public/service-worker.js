@@ -1,11 +1,12 @@
+// public/service-worker.js
 const logger = {
   log: (...args) => console.log('[SW]', ...args),
   warn: (...args) => console.warn('[SW]', ...args),
   error: (...args) => console.error('[SW]', ...args),
 }
 
-const CACHE_NAME = 'pdv-cache-v1';
-const API_CACHE_NAME = 'pdv-api-cache-v1';
+const CACHE_NAME = 'pdv-cache-v2'; // ✅ Versão incrementada para forçar atualização
+const API_CACHE_NAME = 'pdv-api-cache-v2';
 
 // Recursos para cache offline
 const STATIC_ASSETS = [
@@ -13,7 +14,8 @@ const STATIC_ASSETS = [
   '/index.html',
   '/manifest.json',
   '/favicon.ico',
-  '/logomarca.png'
+  '/logomarca.png',
+  '/offline.html'
 ];
 
 // Instalar - Cache inicial
@@ -52,7 +54,13 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
-  // Estratégia para API do Supabase
+  // ✅ CORREÇÃO: NÃO interceptar requisições POST, PUT, PATCH, DELETE
+  if (event.request.method !== 'GET') {
+    logger.log('📤 Requisição', event.request.method, 'deixando passar para rede:', url.pathname);
+    return; // Deixa o navegador lidar diretamente
+  }
+  
+  // Estratégia para API do Supabase (apenas GET)
   if (url.pathname.startsWith('/rest/v1/')) {
     event.respondWith(handleApiRequest(event.request));
   } 
@@ -68,9 +76,11 @@ async function handleApiRequest(request) {
     // Tentar buscar da rede primeiro
     const networkResponse = await fetch(request);
     
-    // Salvar no cache para uso offline
-    const cache = await caches.open(API_CACHE_NAME);
-    await cache.put(request, networkResponse.clone());
+    // Só cachear respostas bem-sucedidas (GET)
+    if (networkResponse.ok) {
+      const cache = await caches.open(API_CACHE_NAME);
+      await cache.put(request, networkResponse.clone());
+    }
     
     return networkResponse;
   } catch (error) {
@@ -104,7 +114,9 @@ async function handleStaticRequest(request) {
   if (cachedResponse) {
     // Atualizar cache em background
     fetch(request).then((networkResponse) => {
-      cache.put(request, networkResponse);
+      if (networkResponse.ok) {
+        cache.put(request, networkResponse);
+      }
     }).catch(() => {});
     
     return cachedResponse;
@@ -113,7 +125,9 @@ async function handleStaticRequest(request) {
   // Não tem cache - buscar da rede
   try {
     const networkResponse = await fetch(request);
-    await cache.put(request, networkResponse.clone());
+    if (networkResponse.ok) {
+      await cache.put(request, networkResponse.clone());
+    }
     return networkResponse;
   } catch (error) {
     // Offline e sem cache - página offline
@@ -153,7 +167,7 @@ async function syncPendingSales() {
           logger.log(`✅ Venda ${sale.id} sincronizada`);
         }
       } catch (error) {
-        console.error(`❌ Erro ao sincronizar venda ${sale.id}:`, error);
+        logger.error(`❌ Erro ao sincronizar venda ${sale.id}:`, error);
       }
     }
     
@@ -167,12 +181,12 @@ async function syncPendingSales() {
     });
     
   } catch (error) {
-    console.error('❌ Erro na sincronização:', error);
+    logger.error('❌ Erro na sincronização:', error);
   }
 }
 
-// Helpers para IndexedDB (simplificados)
-async function openDatabase() {
+// Helpers para IndexedDB
+function openDatabase() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('pdv-offline-db', 1);
     
@@ -188,7 +202,7 @@ async function openDatabase() {
   });
 }
 
-async function getPendingSales(db) {
+function getPendingSales(db) {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(['pendingSales'], 'readonly');
     const store = transaction.objectStore('pendingSales');
@@ -199,7 +213,7 @@ async function getPendingSales(db) {
   });
 }
 
-async function markAsSynced(db, id) {
+function markAsSynced(db, id) {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(['pendingSales'], 'readwrite');
     const store = transaction.objectStore('pendingSales');

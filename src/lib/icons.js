@@ -124,4 +124,8 @@ export {
   Zap,
   MessageCircle,
   UserMinus,
+  AtSign,
+  Snowflake,
+  Sun,
+  ShieldCheck
 } from 'lucide-react'

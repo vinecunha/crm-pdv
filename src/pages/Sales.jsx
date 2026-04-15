@@ -12,7 +12,7 @@ import usePDVShortcuts from '../hooks/usePDVShortcuts'
 import { saveSaleOffline } from '../utils/offlineStorage'
 import { useNetworkStatus } from '../hooks/useNetworkStatus'
 import { formatCurrency } from '../utils/formatters'
-
+import { supabase } from '../lib/supabase'
 
 import * as saleService from '../services/saleService'
 
@@ -376,6 +376,65 @@ const Sales = () => {
     showFeedback('info', 'Cupom removido')
   }
 
+  const createPendingSale = async (callback) => {
+    console.log('🔄 createPendingSale chamado!')
+    
+    try {
+      const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
+      const total = subtotal - discount
+      
+      console.log('📊 Dados:', { subtotal, total, cart: cart.length })
+      
+      // ✅ Agora supabase está definido!
+      const { data: sale, error } = await supabase
+        .from('sales')
+        .insert([{
+          customer_id: customer?.id || null,
+          customer_name: customer?.name || 'Cliente não identificado',
+          customer_phone: customer?.phone || null,
+          total_amount: subtotal,
+          discount_amount: discount,
+          discount_percent: coupon?.discount_type === 'percent' ? coupon.discount_value : 0,
+          coupon_code: coupon?.code || null,
+          final_amount: total,
+          payment_method: 'pix',
+          payment_status: 'pending',
+          status: 'pending',
+          created_by: profile?.id
+        }])
+        .select()
+        .single()
+        
+      if (error) throw error
+      
+      console.log('✅ Venda pendente criada:', sale.id)
+      
+      // Criar itens da venda
+      const saleItems = cart.map(item => ({
+        sale_id: sale.id,
+        product_id: item.id,
+        product_name: item.name,
+        product_code: item.code,
+        quantity: item.quantity,
+        unit_price: item.price,
+        total_price: item.total
+      }))
+      
+      const { error: itemsError } = await supabase.from('sale_items').insert(saleItems)
+      
+      if (itemsError) throw itemsError
+      
+      console.log('✅ Itens da venda salvos')
+      
+      // Chamar callback com o ID da venda
+      callback(sale.id)
+      
+    } catch (error) {
+      console.error('❌ Erro ao criar venda pendente:', error)
+      showFeedback('error', 'Erro ao processar PIX: ' + error.message)
+    }
+  }
+
   const confirmPayment = (method = null) => {
     const finalPaymentMethod = method || paymentMethod
     
@@ -542,7 +601,7 @@ const Sales = () => {
 
         <CheckoutModal isOpen={showPaymentModal} onClose={() => setShowPaymentModal(false)} cart={cart} discount={discount}
           subtotal={subtotal} total={total} customer={customer} paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod}
-          onConfirm={confirmPayment} isSubmitting={createSaleMutation.isPending} isOnline={isOnline} />
+          onConfirm={confirmPayment} isSubmitting={createSaleMutation.isPending} isOnline={isOnline} onCreatePendingSale={createPendingSale} />
 
         <ConfirmModal isOpen={showClearCartConfirm} onClose={() => setShowClearCartConfirm(false)} onConfirm={confirmClearCart}
           title="Limpar Carrinho" message={<div><p className="mb-2">Tem certeza que deseja remover todos os itens do carrinho?</p>

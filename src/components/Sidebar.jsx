@@ -73,7 +73,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     if (path === '/dashboard') return location.pathname === '/dashboard'
     if (path === '/sales') return location.pathname === '/sales'
     if (path === '/budgets') return location.pathname === '/budgets'
-    // Para outras rotas, verifica se começa com o path (para subrotas como /customers/:id/communication)
     return location.pathname.startsWith(path)
   }
 
@@ -186,8 +185,8 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         />
         
         <div className="fixed left-0 top-0 h-full w-72 bg-white z-50 shadow-2xl animate-slideInRight lg:hidden">
-          <div className="flex flex-col h-full">
-            <div className="p-5 border-b border-gray-100">
+          <div className="flex flex-col h-full overflow-hidden">
+            <div className="p-5 border-b border-gray-100 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <img
@@ -235,44 +234,44 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
                     `}
                     style={isActive ? gradientStyle : {}}
                   >
-                    <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500'}`} />
-                    <div className="flex-1">
-                      <p className={`font-medium ${isActive ? 'text-white' : 'text-gray-700'}`}>
+                    <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-gray-500'}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className={`font-medium truncate ${isActive ? 'text-white' : 'text-gray-700'}`}>
                         {item.label}
                       </p>
-                      <p className={`text-xs ${isActive ? 'text-white/80' : 'text-gray-400'}`}>
+                      <p className={`text-xs truncate ${isActive ? 'text-white/80' : 'text-gray-400'}`}>
                         {item.description}
                       </p>
                     </div>
                     {isActive && (
-                      <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                      <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse flex-shrink-0" />
                     )}
                   </LinkComponent>
                 )
               })}
             </div>
 
-            <div className="p-4 border-t border-gray-100">
+            <div className="p-4 border-t border-gray-100 flex-shrink-0">
               <div 
                 onClick={handleProfileClick}
                 className="flex items-center gap-3 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl mb-3 cursor-pointer hover:shadow-md transition-all group"
               >
-                <div className="group-hover:scale-105 transition-transform">
+                <div className="group-hover:scale-105 transition-transform flex-shrink-0">
                   <AvatarDisplay size="md" showStatus={true} />
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">{displayName}</p>
-                  <p className="text-xs text-gray-500">{getRoleName()}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{displayName}</p>
+                  <p className="text-xs text-gray-500 truncate">{getRoleName()}</p>
                 </div>
-                <User className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                <User className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors flex-shrink-0" />
               </div>
               
               <button
                 onClick={handleLogout}
                 className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all duration-200"
               >
-                <LogOut className="w-4 h-4" />
-                <span className="font-medium">Sair do sistema</span>
+                <LogOut className="w-4 h-4 flex-shrink-0" />
+                <span className="font-medium truncate">Sair do sistema</span>
               </button>
             </div>
           </div>
@@ -294,74 +293,77 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       </button>
 
       <div className={`
-        hidden lg:flex flex-col fixed left-0 top-0 h-full bg-white shadow-2xl transition-all duration-300 z-30
+        hidden lg:flex flex-col fixed left-0 top-0 h-full bg-white shadow-2xl transition-all duration-300 z-30 overflow-hidden
         ${collapsed ? 'w-20' : 'w-64'}
       `}>
+        {/* Header com Logo */}
         <div className={`
-          p-5 border-b border-gray-100 transition-all duration-300
+          p-5 border-b border-gray-100 transition-all duration-300 flex-shrink-0
           ${collapsed ? 'px-3' : 'px-6'}
         `}>
           <div className="flex items-center justify-between">
-            <Link to="/dashboard" className="flex items-center gap-3 flex-1">
+            <Link to="/dashboard" className="flex items-center gap-3 flex-1 overflow-hidden">
               <img
                 src={logoSrc}
                 alt={companyName}
-                className="h-10 w-auto object-contain"
+                className="h-10 w-auto object-contain flex-shrink-0"
                 onError={(e) => {
                   e.target.onerror = null
                   e.target.src = '/favicon.ico'
                 }}
               />
               {!collapsed && (
-                <div className="flex-1">
-                  <h2 className="font-bold text-gray-900 text-lg leading-tight">{companyName}</h2>
-                  <p className="text-xs text-gray-500">Gestão Integrada</p>
+                <div className="flex-1 min-w-0">
+                  <h2 className="font-bold text-gray-900 text-lg leading-tight truncate">{companyName}</h2>
+                  <p className="text-xs text-gray-500 truncate">Gestão Integrada</p>
                 </div>
               )}
             </Link>
             <button
               onClick={() => setCollapsed(!collapsed)}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
             >
               {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             </button>
           </div>
         </div>
 
+        {/* Perfil do Usuário - Alinhado com os itens do menu */}
         {!collapsed && !authLoading && (
           <div 
             onClick={handleProfileClick}
-            className="p-4 mx-3 mt-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl cursor-pointer hover:shadow-md transition-all group"
+            className="mx-3 mt-4 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl cursor-pointer hover:shadow-md transition-all group flex-shrink-0"
           >
             <div className="flex items-center gap-3">
-              <div className="group-hover:scale-105 transition-transform">
+              <div className="group-hover:scale-105 transition-transform flex-shrink-0">
                 <AvatarDisplay size="md" showStatus={true} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
                 <div className="flex items-center gap-1">
-                  <p className="text-xs text-gray-500">{getRoleName()}</p>
+                  <p className="text-xs text-gray-500 truncate">{getRoleName()}</p>
                 </div>
               </div>
-              <User className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
+              <User className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors flex-shrink-0" />
             </div>
           </div>
         )}
 
         {collapsed && !authLoading && (
-          <div className="flex justify-center mt-4">
+          <div className="flex justify-center mt-4 me-2 flex-shrink-0">
             <button onClick={handleProfileClick} className="relative group" title="Meu Perfil">
               <div className="hover:scale-105 transition-transform">
                 <AvatarDisplay size="md" showStatus={true} />
               </div>
-              <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
                 {displayName}
               </div>
             </button>
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
+        {/* Menu Items - Scroll apenas aqui */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-1.5">
           {menuItems.map((item) => {
             const Icon = item.icon
             const isActive = isActiveRoute(item.path)
@@ -384,15 +386,15 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
                   style={isActive ? gradientStyle : {}}
                   title={collapsed ? item.label : ''}
                 >
-                  <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500'} transition-transform group-hover:scale-110`} />
+                  <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-gray-500'} transition-transform group-hover:scale-110`} />
                   {!collapsed && (
-                    <div className="flex-1 text-left">
-                      <p className={`font-medium ${isActive ? 'text-white' : 'text-gray-700'}`}>{item.label}</p>
-                      <p className={`text-xs ${isActive ? 'text-white/80' : 'text-gray-400'}`}>{item.description}</p>
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className={`font-medium truncate ${isActive ? 'text-white' : 'text-gray-700'}`}>{item.label}</p>
+                      <p className={`text-xs truncate ${isActive ? 'text-white/80' : 'text-gray-400'}`}>{item.description}</p>
                     </div>
                   )}
                   {!collapsed && isActive && (
-                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse flex-shrink-0" />
                   )}
                 </LinkComponent>
                 
@@ -406,7 +408,8 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
           })}
         </div>
 
-        <div className="p-4 border-t border-gray-100">
+        {/* Botão Sair */}
+        <div className="p-4 border-t border-gray-100 flex-shrink-0">
           <button
             onClick={handleLogout}
             className={`
@@ -416,8 +419,8 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
             `}
             title={collapsed ? 'Sair' : ''}
           >
-            <LogOut className="w-5 h-5 transition-transform group-hover:scale-110" />
-            {!collapsed && <span className="font-medium">Sair do sistema</span>}
+            <LogOut className="w-5 h-5 transition-transform group-hover:scale-110 flex-shrink-0" />
+            {!collapsed && <span className="font-medium truncate">Sair do sistema</span>}
           </button>
         </div>
       </div>

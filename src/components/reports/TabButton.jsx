@@ -1,19 +1,26 @@
 import React from 'react'
 
-const TabButton = ({ active, onClick, icon: Icon, children }) => (
-  <button
-    onClick={onClick}
-    className={`
-      flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors
-      ${active 
-        ? 'border-blue-600 text-blue-600' 
-        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-      }
-    `}
-  >
-    <Icon size={18} />
-    {children}
-  </button>
-)
+const TabButton = ({ active, onClick, icon: Icon, children, isAdvanced }) => {
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
+        ${active 
+          ? isAdvanced 
+            ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md' 
+            : 'bg-blue-600 text-white shadow-md'
+          : 'text-gray-600 hover:bg-gray-100'
+        }
+      `}
+    >
+      <Icon size={16} />
+      {children}
+      {isAdvanced && (
+        <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-full text-[10px]">PRO</span>
+      )}
+    </button>
+  )
+}
 
 export default TabButton

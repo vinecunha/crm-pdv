@@ -2,7 +2,8 @@ import React, { useState, useEffect, lazy, Suspense } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   BarChart3, ShoppingCart, Package, Users, Store,
-  FileSpreadsheet, RefreshCw, Printer, UserCheck
+  FileSpreadsheet, RefreshCw, Printer, UserCheck,
+  TrendingUp, Award, Clock, Calendar, Target, Activity
 } from '../lib/icons'
 import { useAuth } from '../contexts/AuthContext'
 import Button from '../components/ui/Button'
@@ -12,9 +13,9 @@ import useSystemLogs from '../hooks/useSystemLogs'
 import TabButton from '../components/reports/TabButton'
 import DateRangeFilter from '../components/reports/DateRangeFilter'
 
+// Relatórios básicos
 const SalesReport = lazy(() => import(
   /* webpackChunkName: "reports" */
-  /* webpackPrefetch: false */
   '../components/reports/SalesReport'
 ))
 const OperatorPerformance = lazy(() => import(
@@ -34,14 +35,51 @@ const StockReport = lazy(() => import(
   '../components/reports/StockReport'
 ))
 
+// Relatórios avançados (novos)
+const ABCCurveReport = lazy(() => import(
+  /* webpackChunkName: "reports-advanced" */
+  '../components/reports/ABCCurveReport'
+))
+const InventoryTurnoverReport = lazy(() => import(
+  /* webpackChunkName: "reports-advanced" */
+  '../components/reports/InventoryTurnoverReport'
+))
+const ProfitabilityReport = lazy(() => import(
+  /* webpackChunkName: "reports-advanced" */
+  '../components/reports/ProfitabilityReport'
+))
+const PeriodComparisonReport = lazy(() => import(
+  /* webpackChunkName: "reports-advanced" */
+  '../components/reports/PeriodComparisonReport'
+))
+const SalesForecastReport = lazy(() => import(
+  /* webpackChunkName: "reports-advanced" */
+  '../components/reports/SalesForecastReport'
+))
+const SeasonalityReport = lazy(() => import(
+  /* webpackChunkName: "reports-advanced" */
+  '../components/reports/SeasonalityReport'
+))
+
 // ============= Constantes =============
-const tabs = [
-  { id: 'sales', label: 'Vendas', icon: ShoppingCart },
-  { id: 'operators', label: 'Operadores', icon: UserCheck },
-  { id: 'products', label: 'Produtos', icon: Package },
-  { id: 'customers', label: 'Clientes', icon: Users },
-  { id: 'stock', label: 'Estoque', icon: Store }
+const basicTabs = [
+  { id: 'sales', label: 'Vendas', icon: ShoppingCart, category: 'basic' },
+  { id: 'operators', label: 'Operadores', icon: UserCheck, category: 'basic' },
+  { id: 'products', label: 'Produtos', icon: Package, category: 'basic' },
+  { id: 'customers', label: 'Clientes', icon: Users, category: 'basic' },
+  { id: 'stock', label: 'Estoque', icon: Store, category: 'basic' },
 ]
+
+const advancedTabs = [
+  { id: 'abc-curve', label: 'Curva ABC', icon: Award, category: 'advanced', description: 'Classificação de produtos por valor' },
+  { id: 'inventory-turnover', label: 'Giro de Estoque', icon: RefreshCw, category: 'advanced', description: 'Frequência de renovação do estoque' },
+  { id: 'profitability', label: 'Lucratividade', icon: TrendingUp, category: 'advanced', description: 'Margem por produto/categoria' },
+  { id: 'period-comparison', label: 'Comparativo', icon: Calendar, category: 'advanced', description: 'Comparação entre períodos' },
+  { id: 'sales-forecast', label: 'Projeção', icon: Target, category: 'advanced', description: 'Previsão de vendas futuras' },
+  { id: 'seasonality', label: 'Sazonalidade', icon: Activity, category: 'advanced', description: 'Padrões por período' },
+]
+
+const allTabs = [...basicTabs, ...advancedTabs]
 
 // ============= Componente Principal =============
 const Reports = () => {
@@ -50,6 +88,7 @@ const Reports = () => {
   const queryClient = useQueryClient()
   
   const [activeTab, setActiveTab] = useState('sales')
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [dateRange, setDateRange] = useState('month')
   const [customDateRange, setCustomDateRange] = useState({
     start: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0],
@@ -61,14 +100,17 @@ const Reports = () => {
   const [isExporting, setIsExporting] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
+  // Verificar se é admin/gerente (relatórios avançados só para eles)
+  const canViewAdvanced = profile?.role === 'admin' || profile?.role === 'gerente'
+
   // ============= Efeitos =============
   useEffect(() => {
     logAction({
       action: 'VIEW',
       entityType: 'report',
-      details: { component: 'Reports', user_role: profile?.role }
+      details: { component: 'Reports', tab: activeTab, user_role: profile?.role }
     })
-  }, [])
+  }, [activeTab])
 
   // ============= Handlers =============
   const showFeedback = (type, message) => {
@@ -132,6 +174,8 @@ const Reports = () => {
     })
   }
 
+  const visibleTabs = showAdvanced ? allTabs : basicTabs
+
   // ============= Render =============
   return (
     <div className="min-h-screen bg-gray-50">
@@ -150,6 +194,16 @@ const Reports = () => {
             </div>
             
             <div className="flex gap-2">
+              {canViewAdvanced && (
+                <Button 
+                  variant={showAdvanced ? 'primary' : 'outline'} 
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  icon={TrendingUp}
+                  size="sm"
+                >
+                  {showAdvanced ? 'Modo Avançado' : 'Relatórios Avançados'}
+                </Button>
+              )}
               <Button variant="outline" onClick={handlePrint} icon={Printer}>
                 Imprimir
               </Button>
@@ -187,12 +241,13 @@ const Reports = () => {
         {/* Tabs */}
         <div className="mb-6 border-b border-gray-200">
           <nav className="flex flex-wrap gap-1">
-            {tabs.map(tab => (
+            {visibleTabs.map(tab => (
               <TabButton
                 key={tab.id}
                 active={activeTab === tab.id}
                 onClick={() => handleTabChange(tab.id)}
                 icon={tab.icon}
+                isAdvanced={tab.category === 'advanced'}
               >
                 {tab.label}
               </TabButton>
@@ -213,9 +268,10 @@ const Reports = () => {
           setCategoryFilter={setCategoryFilter}
         />
 
-        {/* Conteúdo da Tab - Com Suspense para cada relatório */}
+        {/* Conteúdo da Tab */}
         <div className="space-y-6">
           <Suspense fallback={<DataLoadingSkeleton type="cards" rows={3} />}>
+            {/* Relatórios Básicos */}
             {activeTab === 'sales' && (
               <SalesReport
                 dateRange={dateRange}
@@ -223,7 +279,6 @@ const Reports = () => {
                 paymentMethodFilter={paymentMethodFilter}
               />
             )}
-
             {activeTab === 'operators' && (
               <OperatorPerformance
                 dateRange={dateRange}
@@ -231,23 +286,59 @@ const Reports = () => {
                 paymentMethodFilter={paymentMethodFilter}
               />
             )}
-
             {activeTab === 'products' && (
               <ProductsReport
                 dateRange={dateRange}
                 customDateRange={customDateRange}
               />
             )}
-
             {activeTab === 'customers' && (
               <CustomersReport
                 dateRange={dateRange}
                 customDateRange={customDateRange}
               />
             )}
-
             {activeTab === 'stock' && (
               <StockReport categoryFilter={categoryFilter} />
+            )}
+
+            {/* Relatórios Avançados */}
+            {activeTab === 'abc-curve' && (
+              <ABCCurveReport
+                dateRange={dateRange}
+                customDateRange={customDateRange}
+              />
+            )}
+            {activeTab === 'inventory-turnover' && (
+              <InventoryTurnoverReport
+                dateRange={dateRange}
+                customDateRange={customDateRange}
+              />
+            )}
+            {activeTab === 'profitability' && (
+              <ProfitabilityReport
+                dateRange={dateRange}
+                customDateRange={customDateRange}
+                categoryFilter={categoryFilter}
+              />
+            )}
+            {activeTab === 'period-comparison' && (
+              <PeriodComparisonReport
+                dateRange={dateRange}
+                customDateRange={customDateRange}
+              />
+            )}
+            {activeTab === 'sales-forecast' && (
+              <SalesForecastReport
+                dateRange={dateRange}
+                customDateRange={customDateRange}
+              />
+            )}
+            {activeTab === 'seasonality' && (
+              <SeasonalityReport
+                dateRange={dateRange}
+                customDateRange={customDateRange}
+              />
             )}
           </Suspense>
         </div>

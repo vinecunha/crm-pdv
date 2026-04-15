@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Edit2, Trash2, Shield, CheckCircle, Lock } from '../../lib/icons'
+import { Edit2, Trash2, Shield, CheckCircle, Lock, User } from '../../lib/icons'
 import { useTableStrategy } from '../../hooks/useTableStrategy'
 import UserRoleBadge from './UserRoleBadge'
 import Badge from '../Badge'
@@ -31,6 +31,7 @@ const UserTable = ({
   }
 
   const columns = [
+    
     {
       key: 'registration_number',
       header: 'Matrícula',
@@ -43,11 +44,39 @@ const UserTable = ({
       )
     },
     {
+      key: 'avatar',
+      header: '',
+      width: '60px',
+      render: (row) => (
+        <div className="flex items-center justify-center">
+          {row.avatar_url ? (
+            <img 
+              src={row.avatar_url} 
+              alt={row.full_name || row.email} 
+              className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm"
+              onError={(e) => {
+                e.target.onerror = null
+                e.target.style.display = 'none'
+                e.target.nextSibling?.classList.remove('hidden')
+              }}
+            />
+          ) : null}
+          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-medium shadow-sm bg-gradient-to-br ${
+            row.role === 'admin' ? 'from-purple-500 to-purple-700' :
+            row.role === 'gerente' ? 'from-blue-500 to-cyan-500' :
+            'from-gray-400 to-gray-600'
+          } ${row.avatar_url ? 'hidden' : ''}`}>
+            {(row.display_name || row.full_name || row.email?.charAt(0) || 'U').charAt(0).toUpperCase()}
+          </div>
+        </div>
+      )
+    },
+    {
       key: 'full_name',
       header: 'Nome',
       sortable: true,
-      width: '22%',
-      minWidth: '180px',
+      width: '20%',
+      minWidth: '160px',
       render: (row) => (
         <div className="font-medium text-gray-900 truncate">
           {row.display_name || row.full_name || row.email?.split('@')[0]}
@@ -62,28 +91,28 @@ const UserTable = ({
       header: 'Email',
       sortable: true,
       width: '22%',
-      minWidth: '200px',
+      minWidth: '180px',
       render: (row) => <div className="text-sm text-gray-500 truncate">{row.email}</div>
     },
     {
       key: 'role',
       header: 'Papel',
       sortable: true,
-      width: '120px',
+      width: '110px',
       render: (row) => <UserRoleBadge role={row.role} size="sm" />
     },
     {
       key: 'status',
       header: 'Status',
       sortable: true,
-      width: '120px',
+      width: '110px',
       render: (row) => getStatusBadge(row.status || 'active')
     },
     {
       key: 'created_at',
       header: 'Criado em',
       sortable: true,
-      width: '120px',
+      width: '110px',
       render: (row) => <div className="text-sm text-gray-500">{formatDate(row.created_at)}</div>
     }
   ]

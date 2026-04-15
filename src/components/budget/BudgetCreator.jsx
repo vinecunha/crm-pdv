@@ -5,7 +5,7 @@ import Button from '../ui/Button'
 import ProductGrid from '../sales/pdv/ProductGrid'
 import CartSummary from '../sales/pdv/CartSummary'
 
-export const BudgetCreator = ({
+const BudgetCreator = ({
   products, loading, cart, searchTerm, setSearchTerm,
   selectedCategory, setSelectedCategory, categories,
   onAddToCart, onUpdateQuantity, onRemoveItem, onClearCart,
@@ -175,3 +175,4 @@ export const BudgetCreator = ({
     </div>
   )
 }
+export default BudgetCreator

@@ -13,7 +13,6 @@ import useSystemLogs from '../hooks/useSystemLogs'
 import { formatCurrency, formatDate } from '../utils/formatters'
 import { useNetworkStatus } from '../hooks/useNetworkStatus'
 
-
 import * as budgetService from '../services/budgetService'
 
 import BudgetCreator from '../components/budget/BudgetCreator'
@@ -51,6 +50,11 @@ const Budgets = () => {
   const [budgetItems, setBudgetItems] = useState([])
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [showConvertModal, setShowConvertModal] = useState(false)
+  
+  // Modais de confirmação
+  const [showApproveConfirm, setShowApproveConfirm] = useState(false)
+  const [showRejectConfirm, setShowRejectConfirm] = useState(false)
+  const [budgetToAction, setBudgetToAction] = useState(null)
   
   // Modais
   const [showCustomerModal, setShowCustomerModal] = useState(false)
@@ -141,6 +145,9 @@ const Budgets = () => {
       await logAction({ action: 'UPDATE_BUDGET_STATUS', entityType: 'budget', entityId: data.id, details: { new_status: data.status } })
       queryClient.invalidateQueries({ queryKey: ['budgets'] })
       showFeedback('success', `Orçamento ${data.status === 'approved' ? 'aprovado' : 'rejeitado'}!`)
+      setShowApproveConfirm(false)
+      setShowRejectConfirm(false)
+      setBudgetToAction(null)
     },
     onError: (error) => showFeedback('error', 'Erro ao atualizar status: ' + error.message)
   })
@@ -201,15 +208,44 @@ const Budgets = () => {
     setShowDetailsModal(true)
   }
 
-  const handleApprove = (budget) => { if (!confirm(`Aprovar orçamento #${budget.budget_number}?`)) return; updateStatusMutation.mutate({ id: budget.id, status: 'approved' }) }
-  const handleReject = (budget) => { if (!confirm(`Rejeitar orçamento #${budget.budget_number}?`)) return; updateStatusMutation.mutate({ id: budget.id, status: 'rejected' }) }
-  const handleConvertToSale = () => { if (!selectedBudget) return; if (!isOnline) { showFeedback('error', 'Não é possível converter orçamento offline'); return }; convertToSaleMutation.mutate({ budget: selectedBudget, budgetItems }) }
+  const handleApproveClick = (budget) => {
+    setBudgetToAction(budget)
+    setShowApproveConfirm(true)
+  }
+
+  const handleRejectClick = (budget) => {
+    setBudgetToAction(budget)
+    setShowRejectConfirm(true)
+  }
+
+  const handleApprove = () => {
+    if (!budgetToAction) return
+    updateStatusMutation.mutate({ id: budgetToAction.id, status: 'approved' })
+  }
+
+  const handleReject = () => {
+    if (!budgetToAction) return
+    updateStatusMutation.mutate({ id: budgetToAction.id, status: 'rejected' })
+  }
+
+  const handleConvertToSale = () => { 
+    if (!selectedBudget) return
+    if (!isOnline) { showFeedback('error', 'Não é possível converter orçamento offline'); return }
+    convertToSaleMutation.mutate({ budget: selectedBudget, budgetItems }) 
+  }
 
   // ============= Colunas da Tabela =============
   const getStatusBadge = (status) => {
-    const configs = { pending: { label: 'Pendente', variant: 'warning', icon: Clock }, approved: { label: 'Aprovado', variant: 'success', icon: CheckCircle }, rejected: { label: 'Rejeitado', variant: 'danger', icon: XCircle }, expired: { label: 'Expirado', variant: 'secondary', icon: AlertTriangle }, converted: { label: 'Convertido', variant: 'info', icon: Check } }
+    const configs = { 
+      pending: { label: 'Pendente', variant: 'warning', icon: Clock }, 
+      approved: { label: 'Aprovado', variant: 'success', icon: CheckCircle }, 
+      rejected: { label: 'Rejeitado', variant: 'danger', icon: XCircle }, 
+      expired: { label: 'Expirado', variant: 'secondary', icon: AlertTriangle }, 
+      converted: { label: 'Convertido', variant: 'info', icon: Check } 
+    }
     const config = configs[status] || configs.pending
-    return <Badge variant={config.variant}><config.icon size={12} className="mr-1" />{config.label}</Badge>
+    const Icon = config.icon
+    return <Badge variant={config.variant}><Icon size={12} className="mr-1" />{config.label}</Badge>
   }
 
   const columns = [
@@ -222,8 +258,8 @@ const Budgets = () => {
 
   const actions = [
     { label: 'Ver detalhes', icon: <Eye size={16} />, onClick: handleViewDetails, className: 'text-gray-500 hover:text-blue-600 hover:bg-blue-50' },
-    { label: 'Aprovar', icon: <CheckCircle size={16} />, onClick: handleApprove, className: 'text-green-600 hover:bg-green-50', disabled: (row) => row.status !== 'pending' },
-    { label: 'Rejeitar', icon: <XCircle size={16} />, onClick: handleReject, className: 'text-red-600 hover:bg-red-50', disabled: (row) => row.status !== 'pending' }
+    { label: 'Aprovar', icon: <CheckCircle size={16} />, onClick: handleApproveClick, className: 'text-green-600 hover:bg-green-50', disabled: (row) => row.status !== 'pending' },
+    { label: 'Rejeitar', icon: <XCircle size={16} />, onClick: handleRejectClick, className: 'text-red-600 hover:bg-red-50', disabled: (row) => row.status !== 'pending' }
   ]
 
   const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
@@ -263,12 +299,205 @@ const Budgets = () => {
         <CouponSelector isOpen={showCouponModal} onClose={() => setShowCouponModal(false)} customer={customer} coupon={coupon} availableCoupons={availableCoupons} couponCode={couponCode} setCouponCode={setCouponCode} couponError={couponError} onApplyCoupon={applyCoupon} onRemoveCoupon={removeCoupon} isLoading={validateCouponMutation.isPending} />
         <ConfirmModal isOpen={showClearCartConfirm} onClose={() => setShowClearCartConfirm(false)} onConfirm={confirmClearCart} title="Limpar Orçamento" message={<div><p className="mb-2">Tem certeza que deseja remover todos os itens do orçamento?</p><p className="text-sm text-gray-500">{cart.length} {cart.length === 1 ? 'item será' : 'itens serão'} removidos.</p></div>} confirmText="Limpar" cancelText="Cancelar" variant="danger" />
         
+        {/* Modal de Detalhes */}
         <Modal isOpen={showDetailsModal} onClose={() => setShowDetailsModal(false)} title={`Orçamento #${selectedBudget?.budget_number || ''}`} size="lg">
-          {selectedBudget && <div className="space-y-4"><div className="bg-blue-50 rounded-lg p-4"><p className="text-xs text-blue-600 font-medium mb-2">CLIENTE</p><div className="flex items-center gap-3"><div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-medium">{selectedBudget.customer_name?.charAt(0) || 'C'}</div><div><p className="font-medium text-gray-900">{selectedBudget.customer_name || 'Cliente não identificado'}</p>{selectedBudget.customer_phone && <p className="text-sm text-gray-500">{selectedBudget.customer_phone}</p>}</div></div></div><div className="grid grid-cols-3 gap-3 text-sm"><div><p className="text-gray-500">Data</p><p className="font-medium">{formatDate(selectedBudget.created_at)}</p></div><div><p className="text-gray-500">Válido até</p><p className="font-medium">{formatDate(selectedBudget.valid_until)}</p></div><div><p className="text-gray-500">Status</p>{getStatusBadge(selectedBudget.status)}</div></div>{selectedBudget.notes && <div className="bg-gray-50 rounded-lg p-3"><p className="text-xs text-gray-500 mb-1">Observações</p><p className="text-sm text-gray-700">{selectedBudget.notes}</p></div>}<div><p className="text-xs text-gray-500 font-medium mb-2">ITENS</p><div className="space-y-2 max-h-60 overflow-y-auto">{budgetItems.length === 0 ? <p className="text-center text-gray-500 py-4">Nenhum item encontrado</p> : budgetItems.map((item, i) => <div key={i} className="flex justify-between py-2 border-b border-gray-100 last:border-0"><div><span className="text-gray-700">{item.product_name}</span><span className="text-xs text-gray-500 ml-2">x{item.quantity} {item.unit}</span></div><span className="font-medium">{formatCurrency(item.total_price)}</span></div>)}</div></div><div className="border-t pt-3 space-y-1"><div className="flex justify-between"><span className="text-gray-500">Subtotal</span><span>{formatCurrency(selectedBudget.total_amount)}</span></div>{selectedBudget.discount_amount > 0 && <div className="flex justify-between"><span className="text-green-600">Desconto {selectedBudget.coupon_code && `(${selectedBudget.coupon_code})`}</span><span className="text-green-600">-{formatCurrency(selectedBudget.discount_amount)}</span></div>}<div className="flex justify-between font-bold pt-2 border-t"><span>Total</span><span className="text-blue-600">{formatCurrency(selectedBudget.final_amount)}</span></div></div></div>}
-          <div className="flex justify-end gap-3 mt-6 pt-4 border-t"><Button variant="outline" onClick={() => setShowDetailsModal(false)}>Fechar</Button><Button variant="outline" onClick={() => window.print()}><Printer size={16} className="mr-1" />Imprimir</Button>{selectedBudget?.status === 'pending' && <><Button variant="success" onClick={() => { setShowDetailsModal(false); handleApprove(selectedBudget); }}><CheckCircle size={16} className="mr-1" />Aprovar</Button><Button variant="danger" onClick={() => { setShowDetailsModal(false); handleReject(selectedBudget); }}><XCircle size={16} className="mr-1" />Rejeitar</Button></>}{selectedBudget?.status === 'approved' && <Button variant="success" onClick={() => setShowConvertModal(true)}><Check size={16} className="mr-1" />Converter em Venda</Button>}</div>
+          {selectedBudget && (
+            <div className="space-y-4">
+              {/* Informações do Cliente */}
+              <div className="bg-blue-50 rounded-lg p-4">
+                <p className="text-xs text-blue-600 font-medium mb-2">CLIENTE</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-medium">
+                    {selectedBudget.customer_name?.charAt(0) || 'C'}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{selectedBudget.customer_name || 'Cliente não identificado'}</p>
+                    {selectedBudget.customer_phone && <p className="text-sm text-gray-500">{selectedBudget.customer_phone}</p>}
+                    {selectedBudget.customer_email && <p className="text-sm text-gray-500">{selectedBudget.customer_email}</p>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Informações do Orçamento */}
+              <div className="grid grid-cols-3 gap-3 text-sm">
+                <div>
+                  <p className="text-gray-500">Data de Criação</p>
+                  <p className="font-medium">{formatDate(selectedBudget.created_at)}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Válido até</p>
+                  <p className={`font-medium ${new Date(selectedBudget.valid_until) < new Date() && selectedBudget.status === 'pending' ? 'text-red-600' : ''}`}>
+                    {formatDate(selectedBudget.valid_until)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Status</p>
+                  {getStatusBadge(selectedBudget.status)}
+                </div>
+              </div>
+
+              {/* ✅ INFORMAÇÕES DE APROVAÇÃO/REJEIÇÃO */}
+              {(selectedBudget.status === 'approved' || selectedBudget.status === 'rejected') && (
+                <div className={`rounded-lg p-4 border ${selectedBudget.status === 'approved' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                  <p className={`text-xs font-medium mb-3 flex items-center gap-1 ${selectedBudget.status === 'approved' ? 'text-green-600' : 'text-red-600'}`}>
+                    {selectedBudget.status === 'approved' ? <CheckCircle size={14} /> : <XCircle size={14} />}
+                    {selectedBudget.status === 'approved' ? 'INFORMAÇÕES DE APROVAÇÃO' : 'INFORMAÇÕES DE REJEIÇÃO'}
+                  </p>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-gray-500 text-xs">
+                        {selectedBudget.status === 'approved' ? 'Aprovado por' : 'Rejeitado por'}
+                      </p>
+                      <p className="font-medium text-gray-900">
+                        {selectedBudget.approved_by_user?.full_name || selectedBudget.approved_by_user?.email || 'Sistema'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 text-xs">
+                        {selectedBudget.status === 'approved' ? 'Data de aprovação' : 'Data de rejeição'}
+                      </p>
+                      <p className="font-medium text-gray-900">
+                        {selectedBudget.approved_at ? formatDate(selectedBudget.approved_at) : '-'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Informações de Conversão (se convertido) */}
+              {selectedBudget.status === 'converted' && (
+                <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                  <p className="text-xs text-purple-600 font-medium mb-3 flex items-center gap-1">
+                    <Check size={14} />
+                    INFORMAÇÕES DE CONVERSÃO
+                  </p>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-gray-500 text-xs">Convertido para venda</p>
+                      <p className="font-medium text-gray-900">#{selectedBudget.converted_sale_id || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 text-xs">Data de conversão</p>
+                      <p className="font-medium text-gray-900">{formatDate(selectedBudget.updated_at)}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Criado por */}
+              <div className="text-xs text-gray-500 border-t pt-3">
+                <p>Orçamento criado por: {selectedBudget.created_by_user?.full_name || selectedBudget.created_by_user?.email || 'Sistema'}</p>
+              </div>
+
+              {/* Observações */}
+              {selectedBudget.notes && (
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 mb-1">Observações</p>
+                  <p className="text-sm text-gray-700">{selectedBudget.notes}</p>
+                </div>
+              )}
+
+              {/* Itens */}
+              <div>
+                <p className="text-xs text-gray-500 font-medium mb-2">ITENS</p>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {budgetItems.length === 0 ? (
+                    <p className="text-center text-gray-500 py-4">Nenhum item encontrado</p>
+                  ) : (
+                    budgetItems.map((item, i) => (
+                      <div key={i} className="flex justify-between py-2 border-b border-gray-100 last:border-0">
+                        <div>
+                          <span className="text-gray-700">{item.product_name}</span>
+                          <span className="text-xs text-gray-500 ml-2">x{item.quantity} {item.unit}</span>
+                        </div>
+                        <span className="font-medium">{formatCurrency(item.total_price)}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Totais */}
+              <div className="border-t pt-3 space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Subtotal</span>
+                  <span>{formatCurrency(selectedBudget.total_amount)}</span>
+                </div>
+                {selectedBudget.discount_amount > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-green-600">
+                      Desconto {selectedBudget.coupon_code && `(${selectedBudget.coupon_code})`}
+                    </span>
+                    <span className="text-green-600">-{formatCurrency(selectedBudget.discount_amount)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-bold pt-2 border-t">
+                  <span>Total</span>
+                  <span className="text-blue-600">{formatCurrency(selectedBudget.final_amount)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+            <Button variant="outline" onClick={() => setShowDetailsModal(false)}>Fechar</Button>
+            <Button variant="outline" onClick={() => window.print()}><Printer size={16} className="mr-1" />Imprimir</Button>
+            {selectedBudget?.status === 'pending' && (
+              <>
+                <Button variant="success" onClick={() => { setShowDetailsModal(false); handleApproveClick(selectedBudget); }}>
+                  <CheckCircle size={16} className="mr-1" />Aprovar
+                </Button>
+                <Button variant="danger" onClick={() => { setShowDetailsModal(false); handleRejectClick(selectedBudget); }}>
+                  <XCircle size={16} className="mr-1" />Rejeitar
+                </Button>
+              </>
+            )}
+            {selectedBudget?.status === 'approved' && (
+              <Button variant="success" onClick={() => setShowConvertModal(true)}>
+                <Check size={16} className="mr-1" />Converter em Venda
+              </Button>
+            )}
+          </div>
         </Modal>
         
-        <ConfirmModal isOpen={showConvertModal} onClose={() => setShowConvertModal(false)} onConfirm={handleConvertToSale} title="Converter em Venda" message={<div><p className="mb-2">Deseja converter o orçamento #{selectedBudget?.budget_number} em uma venda?</p><p className="text-sm text-gray-500">O estoque será atualizado e o orçamento será marcado como convertido.</p></div>} confirmText="Converter" cancelText="Cancelar" variant="success" isSubmitting={convertToSaleMutation.isPending} />
+        {/* Modal de Confirmação - Aprovar */}
+        <ConfirmModal 
+          isOpen={showApproveConfirm} 
+          onClose={() => { setShowApproveConfirm(false); setBudgetToAction(null) }} 
+          onConfirm={handleApprove} 
+          title="Aprovar Orçamento" 
+          message={<p>Tem certeza que deseja <strong>aprovar</strong> o orçamento #{budgetToAction?.budget_number}?</p>}
+          confirmText="Aprovar" 
+          cancelText="Cancelar" 
+          variant="success" 
+          loading={updateStatusMutation.isPending}
+        />
+
+        {/* Modal de Confirmação - Rejeitar */}
+        <ConfirmModal 
+          isOpen={showRejectConfirm} 
+          onClose={() => { setShowRejectConfirm(false); setBudgetToAction(null) }} 
+          onConfirm={handleReject} 
+          title="Rejeitar Orçamento" 
+          message={<p>Tem certeza que deseja <strong>rejeitar</strong> o orçamento #{budgetToAction?.budget_number}?</p>}
+          confirmText="Rejeitar" 
+          cancelText="Cancelar" 
+          variant="danger" 
+          loading={updateStatusMutation.isPending}
+        />
+
+        {/* Modal de Confirmação - Converter em Venda */}
+        <ConfirmModal 
+          isOpen={showConvertModal} 
+          onClose={() => setShowConvertModal(false)} 
+          onConfirm={handleConvertToSale} 
+          title="Converter em Venda" 
+          message={<div><p className="mb-2">Deseja converter o orçamento #{selectedBudget?.budget_number} em uma venda?</p><p className="text-sm text-gray-500">O estoque será atualizado e o orçamento será marcado como convertido.</p></div>}
+          confirmText="Converter" 
+          cancelText="Cancelar" 
+          variant="success" 
+          loading={convertToSaleMutation.isPending}
+        />
       </div>
     </div>
   )
