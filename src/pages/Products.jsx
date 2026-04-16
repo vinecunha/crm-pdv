@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import useSystemLogs from '../hooks/useSystemLogs'
 
-
 import * as productService from '../services/productService'
 
 import Button from '../components/ui/Button'
@@ -21,18 +20,15 @@ import ProductDetailsModal from '../components/products/ProductDetailsModal'
 import ProductDeleteModal from '../components/products/ProductDeleteModal'
 import ProductTable from '../components/products/ProductTable'
 
-// ============= Componente Principal =============
 const Products = () => {
   const { profile } = useAuth()
   const { logCreate, logUpdate, logDelete, logError, logAction } = useSystemLogs()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   
-  // Estado local
   const [searchTerm, setSearchTerm] = useState('')
   const [activeFilters, setActiveFilters] = useState({})
   
-  // Modais
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [isEntryModalOpen, setIsEntryModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -41,7 +37,6 @@ const Products = () => {
   const [viewingProductId, setViewingProductId] = useState(null)
   const [entryModalError, setEntryModalError] = useState(null)
   
-  // Formulários
   const [productForm, setProductForm] = useState({
     code: '', name: '', description: '', category: '', unit: 'UN',
     price: '', min_stock: '', max_stock: '', location: '', brand: '', weight: '',
@@ -57,7 +52,6 @@ const Products = () => {
   const [formErrors, setFormErrors] = useState({})
   const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
   
-  // Permissões
   const isAdmin = profile?.role === 'admin'
   const isManager = profile?.role === 'gerente'
   const isOperator = profile?.role === 'operador'
@@ -66,7 +60,6 @@ const Products = () => {
   const canViewAll = isAdmin || isManager
   const canViewOnlyActive = isOperator
 
-  // Configuração dos filtros
   const filters = [
     { key: 'category', label: 'Categoria', type: 'select', options: productService.categories.map(cat => ({ value: cat, label: cat })) },
     { key: 'unit', label: 'Unidade', type: 'select', options: productService.units },
@@ -74,7 +67,6 @@ const Products = () => {
     ...(canManageStock ? [{ key: 'low_stock', label: 'Estoque Baixo', type: 'select', options: [{ value: 'true', label: 'Apenas produtos com estoque baixo' }] }] : [])
   ]
 
-  // ============= Queries =============
   const { 
     data: products = [], 
     isLoading,
@@ -96,7 +88,6 @@ const Products = () => {
     enabled: !!viewingProductId,
   })
 
-  // ============= Filtragem em Memória =============
   const filteredProducts = React.useMemo(() => {
     const productsArray = Array.isArray(products) ? products : []
     let filtered = [...productsArray]
@@ -121,7 +112,6 @@ const Products = () => {
     return filtered
   }, [products, searchTerm, activeFilters])
 
-  // ============= Mutations =============
   const createMutation = useMutation({
     mutationFn: (data) => productService.createProduct(data, profile),
     onSuccess: async (data) => {
@@ -182,12 +172,10 @@ const Products = () => {
     }
   })
 
-  // ============= Efeitos =============
   React.useEffect(() => {
     logAction({ action: 'VIEW', entityType: 'product', details: { user_role: profile?.role } })
   }, [])
 
-  // ============= Handlers =============
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
@@ -311,13 +299,12 @@ const Products = () => {
   const isMutating = createMutation.isPending || updateMutation.isPending || 
                      deleteMutation.isPending || entryMutation.isPending
 
-  // ============= Render =============
   if (productsError) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro ao carregar produtos</h2>
-          <p className="text-gray-600 mb-4">{productsError.message}</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao carregar produtos</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{productsError.message}</p>
           <Button onClick={() => refetchProducts()}>Tentar novamente</Button>
         </div>
       </div>
@@ -327,17 +314,17 @@ const Products = () => {
   if (isLoading) return <DataLoadingSkeleton />
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Gestão de Estoque</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gestão de Estoque</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
               Gerencie produtos, entradas e controle de estoque
               {!isLoading && products.length > 0 && (
-                <span className="ml-2 text-blue-600">
+                <span className="ml-2 text-blue-600 dark:text-blue-400">
                   ({products.length} produtos)
-                  {isFetching && <span className="ml-2 text-xs text-gray-400">atualizando...</span>}
+                  {isFetching && <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">atualizando...</span>}
                 </span>
               )}
             </p>

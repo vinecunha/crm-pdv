@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { AlertCircle, CheckCircle, Info, X, AlertTriangle } from '../../lib/icons'
 
 const FeedbackMessage = ({ 
-  type = 'success', // 'success', 'error', 'warning', 'info'
+  type = 'success',
   message, 
   onClose, 
   duration = 5000,
@@ -21,31 +21,31 @@ const FeedbackMessage = ({
   const config = {
     success: {
       icon: CheckCircle,
-      bgColor: 'bg-green-50',
-      borderColor: 'border-green-200',
-      textColor: 'text-green-800',
-      iconColor: 'text-green-500'
+      bgColor: 'bg-green-50 dark:bg-green-900/20',
+      borderColor: 'border-green-200 dark:border-green-800',
+      textColor: 'text-green-800 dark:text-green-300',
+      iconColor: 'text-green-500 dark:text-green-400'
     },
     error: {
       icon: AlertCircle,
-      bgColor: 'bg-red-50',
-      borderColor: 'border-red-200',
-      textColor: 'text-red-800',
-      iconColor: 'text-red-500'
+      bgColor: 'bg-red-50 dark:bg-red-900/20',
+      borderColor: 'border-red-200 dark:border-red-800',
+      textColor: 'text-red-800 dark:text-red-300',
+      iconColor: 'text-red-500 dark:text-red-400'
     },
     warning: {
       icon: AlertTriangle,
-      bgColor: 'bg-yellow-50',
-      borderColor: 'border-yellow-200',
-      textColor: 'text-yellow-800',
-      iconColor: 'text-yellow-500'
+      bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
+      borderColor: 'border-yellow-200 dark:border-yellow-800',
+      textColor: 'text-yellow-800 dark:text-yellow-300',
+      iconColor: 'text-yellow-500 dark:text-yellow-400'
     },
     info: {
       icon: Info,
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200',
-      textColor: 'text-blue-800',
-      iconColor: 'text-blue-500'
+      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+      borderColor: 'border-blue-200 dark:border-blue-800',
+      textColor: 'text-blue-800 dark:text-blue-300',
+      iconColor: 'text-blue-500 dark:text-blue-400'
     }
   }
 

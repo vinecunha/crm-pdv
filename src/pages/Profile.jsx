@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { secureStorage } from '../utils/secureStorage'
 import {
-  User, Save, RotateCcw, Shield
+  User, Save, RotateCcw, Shield, Settings,
 } from '../lib/icons'
 import { sanitizeObject } from '../utils/sanitize'
 import Button from '../components/ui/Button'
@@ -14,8 +14,8 @@ import AvatarUploader from '../components/profile/AvatarUploader'
 import ProfileInfoForm from '../components/profile/ProfileInfoForm'
 import SecuritySection from '../components/profile/SecuritySection'
 import ChangePasswordModal from '../components/profile/ChangePasswordModal'
+import UserPreferencesTab from '../components/profile/UserPreferencesTab'
 
-// ============= API Functions =============
 const fetchProfile = async (userId) => {
   const { data, error } = await supabase
     .from('profiles')
@@ -59,7 +59,6 @@ const updateProfile = async ({ userId, profileData }) => {
   return freshProfile
 }
 
-// ============= Componente Principal =============
 const Profile = () => {
   const { profile, user, changePassword, logout } = useAuth()
   const queryClient = useQueryClient()
@@ -85,7 +84,6 @@ const Profile = () => {
   const [hasChanges, setHasChanges] = useState(false)
   const [formErrors, setFormErrors] = useState({})
 
-  // ============= Query =============
   const { 
     data: profileData,
     isLoading,
@@ -95,19 +93,62 @@ const Profile = () => {
     queryKey: ['profile', user?.id],
     queryFn: () => fetchProfile(user?.id),
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 5 * 60 * 1000,
   })
 
-  // ============= Mutation =============
+  
+  const [preferences, setPreferences] = useState({
+    dark_mode: false,
+    sidebar_collapsed: false,
+    table_density: 'comfortable'
+  })
+
   const updateMutation = useMutation({
-    mutationFn: updateProfile,
+    mutationFn: async ({ userId, profileData, preferences }) => {
+      // 1. Atualizar dados básicos do perfil
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          display_name: profileData.display_name || null,
+          phone: profileData.phone || null,
+          avatar_url: profileData.avatar_url || null,
+          address: profileData.address || null,
+          city: profileData.city || null,
+          state: profileData.state || null,
+          zip_code: profileData.zip_code || null,
+          birth_date: profileData.birth_date || null,
+          document: profileData.document || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId)
+
+      if (profileError) throw profileError
+
+      // 2. Atualizar preferências via RPC (se fornecidas)
+      if (preferences) {
+        const { error: prefsError } = await supabase.rpc('update_user_preferences', {
+          p_user_id: userId,
+          p_dark_mode: preferences.dark_mode ?? null,
+          p_sidebar_collapsed: preferences.sidebar_collapsed ?? null,
+          p_table_density: preferences.table_density ?? null
+        })
+
+        if (prefsError) throw prefsError
+      }
+
+      // 3. Buscar perfil atualizado com todas as informações
+      const { data: freshProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+
+      if (fetchError) throw fetchError
+      return freshProfile
+    },
     onSuccess: (freshProfile) => {
-      // Atualizar cache do React Query
       queryClient.setQueryData(['profile', user?.id], freshProfile)
-      
-      // Atualizar secureStorage
       secureStorage.set('profile', freshProfile)
-      
       showFeedback('success', 'Perfil atualizado com sucesso!')
       setHasChanges(false)
     },
@@ -117,7 +158,6 @@ const Profile = () => {
     }
   })
 
-  // ============= Efeitos =============
   useEffect(() => {
     if (profileData) {
       setFormData({
@@ -133,10 +173,15 @@ const Profile = () => {
         birth_date: profileData.birth_date || '',
         document: profileData.document || ''
       })
+      
+      setPreferences({
+        dark_mode: profileData.dark_mode || false,
+        sidebar_collapsed: profileData.sidebar_collapsed || false,
+        table_density: profileData.table_density || 'comfortable'
+      })
     }
   }, [profileData, user])
 
-  // ============= Handlers =============
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
@@ -150,6 +195,18 @@ const Profile = () => {
     if (formErrors[name]) {
       setFormErrors(prev => ({ ...prev, [name]: '' }))
     }
+  }
+
+  const handleSavePreferences = () => {
+    updateMutation.mutate({
+      userId: user?.id,
+      profileData: formData,  // Passar formData completo
+      preferences: {           // Passar preferences separado
+        dark_mode: preferences.dark_mode,
+        sidebar_collapsed: preferences.sidebar_collapsed,
+        table_density: preferences.table_density
+      }
+    })
   }
 
   const validateForm = () => {
@@ -172,7 +229,8 @@ const Profile = () => {
     
     updateMutation.mutate({
       userId: user?.id,
-      profileData: formData
+      profileData: formData,
+      preferences: preferences  // ← incluir preferências
     })
   }
 
@@ -218,16 +276,16 @@ const Profile = () => {
     }, 2000)
   }
 
-  // ============= Constantes =============
   const tabs = [
-    { id: 'profile', label: 'Perfil', icon: User },
-    { id: 'security', label: 'Segurança', icon: Shield }
-  ]
+  { id: 'profile', label: 'Perfil', icon: User },
+  { id: 'preferences', label: 'Preferências', icon: Settings },
+  { id: 'security', label: 'Segurança', icon: Shield }
+]
 
   const roleColors = {
-    admin: 'bg-purple-100 text-purple-800',
-    gerente: 'bg-blue-100 text-blue-800',
-    operador: 'bg-gray-100 text-gray-800'
+    admin: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300',
+    gerente: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
+    operador: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
   }
 
   const roleNames = {
@@ -236,16 +294,14 @@ const Profile = () => {
     operador: 'Operador'
   }
 
-  // Nome de exibição para o avatar
   const displayNameForAvatar = formData.display_name || formData.full_name || 'Usuário'
 
-  // ============= Render =============
   if (profileError) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro ao carregar perfil</h2>
-          <p className="text-gray-600 mb-4">{profileError.message}</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao carregar perfil</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{profileError.message}</p>
           <Button onClick={() => refetch()}>Tentar novamente</Button>
         </div>
       </div>
@@ -257,14 +313,14 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <User className="text-blue-600" />
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <User className="text-blue-600 dark:text-blue-400" />
             Meu Perfil
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
             Gerencie suas informações pessoais e configurações de conta
           </p>
         </div>
@@ -280,9 +336,8 @@ const Profile = () => {
         )}
 
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Sidebar */}
           <div className="lg:w-72 flex-shrink-0">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center">
               <AvatarUploader
                 user={user}
                 avatarUrl={formData.avatar_url}
@@ -291,41 +346,40 @@ const Profile = () => {
                 onAvatarUpdate={handleAvatarUpdate}
               />
 
-              <h2 className="mt-4 text-lg font-semibold text-gray-900">
+              <h2 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
                 {displayNameForAvatar}
               </h2>
-              <p className="text-sm text-gray-500">{user?.email}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{user?.email}</p>
               
               <div className="mt-2">
                 <span className={`
                   inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                  ${roleColors[profile?.role] || 'bg-gray-100 text-gray-800'}
+                  ${roleColors[profile?.role] || 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'}
                 `}>
                   <Shield size={12} className="mr-1" />
                   {roleNames[profile?.role] || 'Usuário'}
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-gray-100">
+              <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                 <div className="text-center">
-                  <p className="text-lg font-semibold text-gray-900">
+                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
                     {profileData?.login_count || 0}
                   </p>
-                  <p className="text-xs text-gray-500">Logins</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Logins</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-lg font-semibold text-gray-900">
+                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
                     {profileData?.last_login 
                       ? new Date(profileData.last_login).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
                       : '-'}
                   </p>
-                  <p className="text-xs text-gray-500">Último acesso</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Último acesso</p>
                 </div>
               </div>
             </div>
 
-            {/* Tabs Navigation */}
-            <div className="mt-4 bg-white rounded-lg shadow-sm border border-gray-200 p-2">
+            <div className="mt-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-2">
               <nav className="space-y-1">
                 {tabs.map((tab) => {
                   const Icon = tab.icon
@@ -336,8 +390,8 @@ const Profile = () => {
                       className={`
                         w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all
                         ${activeTab === tab.id 
-                          ? 'bg-blue-50 text-blue-700 font-medium' 
-                          : 'text-gray-600 hover:bg-gray-50'
+                          ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium' 
+                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                         }
                       `}
                     >
@@ -350,12 +404,11 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* Main Content */}
           <div className="flex-1">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
               {activeTab === 'profile' && (
                 <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
                     Informações Pessoais
                   </h3>
 
@@ -367,7 +420,7 @@ const Profile = () => {
                   />
 
                   {hasChanges && (
-                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t dark:border-gray-700">
                       <Button 
                         variant="outline" 
                         onClick={handleCancelChanges}
@@ -390,7 +443,7 @@ const Profile = () => {
 
               {activeTab === 'security' && (
                 <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
                     Segurança da Conta
                   </h3>
 
@@ -400,6 +453,15 @@ const Profile = () => {
                     onLogout={logout}
                   />
                 </div>
+              )}
+
+              {activeTab === 'preferences' && (
+                <UserPreferencesTab
+                  preferences={preferences}
+                  setPreferences={setPreferences}
+                  onSave={handleSavePreferences}
+                  saving={updateMutation.isPending}
+                />
               )}
             </div>
           </div>

@@ -202,7 +202,10 @@ const DataTable = ({
                   <tr key={row?.id || rowIndex} onClick={() => row && onRowClick?.(row, rowIndex)}
                     className={`${onRowClick ? 'cursor-pointer' : ''} ${hover ? 'hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors' : ''} ${striped && rowIndex % 2 === 1 ? 'bg-gray-50 dark:bg-gray-900/50' : ''}`}>
                     {columns.filter(col => col != null).map((column, colIndex) => (
-                      <td key={colIndex} className={`px-6 py-4 whitespace-nowrap text-sm ${column.className || ''}`}>
+                      <td
+                        key={colIndex}
+                        className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 ${column.className || ''}`}
+                      >
                         {renderCell(row, column, indexOfFirstItem + rowIndex)}
                       </td>
                     ))}

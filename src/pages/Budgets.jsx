@@ -249,114 +249,358 @@ const Budgets = () => {
   }
 
   const columns = [
-    { key: 'budget_number', header: 'Nº Orçamento', sortable: true, render: (row) => <div><p className="font-medium text-gray-900">#{row.budget_number}</p><p className="text-xs text-gray-500">{formatDate(row.created_at)}</p></div> },
-    { key: 'customer_name', header: 'Cliente', sortable: true, render: (row) => <div><p className="text-sm text-gray-900">{row.customer_name || 'Cliente não identificado'}</p>{row.customer_phone && <p className="text-xs text-gray-500">{row.customer_phone}</p>}</div> },
-    { key: 'final_amount', header: 'Total', sortable: true, render: (row) => <div><p className="font-semibold text-gray-900">{formatCurrency(row.final_amount)}</p>{row.discount_amount > 0 && <p className="text-xs text-green-600">-{formatCurrency(row.discount_amount)}</p>}</div> },
-    { key: 'valid_until', header: 'Válido até', sortable: true, render: (row) => <span className={`text-sm ${new Date(row.valid_until) < new Date() && row.status === 'pending' ? 'text-red-600' : 'text-gray-600'}`}>{formatDate(row.valid_until)}</span> },
-    { key: 'status', header: 'Status', sortable: true, render: (row) => getStatusBadge(row.status) }
+    {
+      key: 'budget_number',
+      header: 'Nº Orçamento',
+      sortable: true,
+      render: (row) => (
+        <div>
+          <p className="font-medium text-gray-900 dark:text-gray-100">
+            #{row.budget_number}
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {formatDate(row.created_at)}
+          </p>
+        </div>
+      )
+    },
+    {
+      key: 'customer_name',
+      header: 'Cliente',
+      sortable: true,
+      render: (row) => (
+        <div>
+          <p className="text-sm text-gray-900 dark:text-gray-100">
+            {row.customer_name || 'Cliente não identificado'}
+          </p>
+          {row.customer_phone && (
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {row.customer_phone}
+            </p>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'final_amount',
+      header: 'Total',
+      sortable: true,
+      render: (row) => (
+        <div>
+          <p className="font-semibold text-gray-900 dark:text-gray-100">
+            {formatCurrency(row.final_amount)}
+          </p>
+          {row.discount_amount > 0 && (
+            <p className="text-xs text-green-600 dark:text-green-400">
+              -{formatCurrency(row.discount_amount)}
+            </p>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'valid_until',
+      header: 'Válido até',
+      sortable: true,
+      render: (row) => (
+        <span
+          className={`text-sm ${
+            new Date(row.valid_until) < new Date() && row.status === 'pending'
+              ? 'text-red-600 dark:text-red-400'
+              : 'text-gray-600 dark:text-gray-400'
+          }`}
+        >
+          {formatDate(row.valid_until)}
+        </span>
+      )
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      sortable: true,
+      render: (row) => getStatusBadge(row.status)
+    }
   ]
 
   const actions = [
-    { id: 'details', label: 'Ver detalhes', icon: Eye, onClick: handleViewDetails, className: 'text-gray-500 hover:text-blue-600 hover:bg-blue-50' },
-    { id: 'approve', label: 'Aprovar', icon: CheckCircle, onClick: handleApproveClick, className: 'text-green-600 hover:bg-green-50', disabled: (row) => row.status !== 'pending' },
-    { id: 'reject', label: 'Rejeitar', icon: XCircle, onClick: handleRejectClick, className: 'text-red-600 hover:bg-red-50', disabled: (row) => row.status !== 'pending' }
+    {
+      id: 'details',
+      label: 'Ver detalhes',
+      icon: Eye,
+      onClick: handleViewDetails,
+      className:
+        'text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30'
+    },
+    {
+      id: 'approve',
+      label: 'Aprovar',
+      icon: CheckCircle,
+      onClick: handleApproveClick,
+      className:
+        'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30',
+      disabled: (row) => row.status !== 'pending'
+    },
+    {
+      id: 'reject',
+      label: 'Rejeitar',
+      icon: XCircle,
+      onClick: handleRejectClick,
+      className:
+        'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30',
+      disabled: (row) => row.status !== 'pending'
+    }
   ]
 
   const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
   const total = subtotal - discount
   const isMutating = searchCustomerMutation.isPending || createCustomerMutation.isPending || validateCouponMutation.isPending || createBudgetMutation.isPending
 
-  // ============= Render =============
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {feedback.show && <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />}
         <div className="mb-6">
           <div className="flex items-center justify-between">
-            <div><h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><FileText className="text-blue-600" />Orçamentos</h1><p className="text-gray-600 mt-1">{mode === 'list' ? 'Gerencie os orçamentos solicitados pelos clientes' : 'Crie um novo orçamento'}</p></div>
-            <div className="flex gap-2">{mode === 'list' ? <><Button variant="outline" onClick={() => refetchBudgets()} loading={loadingBudgets} icon={RefreshCw}>Atualizar</Button><Button onClick={() => setMode('create')} icon={Plus}>Novo Orçamento</Button></> : <Button variant="outline" onClick={() => setMode('list')} disabled={isMutating}>Cancelar</Button>}</div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <FileText className="text-blue-600 dark:text-blue-400" />
+                Orçamentos
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                {mode === 'list' ? 'Gerencie os orçamentos solicitados pelos clientes' : 'Crie um novo orçamento'}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              {mode === 'list' ? (
+                <>
+                  <Button variant="outline" onClick={() => refetchBudgets()} loading={loadingBudgets} icon={RefreshCw}>Atualizar</Button>
+                  <Button onClick={() => setMode('create')} icon={Plus}>Novo Orçamento</Button>
+                </>
+              ) : (
+                <Button variant="outline" onClick={() => setMode('list')} disabled={isMutating}>Cancelar</Button>
+              )}
+            </div>
           </div>
         </div>
 
         {mode === 'list' && (
           <>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
               <div className="flex items-center gap-3">
-                <div className="flex-1 relative"><Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" /><input type="text" placeholder="Buscar por número, cliente ou telefone..." value={searchTermList} onChange={(e) => setSearchTermList(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" /></div>
-                <select value={filters.status || 'all'} onChange={(e) => setFilters({ status: e.target.value })} className="px-3 py-2 border border-gray-300 rounded-lg text-sm"><option value="all">Todos</option><option value="pending">Pendentes</option><option value="approved">Aprovados</option><option value="rejected">Rejeitados</option><option value="expired">Expirados</option><option value="converted">Convertidos</option></select>
+                <div className="flex-1 relative">
+                  <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                  <input
+                    type="text"
+                    placeholder="Buscar por número, cliente ou telefone..."
+                    value={searchTermList}
+                    onChange={(e) => setSearchTermList(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
+                  />
+                </div>
+                <select
+                  value={filters.status || 'all'}
+                  onChange={(e) => setFilters({ status: e.target.value })}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm"
+                >
+                  <option value="all">Todos</option>
+                  <option value="pending">Pendentes</option>
+                  <option value="approved">Aprovados</option>
+                  <option value="rejected">Rejeitados</option>
+                  <option value="expired">Expirados</option>
+                  <option value="converted">Convertidos</option>
+                </select>
               </div>
             </div>
+            
             {loadingBudgets && <DataLoadingSkeleton />}
-            {!loadingBudgets && budgets.length === 0 && <DataEmptyState title="Nenhum orçamento encontrado" description="Comece criando um novo orçamento para seus clientes" icon="file-text" action={{ label: "Criar Orçamento", icon: <Plus size={18} />, onClick: () => setMode('create') }} />}
-            {!loadingBudgets && budgets.length > 0 && <DataTable columns={columns} data={budgets} actions={actions} onRowClick={handleViewDetails} emptyMessage="Nenhum orçamento encontrado" striped hover pagination itemsPerPageOptions={[20, 50, 100]} defaultItemsPerPage={20} showTotalItems />}
+            
+            {!loadingBudgets && budgets.length === 0 && (
+              <DataEmptyState
+                title="Nenhum orçamento encontrado"
+                description="Comece criando um novo orçamento para seus clientes"
+                icon="file-text"
+                action={{
+                  label: "Criar Orçamento",
+                  icon: <Plus size={18} />,
+                  onClick: () => setMode('create')
+                }}
+              />
+            )}
+            
+            {!loadingBudgets && budgets.length > 0 && (
+              <DataTable
+                columns={columns}
+                data={budgets}
+                actions={actions}
+                onRowClick={handleViewDetails}
+                emptyMessage="Nenhum orçamento encontrado"
+                striped
+                hover
+                pagination
+                itemsPerPageOptions={[20, 50, 100]}
+                defaultItemsPerPage={20}
+                showTotalItems
+              />
+            )}
           </>
         )}
 
-        {mode === 'create' && (loadingProducts ? <DataLoadingSkeleton /> : <BudgetCreator products={products} loading={loadingProducts} cart={cart} searchTerm={searchTerm} setSearchTerm={setSearchTerm} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} categories={categories} onAddToCart={addToCart} onUpdateQuantity={updateCartItemQuantity} onRemoveItem={removeFromCart} onClearCart={handleClearCart} customer={customer} onClearCustomer={clearCustomer} onShowCustomerModal={() => setShowCustomerModal(true)} coupon={coupon} onRemoveCoupon={removeCoupon} onShowCouponModal={() => setShowCouponModal(true)} discount={discount} notes={notes} setNotes={setNotes} validUntil={validUntil} setValidUntil={setValidUntil} subtotal={subtotal} total={total} onCreateBudget={handleCreateBudget} isMutating={isMutating} searchInputRef={searchInputRef} />)}
+        {mode === 'create' && (
+          loadingProducts ? (
+            <DataLoadingSkeleton />
+          ) : (
+            <BudgetCreator
+              products={products}
+              loading={loadingProducts}
+              cart={cart}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              selectedCategory={selectedCategory}
+              setSelectedCategory={setSelectedCategory}
+              categories={categories}
+              onAddToCart={addToCart}
+              onUpdateQuantity={updateCartItemQuantity}
+              onRemoveItem={removeFromCart}
+              onClearCart={handleClearCart}
+              customer={customer}
+              onClearCustomer={clearCustomer}
+              onShowCustomerModal={() => setShowCustomerModal(true)}
+              coupon={coupon}
+              onRemoveCoupon={removeCoupon}
+              onShowCouponModal={() => setShowCouponModal(true)}
+              discount={discount}
+              notes={notes}
+              setNotes={setNotes}
+              validUntil={validUntil}
+              setValidUntil={setValidUntil}
+              subtotal={subtotal}
+              total={total}
+              onCreateBudget={handleCreateBudget}
+              isMutating={isMutating}
+              searchInputRef={searchInputRef}
+            />
+          )
+        )}
 
-        <Modal isOpen={showCustomerModal} onClose={() => setShowCustomerModal(false)} title="Identificar Cliente" size="sm"><div className="space-y-4"><div className="text-center"><div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3"><Phone size={28} className="text-blue-600" /></div><p className="text-gray-600 mb-4">Digite o telefone do cliente</p></div><input type="tel" placeholder="(11) 99999-9999" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-lg text-center" onKeyPress={(e) => e.key === 'Enter' && searchCustomer()} autoFocus disabled={searchCustomerMutation.isPending} /><div className="flex gap-3"><Button variant="outline" onClick={() => setShowCustomerModal(false)} className="flex-1">Cancelar</Button><Button onClick={searchCustomer} loading={searchCustomerMutation.isPending} className="flex-1">Buscar</Button></div></div></Modal>
-        <QuickCustomerForm isOpen={showQuickCustomerModal} onClose={() => setShowQuickCustomerModal(false)} formData={quickCustomerForm} setFormData={setQuickCustomerForm} errors={quickCustomerErrors} onSubmit={quickRegisterCustomer} isSubmitting={createCustomerMutation.isPending} />
-        <CouponSelector isOpen={showCouponModal} onClose={() => setShowCouponModal(false)} customer={customer} coupon={coupon} availableCoupons={availableCoupons} couponCode={couponCode} setCouponCode={setCouponCode} couponError={couponError} onApplyCoupon={applyCoupon} onRemoveCoupon={removeCoupon} isLoading={validateCouponMutation.isPending} />
-        <ConfirmModal isOpen={showClearCartConfirm} onClose={() => setShowClearCartConfirm(false)} onConfirm={confirmClearCart} title="Limpar Orçamento" message={<div><p className="mb-2">Tem certeza que deseja remover todos os itens do orçamento?</p><p className="text-sm text-gray-500">{cart.length} {cart.length === 1 ? 'item será' : 'itens serão'} removidos.</p></div>} confirmText="Limpar" cancelText="Cancelar" variant="danger" />
-        
-        {/* Modal de Detalhes */}
+        <Modal isOpen={showCustomerModal} onClose={() => setShowCustomerModal(false)} title="Identificar Cliente" size="sm">
+          <div className="space-y-4">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Phone size={28} className="text-blue-600 dark:text-blue-400" />
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">Digite o telefone do cliente</p>
+            </div>
+            <input
+              type="tel"
+              placeholder="(11) 99999-9999"
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-lg text-center placeholder-gray-400 dark:placeholder-gray-500"
+              onKeyPress={(e) => e.key === 'Enter' && searchCustomer()}
+              autoFocus
+              disabled={searchCustomerMutation.isPending}
+            />
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setShowCustomerModal(false)} className="flex-1">Cancelar</Button>
+              <Button onClick={searchCustomer} loading={searchCustomerMutation.isPending} className="flex-1">Buscar</Button>
+            </div>
+          </div>
+        </Modal>
+
+        <QuickCustomerForm
+          isOpen={showQuickCustomerModal}
+          onClose={() => setShowQuickCustomerModal(false)}
+          formData={quickCustomerForm}
+          setFormData={setQuickCustomerForm}
+          errors={quickCustomerErrors}
+          onSubmit={quickRegisterCustomer}
+          isSubmitting={createCustomerMutation.isPending}
+        />
+
+        <CouponSelector
+          isOpen={showCouponModal}
+          onClose={() => setShowCouponModal(false)}
+          customer={customer}
+          coupon={coupon}
+          availableCoupons={availableCoupons}
+          couponCode={couponCode}
+          setCouponCode={setCouponCode}
+          couponError={couponError}
+          onApplyCoupon={applyCoupon}
+          onRemoveCoupon={removeCoupon}
+          isLoading={validateCouponMutation.isPending}
+        />
+
+        <ConfirmModal
+          isOpen={showClearCartConfirm}
+          onClose={() => setShowClearCartConfirm(false)}
+          onConfirm={confirmClearCart}
+          title="Limpar Orçamento"
+          message={
+            <div>
+              <p className="mb-2 dark:text-gray-300">Tem certeza que deseja remover todos os itens do orçamento?</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{cart.length} {cart.length === 1 ? 'item será' : 'itens serão'} removidos.</p>
+            </div>
+          }
+          confirmText="Limpar"
+          cancelText="Cancelar"
+          variant="danger"
+        />
+
         <Modal isOpen={showDetailsModal} onClose={() => setShowDetailsModal(false)} title={`Orçamento #${selectedBudget?.budget_number || ''}`} size="lg">
           {selectedBudget && (
             <div className="space-y-4">
-              {/* Informações do Cliente */}
-              <div className="bg-blue-50 rounded-lg p-4">
-                <p className="text-xs text-blue-600 font-medium mb-2">CLIENTE</p>
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-2">CLIENTE</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-medium">
+                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium">
                     {selectedBudget.customer_name?.charAt(0) || 'C'}
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{selectedBudget.customer_name || 'Cliente não identificado'}</p>
-                    {selectedBudget.customer_phone && <p className="text-sm text-gray-500">{selectedBudget.customer_phone}</p>}
-                    {selectedBudget.customer_email && <p className="text-sm text-gray-500">{selectedBudget.customer_email}</p>}
+                    <p className="font-medium text-gray-900 dark:text-white">{selectedBudget.customer_name || 'Cliente não identificado'}</p>
+                    {selectedBudget.customer_phone && <p className="text-sm text-gray-500 dark:text-gray-400">{selectedBudget.customer_phone}</p>}
+                    {selectedBudget.customer_email && <p className="text-sm text-gray-500 dark:text-gray-400">{selectedBudget.customer_email}</p>}
                   </div>
                 </div>
               </div>
 
-              {/* Informações do Orçamento */}
               <div className="grid grid-cols-3 gap-3 text-sm">
                 <div>
-                  <p className="text-gray-500">Data de Criação</p>
-                  <p className="font-medium">{formatDate(selectedBudget.created_at)}</p>
+                  <p className="text-gray-500 dark:text-gray-400">Data de Criação</p>
+                  <p className="font-medium dark:text-white">{formatDate(selectedBudget.created_at)}</p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Válido até</p>
-                  <p className={`font-medium ${new Date(selectedBudget.valid_until) < new Date() && selectedBudget.status === 'pending' ? 'text-red-600' : ''}`}>
+                  <p className="text-gray-500 dark:text-gray-400">Válido até</p>
+                  <p className={`font-medium ${new Date(selectedBudget.valid_until) < new Date() && selectedBudget.status === 'pending' ? 'text-red-600 dark:text-red-400' : 'dark:text-white'}`}>
                     {formatDate(selectedBudget.valid_until)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Status</p>
+                  <p className="text-gray-500 dark:text-gray-400">Status</p>
                   {getStatusBadge(selectedBudget.status)}
                 </div>
               </div>
 
-              {/* ✅ INFORMAÇÕES DE APROVAÇÃO/REJEIÇÃO */}
               {(selectedBudget.status === 'approved' || selectedBudget.status === 'rejected') && (
-                <div className={`rounded-lg p-4 border ${selectedBudget.status === 'approved' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                  <p className={`text-xs font-medium mb-3 flex items-center gap-1 ${selectedBudget.status === 'approved' ? 'text-green-600' : 'text-red-600'}`}>
+                <div className={`rounded-lg p-4 border ${selectedBudget.status === 'approved' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'}`}>
+                  <p className={`text-xs font-medium mb-3 flex items-center gap-1 ${selectedBudget.status === 'approved' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                     {selectedBudget.status === 'approved' ? <CheckCircle size={14} /> : <XCircle size={14} />}
                     {selectedBudget.status === 'approved' ? 'INFORMAÇÕES DE APROVAÇÃO' : 'INFORMAÇÕES DE REJEIÇÃO'}
                   </p>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <p className="text-gray-500 text-xs">
+                      <p className="text-gray-500 dark:text-gray-400 text-xs">
                         {selectedBudget.status === 'approved' ? 'Aprovado por' : 'Rejeitado por'}
                       </p>
-                      <p className="font-medium text-gray-900">
+                      <p className="font-medium text-gray-900 dark:text-white">
                         {selectedBudget.approved_by_user?.full_name || selectedBudget.approved_by_user?.email || 'Sistema'}
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-500 text-xs">
+                      <p className="text-gray-500 dark:text-gray-400 text-xs">
                         {selectedBudget.status === 'approved' ? 'Data de aprovação' : 'Data de rejeição'}
                       </p>
-                      <p className="font-medium text-gray-900">
+                      <p className="font-medium text-gray-900 dark:text-white">
                         {selectedBudget.approved_at ? formatDate(selectedBudget.approved_at) : '-'}
                       </p>
                     </div>
@@ -364,82 +608,77 @@ const Budgets = () => {
                 </div>
               )}
 
-              {/* Informações de Conversão (se convertido) */}
               {selectedBudget.status === 'converted' && (
-                <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                  <p className="text-xs text-purple-600 font-medium mb-3 flex items-center gap-1">
+                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
+                  <p className="text-xs text-purple-600 dark:text-purple-400 font-medium mb-3 flex items-center gap-1">
                     <Check size={14} />
                     INFORMAÇÕES DE CONVERSÃO
                   </p>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <p className="text-gray-500 text-xs">Convertido para venda</p>
-                      <p className="font-medium text-gray-900">#{selectedBudget.converted_sale_id || '-'}</p>
+                      <p className="text-gray-500 dark:text-gray-400 text-xs">Convertido para venda</p>
+                      <p className="font-medium text-gray-900 dark:text-white">#{selectedBudget.converted_sale_id || '-'}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500 text-xs">Data de conversão</p>
-                      <p className="font-medium text-gray-900">{formatDate(selectedBudget.updated_at)}</p>
+                      <p className="text-gray-500 dark:text-gray-400 text-xs">Data de conversão</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{formatDate(selectedBudget.updated_at)}</p>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Criado por */}
-              <div className="text-xs text-gray-500 border-t pt-3">
+              <div className="text-xs text-gray-500 dark:text-gray-400 border-t dark:border-gray-700 pt-3">
                 <p>Orçamento criado por: {selectedBudget.created_by_user?.full_name || selectedBudget.created_by_user?.email || 'Sistema'}</p>
               </div>
 
-              {/* Observações */}
               {selectedBudget.notes && (
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-xs text-gray-500 mb-1">Observações</p>
-                  <p className="text-sm text-gray-700">{selectedBudget.notes}</p>
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Observações</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{selectedBudget.notes}</p>
                 </div>
               )}
 
-              {/* Itens */}
               <div>
-                <p className="text-xs text-gray-500 font-medium mb-2">ITENS</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-2">ITENS</p>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {budgetItems.length === 0 ? (
-                    <p className="text-center text-gray-500 py-4">Nenhum item encontrado</p>
+                    <p className="text-center text-gray-500 dark:text-gray-400 py-4">Nenhum item encontrado</p>
                   ) : (
                     budgetItems.map((item, i) => (
-                      <div key={i} className="flex justify-between py-2 border-b border-gray-100 last:border-0">
+                      <div key={i} className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
                         <div>
-                          <span className="text-gray-700">{item.product_name}</span>
-                          <span className="text-xs text-gray-500 ml-2">x{item.quantity} {item.unit}</span>
+                          <span className="text-gray-700 dark:text-gray-300">{item.product_name}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">x{item.quantity} {item.unit}</span>
                         </div>
-                        <span className="font-medium">{formatCurrency(item.total_price)}</span>
+                        <span className="font-medium dark:text-white">{formatCurrency(item.total_price)}</span>
                       </div>
                     ))
                   )}
                 </div>
               </div>
 
-              {/* Totais */}
-              <div className="border-t pt-3 space-y-1">
+              <div className="border-t dark:border-gray-700 pt-3 space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Subtotal</span>
-                  <span>{formatCurrency(selectedBudget.total_amount)}</span>
+                  <span className="text-gray-500 dark:text-gray-400">Subtotal</span>
+                  <span className="dark:text-white">{formatCurrency(selectedBudget.total_amount)}</span>
                 </div>
                 {selectedBudget.discount_amount > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-green-600">
+                    <span className="text-green-600 dark:text-green-400">
                       Desconto {selectedBudget.coupon_code && `(${selectedBudget.coupon_code})`}
                     </span>
-                    <span className="text-green-600">-{formatCurrency(selectedBudget.discount_amount)}</span>
+                    <span className="text-green-600 dark:text-green-400">-{formatCurrency(selectedBudget.discount_amount)}</span>
                   </div>
                 )}
-                <div className="flex justify-between font-bold pt-2 border-t">
-                  <span>Total</span>
-                  <span className="text-blue-600">{formatCurrency(selectedBudget.final_amount)}</span>
+                <div className="flex justify-between font-bold pt-2 border-t dark:border-gray-700">
+                  <span className="dark:text-white">Total</span>
+                  <span className="text-blue-600 dark:text-blue-400">{formatCurrency(selectedBudget.final_amount)}</span>
                 </div>
               </div>
             </div>
           )}
 
-          <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+          <div className="flex justify-end gap-3 mt-6 pt-4 border-t dark:border-gray-700">
             <Button variant="outline" onClick={() => setShowDetailsModal(false)}>Fechar</Button>
             <Button variant="outline" onClick={() => window.print()}><Printer size={16} className="mr-1" />Imprimir</Button>
             {selectedBudget?.status === 'pending' && (
@@ -459,40 +698,42 @@ const Budgets = () => {
             )}
           </div>
         </Modal>
-        
-        {/* Modal de Confirmação - Aprovar */}
+
         <ConfirmModal 
           isOpen={showApproveConfirm} 
           onClose={() => { setShowApproveConfirm(false); setBudgetToAction(null) }} 
           onConfirm={handleApprove} 
           title="Aprovar Orçamento" 
-          message={<p>Tem certeza que deseja <strong>aprovar</strong> o orçamento #{budgetToAction?.budget_number}?</p>}
+          message={<p className="dark:text-gray-300">Tem certeza que deseja <strong>aprovar</strong> o orçamento #{budgetToAction?.budget_number}?</p>}
           confirmText="Aprovar" 
           cancelText="Cancelar" 
           variant="success" 
           loading={updateStatusMutation.isPending}
         />
 
-        {/* Modal de Confirmação - Rejeitar */}
         <ConfirmModal 
           isOpen={showRejectConfirm} 
           onClose={() => { setShowRejectConfirm(false); setBudgetToAction(null) }} 
           onConfirm={handleReject} 
           title="Rejeitar Orçamento" 
-          message={<p>Tem certeza que deseja <strong>rejeitar</strong> o orçamento #{budgetToAction?.budget_number}?</p>}
+          message={<p className="dark:text-gray-300">Tem certeza que deseja <strong>rejeitar</strong> o orçamento #{budgetToAction?.budget_number}?</p>}
           confirmText="Rejeitar" 
           cancelText="Cancelar" 
           variant="danger" 
           loading={updateStatusMutation.isPending}
         />
 
-        {/* Modal de Confirmação - Converter em Venda */}
         <ConfirmModal 
           isOpen={showConvertModal} 
           onClose={() => setShowConvertModal(false)} 
           onConfirm={handleConvertToSale} 
           title="Converter em Venda" 
-          message={<div><p className="mb-2">Deseja converter o orçamento #{selectedBudget?.budget_number} em uma venda?</p><p className="text-sm text-gray-500">O estoque será atualizado e o orçamento será marcado como convertido.</p></div>}
+          message={
+            <div>
+              <p className="mb-2 dark:text-gray-300">Deseja converter o orçamento #{selectedBudget?.budget_number} em uma venda?</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">O estoque será atualizado e o orçamento será marcado como convertido.</p>
+            </div>
+          }
           confirmText="Converter" 
           cancelText="Cancelar" 
           variant="success" 

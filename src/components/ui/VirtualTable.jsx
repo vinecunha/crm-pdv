@@ -75,16 +75,16 @@ const VirtualTable = ({
 
   if (sortedData.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-        <p className="text-gray-500">{emptyMessage}</p>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
+        <p className="text-gray-500 dark:text-gray-400">{emptyMessage}</p>
       </div>
     )
   }
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 overflow-hidden ${className}`}>
+    <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden ${className}`}>
       {/* Cabeçalho da Tabela */}
-      <div className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+      <div className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
         <div className="flex items-center">
           {columns.map((column, index) => {
             const width = column.width || `${100 / columns.length}%`
@@ -97,7 +97,7 @@ const VirtualTable = ({
                 {column.sortable ? (
                   <button
                     onClick={() => handleSort(column.key)}
-                    className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700"
+                    className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hover:text-gray-700 dark:hover:text-gray-200"
                   >
                     {column.header}
                     <span className="flex flex-col">
@@ -105,8 +105,8 @@ const VirtualTable = ({
                         size={12}
                         className={`
                           ${sortConfig.key === column.key && sortConfig.direction === 'asc'
-                            ? 'text-blue-600'
-                            : 'text-gray-400'
+                            ? 'text-blue-600 dark:text-blue-400'
+                            : 'text-gray-400 dark:text-gray-600'
                           }
                         `}
                       />
@@ -115,15 +115,15 @@ const VirtualTable = ({
                         className={`
                           -mt-1
                           ${sortConfig.key === column.key && sortConfig.direction === 'desc'
-                            ? 'text-blue-600'
-                            : 'text-gray-400'
+                            ? 'text-blue-600 dark:text-blue-400'
+                            : 'text-gray-400 dark:text-gray-600'
                           }
                         `}
                       />
                     </span>
                   </button>
                 ) : (
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     {column.header}
                   </span>
                 )}
@@ -132,7 +132,7 @@ const VirtualTable = ({
           })}
           {actions && actions.length > 0 && (
             <div className="px-4 py-3 text-right" style={{ width: actions.length * 48 + 16 }}>
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Ações
               </span>
             </div>
@@ -159,9 +159,11 @@ const VirtualTable = ({
                 data-index={rowIndex}
                 ref={virtualizer.measureElement}
                 className={`
-                  flex items-center border-b border-gray-100
-                  ${striped && rowIndex % 2 === 0 ? 'bg-gray-50' : 'bg-white'}
-                  ${hover ? 'hover:bg-blue-50 transition-colors' : ''}
+                  flex items-center border-b border-gray-100 dark:border-gray-700
+                  ${striped && rowIndex % 2 === 0 
+                    ? 'bg-gray-50 dark:bg-gray-900/50' 
+                    : 'bg-white dark:bg-gray-800'}
+                  ${hover ? 'hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors' : ''}
                   ${onRowClick ? 'cursor-pointer' : ''}
                 `}
                 style={{
@@ -203,7 +205,7 @@ const VirtualTable = ({
                           disabled={isDisabled}
                           className={`
                             p-2 rounded-lg transition-colors
-                            ${action.className || 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}
+                            ${action.className || 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'}
                             ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
                           `}
                           title={typeof action.label === 'function' ? action.label(row) : action.label}

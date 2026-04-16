@@ -13,7 +13,6 @@ import AppearanceSettingsTab from '../components/settings/AppearanceSettingsTab'
 import PermissionsSettingsTab from '../components/settings/PermissionsSettingsTab'
 import SecuritySettingsTab from '../components/settings/SecuritySettingsTab'
 
-// ============= API Functions =============
 const fetchCompanySettings = async () => {
   const { data, error } = await supabase
     .from('company_settings')
@@ -52,7 +51,6 @@ const saveCompanySettings = async (settings) => {
   return safeData
 }
 
-// ============= Componente Principal =============
 const Settings = () => {
   const { profile, isAdmin, changePassword, logout } = useAuth()
   const queryClient = useQueryClient()
@@ -61,7 +59,6 @@ const Settings = () => {
   const [feedback, setFeedback] = useState({ message: null, type: 'success' })
   const [localSettings, setLocalSettings] = useState(null)
 
-  // ============= Query =============
   const { 
     data: companySettings,
     isLoading,
@@ -74,7 +71,6 @@ const Settings = () => {
     staleTime: 0,
   })
 
-  // ============= Mutation =============
   const saveMutation = useMutation({
     mutationFn: saveCompanySettings,
     onSuccess: (data) => {
@@ -86,7 +82,6 @@ const Settings = () => {
     }
   })
 
-  // ============= Handlers =============
   const showFeedback = (message, type = 'success') => {
     setFeedback({ message, type })
     setTimeout(() => setFeedback({ message: null, type: 'success' }), 3000)
@@ -104,16 +99,15 @@ const Settings = () => {
 
   const currentSettings = localSettings || companySettings || {}
 
-  // ============= Render =============
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="bg-red-100 rounded-full p-4 inline-block mb-4">
-            <Shield className="h-12 w-12 text-red-600" />
+          <div className="bg-red-100 dark:bg-red-900/30 rounded-full p-4 inline-block mb-4">
+            <Shield className="h-12 w-12 text-red-600 dark:text-red-400" />
           </div>
-          <h2 className="text-2xl font-bold text-red-600">Acesso Restrito</h2>
-          <p className="mt-2 text-gray-600">Apenas administradores podem acessar as configurações.</p>
+          <h2 className="text-2xl font-bold text-red-600 dark:text-red-400">Acesso Restrito</h2>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">Apenas administradores podem acessar as configurações.</p>
         </div>
       </div>
     )
@@ -123,13 +117,13 @@ const Settings = () => {
   
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro ao carregar configurações</h2>
-          <p className="text-gray-600 mb-4">{error.message}</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao carregar configurações</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{error.message}</p>
           <button 
             onClick={() => refetch()}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
           >
             Tentar novamente
           </button>
@@ -139,11 +133,11 @@ const Settings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Configurações</h1>
-          <p className="text-gray-500 mt-1">Gerencie as preferências do sistema</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Configurações</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Gerencie as preferências do sistema</p>
         </div>
 
         {feedback.message && (
@@ -158,7 +152,7 @@ const Settings = () => {
           <SettingsSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
           <div className="flex-1">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
               {activeTab === 'company' && (
                 <CompanySettingsTab 
                   settings={currentSettings} 

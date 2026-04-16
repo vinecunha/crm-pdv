@@ -13,7 +13,6 @@ import useSystemLogs from '../hooks/useSystemLogs'
 import TabButton from '../components/reports/TabButton'
 import DateRangeFilter from '../components/reports/DateRangeFilter'
 
-// Relatórios básicos
 const SalesReport = lazy(() => import(
   /* webpackChunkName: "reports" */
   '../components/reports/SalesReport'
@@ -35,7 +34,6 @@ const StockReport = lazy(() => import(
   '../components/reports/StockReport'
 ))
 
-// Relatórios avançados (novos)
 const ABCCurveReport = lazy(() => import(
   /* webpackChunkName: "reports-advanced" */
   '../components/reports/ABCCurveReport'
@@ -61,7 +59,6 @@ const SeasonalityReport = lazy(() => import(
   '../components/reports/SeasonalityReport'
 ))
 
-// ============= Constantes =============
 const basicTabs = [
   { id: 'sales', label: 'Vendas', icon: ShoppingCart, category: 'basic' },
   { id: 'operators', label: 'Operadores', icon: UserCheck, category: 'basic' },
@@ -81,7 +78,6 @@ const advancedTabs = [
 
 const allTabs = [...basicTabs, ...advancedTabs]
 
-// ============= Componente Principal =============
 const Reports = () => {
   const { profile } = useAuth()
   const { logAction } = useSystemLogs()
@@ -100,10 +96,8 @@ const Reports = () => {
   const [isExporting, setIsExporting] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
-  // Verificar se é admin/gerente (relatórios avançados só para eles)
   const canViewAdvanced = profile?.role === 'admin' || profile?.role === 'gerente'
 
-  // ============= Efeitos =============
   useEffect(() => {
     logAction({
       action: 'VIEW',
@@ -112,7 +106,6 @@ const Reports = () => {
     })
   }, [activeTab])
 
-  // ============= Handlers =============
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 4000)
@@ -176,19 +169,17 @@ const Reports = () => {
 
   const visibleTabs = showAdvanced ? allTabs : basicTabs
 
-  // ============= Render =============
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <BarChart3 className="text-blue-600" />
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <BarChart3 className="text-blue-600 dark:text-blue-400" />
                 Relatórios e Análises
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
                 Visualize e analise os dados do seu negócio
               </p>
             </div>
@@ -238,8 +229,7 @@ const Reports = () => {
           </div>
         )}
 
-        {/* Tabs */}
-        <div className="mb-6 border-b border-gray-200">
+        <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
           <nav className="flex flex-wrap gap-1">
             {visibleTabs.map(tab => (
               <TabButton
@@ -255,7 +245,6 @@ const Reports = () => {
           </nav>
         </div>
 
-        {/* Filtros de Data */}
         <DateRangeFilter
           activeTab={activeTab}
           dateRange={dateRange}
@@ -268,10 +257,8 @@ const Reports = () => {
           setCategoryFilter={setCategoryFilter}
         />
 
-        {/* Conteúdo da Tab */}
         <div className="space-y-6">
           <Suspense fallback={<DataLoadingSkeleton type="cards" rows={3} />}>
-            {/* Relatórios Básicos */}
             {activeTab === 'sales' && (
               <SalesReport
                 dateRange={dateRange}
@@ -302,7 +289,6 @@ const Reports = () => {
               <StockReport categoryFilter={categoryFilter} />
             )}
 
-            {/* Relatórios Avançados */}
             {activeTab === 'abc-curve' && (
               <ABCCurveReport
                 dateRange={dateRange}

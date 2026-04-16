@@ -490,9 +490,9 @@ const Sales = () => {
   if (isLoading) return <DataLoadingSkeleton />
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       {!isOnline && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-500 text-white py-2 px-4 text-center text-sm font-medium shadow-md">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-500 dark:bg-yellow-600 text-white py-2 px-4 text-center text-sm font-medium shadow-md">
           <div className="flex items-center justify-center gap-2">
             <WifiOff size={16} />
             <span>MODO OFFLINE - As vendas serão salvas localmente e sincronizadas quando a internet voltar</span>
@@ -506,10 +506,10 @@ const Sales = () => {
 
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <ShoppingCart className="text-blue-600" /> Ponto de Venda (PDV)
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <ShoppingCart className="text-blue-600 dark:text-blue-400" /> Ponto de Venda (PDV)
             </h1>
-            <p className="text-gray-600 mt-1">Realize vendas rapidamente com atalhos de teclado</p>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">Realize vendas rapidamente com atalhos de teclado</p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => navigate('/budgets')} icon={FileText}>Orçamentos</Button>
@@ -525,21 +525,21 @@ const Sales = () => {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 sticky top-4">
-              <div className="p-4 border-b border-gray-200">
-                <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 sticky top-4">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <ShoppingCart size={18} /> Carrinho
-                  {cart.length > 0 && <span className="ml-auto text-sm text-gray-500">{cart.length} {cart.length === 1 ? 'item' : 'itens'}</span>}
+                  {cart.length > 0 && <span className="ml-auto text-sm text-gray-500 dark:text-gray-400">{cart.length} {cart.length === 1 ? 'item' : 'itens'}</span>}
                 </h2>
               </div>
 
-              <div className="p-4 border-b border-gray-200 space-y-3">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700 space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2"><User size={16} className="text-gray-400" /><span className="text-sm font-medium text-gray-700">Cliente</span></div>
+                  <div className="flex items-center gap-2"><User size={16} className="text-gray-400 dark:text-gray-500" /><span className="text-sm font-medium text-gray-700 dark:text-gray-300">Cliente</span></div>
                   {customer ? (
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600 truncate max-w-[150px]">{customer.name}</span>
-                      <button onClick={clearCustomer} className="text-xs text-red-500 hover:text-red-700" disabled={isMutating}>Remover</button>
+                      <span className="text-sm text-gray-600 dark:text-gray-300 truncate max-w-[150px]">{customer.name}</span>
+                      <button onClick={clearCustomer} className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300" disabled={isMutating}>Remover</button>
                     </div>
                   ) : (
                     <Button size="sm" variant="outline" onClick={() => setShowCustomerModal(true)} shortcut={{ key: 'C', alt: true, description: 'Cliente' }} disabled={isMutating}>Identificar</Button>
@@ -547,11 +547,11 @@ const Sales = () => {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2"><Ticket size={16} className="text-gray-400" /><span className="text-sm font-medium text-gray-700">Cupom</span></div>
+                  <div className="flex items-center gap-2"><Ticket size={16} className="text-gray-400 dark:text-gray-500" /><span className="text-sm font-medium text-gray-700 dark:text-gray-300">Cupom</span></div>
                   {coupon ? (
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-green-600 font-medium">{coupon.code}</span>
-                      <button onClick={removeCoupon} className="text-xs text-red-500 hover:text-red-700" disabled={isMutating}>Remover</button>
+                      <span className="text-sm text-green-600 dark:text-green-400 font-medium">{coupon.code}</span>
+                      <button onClick={removeCoupon} className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300" disabled={isMutating}>Remover</button>
                     </div>
                   ) : (
                     <Button size="sm" variant="outline" onClick={() => setShowCouponModal(true)} shortcut={{ key: 'U', alt: true, description: 'Cupom' }} disabled={!customer || isMutating}>Aplicar</Button>
@@ -563,11 +563,11 @@ const Sales = () => {
                 onRemoveItem={removeFromCart} onClearCart={handleClearCart} onCheckout={() => setShowPaymentModal(true)}
                 selectedItemIndex={selectedCartItemIndex} onSelectItem={setSelectedCartItemIndex} disabled={isMutating} />
 
-              <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+              <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 rounded-b-lg">
                 <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm"><span className="text-gray-600">Subtotal</span><span className="font-medium">{formatCurrency(subtotal)}</span></div>
-                  {discount > 0 && <div className="flex justify-between text-sm text-green-600"><span>Desconto</span><span>- {formatCurrency(discount)}</span></div>}
-                  <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200"><span>Total</span><span className="text-blue-600">{formatCurrency(total)}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-gray-600 dark:text-gray-400">Subtotal</span><span className="font-medium dark:text-white">{formatCurrency(subtotal)}</span></div>
+                  {discount > 0 && <div className="flex justify-between text-sm text-green-600 dark:text-green-400"><span>Desconto</span><span>- {formatCurrency(discount)}</span></div>}
+                  <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200 dark:border-gray-700"><span className="dark:text-white">Total</span><span className="text-blue-600 dark:text-blue-400">{formatCurrency(total)}</span></div>
                 </div>
                 <Button variant="success" size="lg" fullWidth onClick={() => setShowPaymentModal(true)}
                   disabled={cart.length === 0 || isMutating} icon={CreditCard} shortcut={{ key: 'Enter', ctrl: true, description: 'Finalizar' }}>
@@ -580,9 +580,9 @@ const Sales = () => {
 
         <Modal isOpen={showCustomerModal} onClose={() => setShowCustomerModal(false)} title="Identificar Cliente" size="sm">
           <div className="space-y-4">
-            <div className="text-center"><div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3"><Phone size={28} className="text-blue-600" /></div><p className="text-gray-600 mb-4">Digite o telefone do cliente</p></div>
+            <div className="text-center"><div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-3"><Phone size={28} className="text-blue-600 dark:text-blue-400" /></div><p className="text-gray-600 dark:text-gray-400 mb-4">Digite o telefone do cliente</p></div>
             <input type="tel" placeholder="(11) 99999-9999" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-lg text-center"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-lg text-center placeholder-gray-400 dark:placeholder-gray-500"
               onKeyPress={(e) => e.key === 'Enter' && searchCustomer()} autoFocus disabled={searchCustomerMutation.isPending} />
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setShowCustomerModal(false)} className="flex-1">Cancelar (ESC)</Button>
@@ -604,8 +604,8 @@ const Sales = () => {
           onConfirm={confirmPayment} isSubmitting={createSaleMutation.isPending} isOnline={isOnline} onCreatePendingSale={createPendingSale} />
 
         <ConfirmModal isOpen={showClearCartConfirm} onClose={() => setShowClearCartConfirm(false)} onConfirm={confirmClearCart}
-          title="Limpar Carrinho" message={<div><p className="mb-2">Tem certeza que deseja remover todos os itens do carrinho?</p>
-          <p className="text-sm text-gray-500">{cart.length} {cart.length === 1 ? 'item será' : 'itens serão'} removidos.</p></div>}
+          title="Limpar Carrinho" message={<div><p className="mb-2 dark:text-gray-300">Tem certeza que deseja remover todos os itens do carrinho?</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{cart.length} {cart.length === 1 ? 'item será' : 'itens serão'} removidos.</p></div>}
           confirmText="Limpar Carrinho" cancelText="Cancelar" variant="danger" />
 
         <ShortcutsHelpModal isOpen={showShortcutsHelp} onClose={() => setShowShortcutsHelp(false)} shortcuts={shortcuts} />

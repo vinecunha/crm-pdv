@@ -24,7 +24,6 @@ import CouponFilters from '../components/coupons/CouponFilters'
 import CouponCustomersModal from '../components/coupons/CouponCustomersModal'
 import CouponCampaignModal from '../components/coupons/CouponCampaignModal'
 
-// ============= Componente Principal =============
 const Coupons = () => {
   const { profile, user } = useAuth()
   const { logError } = useSystemLogs()
@@ -52,7 +51,6 @@ const Coupons = () => {
     is_global: true, is_active: true, valid_from: '', valid_to: '', usage_limit: ''
   })
 
-  // ============= Queries =============
   const { 
     data: coupons = [], 
     isLoading: isLoadingCoupons,
@@ -83,7 +81,6 @@ const Coupons = () => {
     enabled: !!editingCoupon?.id && !editingCoupon?.is_global,
   })
 
-  // ============= Mutations =============
   const createMutation = useMutation({
     mutationFn: ({ couponData, allowedCustomers }) => couponService.createCoupon(couponData, allowedCustomers, profile),
     onSuccess: async (coupon) => {
@@ -118,7 +115,6 @@ const Coupons = () => {
     }
   })
 
-  // ✅ deleteMutation CORRIGIDO
   const deleteMutation = useMutation({
     mutationFn: (id) => {
       logger.log('🔄 [Coupons] deleteMutation.mutationFn', { id })
@@ -159,7 +155,6 @@ const Coupons = () => {
     mutationFn: ({ couponId, customer }) => couponService.addAllowedCustomer(couponId, customer),
     onSuccess: () => { 
       logger.log('✅ [Coupons] Cliente adicionado ao cupom')
-      // ✅ Invalidar ambas as queries
       queryClient.invalidateQueries({ queryKey: ['allowed-customers', selectedCoupon?.id] })
       queryClient.invalidateQueries({ queryKey: ['coupons'] })
       showFeedback('success', 'Cliente adicionado!') 
@@ -174,7 +169,6 @@ const Coupons = () => {
     mutationFn: ({ couponId, customerId }) => couponService.removeAllowedCustomer(couponId, customerId),
     onSuccess: () => { 
       logger.log('✅ [Coupons] Cliente removido do cupom')
-      // ✅ Invalidar ambas as queries
       queryClient.invalidateQueries({ queryKey: ['allowed-customers', selectedCoupon?.id] })
       queryClient.invalidateQueries({ queryKey: ['coupons'] })
       showFeedback('success', 'Cliente removido!') 
@@ -185,7 +179,6 @@ const Coupons = () => {
     }
   })
 
-  // ============= Handlers =============
   const showFeedback = (type, message) => { 
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000) 
@@ -258,7 +251,6 @@ const Coupons = () => {
     }
   }
 
-  // ✅ Handler de exclusão com ConfirmModal
   const handleDeleteCoupon = (coupon) => {
     logger.log('🗑️ [Coupons] handleDeleteCoupon chamado', {
       id: coupon?.id,
@@ -275,7 +267,6 @@ const Coupons = () => {
     setShowDeleteConfirmModal(true)
   }
 
-  // ✅ Handler de confirmação
   const handleConfirmDelete = () => {
     logger.log('✅ [Coupons] Exclusão confirmada', {
       id: couponToDelete?.id,
@@ -284,7 +275,6 @@ const Coupons = () => {
     deleteMutation.mutate(couponToDelete.id)
   }
 
-  // ✅ Handler de cancelamento
   const handleCancelDelete = () => {
     logger.log('❌ [Coupons] Exclusão cancelada')
     setShowDeleteConfirmModal(false)
@@ -332,7 +322,6 @@ const Coupons = () => {
     setCampaignLoading?.(true)
     
     try {
-      // 1. Registrar comunicação no banco
       const { error: commError } = await supabase
         .from('customer_communications')
         .insert({
@@ -348,7 +337,6 @@ const Coupons = () => {
         logger.error('❌ [Coupons] Erro ao registrar comunicação', { error: commError.message })
       }
       
-      // 2. ✅ ABRIR WHATSAPP
       if (channel === 'whatsapp') {
         const phone = customer.phone?.replace(/\D/g, '')
         if (phone) {
@@ -362,7 +350,6 @@ const Coupons = () => {
         }
       }
       
-      // 3. ✅ ABRIR EMAIL
       if (channel === 'email') {
         const email = customer.email
         if (email) {
@@ -376,7 +363,6 @@ const Coupons = () => {
         }
       }
       
-      // 4. ✅ ABRIR SMS
       if (channel === 'sms') {
         const phone = customer.phone?.replace(/\D/g, '')
         if (phone) {
@@ -390,7 +376,6 @@ const Coupons = () => {
         }
       }
       
-      // 5. Notificação de sucesso
       await supabase.rpc('create_notification', {
         p_user_id: user?.id,
         p_title: '📧 Campanha Enviada',
@@ -419,13 +404,12 @@ const Coupons = () => {
     logComponentAction('ACCESS_PAGE', null, { page: 'coupons' }) 
   }, [])
 
-  // ============= Render =============
   if (couponsError) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro ao carregar cupons</h2>
-          <p className="text-gray-600 mb-4">{couponsError.message}</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao carregar cupons</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{couponsError.message}</p>
           <Button onClick={() => refetchCoupons()} icon={RefreshCw}>Tentar novamente</Button>
         </div>
       </div>
@@ -437,7 +421,7 @@ const Coupons = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {feedback.show && (
           <FeedbackMessage 
@@ -450,11 +434,11 @@ const Coupons = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Cupons de Desconto</h1>
-              <p className="text-gray-500 mt-1">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Cupons de Desconto</h1>
+              <p className="text-gray-500 dark:text-gray-400 mt-1">
                 Gerencie cupons globais e restritos para seus clientes
                 {isFetchingCoupons && (
-                  <span className="ml-2 text-xs text-gray-400">atualizando...</span>
+                  <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">atualizando...</span>
                 )}
               </p>
             </div>
@@ -485,7 +469,6 @@ const Coupons = () => {
           onSendCampaign={handleOpenCampaignModal}
         />
 
-        {/* Modal de Cadastro/Edição */}
         <Modal 
           isOpen={showModal} 
           onClose={() => !isMutating && setShowModal(false)} 
@@ -501,7 +484,7 @@ const Coupons = () => {
             setSelectedCustomers={setSelectedCustomers} 
             disabled={isMutating} 
           />
-          <div className="flex gap-3 pt-4 mt-4 border-t">
+          <div className="flex gap-3 pt-4 mt-4 border-t dark:border-gray-700">
             <Button 
               variant="outline" 
               onClick={() => setShowModal(false)} 
@@ -520,7 +503,6 @@ const Coupons = () => {
           </div>
         </Modal>
 
-        {/* Modal de Clientes Permitidos */}
         <CouponCustomersModal 
           isOpen={showCustomersModal} 
           onClose={() => setShowCustomersModal(false)} 
@@ -546,7 +528,6 @@ const Coupons = () => {
           }}
         />
 
-        {/* ✅ Modal de Confirmação de Exclusão */}
         <ConfirmModal
           isOpen={showDeleteConfirmModal}
           onClose={handleCancelDelete}
@@ -554,8 +535,8 @@ const Coupons = () => {
           title="Confirmar Exclusão"
           message={
             <div className="space-y-2">
-              <p>Tem certeza que deseja excluir o cupom <strong>{couponToDelete?.code}</strong>?</p>
-              <p className="text-sm text-gray-500">Esta ação não pode ser desfeita.</p>
+              <p className="dark:text-gray-300">Tem certeza que deseja excluir o cupom <strong>{couponToDelete?.code}</strong>?</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Esta ação não pode ser desfeita.</p>
             </div>
           }
           confirmText="Excluir"

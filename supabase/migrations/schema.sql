@@ -529,9 +529,22 @@ create table public.profiles (
   display_name text null,
   status character varying(20) null default 'active'::character varying,
   registration_number character varying(20) null,
+  sidebar_collapsed boolean null default false,
+  table_density text null default 'comfortable'::text,
   constraint profiles_pkey primary key (id),
   constraint profiles_registration_number_key unique (registration_number),
   constraint profiles_id_fkey foreign KEY (id) references auth.users (id),
+  constraint check_table_density check (
+    (
+      table_density = any (
+        array[
+          'compact'::text,
+          'comfortable'::text,
+          'spacious'::text
+        ]
+      )
+    )
+  ),
   constraint profiles_status_check check (
     (
       (status)::text = any (
@@ -571,6 +584,9 @@ create trigger on_profile_update
 after
 update on profiles for EACH row when (old.* is distinct from new.*)
 execute FUNCTION handle_profile_update ();
+
+create trigger trigger_initialize_user_preferences BEFORE INSERT on profiles for EACH row
+execute FUNCTION initialize_user_preferences ();
 
 create trigger trigger_set_registration_number BEFORE INSERT on profiles for EACH row
 execute FUNCTION set_registration_number ();

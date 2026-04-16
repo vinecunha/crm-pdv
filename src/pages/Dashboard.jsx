@@ -18,7 +18,6 @@ import Badge from '../components/Badge'
 import { Line } from 'react-chartjs-2'
 import '../lib/chartConfig'
 
-// ============= API Function =============
 const fetchDashboardData = async () => {
   const [
     customersResult,
@@ -56,11 +55,9 @@ const fetchDashboardData = async () => {
   return { customersCount, sales, products, saleItems }
 }
 
-// ============= Componente Principal =============
 const Dashboard = () => {
   const { profile, permissions } = useAuth()
 
-  // ============= Query =============
   const { 
     data: rawData,
     isLoading,
@@ -69,16 +66,14 @@ const Dashboard = () => {
   } = useQuery({
     queryKey: ['dashboard-data'],
     queryFn: fetchDashboardData,
-    staleTime: 2 * 60 * 1000, // 2 minutos
+    staleTime: 2 * 60 * 1000,
   })
 
-  // ============= Dados Processados =============
   const dashboardData = React.useMemo(() => {
     if (!rawData) return null
 
     const { customersCount, sales, products, saleItems } = rawData
 
-    // Calcular datas
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     
@@ -89,7 +84,6 @@ const Dashboard = () => {
     const startOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1)
     const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0)
     
-    // Últimos 7 dias para o gráfico
     const last7Days = []
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today)
@@ -97,14 +91,12 @@ const Dashboard = () => {
       last7Days.push(date)
     }
 
-    // Vendas por dia (últimos 7 dias)
     const salesByDay = {}
     last7Days.forEach(date => {
       const key = date.toISOString().split('T')[0]
       salesByDay[key] = 0
     })
 
-    // Vendas de hoje e ontem
     const salesToday = sales.filter(sale => new Date(sale.created_at) >= today)
     const salesYesterday = sales.filter(sale => {
       const saleDate = new Date(sale.created_at)
@@ -114,7 +106,6 @@ const Dashboard = () => {
     const totalSalesToday = salesToday.reduce((sum, sale) => sum + (sale.final_amount || 0), 0)
     const totalSalesYesterday = salesYesterday.reduce((sum, sale) => sum + (sale.final_amount || 0), 0)
 
-    // Vendas do mês
     const salesThisMonth = sales.filter(sale => new Date(sale.created_at) >= startOfMonth)
     const salesLastMonth = sales.filter(sale => {
       const saleDate = new Date(sale.created_at)
@@ -124,7 +115,6 @@ const Dashboard = () => {
     const totalSalesMonth = salesThisMonth.reduce((sum, sale) => sum + (sale.final_amount || 0), 0)
     const totalSalesLastMonth = salesLastMonth.reduce((sum, sale) => sum + (sale.final_amount || 0), 0)
 
-    // Preencher vendas por dia para o gráfico
     salesThisMonth.forEach(sale => {
       const dateKey = new Date(sale.created_at).toISOString().split('T')[0]
       if (salesByDay[dateKey] !== undefined) {
@@ -132,11 +122,9 @@ const Dashboard = () => {
       }
     })
 
-    // Ticket médio
     const averageTicket = salesToday.length > 0 ? totalSalesToday / salesToday.length : 0
     const averageTicketYesterday = salesYesterday.length > 0 ? totalSalesYesterday / salesYesterday.length : 0
 
-    // Calcular variações
     const salesChange = totalSalesYesterday > 0 
       ? ((totalSalesToday - totalSalesYesterday) / totalSalesYesterday) * 100 
       : 0
@@ -147,12 +135,10 @@ const Dashboard = () => {
       ? ((averageTicket - averageTicketYesterday) / averageTicketYesterday) * 100
       : 0
 
-    // Produtos com estoque baixo
     const lowStockProducts = products.filter(p => 
       (p.stock_quantity || 0) <= (p.min_stock || 5)
     )
 
-    // Produtos mais vendidos
     const productSalesMap = {}
     saleItems.forEach(item => {
       const productId = item.product_id
@@ -170,7 +156,6 @@ const Dashboard = () => {
       .sort((a, b) => b.quantity - a.quantity)
       .slice(0, 5)
 
-    // Últimas vendas
     const recentSales = sales.slice(0, 5).map(sale => ({
       id: sale.id,
       sale_number: sale.sale_number,
@@ -206,7 +191,6 @@ const Dashboard = () => {
     }
   }, [rawData])
 
-  // ============= Quick Actions =============
   const quickActions = React.useMemo(() => {
     const actions = []
     
@@ -226,7 +210,6 @@ const Dashboard = () => {
     return actions
   }, [permissions])
 
-  // ============= Helpers =============
   const getStatusBadge = (status) => {
     const config = {
       completed: { label: 'Concluída', variant: 'success' },
@@ -257,22 +240,29 @@ const Dashboard = () => {
       y: {
         ticks: {
           callback: (value) => `R$ ${value}`
+        },
+        grid: {
+          color: 'rgba(156, 163, 175, 0.2)'
+        }
+      },
+      x: {
+        grid: {
+          display: false
         }
       }
     }
   }
 
-  // ============= Render =============
   if (isLoading) {
     return <DataLoadingSkeleton type="cards" rows={4} />
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro ao carregar dashboard</h2>
-          <p className="text-gray-600 mb-4">{error.message}</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao carregar dashboard</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{error.message}</p>
           <Button onClick={() => refetch()}>Tentar novamente</Button>
         </div>
       </div>
@@ -284,13 +274,12 @@ const Dashboard = () => {
   const { stats, recentSales, topProducts, chartData } = dashboardData
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Visão Geral</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Visão Geral</h1>
             </div>
             
             <div className="flex gap-2">
@@ -308,7 +297,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <SectionErrorBoundary title="Erro nas vendas de hoje">
             <SummaryCard
@@ -353,7 +341,6 @@ const Dashboard = () => {
           </SectionErrorBoundary>
         </div>
 
-        {/* Segunda linha de cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <SectionErrorBoundary title="Erro nos produtos">
             <SummaryCard
@@ -384,49 +371,47 @@ const Dashboard = () => {
           </SectionErrorBoundary>
         </div>
 
-        {/* Gráfico de Vendas */}
         <SectionErrorBoundary title="Erro no gráfico de vendas">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Vendas dos Últimos 7 Dias</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Vendas dos Últimos 7 Dias</h2>
             <div className="h-64">
               <Line data={chartData} options={chartOptions} />
             </div>
           </div>
         </SectionErrorBoundary>
 
-        {/* Últimas Vendas e Produtos Mais Vendidos */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SectionErrorBoundary title="Erro nas últimas vendas">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Últimas Vendas</h2>
-                <Link to="/sales-list" className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Últimas Vendas</h2>
+                <Link to="/sales-list" className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1">
                   Ver todas <ChevronRight size={16} />
                 </Link>
               </div>
               
               {recentSales.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <ShoppingCart className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <ShoppingCart className="h-12 w-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
                   <p>Nenhuma venda registrada ainda</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {recentSales.map((sale) => (
-                    <div key={sale.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div key={sale.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <p className="font-medium text-gray-900">#{sale.sale_number}</p>
-                          <p className="text-sm text-gray-600">{sale.customer}</p>
+                          <p className="font-medium text-gray-900 dark:text-white">#{sale.sale_number}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">{sale.customer}</p>
                         </div>
                         <div className="flex items-center gap-2 mt-1">
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
                             {formatDate(sale.date)} • {getPaymentMethodLabel(sale.payment_method)}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-gray-900">{formatCurrency(sale.amount)}</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">{formatCurrency(sale.amount)}</p>
                         {getStatusBadge(sale.status)}
                       </div>
                     </div>
@@ -437,37 +422,37 @@ const Dashboard = () => {
           </SectionErrorBoundary>
 
           <SectionErrorBoundary title="Erro nos produtos mais vendidos">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Produtos Mais Vendidos</h2>
-                <Link to="/reports" className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Produtos Mais Vendidos</h2>
+                <Link to="/reports" className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1">
                   Relatórios <ChevronRight size={16} />
                 </Link>
               </div>
               
               {topProducts.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Package className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <Package className="h-12 w-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
                   <p>Nenhuma venda registrada ainda</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {topProducts.map((product, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                          index === 0 ? 'bg-yellow-100 text-yellow-700' :
-                          index === 1 ? 'bg-gray-200 text-gray-600' :
-                          index === 2 ? 'bg-amber-100 text-amber-700' :
-                          'bg-blue-100 text-blue-600'
+                          index === 0 ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' :
+                          index === 1 ? 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300' :
+                          index === 2 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' :
+                          'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                         }`}>
                           {index + 1}
                         </div>
-                        <span className="font-medium text-gray-900">{product.name}</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{product.name}</span>
                       </div>
                       <div className="text-right">
-                        <span className="font-semibold text-gray-900">{formatNumber(product.quantity)}</span>
-                        <p className="text-xs text-gray-500">unidades</p>
+                        <span className="font-semibold text-gray-900 dark:text-white">{formatNumber(product.quantity)}</span>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">unidades</p>
                       </div>
                     </div>
                   ))}

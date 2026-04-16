@@ -23,7 +23,6 @@ import UserFilters from '../components/users/UserFilters'
 import UserDeleteModal from '../components/users/UserDeleteModal'
 import UserRoleBadge from '../components/users/UserRoleBadge'
 
-// ============= Componente Principal =============
 const Users = () => {
   const { profile } = useAuth()
   const { logCreate, logUpdate, logDelete, logError, logAction } = useSystemLogs()
@@ -56,7 +55,6 @@ const Users = () => {
   const canDeleteUser = isAdmin
   const canChangeRole = isAdmin
 
-  // ============= Queries =============
   const { data: users = [], isLoading: loadingUsers, refetch: refetchUsers } = useQuery({
     queryKey: ['users', { filters }],
     queryFn: () => userService.fetchUsers(filters),
@@ -69,7 +67,6 @@ const Users = () => {
     enabled: activeTab === 'unlock' && isAdmin,
   })
 
-  // ============= Mutations =============
   const createMutation = useMutation({
     mutationFn: userService.createUser,
     onSuccess: async (user) => {
@@ -137,7 +134,6 @@ const Users = () => {
     onError: (error) => showFeedback('error', 'Erro ao desbloquear usuários')
   })
 
-  // ============= Dados Filtrados =============
   const filteredUsers = useMemo(() => {
     const usersArray = Array.isArray(users) ? users : []
     return usersArray.filter(user => 
@@ -170,7 +166,6 @@ const Users = () => {
     totalBlocked: blockedUsers.filter(u => u.status === 'blocked' || u.status === 'locked').length
   }), [blockedUsers])
 
-  // ============= Handlers =============
   const showFeedback = (type, message) => { setFeedback({ show: true, type, message }); setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000) }
   
   const resetForm = () => { 
@@ -195,7 +190,6 @@ const Users = () => {
     if (editingUser) {
       const updateData = { full_name: formData.full_name }
       if (canChangeRole) updateData.role = formData.role
-      // Não permite alterar matrícula na edição
       updateMutation.mutate({ id: editingUser.id, data: updateData })
     } else {
       if (!formData.email || !formData.password || !formData.full_name) { 
@@ -236,7 +230,7 @@ const Users = () => {
     { 
       key: 'registration_number', 
       header: 'Matrícula', 
-      render: (row) => <span className="font-mono text-sm text-gray-600">{row.registration_number || '-'}</span> 
+      render: (row) => <span className="font-mono text-sm text-gray-600 dark:text-gray-400">{row.registration_number || '-'}</span> 
     },
     { 
       key: 'email', 
@@ -251,8 +245,8 @@ const Users = () => {
             {row.email?.charAt(0).toUpperCase() || 'U'}
           </div>
           <div>
-            <p className="font-medium text-gray-900">{row.display_name || row.full_name || row.email?.split('@')[0]}</p>
-            <p className="text-xs text-gray-500">{row.email}</p>
+            <p className="font-medium text-gray-900 dark:text-white">{row.display_name || row.full_name || row.email?.split('@')[0]}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{row.email}</p>
           </div>
         </div>
       ) 
@@ -270,7 +264,7 @@ const Users = () => {
     { 
       key: 'last_login', 
       header: 'Último Acesso', 
-      render: (row) => <span className="text-sm text-gray-600">{row.last_login ? formatDateTime(row.last_login) : 'Nunca'}</span> 
+      render: (row) => <span className="text-sm text-gray-600 dark:text-gray-400">{row.last_login ? formatDateTime(row.last_login) : 'Nunca'}</span> 
     }
   ]
 
@@ -278,25 +272,25 @@ const Users = () => {
     label: 'Desbloquear', 
     icon: <Unlock size={16} />, 
     onClick: handleUnlockUser, 
-    className: 'text-green-600 hover:text-green-800 hover:bg-green-50', 
+    className: 'text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/30', 
     disabled: (row) => row.status === 'active' || row.id === profile?.id 
   }]
 
   const renderUserCard = (user) => (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md dark:hover:shadow-gray-900/50 transition-shadow">
       <div className="flex items-start justify-between mb-3">
         <UserRoleBadge role={user.role} size="sm" />
-        {user.id === profile?.id && <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs">Você</span>}
+        {user.id === profile?.id && <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full text-xs">Você</span>}
       </div>
-      <p className="text-xs text-gray-500 font-mono mb-1">{user.registration_number || 'Sem matrícula'}</p>
-      <h3 className="font-semibold text-gray-900 mb-2">{user.full_name || user.email?.split('@')[0]}</h3>
-      <p className="text-sm text-gray-500 mb-3 break-all">{user.email}</p>
-      <div className="flex gap-2 pt-3 border-t border-gray-100">
+      <p className="text-xs text-gray-500 dark:text-gray-400 font-mono mb-1">{user.registration_number || 'Sem matrícula'}</p>
+      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{user.full_name || user.email?.split('@')[0]}</h3>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 break-all">{user.email}</p>
+      <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
         {canEditUser && (!isAdmin ? user.role !== 'admin' : true) && (
-          <button onClick={() => handleEdit(user)} className="flex-1 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 text-sm">Editar</button>
+          <button onClick={() => handleEdit(user)} className="flex-1 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800/50 text-sm">Editar</button>
         )}
         {canDeleteUser && user.id !== profile?.id && (!isAdmin ? user.role !== 'admin' : true) && (
-          <button onClick={() => { setUserToDelete(user); setShowDeleteModal(true) }} className="flex-1 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-sm">Excluir</button>
+          <button onClick={() => { setUserToDelete(user); setShowDeleteModal(true) }} className="flex-1 py-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-800/50 text-sm">Excluir</button>
         )}
       </div>
     </div>
@@ -312,12 +306,12 @@ const Users = () => {
   if (!canCreateUser && !canEditUser) return <DataEmptyState title="Acesso Restrito" description="Você não tem permissão para acessar esta página." icon="users" />
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {feedback.show && <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />}
         <div className="mb-6">
           <div className="flex items-center justify-between">
-            <div><h1 className="text-2xl font-bold text-gray-900">Usuários</h1><p className="text-gray-500 mt-1">Gerencie os usuários e acessos do sistema</p></div>
+            <div><h1 className="text-2xl font-bold text-gray-900 dark:text-white">Usuários</h1><p className="text-gray-500 dark:text-gray-400 mt-1">Gerencie os usuários e acessos do sistema</p></div>
             {activeTab === 'users' && (
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => refetchUsers()} loading={loadingUsers} icon={RefreshCw}>Atualizar</Button>
@@ -331,7 +325,7 @@ const Users = () => {
               </div>
             )}
           </div>
-          <div className="border-b border-gray-200 mt-4">
+          <div className="border-b border-gray-200 dark:border-gray-700 mt-4">
             <nav className="flex gap-6">
               {tabs.map(tab => {
                 const Icon = tab.icon
@@ -339,10 +333,10 @@ const Users = () => {
                   <button 
                     key={tab.id} 
                     onClick={() => setActiveTab(tab.id)} 
-                    className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === tab.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                    className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === tab.id ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
                   >
                     <Icon size={16} />{tab.label}
-                    {tab.badge > 0 && <span className="ml-1 px-1.5 py-0.5 bg-red-100 text-red-600 rounded-full text-xs font-bold">{tab.badge}</span>}
+                    {tab.badge > 0 && <span className="ml-1 px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-xs font-bold">{tab.badge}</span>}
                   </button>
                 )
               })}
@@ -376,18 +370,18 @@ const Users = () => {
               <StatCard label="Inativos" value={unlockStats.totalInactive} color="yellow" icon={Shield} active={statusFilter === 'inactive'} onClick={() => setStatusFilter('inactive')} />
               <StatCard label="Ativos" value={unlockStats.totalActive} color="green" icon={CheckCircle} active={statusFilter === 'active'} onClick={() => setStatusFilter('active')} />
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
               <div className="flex items-center gap-3">
-                <div className="flex-1 relative"><Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" /><input type="text" placeholder="Buscar por nome ou email..." value={unlockSearchTerm} onChange={(e) => setUnlockSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" /></div>
-                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-lg text-sm"><option value="blocked">Bloqueados</option><option value="inactive">Inativos</option><option value="active">Ativos</option><option value="all">Todos</option></select>
+                <div className="flex-1 relative"><Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" /><input type="text" placeholder="Buscar por nome ou email..." value={unlockSearchTerm} onChange={(e) => setUnlockSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500" /></div>
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm"><option value="blocked">Bloqueados</option><option value="inactive">Inativos</option><option value="active">Ativos</option><option value="all">Todos</option></select>
               </div>
             </div>
             {loadingBlocked && <DataLoadingSkeleton />}
-            {!loadingBlocked && filteredBlockedUsers.length === 0 ? <div className="bg-white rounded-xl border border-gray-200 p-12 text-center"><CheckCircle size={48} className="text-green-400 mx-auto mb-3" /><p className="text-gray-500 font-medium">{statusFilter === 'blocked' ? 'Nenhum usuário bloqueado!' : 'Nenhum usuário encontrado'}</p><p className="text-sm text-gray-400 mt-1">{statusFilter === 'blocked' ? 'Todos os usuários podem acessar o sistema' : 'Tente ajustar os filtros'}</p></div> : !loadingBlocked && <DataTable columns={unlockColumns} data={filteredBlockedUsers} actions={unlockActions} striped hover pagination itemsPerPageOptions={[20, 50, 100]} defaultItemsPerPage={20} showTotalItems />}
+            {!loadingBlocked && filteredBlockedUsers.length === 0 ? <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-12 text-center"><CheckCircle size={48} className="text-green-400 dark:text-green-500 mx-auto mb-3" /><p className="text-gray-500 dark:text-gray-400 font-medium">{statusFilter === 'blocked' ? 'Nenhum usuário bloqueado!' : 'Nenhum usuário encontrado'}</p><p className="text-sm text-gray-400 dark:text-gray-500 mt-1">{statusFilter === 'blocked' ? 'Todos os usuários podem acessar o sistema' : 'Tente ajustar os filtros'}</p></div> : !loadingBlocked && <DataTable columns={unlockColumns} data={filteredBlockedUsers} actions={unlockActions} striped hover pagination itemsPerPageOptions={[20, 50, 100]} defaultItemsPerPage={20} showTotalItems />}
             <Modal isOpen={showUnlockAllModal} onClose={() => setShowUnlockAllModal(false)} title="Desbloquear Todos" size="sm">
               <div className="space-y-4">
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                  <div className="flex items-start gap-2"><AlertTriangle size={18} className="text-yellow-600 mt-0.5" /><p className="text-sm text-yellow-800">Tem certeza que deseja desbloquear todos os {unlockStats.totalBlocked} usuários?</p></div>
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                  <div className="flex items-start gap-2"><AlertTriangle size={18} className="text-yellow-600 dark:text-yellow-400 mt-0.5" /><p className="text-sm text-yellow-800 dark:text-yellow-300">Tem certeza que deseja desbloquear todos os {unlockStats.totalBlocked} usuários?</p></div>
                 </div>
                 <div className="flex gap-3 pt-4">
                   <Button variant="outline" onClick={() => setShowUnlockAllModal(false)} disabled={unlockAllMutation.isPending} className="flex-1">Cancelar</Button>
@@ -402,17 +396,16 @@ const Users = () => {
   )
 }
 
-// Componente StatCard
 const StatCard = ({ label, value, color, icon: Icon, active, onClick }) => {
   const colors = { 
-    green: { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-500' }, 
-    yellow: { bg: 'bg-yellow-50', text: 'text-yellow-600', border: 'border-yellow-500' }, 
-    red: { bg: 'bg-red-50', text: 'text-red-600', border: 'border-red-500' } 
+    green: { bg: 'bg-green-50 dark:bg-green-900/30', text: 'text-green-600 dark:text-green-400', border: 'border-green-500 dark:border-green-400' }, 
+    yellow: { bg: 'bg-yellow-50 dark:bg-yellow-900/30', text: 'text-yellow-600 dark:text-yellow-400', border: 'border-yellow-500 dark:border-yellow-400' }, 
+    red: { bg: 'bg-red-50 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400', border: 'border-red-500 dark:border-red-400' } 
   }
   return (
-    <div className={`bg-white rounded-xl border-2 p-5 cursor-pointer transition-all hover:shadow-md ${active ? colors[color].border : 'border-gray-200'}`} onClick={onClick}>
+    <div className={`bg-white dark:bg-gray-800 rounded-xl border-2 p-5 cursor-pointer transition-all hover:shadow-md dark:hover:shadow-gray-900/50 ${active ? colors[color].border : 'border-gray-200 dark:border-gray-700'}`} onClick={onClick}>
       <div className="flex items-center justify-between">
-        <div><p className="text-sm text-gray-500">{label}</p><p className={`text-2xl font-bold ${colors[color].text}`}>{value}</p></div>
+        <div><p className="text-sm text-gray-500 dark:text-gray-400">{label}</p><p className={`text-2xl font-bold ${colors[color].text}`}>{value}</p></div>
         <div className={`p-3 ${colors[color].bg} rounded-full`}><Icon size={24} className={colors[color].text} /></div>
       </div>
     </div>

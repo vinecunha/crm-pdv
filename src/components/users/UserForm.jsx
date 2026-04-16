@@ -14,7 +14,6 @@ const UserForm = ({
 }) => {
   const [generatingCode, setGeneratingCode] = useState(false)
 
-  // Gerar matrícula automaticamente ao abrir para novo usuário
   useEffect(() => {
     if (!editingUser && !formData.registration_number) {
       handleGenerateRegistration()
@@ -46,21 +45,20 @@ const UserForm = ({
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      {/* Matrícula */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Matrícula
         </label>
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
             <input
               type="text"
               name="registration_number"
               value={formData.registration_number || ''}
               onChange={handleChange}
               placeholder="FUNC000001"
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-50 font-mono"
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white font-mono rounded-lg"
               disabled={!!editingUser || generatingCode}
               readOnly={!editingUser}
             />
@@ -77,7 +75,7 @@ const UserForm = ({
             </Button>
           )}
         </div>
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
           {editingUser 
             ? 'Matrícula do funcionário (não pode ser alterada)' 
             : 'Matrícula gerada automaticamente'}
@@ -86,9 +84,9 @@ const UserForm = ({
 
       {!editingUser && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email *</label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
             <input
               type="email"
               name="email"
@@ -97,7 +95,7 @@ const UserForm = ({
               required
               disabled={isSubmitting}
               placeholder="usuario@exemplo.com"
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
               autoComplete="off"
             />
           </div>
@@ -105,9 +103,9 @@ const UserForm = ({
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo *</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome Completo *</label>
         <div className="relative">
-          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
           <input
             type="text"
             name="full_name"
@@ -116,7 +114,7 @@ const UserForm = ({
             required
             disabled={isSubmitting}
             placeholder="Nome do usuário"
-            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
             autoComplete="off"
           />
         </div>
@@ -124,9 +122,9 @@ const UserForm = ({
 
       {!editingUser && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Senha *</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Senha *</label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
             <input
               type="password"
               name="password"
@@ -135,17 +133,17 @@ const UserForm = ({
               required
               disabled={isSubmitting}
               placeholder="Mínimo 6 caracteres"
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
               autoComplete="new-password"
             />
           </div>
-          <p className="text-xs text-gray-500 mt-1">A senha deve ter no mínimo 6 caracteres</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">A senha deve ter no mínimo 6 caracteres</p>
         </div>
       )}
 
       {canChangeRole && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             <span className="flex items-center gap-2">
               <Shield size={16} />
               Papel do Usuário
@@ -156,13 +154,13 @@ const UserForm = ({
             value={formData.role}
             onChange={handleChange}
             disabled={isSubmitting}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:bg-gray-100 dark:disabled:bg-gray-800"
           >
             {roles.map(role => (
               <option key={role.value} value={role.value}>{role.label}</option>
             ))}
           </select>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             {roles.find(r => r.value === formData.role)?.description}
           </p>
         </div>
@@ -170,11 +168,11 @@ const UserForm = ({
 
       {editingUser && !canChangeRole && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Papel</label>
-          <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Papel</label>
+          <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white">
             {formData.role === 'admin' ? 'Administrador' : formData.role === 'gerente' ? 'Gerente' : 'Operador'}
           </div>
-          <p className="text-xs text-gray-500 mt-1">Para alterar o papel, contate um administrador</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Para alterar o papel, contate um administrador</p>
         </div>
       )}
 

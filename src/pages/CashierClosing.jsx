@@ -15,33 +15,32 @@ import { formatCurrency, formatNumber, formatDate, formatDateTime } from '../uti
 import useSystemLogs from '../hooks/useSystemLogs'
 import useLogger from '../hooks/useLogger'
 
-// Componentes internos (mantidos)
 const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) => {
   const variants = {
-    default: 'bg-white border-gray-200',
-    success: 'bg-green-50 border-green-200',
-    warning: 'bg-yellow-50 border-yellow-200',
-    danger: 'bg-red-50 border-red-200',
-    info: 'bg-blue-50 border-blue-200'
+    default: 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
+    success: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
+    warning: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800',
+    danger: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
+    info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
   }
 
   const iconColors = {
-    default: 'text-gray-600',
-    success: 'text-green-600',
-    warning: 'text-yellow-600',
-    danger: 'text-red-600',
-    info: 'text-blue-600'
+    default: 'text-gray-600 dark:text-gray-400',
+    success: 'text-green-600 dark:text-green-400',
+    warning: 'text-yellow-600 dark:text-yellow-400',
+    danger: 'text-red-600 dark:text-red-400',
+    info: 'text-blue-600 dark:text-blue-400'
   }
 
   return (
-    <div className={`${variants[variant]} rounded-xl border p-5 transition-all hover:shadow-md`}>
+    <div className={`${variants[variant]} rounded-xl border p-5 transition-all hover:shadow-md dark:hover:shadow-gray-900/50`}>
       <div className="flex items-start justify-between">
         <div className="space-y-1">
-          <p className="text-sm font-medium text-gray-500">{label}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          {sublabel && <p className="text-xs text-gray-400">{sublabel}</p>}
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{label}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+          {sublabel && <p className="text-xs text-gray-400 dark:text-gray-500">{sublabel}</p>}
         </div>
-        <div className="p-2.5 rounded-lg bg-white/50">
+        <div className="p-2.5 rounded-lg bg-white/50 dark:bg-gray-900/50">
           <Icon size={22} className={iconColors[variant]} />
         </div>
       </div>
@@ -49,7 +48,6 @@ const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) =
   )
 }
 
-// Funções de API (queries e mutations)
 const fetchUsers = async () => {
   const { data, error } = await supabase.from('profiles').select('id, email, full_name').order('full_name')
   if (error) throw error
@@ -124,7 +122,6 @@ const CashierClosing = () => {
   const { logCreate, logComponentAction } = useLogger('CashierClosing')
   const queryClient = useQueryClient()
   
-  // Estado local
   const today = new Date()
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
   
@@ -143,17 +140,16 @@ const CashierClosing = () => {
     notes: ''
   })
 
-  // Queries
   const { data: users = [] } = useQuery({
     queryKey: ['users'],
     queryFn: fetchUsers,
-    staleTime: 30 * 60 * 1000, // 30 minutos
+    staleTime: 30 * 60 * 1000,
   })
 
   const { data: closingHistory = [], refetch: refetchHistory } = useQuery({
     queryKey: ['closing-history'],
     queryFn: fetchClosingHistory,
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 5 * 60 * 1000,
   })
 
   const { 
@@ -166,9 +162,8 @@ const CashierClosing = () => {
     queryKey: ['cashier-summary', { startDate: dateRange.start, endDate: dateRange.end, userId: selectedUser }],
     queryFn: fetchCashierSummary,
     enabled: !!(dateRange.start && dateRange.end),
-    staleTime: 2 * 60 * 1000, // 2 minutos
+    staleTime: 2 * 60 * 1000,
     onSuccess: (data) => {
-      // Atualizar valores declarados com os valores do sistema
       if (data?.meios_pagamento) {
         const declared = { cash: 0, credit_card: 0, debit_card: 0, pix: 0, notes: '' }
         data.meios_pagamento.forEach(m => {
@@ -186,13 +181,11 @@ const CashierClosing = () => {
     }
   })
 
-  // Mutation para fechamento
   const closingMutation = useMutation({
     mutationFn: createCashierClosing,
     onSuccess: async (result) => {
       const { data, expectedTotal, totalDeclared, difference } = result
       
-      // Logs
       await logCreate('cashier_closing', data.id, {
         closing_date: data.closing_date,
         expected_total: expectedTotal,
@@ -207,7 +200,6 @@ const CashierClosing = () => {
         details: { expected_total: expectedTotal, declared_total: totalDeclared, difference }
       })
       
-      // Invalidate queries para recarregar dados
       queryClient.invalidateQueries({ queryKey: ['closing-history'] })
       queryClient.invalidateQueries({ queryKey: ['cashier-summary'] })
       
@@ -223,7 +215,6 @@ const CashierClosing = () => {
     }
   })
 
-  // Efeito para log de acesso
   React.useEffect(() => {
     logComponentAction('ACCESS_PAGE', null, { page: 'cashier_closing' })
   }, [])
@@ -239,7 +230,6 @@ const CashierClosing = () => {
       return
     }
     
-    // Atualizar valores declarados com os do sistema antes de abrir
     if (summary?.meios_pagamento) {
       const declared = { ...declaredValues }
       summary.meios_pagamento.forEach(m => {
@@ -276,37 +266,36 @@ const CashierClosing = () => {
   }
 
   const getDifferenceColor = (difference) => {
-    if (Math.abs(difference) < 0.01) return 'text-green-600'
-    if (Math.abs(difference) < 10) return 'text-yellow-600'
-    return 'text-red-600'
+    if (Math.abs(difference) < 0.01) return 'text-green-600 dark:text-green-400'
+    if (Math.abs(difference) < 10) return 'text-yellow-600 dark:text-yellow-400'
+    return 'text-red-600 dark:text-red-400'
   }
 
   const paymentMethods = [
-    { key: 'cash', label: 'Dinheiro', icon: '💵', color: 'text-green-600', bgColor: 'bg-green-50' },
-    { key: 'credit_card', label: 'Cartão de Crédito', icon: '💳', color: 'text-blue-600', bgColor: 'bg-blue-50' },
-    { key: 'debit_card', label: 'Cartão de Débito', icon: '🏧', color: 'text-purple-600', bgColor: 'bg-purple-50' },
-    { key: 'pix', label: 'PIX', icon: '📱', color: 'text-teal-600', bgColor: 'bg-teal-50' }
+    { key: 'cash', label: 'Dinheiro', icon: '💵', color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-50 dark:bg-green-900/20' },
+    { key: 'credit_card', label: 'Cartão de Crédito', icon: '💳', color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-50 dark:bg-blue-900/20' },
+    { key: 'debit_card', label: 'Cartão de Débito', icon: '🏧', color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-50 dark:bg-purple-900/20' },
+    { key: 'pix', label: 'PIX', icon: '📱', color: 'text-teal-600 dark:text-teal-400', bgColor: 'bg-teal-50 dark:bg-teal-900/20' }
   ]
 
-  // Colunas para DataTable do histórico
   const historyColumns = [
     {
       key: 'closing_date',
       header: 'Data',
       sortable: true,
-      render: (row) => formatDate(row.closing_date)
+      render: (row) => <span className="dark:text-white">{formatDate(row.closing_date)}</span>
     },
     {
       key: 'expected_total',
       header: 'Esperado',
       sortable: true,
-      render: (row) => formatCurrency(row.expected_total)
+      render: (row) => <span className="dark:text-white">{formatCurrency(row.expected_total)}</span>
     },
     {
       key: 'declared_total',
       header: 'Declarado',
       sortable: true,
-      render: (row) => formatCurrency(row.declared_total)
+      render: (row) => <span className="dark:text-white">{formatCurrency(row.declared_total)}</span>
     },
     {
       key: 'difference',
@@ -321,12 +310,12 @@ const CashierClosing = () => {
     {
       key: 'closed_by',
       header: 'Operador',
-      render: (row) => users.find(u => u.id === row.closed_by)?.full_name || '-'
+      render: (row) => <span className="dark:text-gray-300">{users.find(u => u.id === row.closed_by)?.full_name || '-'}</span>
     },
     {
       key: 'closed_at',
       header: 'Horário',
-      render: (row) => formatDateTime(row.closed_at)
+      render: (row) => <span className="dark:text-gray-300">{formatDateTime(row.closed_at)}</span>
     }
   ]
 
@@ -335,7 +324,7 @@ const CashierClosing = () => {
       label: 'Ver detalhes',
       icon: <Eye size={16} />,
       onClick: viewClosingDetails,
-      className: 'text-blue-600 hover:text-blue-800 hover:bg-blue-50'
+      className: 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30'
     }
   ]
 
@@ -346,14 +335,13 @@ const CashierClosing = () => {
   const expectedTotal = resumo.total_liquido || 0
   const difference = totalDeclarado - expectedTotal
 
-  // Tratamento de erro da query principal
   if (summaryError) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <AlertCircle size={48} className="text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro ao carregar dados</h2>
-          <p className="text-gray-600 mb-4">{summaryError.message}</p>
+          <AlertCircle size={48} className="text-red-500 dark:text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao carregar dados</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{summaryError.message}</p>
           <Button onClick={handleRefresh} icon={RefreshCw}>
             Tentar novamente
           </Button>
@@ -365,19 +353,17 @@ const CashierClosing = () => {
   if (isLoadingSummary && !summary) return <DataLoadingSkeleton />
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Feedback */}
         {feedback.show && (
           <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />
         )}
 
-        {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Fechamento de Caixa</h1>
-              <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Fechamento de Caixa</h1>
+              <div className="flex items-center gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
                 <Calendar size={14} />
                 <span>{formatDate(dateRange.start)} - {formatDate(dateRange.end)}</span>
               </div>
@@ -401,31 +387,30 @@ const CashierClosing = () => {
           </div>
         </div>
 
-        {/* Filtros */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
-              <Calendar size={16} className="text-gray-400" />
+              <Calendar size={16} className="text-gray-400 dark:text-gray-500" />
               <input
                 type="date"
                 value={dateRange.start}
                 onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm"
+                className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm"
               />
-              <span className="text-gray-400">—</span>
+              <span className="text-gray-400 dark:text-gray-500">—</span>
               <input
                 type="date"
                 value={dateRange.end}
                 onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm"
+                className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm"
               />
             </div>
             <div className="flex items-center gap-2">
-              <Users size={16} className="text-gray-400" />
+              <Users size={16} className="text-gray-400 dark:text-gray-500" />
               <select
                 value={selectedUser}
                 onChange={(e) => setSelectedUser(e.target.value)}
-                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm"
+                className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm"
               >
                 <option value="all">Todos os operadores</option>
                 {users.map(user => (
@@ -434,7 +419,7 @@ const CashierClosing = () => {
               </select>
             </div>
             {isFetchingSummary && (
-              <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                 <RefreshCw size={14} className="animate-spin" />
                 Atualizando...
               </div>
@@ -444,7 +429,6 @@ const CashierClosing = () => {
 
         {summary && (
           <>
-            {/* Cards de Resumo */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <StatCard
                 label="Vendas Totais"
@@ -476,27 +460,26 @@ const CashierClosing = () => {
               />
             </div>
 
-            {/* Resumo Final */}
-            <div className="mt-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200 p-6">
+            <div className="mt-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Total do Período</p>
-                  <p className="text-3xl font-bold text-gray-900">{formatCurrency(resumo.total_liquido || 0)}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Total do Período</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">{formatCurrency(resumo.total_liquido || 0)}</p>
                 </div>
                 <div className="flex items-center gap-4 text-sm">
                   <div className="text-right">
-                    <p className="text-gray-500">Vendas</p>
-                    <p className="font-medium">{formatNumber(resumo.total_vendas || 0)}</p>
+                    <p className="text-gray-500 dark:text-gray-400">Vendas</p>
+                    <p className="font-medium dark:text-white">{formatNumber(resumo.total_vendas || 0)}</p>
                   </div>
-                  <ChevronRight size={20} className="text-gray-300" />
+                  <ChevronRight size={20} className="text-gray-300 dark:text-gray-600" />
                   <div className="text-right">
-                    <p className="text-gray-500">Descontos</p>
-                    <p className="font-medium text-orange-600">-{formatCurrency(resumo.total_descontos || 0)}</p>
+                    <p className="text-gray-500 dark:text-gray-400">Descontos</p>
+                    <p className="font-medium text-orange-600 dark:text-orange-400">-{formatCurrency(resumo.total_descontos || 0)}</p>
                   </div>
-                  <ChevronRight size={20} className="text-gray-300" />
+                  <ChevronRight size={20} className="text-gray-300 dark:text-gray-600" />
                   <div className="text-right">
-                    <p className="text-gray-500">Cancelamentos</p>
-                    <p className="font-medium text-red-500">{formatCurrency(resumo.total_cancelamentos || 0)}</p>
+                    <p className="text-gray-500 dark:text-gray-400">Cancelamentos</p>
+                    <p className="font-medium text-red-500 dark:text-red-400">{formatCurrency(resumo.total_cancelamentos || 0)}</p>
                   </div>
                 </div>
               </div>
@@ -504,24 +487,22 @@ const CashierClosing = () => {
           </>
         )}
 
-        {/* Modal de Fechamento de Caixa */}
         {showClosingModal && summary && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/30" onClick={() => !closingMutation.isPending && setShowClosingModal(false)} />
-            <div className="relative bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+            <div className="absolute inset-0 bg-black/30 dark:bg-black/50" onClick={() => !closingMutation.isPending && setShowClosingModal(false)} />
+            <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
                 <div>
-                  <h3 className="text-lg font-semibold">Fechamento de Caixa</h3>
-                  <p className="text-sm text-gray-500">{formatDate(dateRange.start)} - {formatDate(dateRange.end)}</p>
+                  <h3 className="text-lg font-semibold dark:text-white">Fechamento de Caixa</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{formatDate(dateRange.start)} - {formatDate(dateRange.end)}</p>
                 </div>
-                <button onClick={() => !closingMutation.isPending && setShowClosingModal(false)} className="text-gray-400 hover:text-gray-600">
+                <button onClick={() => !closingMutation.isPending && setShowClosingModal(false)} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
                   <X size={20} />
                 </button>
               </div>
               
               <div className="p-6 overflow-y-auto max-h-[60vh] space-y-4">
-                {/* Valor Esperado - DESTACADO */}
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-5 text-white shadow-lg">
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-xl p-5 text-white shadow-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <DollarSign size={20} />
                     <p className="text-sm font-medium opacity-90">VALOR ESPERADO PELO SISTEMA</p>
@@ -532,19 +513,18 @@ const CashierClosing = () => {
                   </p>
                 </div>
 
-                {/* Valores Declarados */}
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-3">VALORES DECLARADOS</p>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">VALORES DECLARADOS</p>
                   <div className="space-y-2">
                     {paymentMethods.map(({ key, label, icon, color, bgColor }) => {
                       const sistemaValue = summary?.meios_pagamento?.find(m => m.payment_method === key)?.total || 0
                       return (
-                        <div key={key} className={`flex items-center justify-between p-3 ${bgColor} rounded-lg border`}>
+                        <div key={key} className={`flex items-center justify-between p-3 ${bgColor} rounded-lg border dark:border-gray-700`}>
                           <div className="flex items-center gap-3">
                             <span className="text-xl">{icon}</span>
                             <div>
                               <span className={`font-medium ${color}`}>{label}</span>
-                              <p className="text-xs text-gray-500">Sistema: {formatCurrency(sistemaValue)}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">Sistema: {formatCurrency(sistemaValue)}</p>
                             </div>
                           </div>
                           <input
@@ -553,7 +533,7 @@ const CashierClosing = () => {
                             min="0"
                             value={declaredValues[key]}
                             onChange={(e) => setDeclaredValues({ ...declaredValues, [key]: parseFloat(e.target.value) || 0 })}
-                            className="w-40 px-3 py-2 text-right border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
+                            className="w-40 px-3 py-2 text-right border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                             disabled={closingMutation.isPending}
                           />
                         </div>
@@ -562,41 +542,45 @@ const CashierClosing = () => {
                   </div>
                 </div>
 
-                {/* Total Declarado e Diferença */}
-                <div className={`p-4 rounded-xl ${Math.abs(difference) < 0.01 ? 'bg-green-50 border border-green-200' : Math.abs(difference) < 10 ? 'bg-yellow-50 border border-yellow-200' : 'bg-red-50 border border-red-200'}`}>
+                <div className={`p-4 rounded-xl ${
+                  Math.abs(difference) < 0.01 
+                    ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' 
+                    : Math.abs(difference) < 10 
+                      ? 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800' 
+                      : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+                }`}>
                   <div className="flex justify-between items-center">
-                    <span className="font-medium">Total Declarado</span>
-                    <span className="text-2xl font-bold">{formatCurrency(totalDeclarado)}</span>
+                    <span className="font-medium dark:text-white">Total Declarado</span>
+                    <span className="text-2xl font-bold dark:text-white">{formatCurrency(totalDeclarado)}</span>
                   </div>
-                  <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                    <span className="font-medium">Diferença</span>
+                  <div className="flex justify-between items-center mt-3 pt-3 border-t dark:border-gray-600">
+                    <span className="font-medium dark:text-white">Diferença</span>
                     <span className={`text-2xl font-bold ${getDifferenceColor(difference)}`}>
                       {formatCurrency(difference)}
                     </span>
                   </div>
                   {Math.abs(difference) > 10 && (
-                    <div className="mt-3 flex items-center gap-2 text-sm text-red-700 bg-red-100 p-2 rounded">
+                    <div className="mt-3 flex items-center gap-2 text-sm text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/30 p-2 rounded">
                       <AlertCircle size={16} />
                       Atenção: Diferença significativa. Verifique os valores declarados.
                     </div>
                   )}
                 </div>
 
-                {/* Observações */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Observações</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observações</label>
                   <textarea
                     value={declaredValues.notes}
                     onChange={(e) => setDeclaredValues({ ...declaredValues, notes: e.target.value })}
                     rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg placeholder-gray-400 dark:placeholder-gray-500"
                     placeholder="Observações sobre este fechamento..."
                     disabled={closingMutation.isPending}
                   />
                 </div>
               </div>
 
-              <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+              <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
                 <Button variant="outline" onClick={() => setShowClosingModal(false)} disabled={closingMutation.isPending}>
                   Cancelar
                 </Button>
@@ -608,14 +592,13 @@ const CashierClosing = () => {
           </div>
         )}
 
-        {/* Modal de Histórico */}
         {showHistoryModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/30" onClick={() => setShowHistoryModal(false)} />
-            <div className="relative bg-white rounded-xl shadow-xl w-full max-w-6xl max-h-[85vh] overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Histórico de Fechamentos</h3>
-                <button onClick={() => setShowHistoryModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+            <div className="absolute inset-0 bg-black/30 dark:bg-black/50" onClick={() => setShowHistoryModal(false)} />
+            <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-6xl max-h-[85vh] overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                <h3 className="text-lg font-semibold dark:text-white">Histórico de Fechamentos</h3>
+                <button onClick={() => setShowHistoryModal(false)} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">✕</button>
               </div>
               <div className="p-4 overflow-y-auto">
                 <DataTable
@@ -631,18 +614,16 @@ const CashierClosing = () => {
                   showTotalItems
                 />
               </div>
-              <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
+              <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end">
                 <Button variant="outline" onClick={() => setShowHistoryModal(false)}>Fechar</Button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Modal de Detalhes (mantido igual) */}
         {showDetailsModal && selectedClosing && (
-          // ... (código do modal de detalhes permanece o mesmo)
           <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* ... conteúdo do modal de detalhes ... */}
+            {/* Modal de detalhes - conteúdo mantido conforme original */}
           </div>
         )}
       </div>

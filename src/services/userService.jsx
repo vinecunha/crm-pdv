@@ -112,6 +112,18 @@ export const updateUser = async (id, userData) => {
   return { id, ...safeData }
 }
 
+export const updateUserPreferences = async (userId, preferences) => {
+  const { data, error } = await supabase.rpc('update_user_preferences', {
+    p_user_id: userId,
+    p_dark_mode: preferences.dark_mode,
+    p_sidebar_collapsed: preferences.sidebar_collapsed,
+    p_table_density: preferences.table_density
+  })
+
+  if (error) throw error
+  return data
+}
+
 /**
  * Atualizar status do usuário
  */

@@ -42,10 +42,10 @@ const CustomerCommunication = () => {
   }
 
   const channels = [
-    { id: 'whatsapp', name: 'WhatsApp', icon: MessageCircle, color: 'green', bgColor: 'bg-green-50', textColor: 'text-green-600', borderColor: 'border-green-200', hoverColor: 'hover:bg-green-100', available: !!customer?.phone, description: 'Envie mensagem via WhatsApp' },
-    { id: 'telegram', name: 'Telegram', icon: Send, color: 'blue', bgColor: 'bg-blue-50', textColor: 'text-blue-600', borderColor: 'border-blue-200', hoverColor: 'hover:bg-blue-100', available: !!customer?.phone, description: 'Envie mensagem via Telegram' },
-    { id: 'email', name: 'E-mail', icon: Mail, color: 'purple', bgColor: 'bg-purple-50', textColor: 'text-purple-600', borderColor: 'border-purple-200', hoverColor: 'hover:bg-purple-100', available: !!customer?.email, description: 'Envie um e-mail' },
-    { id: 'sms', name: 'SMS', icon: Smartphone, color: 'orange', bgColor: 'bg-orange-50', textColor: 'text-orange-600', borderColor: 'border-orange-200', hoverColor: 'hover:bg-orange-100', available: !!customer?.phone, description: 'Envie SMS (1 grátis/dia)' }
+    { id: 'whatsapp', name: 'WhatsApp', icon: MessageCircle, color: 'green', bgColor: 'bg-green-50 dark:bg-green-900/20', textColor: 'text-green-600 dark:text-green-400', borderColor: 'border-green-200 dark:border-green-800', hoverColor: 'hover:bg-green-100 dark:hover:bg-green-900/30', available: !!customer?.phone, description: 'Envie mensagem via WhatsApp' },
+    { id: 'telegram', name: 'Telegram', icon: Send, color: 'blue', bgColor: 'bg-blue-50 dark:bg-blue-900/20', textColor: 'text-blue-600 dark:text-blue-400', borderColor: 'border-blue-200 dark:border-blue-800', hoverColor: 'hover:bg-blue-100 dark:hover:bg-blue-900/30', available: !!customer?.phone, description: 'Envie mensagem via Telegram' },
+    { id: 'email', name: 'E-mail', icon: Mail, color: 'purple', bgColor: 'bg-purple-50 dark:bg-purple-900/20', textColor: 'text-purple-600 dark:text-purple-400', borderColor: 'border-purple-200 dark:border-purple-800', hoverColor: 'hover:bg-purple-100 dark:hover:bg-purple-900/30', available: !!customer?.email, description: 'Envie um e-mail' },
+    { id: 'sms', name: 'SMS', icon: Smartphone, color: 'orange', bgColor: 'bg-orange-50 dark:bg-orange-900/20', textColor: 'text-orange-600 dark:text-orange-400', borderColor: 'border-orange-200 dark:border-orange-800', hoverColor: 'hover:bg-orange-100 dark:hover:bg-orange-900/30', available: !!customer?.phone, description: 'Envie SMS (1 grátis/dia)' }
   ]
 
   useEffect(() => { if (id) loadCustomerData() }, [id])
@@ -99,22 +99,44 @@ const CustomerCommunication = () => {
   const handleCopy = (text, type) => { navigator.clipboard?.writeText(text); setCopied(type); setTimeout(() => setCopied(''), 2000) }
 
   if (loading) return <DataLoadingSkeleton type="cards" rows={3} />
-  if (!customer) return <div className="min-h-screen flex items-center justify-center"><div className="text-center"><AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" /><p className="text-gray-600">Cliente não encontrado</p><Button className="mt-4" onClick={() => navigate('/customers')}>Voltar</Button></div></div>
+  if (!customer) return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="text-center">
+        <AlertCircle className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+        <p className="text-gray-600 dark:text-gray-400">Cliente não encontrado</p>
+        <Button className="mt-4" onClick={() => navigate('/customers')}>Voltar</Button>
+      </div>
+    </div>
+  )
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <button onClick={() => navigate('/customers')} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"><ArrowLeft size={18} />Voltar para Clientes</button>
+        <button onClick={() => navigate('/customers')} className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4">
+          <ArrowLeft size={18} />Voltar para Clientes
+        </button>
 
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center"><User size={32} className="text-blue-600" /></div>
+            <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+              <User size={32} className="text-blue-600 dark:text-blue-400" />
+            </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{customer.name}</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{customer.name}</h1>
               <div className="flex items-center gap-4 mt-1">
-                {customer.email && <span className="text-sm text-gray-600 flex items-center gap-1"><Mail size={14} />{customer.email}</span>}
-                {customer.phone && <span className="text-sm text-gray-600 flex items-center gap-1"><Phone size={14} />{customer.phone}</span>}
-                <Badge variant={customer.status === 'active' ? 'success' : 'danger'}>{customer.status === 'active' ? 'Ativo' : 'Inativo'}</Badge>
+                {customer.email && (
+                  <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                    <Mail size={14} />{customer.email}
+                  </span>
+                )}
+                {customer.phone && (
+                  <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                    <Phone size={14} />{customer.phone}
+                  </span>
+                )}
+                <Badge variant={customer.status === 'active' ? 'success' : 'danger'}>
+                  {customer.status === 'active' ? 'Ativo' : 'Inativo'}
+                </Badge>
               </div>
             </div>
           </div>
@@ -127,13 +149,50 @@ const CustomerCommunication = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1 space-y-4">
             <CommunicationChannels channels={channels} customer={customer} onSelectChannel={setActiveChannel} />
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold mb-4">Informações de Contato</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+              <h2 className="text-lg font-semibold mb-4 dark:text-white">Informações de Contato</h2>
               <div className="space-y-3">
-                {customer.phone && <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"><div className="flex items-center gap-2"><Phone size={16} className="text-gray-500" /><span className="text-sm">{customer.phone}</span></div><button onClick={() => handleCopy(customer.phone, 'phone')} className="text-gray-400 hover:text-gray-600">{copied === 'phone' ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}</button></div>}
-                {customer.email && <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"><div className="flex items-center gap-2"><AtSign size={16} className="text-gray-500" /><span className="text-sm">{customer.email}</span></div><button onClick={() => handleCopy(customer.email, 'email')} className="text-gray-400 hover:text-gray-600">{copied === 'email' ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}</button></div>}
-                {customer.address && <div className="p-3 bg-gray-50 rounded-lg"><div className="flex items-center gap-2 mb-2"><MapPin size={16} className="text-gray-500" /><span className="text-sm font-medium">Endereço</span></div><p className="text-sm text-gray-600 ml-7">{customer.address}{customer.city && `, ${customer.city}`}{customer.state && ` - ${customer.state}`}</p></div>}
-                {customer.document && <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"><div className="flex items-center gap-2"><Hash size={16} className="text-gray-500" /><span className="text-sm">{customer.document}</span></div></div>}
+                {customer.phone && (
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Phone size={16} className="text-gray-500 dark:text-gray-400" />
+                      <span className="text-sm dark:text-white">{customer.phone}</span>
+                    </div>
+                    <button onClick={() => handleCopy(customer.phone, 'phone')} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
+                      {copied === 'phone' ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
+                    </button>
+                  </div>
+                )}
+                {customer.email && (
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <AtSign size={16} className="text-gray-500 dark:text-gray-400" />
+                      <span className="text-sm dark:text-white">{customer.email}</span>
+                    </div>
+                    <button onClick={() => handleCopy(customer.email, 'email')} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
+                      {copied === 'email' ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
+                    </button>
+                  </div>
+                )}
+                {customer.address && (
+                  <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MapPin size={16} className="text-gray-500 dark:text-gray-400" />
+                      <span className="text-sm font-medium dark:text-white">Endereço</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 ml-7">
+                      {customer.address}{customer.city && `, ${customer.city}`}{customer.state && ` - ${customer.state}`}
+                    </p>
+                  </div>
+                )}
+                {customer.document && (
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Hash size={16} className="text-gray-500 dark:text-gray-400" />
+                      <span className="text-sm dark:text-white">{customer.document}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -144,7 +203,18 @@ const CustomerCommunication = () => {
           </div>
         </div>
 
-        <MessageModal isOpen={!!activeChannel} onClose={() => setActiveChannel(null)} activeChannel={activeChannel} channels={channels} messageForm={messageForm} setMessageForm={setMessageForm} messageTemplates={messageTemplates} customer={customer} onSend={handleSendMessage} isSending={isSending} />
+        <MessageModal 
+          isOpen={!!activeChannel} 
+          onClose={() => setActiveChannel(null)} 
+          activeChannel={activeChannel} 
+          channels={channels} 
+          messageForm={messageForm} 
+          setMessageForm={setMessageForm} 
+          messageTemplates={messageTemplates} 
+          customer={customer} 
+          onSend={handleSendMessage} 
+          isSending={isSending} 
+        />
       </div>
     </div>
   )

@@ -137,4 +137,6 @@ export {
   Moon,
   History,
   Wallet,
+  AlignJustify,
+  LayoutGrid
 } from 'lucide-react'

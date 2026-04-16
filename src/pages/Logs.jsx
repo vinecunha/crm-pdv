@@ -18,7 +18,6 @@ import DeletedRecordsTable from '../components/logs/DeletedRecordsTable'
 import DeletedRecordCard from '../components/logs/DeletedRecordCard'
 import RestoreConfirmModal from '../components/logs/RestoreConfirmModal'
 
-// ============= API Functions =============
 const fetchLogs = async ({ queryKey }) => {
   const [, { filters, searchTerm }] = queryKey
   
@@ -85,7 +84,6 @@ const restoreRecord = async ({ tableName, recordId }) => {
   return data
 }
 
-// ============= Componente Principal =============
 const Logs = () => {
   const { profile } = useAuth()
   const queryClient = useQueryClient()
@@ -104,7 +102,6 @@ const Logs = () => {
   const canView = isAdmin || isGerente
   const canRestore = isAdmin
 
-  // ============= Queries =============
   const { 
     data: logs = [], 
     isLoading: loadingLogs,
@@ -129,7 +126,6 @@ const Logs = () => {
     enabled: canView && activeTab === 'deleted',
   })
 
-  // ============= Mutation =============
   const restoreMutation = useMutation({
     mutationFn: restoreRecord,
     onSuccess: (_, variables) => {
@@ -144,7 +140,6 @@ const Logs = () => {
     }
   })
 
-  // ============= Estatísticas Calculadas =============
   const logStats = React.useMemo(() => {
     const today = new Date().toDateString()
     return {
@@ -165,7 +160,6 @@ const Logs = () => {
     }
   }, [deletedRecords])
 
-  // ============= Handlers =============
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false }), 3000)
@@ -173,14 +167,14 @@ const Logs = () => {
 
   const getActionColor = (action) => {
     const colors = {
-      CREATE: 'text-green-600 bg-green-100',
-      UPDATE: 'text-blue-600 bg-blue-100',
-      DELETE: 'text-red-600 bg-red-100',
-      LOGIN_SUCCESS: 'text-purple-600 bg-purple-100',
-      LOGIN_FAILED: 'text-red-600 bg-red-100',
-      LOGOUT: 'text-orange-600 bg-orange-100',
-      VIEW: 'text-gray-600 bg-gray-100',
-      ERROR: 'text-red-600 bg-red-100'
+      CREATE: 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30',
+      UPDATE: 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30',
+      DELETE: 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/30',
+      LOGIN_SUCCESS: 'text-purple-600 bg-purple-100 dark:text-purple-400 dark:bg-purple-900/30',
+      LOGIN_FAILED: 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/30',
+      LOGOUT: 'text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30',
+      VIEW: 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-700',
+      ERROR: 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/30'
     }
     return colors[action] || colors.VIEW
   }
@@ -257,37 +251,36 @@ const Logs = () => {
 
   if (!canView) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="bg-red-100 rounded-full p-4 inline-block mb-4">
-            <X className="h-12 w-12 text-red-600" />
+          <div className="bg-red-100 dark:bg-red-900/30 rounded-full p-4 inline-block mb-4">
+            <X className="h-12 w-12 text-red-600 dark:text-red-400" />
           </div>
-          <h2 className="text-2xl font-bold text-red-600">Acesso Restrito</h2>
-          <p className="mt-2 text-gray-600">Apenas administradores e gerentes podem acessar.</p>
+          <h2 className="text-2xl font-bold text-red-600 dark:text-red-400">Acesso Restrito</h2>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">Apenas administradores e gerentes podem acessar.</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {feedback.show && (
           <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />
         )}
 
-        {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <Database className="text-blue-600" />
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Database className="text-blue-600 dark:text-blue-400" />
                 Auditoria do Sistema
               </h1>
-              <p className="text-gray-500 mt-1">
+              <p className="text-gray-500 dark:text-gray-400 mt-1">
                 Logs de atividades e registros excluídos
                 {isFetching && (
-                  <span className="ml-2 inline-flex items-center text-xs text-gray-400">
+                  <span className="ml-2 inline-flex items-center text-xs text-gray-400 dark:text-gray-500">
                     <RefreshCw size={12} className="animate-spin mr-1" />
                     Atualizando...
                   </span>
@@ -312,13 +305,12 @@ const Logs = () => {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="border-b border-gray-200 mb-6">
+        <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
           <nav className="flex gap-6">
             <button
               onClick={() => setActiveTab('logs')}
               className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
-                activeTab === 'logs' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+                activeTab === 'logs' ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
               <FileText size={16} />
@@ -327,13 +319,13 @@ const Logs = () => {
             <button
               onClick={() => setActiveTab('deleted')}
               className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
-                activeTab === 'deleted' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+                activeTab === 'deleted' ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
               <RotateCcw size={16} />
               Registros Deletados
               {deletedStats.total > 0 && (
-                <span className="ml-1 px-1.5 py-0.5 bg-red-100 text-red-600 rounded-full text-xs font-bold">
+                <span className="ml-1 px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-xs font-bold">
                   {deletedStats.total}
                 </span>
               )}
@@ -341,10 +333,8 @@ const Logs = () => {
           </nav>
         </div>
 
-        {/* Conteúdo da Aba Logs */}
         {activeTab === 'logs' && (
           <>
-            {/* Estatísticas */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <StatCard label="Total de Logs" value={logStats.total} icon={FileText} variant="info" />
               <StatCard label="Erros" value={logStats.errors} icon={X} variant={logStats.errors > 0 ? 'danger' : 'default'} />
@@ -411,7 +401,6 @@ const Logs = () => {
           </>
         )}
 
-        {/* Conteúdo da Aba Deletados */}
         {activeTab === 'deleted' && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">

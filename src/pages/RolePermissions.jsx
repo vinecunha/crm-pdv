@@ -11,7 +11,6 @@ import FeedbackMessage from '../components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
 import Modal from '../components/ui/Modal'
 
-// ============= API Functions =============
 const fetchPermissions = async () => {
   const [permsResult, rolePermsResult] = await Promise.all([
     supabase.from('permissions').select('*').order('module').order('name'),
@@ -21,7 +20,6 @@ const fetchPermissions = async () => {
   if (permsResult.error) throw permsResult.error
   if (rolePermsResult.error) throw rolePermsResult.error
 
-  // Agrupar permissões por módulo
   const grouped = {}
   permsResult.data?.forEach(p => {
     const module = p.module || 'outros'
@@ -29,7 +27,6 @@ const fetchPermissions = async () => {
     grouped[module].push(p)
   })
 
-  // Organizar por role
   const roleMap = { admin: new Set(), gerente: new Set(), operador: new Set() }
   rolePermsResult.data?.forEach(rp => {
     if (roleMap[rp.role_name]) {
@@ -53,7 +50,6 @@ const setToObject = (set) => {
 }
 
 const saveRolePermissions = async ({ role, permissions }) => {
-  // Deletar permissões atuais
   const { error: deleteError } = await supabase
     .from('role_permissions')
     .delete()
@@ -61,7 +57,6 @@ const saveRolePermissions = async ({ role, permissions }) => {
 
   if (deleteError) throw deleteError
 
-  // Inserir novas permissões
   const insertData = Object.keys(permissions).map(permId => ({
     role_name: role,
     permission_id: parseInt(permId)
@@ -92,7 +87,6 @@ const resetRolePermissions = async ({ role, defaultPermissions }) => {
   return { role }
 }
 
-// ============= Constantes =============
 const roleColors = {
   admin: 'from-purple-600 to-purple-700',
   gerente: 'from-blue-500 to-cyan-500',
@@ -105,7 +99,6 @@ const roleNames = {
   operador: 'Operador'
 }
 
-// ============= Componente Principal =============
 const RolePermissions = () => {
   const { profile, isAdmin } = useAuth()
   const queryClient = useQueryClient()
@@ -116,7 +109,6 @@ const RolePermissions = () => {
   const [localPermissions, setLocalPermissions] = useState({})
   const [hasChanges, setHasChanges] = useState(false)
 
-  // ============= Query =============
   const { 
     data,
     isLoading,
@@ -125,14 +117,13 @@ const RolePermissions = () => {
   } = useQuery({
     queryKey: ['permissions'],
     queryFn: fetchPermissions,
-    staleTime: 30 * 60 * 1000, // 30 minutos
+    staleTime: 30 * 60 * 1000,
     enabled: isAdmin,
   })
 
   const permissions = data?.permissions || {}
   const rolePermissions = data?.rolePermissions || {}
 
-  // ============= Mutations =============
   const saveMutation = useMutation({
     mutationFn: saveRolePermissions,
     onSuccess: (data) => {
@@ -158,7 +149,6 @@ const RolePermissions = () => {
     }
   })
 
-  // ============= Efeitos =============
   React.useEffect(() => {
     if (rolePermissions[selectedRole]) {
       setLocalPermissions({ ...rolePermissions[selectedRole] })
@@ -172,7 +162,6 @@ const RolePermissions = () => {
     }
   }, [isAdmin])
 
-  // ============= Handlers =============
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false }), 3000)
@@ -274,15 +263,14 @@ const RolePermissions = () => {
     return { granted, total, allGranted: granted === total, someGranted: granted > 0 && granted < total }
   }
 
-  // ============= Render =============
   if (!isAdmin) return null
   if (isLoading) return <DataLoadingSkeleton type="cards" rows={4} />
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro ao carregar permissões</h2>
-          <p className="text-gray-600 mb-4">{error.message}</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao carregar permissões</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{error.message}</p>
           <Button onClick={() => refetch()}>Tentar novamente</Button>
         </div>
       </div>
@@ -292,17 +280,16 @@ const RolePermissions = () => {
   const isMutating = saveMutation.isPending || resetMutation.isPending
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <Shield className="text-purple-600" />
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Shield className="text-purple-600 dark:text-purple-400" />
                 Gerenciamento de Permissões
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
                 Defina quais funcionalidades cada função pode acessar no sistema
               </p>
             </div>
@@ -324,7 +311,6 @@ const RolePermissions = () => {
           </div>
         </div>
 
-        {/* Feedback */}
         {feedback.show && (
           <div className="mb-4">
             <FeedbackMessage
@@ -335,7 +321,6 @@ const RolePermissions = () => {
           </div>
         )}
 
-        {/* Seletor de Role */}
         <div className="mb-6">
           <div className="flex gap-2">
             {['admin', 'gerente', 'operador'].map(role => (
@@ -346,7 +331,7 @@ const RolePermissions = () => {
                   flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all
                   ${selectedRole === role 
                     ? `bg-gradient-to-r ${roleColors[role]} text-white shadow-md` 
-                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }
                 `}
                 disabled={isMutating}
@@ -360,8 +345,8 @@ const RolePermissions = () => {
           </div>
           
           {selectedRole === 'admin' && (
-            <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-              <p className="text-sm text-purple-800 flex items-center gap-2">
+            <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+              <p className="text-sm text-purple-800 dark:text-purple-300 flex items-center gap-2">
                 <Info size={16} />
                 <span>
                   <strong>Administrador</strong> possui automaticamente todas as permissões do sistema.
@@ -371,20 +356,19 @@ const RolePermissions = () => {
           )}
         </div>
 
-        {/* Permissões por Módulo */}
         <div className="space-y-4">
           {Object.entries(permissions).map(([module, modulePermissions]) => {
             const stats = getModuleStats(modulePermissions)
             
             return (
-              <div key={module} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+              <div key={module} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <h3 className="font-semibold text-gray-900 capitalize">
+                      <h3 className="font-semibold text-gray-900 dark:text-white capitalize">
                         {module === 'dashboard' ? 'Dashboard' : module}
                       </h3>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
                         {stats.granted}/{stats.total} permissões
                       </span>
                     </div>
@@ -392,7 +376,7 @@ const RolePermissions = () => {
                     {selectedRole !== 'admin' && (
                       <button
                         onClick={() => handleToggleAllModule(modulePermissions)}
-                        className="text-sm text-blue-600 hover:text-blue-700"
+                        className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                         disabled={isMutating}
                       >
                         {stats.allGranted ? 'Desmarcar todos' : 'Marcar todos'}
@@ -401,11 +385,11 @@ const RolePermissions = () => {
                   </div>
                   
                   {selectedRole !== 'admin' && (
-                    <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
+                    <div className="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
                       <div 
                         className={`h-1.5 rounded-full transition-all ${
                           stats.allGranted ? 'bg-green-500' : 
-                          stats.someGranted ? 'bg-yellow-500' : 'bg-gray-300'
+                          stats.someGranted ? 'bg-yellow-500' : 'bg-gray-300 dark:bg-gray-600'
                         }`}
                         style={{ width: `${(stats.granted / stats.total) * 100}%` }}
                       />
@@ -413,7 +397,7 @@ const RolePermissions = () => {
                   )}
                 </div>
                 
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-gray-100 dark:divide-gray-700">
                   {modulePermissions.map(permission => {
                     const granted = selectedRole === 'admin' 
                       ? true 
@@ -424,7 +408,7 @@ const RolePermissions = () => {
                         key={permission.id}
                         className={`
                           px-6 py-3 flex items-center justify-between
-                          ${selectedRole !== 'admin' && !isMutating ? 'cursor-pointer hover:bg-gray-50' : ''}
+                          ${selectedRole !== 'admin' && !isMutating ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700' : ''}
                           transition-colors
                         `}
                         onClick={() => selectedRole !== 'admin' && !isMutating && handleTogglePermission(permission.id)}
@@ -434,25 +418,25 @@ const RolePermissions = () => {
                             w-5 h-5 rounded border-2 flex items-center justify-center transition-all
                             ${granted 
                               ? 'bg-green-500 border-green-500 text-white' 
-                              : 'border-gray-300 text-transparent'
+                              : 'border-gray-300 dark:border-gray-600 text-transparent'
                             }
                           `}>
                             {granted && <CheckCircle size={14} />}
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900">{permission.name}</p>
-                            <p className="text-xs text-gray-500">{permission.description}</p>
+                            <p className="font-medium text-gray-900 dark:text-white">{permission.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{permission.description}</p>
                           </div>
                         </div>
                         
                         <div>
                           {granted ? (
-                            <span className="text-xs text-green-600 flex items-center gap-1">
+                            <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
                               <CheckCircle size={12} />
                               Permitido
                             </span>
                           ) : (
-                            <span className="text-xs text-red-500 flex items-center gap-1">
+                            <span className="text-xs text-red-500 dark:text-red-400 flex items-center gap-1">
                               <XCircle size={12} />
                               Negado
                             </span>
@@ -467,22 +451,20 @@ const RolePermissions = () => {
           })}
         </div>
 
-        {/* Aviso de Segurança */}
-        <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+        <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
           <div className="flex items-start gap-3">
-            <AlertTriangle size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
+            <AlertTriangle size={20} className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-amber-800">⚠️ Área Sensível</p>
-              <p className="text-xs text-amber-700 mt-1">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-300">⚠️ Área Sensível</p>
+              <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
                 Alterações nas permissões afetam imediatamente o acesso dos usuários.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Botões de ação fixos */}
         {hasChanges && (
-          <div className="fixed bottom-6 right-6 flex gap-2 bg-white p-3 rounded-lg shadow-lg border border-gray-200">
+          <div className="fixed bottom-6 right-6 flex gap-2 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
             <Button variant="outline" size="sm" onClick={() => setShowResetModal(true)} disabled={isMutating}>
               Restaurar Padrão
             </Button>
@@ -496,7 +478,6 @@ const RolePermissions = () => {
           </div>
         )}
 
-        {/* Modal de Confirmação de Reset */}
         <Modal
           isOpen={showResetModal}
           onClose={() => setShowResetModal(false)}
@@ -504,8 +485,8 @@ const RolePermissions = () => {
           size="sm"
         >
           <div className="space-y-4">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-              <p className="text-sm text-yellow-800">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+              <p className="text-sm text-yellow-800 dark:text-yellow-300">
                 Tem certeza que deseja restaurar as permissões padrão para <strong>{roleNames[selectedRole]}</strong>?
               </p>
             </div>

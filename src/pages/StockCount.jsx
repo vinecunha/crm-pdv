@@ -20,7 +20,6 @@ import FinishSessionModal from '../components/stock-count/FinishSessionModal'
 import ShortcutsHelpModal from '../components/ui/ShortcutsHelpModal'
 import SessionDetailsModal from '../components/stock-count/SessionDetailsModal'
 
-// ============= API Functions =============
 const fetchCountSessions = async () => {
   logger.log('🔄 fetchCountSessions executado')
   const { data, error } = await supabase
@@ -137,13 +136,11 @@ const cancelSession = async ({ sessionId, profile }) => {
 const finishSession = async ({ session, sessionItems, stats, profile }) => {
   const divergedItems = sessionItems.filter(item => item.status === 'diverged')
 
-  // Atualizar estoque dos produtos divergentes
   for (const item of divergedItems) {
     if (!item.product) continue
 
     const adjustmentQuantity = item.counted_quantity - item.system_quantity
 
-    // Inserir movimento de estoque
     await supabase.from('stock_movements').insert([{
       product_id: item.product_id,
       movement_type: 'ADJUSTMENT',
@@ -156,7 +153,6 @@ const finishSession = async ({ session, sessionItems, stats, profile }) => {
       created_by: profile?.id
     }])
 
-    // Atualizar produto
     await supabase
       .from('products')
       .update({
@@ -167,7 +163,6 @@ const finishSession = async ({ session, sessionItems, stats, profile }) => {
       .eq('id', item.product_id)
   }
 
-  // Finalizar sessão
   const { error } = await supabase
     .from('stock_count_sessions')
     .update({
@@ -185,13 +180,11 @@ const finishSession = async ({ session, sessionItems, stats, profile }) => {
   return { divergedCount: divergedItems.length }
 }
 
-// ============= Componente Principal =============
 const StockCount = () => {
   const { profile } = useAuth()
   const { logCreate, logAction } = useSystemLogs()
   const queryClient = useQueryClient()
 
-  // Estados de UI
   const [viewMode, setViewMode] = useState('sessions')
   const [activeSession, setActiveSession] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -199,7 +192,6 @@ const StockCount = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [selectedSession, setSelectedSession] = useState(null)
   
-  // Modais
   const [isNewSessionModalOpen, setIsNewSessionModalOpen] = useState(false)
   const [isProductSearchModalOpen, setIsProductSearchModalOpen] = useState(false)
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false)
@@ -211,7 +203,6 @@ const StockCount = () => {
   const [productSearchTerm, setProductSearchTerm] = useState('')
   const [shortcutFeedback, setShortcutFeedback] = useState(null)
 
-  // Formulários
   const [sessionForm, setSessionForm] = useState({
     name: '',
     description: '',
@@ -229,7 +220,6 @@ const StockCount = () => {
 
   const searchInputRef = useRef(null)
 
-  // ============= Queries =============
   const { 
     data: countSessions = [], 
     isLoading: loadingSessions,
@@ -268,7 +258,6 @@ const StockCount = () => {
     queryFn: async () => {
       if (!selectedSession?.id) return null
       
-      // Buscar itens da sessão com detalhes completos
       const { data: items, error: itemsError } = await supabase
         .from('stock_count_items')
         .select(`
@@ -280,7 +269,6 @@ const StockCount = () => {
 
       if (itemsError) throw itemsError
 
-      // Buscar informações da sessão atualizadas
       const { data: session, error: sessionError } = await supabase
         .from('stock_count_sessions')
         .select('*')
@@ -294,7 +282,6 @@ const StockCount = () => {
     enabled: !!selectedSession?.id && showDetailsModal,
   })
 
-  // ============= Mutations =============
   const createSessionMutation = useMutation({
     mutationFn: createStockSession,
     onSuccess: async (data) => {
@@ -354,7 +341,6 @@ const StockCount = () => {
         : 'Contagem registrada! Quantidade confere.'
       )
 
-      // Navegar para próximo item pendente
       const pendingItems = sessionItems.filter(item => 
         item.id !== variables.itemId && item.counted_quantity === null
       )
@@ -424,7 +410,6 @@ const StockCount = () => {
     }
   })
 
-  // ============= Estatísticas =============
   const stats = useMemo(() => {
     const total = sessionItems.length
     const counted = sessionItems.filter(item => item.counted_quantity !== null).length
@@ -436,7 +421,6 @@ const StockCount = () => {
     return { totalItems: total, countedItems: counted, differences, progress }
   }, [sessionItems])
 
-  // ============= Items Filtrados =============
   const filteredItems = useMemo(() => {
     return sessionItems.filter(item => {
       if (activeFilters.status === 'pending') return item.counted_quantity === null
@@ -446,7 +430,6 @@ const StockCount = () => {
     })
   }, [sessionItems, activeFilters])
 
-  // ============= Handlers =============
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 4000)
@@ -610,7 +593,6 @@ const StockCount = () => {
     setShortcutFeedback(shortcut)
   }, [])
 
-  // Hook de atalhos
   const { shortcuts } = useStockCountShortcuts({
     onFocusSearch: handleFocusSearch,
     onClearSearch: handleClearSearch,
@@ -643,7 +625,7 @@ const StockCount = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {feedback.show && (
           <div className="mb-4">
@@ -662,15 +644,14 @@ const StockCount = () => {
           />
         )}
 
-        {/* Header */}
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <ClipboardList className="text-blue-600" />
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <ClipboardList className="text-blue-600 dark:text-blue-400" />
                 Balanço de Estoque
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
                 {viewMode === 'sessions'
                   ? 'Gerencie e realize balanços periódicos do estoque'
                   : `Contagem: ${activeSession?.name}`
@@ -724,7 +705,6 @@ const StockCount = () => {
           </div>
         </div>
 
-        {/* Conteúdo Principal */}
         {viewMode === 'sessions' ? (
           <StockCountSessionsView
             sessions={countSessions}
@@ -752,7 +732,6 @@ const StockCount = () => {
           />
         )}
 
-        {/* Modals */}
         <NewSessionModal
           isOpen={isNewSessionModalOpen}
           onClose={() => {

@@ -24,7 +24,6 @@ import CustomerFilters from '../components/customers/CustomerFilters'
 
 import * as customerService from '../services/customerService'
 
-// ============= Componente Principal =============
 const Customers = () => {
   const { profile, user } = useAuth()
   const { logCreate, logUpdate, logDelete, logError, logAction } = useSystemLogs()
@@ -32,7 +31,6 @@ const Customers = () => {
   const queryClient = useQueryClient()
   const { invalidateQueries } = useReactQuery()
   
-  // Estado local - Clientes
   const [searchTerm, setSearchTerm] = useState('')
   const [activeFilters, setActiveFilters] = useState({})
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -45,12 +43,10 @@ const Customers = () => {
   const [formErrors, setFormErrors] = useState({})
   const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
 
-  // Estado local - Campanhas
   const [showCampaignModal, setShowCampaignModal] = useState(false)
   const [showBirthdayConfirmModal, setShowBirthdayConfirmModal] = useState(false)
   const [campaignLoading, setCampaignLoading] = useState(false)
 
-  // ============= Queries =============
   const { 
     data: customers = [], 
     isLoading,
@@ -64,7 +60,6 @@ const Customers = () => {
     refetchOnMount: true,
   })
 
-  // ============= Filtragem em Memória =============
   const filteredCustomers = useMemo(() => {
     const customersArray = Array.isArray(customers) ? customers : []
     let filtered = [...customersArray]
@@ -91,7 +86,6 @@ const Customers = () => {
     return filtered
   }, [customers, searchTerm, activeFilters])
 
-  // ============= Mutations - Clientes =============
   const createMutation = useMutation({
     mutationFn: customerService.createCustomer,
     onSuccess: async (data) => {
@@ -137,7 +131,6 @@ const Customers = () => {
     }
   })
 
-  // ============= Efeitos =============
   React.useEffect(() => {
     logAction({ 
       action: 'VIEW', 
@@ -146,7 +139,6 @@ const Customers = () => {
     })
   }, [])
 
-  // ============= Handlers - Clientes =============
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
@@ -210,15 +202,9 @@ const Customers = () => {
     deleteMutation.mutate(selectedCustomer.id)
   }
 
-  // ============= Handlers - Campanhas =============
-  
-  /**
-   * Função chamada quando o usuário clica no botão de campanha na tabela
-   */
   const handleSendCampaign = (customer) => {
     setSelectedCustomer(customer)
     
-    // Verificar se é aniversariante
     const today = new Date()
     const birth = customer.birth_date ? new Date(customer.birth_date) : null
     const isBirthday = birth && 
@@ -226,23 +212,17 @@ const Customers = () => {
       birth.getDate() === today.getDate()
     
     if (isBirthday) {
-      // Abrir modal de confirmação para aniversariante
       setShowBirthdayConfirmModal(true)
     } else {
-      // Abrir modal de campanha normal (para inativos/VIP)
       setShowCampaignModal(true)
     }
   }
 
-  /**
-   * Enviar campanha de aniversário (com cupom de 10% OFF)
-   */
   const handleSendBirthdayCampaign = async () => {
     if (!selectedCustomer) return
     
     setCampaignLoading(true)
     try {
-      // 1. Buscar ou criar cupom de aniversário
       const { data: birthdayCoupon } = await supabase
         .from('coupons')
         .select('*')
@@ -252,7 +232,6 @@ const Customers = () => {
       let couponId = birthdayCoupon?.id
       
       if (!birthdayCoupon) {
-        // Criar cupom de aniversário se não existir
         const { data: newCoupon } = await supabase
           .from('coupons')
           .insert({
@@ -276,7 +255,6 @@ const Customers = () => {
         couponId = newCoupon?.id
       }
       
-      // 2. Associar cupom ao cliente
       if (couponId) {
         await supabase
           .from('coupon_allowed_customers')
@@ -286,7 +264,6 @@ const Customers = () => {
           }, { onConflict: 'coupon_id,customer_id' })
       }
       
-      // 3. Registrar comunicação
       await supabase
         .from('customer_communications')
         .insert({
@@ -298,7 +275,6 @@ const Customers = () => {
           sent_by: user?.id
         })
       
-      // 4. Criar notificação
       await supabase.rpc('create_notification', {
         p_user_id: user?.id,
         p_title: '🎂 Campanha de Aniversário',
@@ -331,15 +307,11 @@ const Customers = () => {
     }
   }
 
-  /**
-   * Enviar campanha personalizada (para inativos/VIP)
-   */
   const handleSendCustomCampaign = async (message, couponCode) => {
     if (!selectedCustomer) return
     
     setCampaignLoading(true)
     try {
-      // 1. Se tiver cupom, associar ao cliente
       if (couponCode) {
         const { data: coupon } = await supabase
           .from('coupons')
@@ -357,7 +329,6 @@ const Customers = () => {
         }
       }
       
-      // 2. Registrar comunicação
       await supabase
         .from('customer_communications')
         .insert({
@@ -369,7 +340,6 @@ const Customers = () => {
           sent_by: user?.id
         })
       
-      // 3. Criar notificação
       await supabase.rpc('create_notification', {
         p_user_id: user?.id,
         p_title: '📧 Campanha Enviada',
@@ -404,13 +374,12 @@ const Customers = () => {
 
   const isMutating = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending
 
-  // ============= Render =============
   if (customersError) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro ao carregar clientes</h2>
-          <p className="text-gray-600 mb-4">{customersError.message}</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao carregar clientes</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{customersError.message}</p>
           <Button onClick={() => refetchCustomers()} icon={RefreshCw}>Tentar novamente</Button>
         </div>
       </div>
@@ -420,15 +389,15 @@ const Customers = () => {
   if (isLoading) return <DataLoadingSkeleton />
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Clientes</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Clientes</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
               Gerencie seus clientes cadastrados ({customers.length})
               {isFetching && (
-                <span className="ml-2 inline-flex items-center text-xs text-gray-400">
+                <span className="ml-2 inline-flex items-center text-xs text-gray-400 dark:text-gray-500">
                   <RefreshCw size={12} className="animate-spin mr-1" />
                   Atualizando...
                 </span>
@@ -436,11 +405,11 @@ const Customers = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-              <RFVLegend /> {/* <- Adicione aqui */}
-              <Button onClick={() => handleOpenModal()} icon={UserPlus} disabled={isMutating}>
-                Novo Cliente
-              </Button>
-            </div>
+            <RFVLegend />
+            <Button onClick={() => handleOpenModal()} icon={UserPlus} disabled={isMutating}>
+              Novo Cliente
+            </Button>
+          </div>
         </div>
 
         {feedback.show && (
@@ -475,7 +444,6 @@ const Customers = () => {
           />
         )}
 
-        {/* Modal de Cadastro/Edição */}
         <Modal 
           isOpen={isModalOpen} 
           onClose={() => !isMutating && setIsModalOpen(false)} 
@@ -496,7 +464,6 @@ const Customers = () => {
           />
         </Modal>
 
-        {/* Modal de Exclusão */}
         <CustomerDeleteModal 
           isOpen={isDeleteModalOpen} 
           onClose={() => setIsDeleteModalOpen(false)} 
@@ -505,7 +472,6 @@ const Customers = () => {
           isSubmitting={deleteMutation.isPending} 
         />
 
-        {/* Modal de Confirmação - Aniversariante */}
         <ConfirmModal
           isOpen={showBirthdayConfirmModal}
           onClose={() => {
@@ -516,8 +482,8 @@ const Customers = () => {
           title="🎂 Campanha de Aniversário"
           message={
             <div className="space-y-2">
-              <p>Deseja enviar um cupom de <strong>10% OFF</strong> para <strong>{selectedCustomer?.name}</strong>?</p>
-              <p className="text-sm text-gray-500">
+              <p className="dark:text-gray-300">Deseja enviar um cupom de <strong>10% OFF</strong> para <strong>{selectedCustomer?.name}</strong>?</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 O cliente receberá o cupom <strong>ANIVERSARIO</strong> válido por 30 dias.
               </p>
             </div>
@@ -528,7 +494,6 @@ const Customers = () => {
           loading={campaignLoading}
         />
 
-        {/* Modal de Campanha Personalizada */}
         <CampaignModal
           isOpen={showCampaignModal}
           onClose={() => {

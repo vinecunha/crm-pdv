@@ -12,12 +12,12 @@ const UnlockTable = ({ users, onUnlock }) => {
       sortable: true,
       render: (row) => (
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+          <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center text-white text-xs font-medium dark:from-red-600 dark:to-orange-600">
             {row.email?.charAt(0).toUpperCase() || 'U'}
           </div>
           <div>
-            <p className="font-medium text-gray-900">{row.email}</p>
-            <p className="text-xs text-gray-500">IP: {row.ip_address || 'N/A'}</p>
+            <p className="font-medium text-gray-900 dark:text-white">{row.email}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">IP: {row.ip_address || 'N/A'}</p>
           </div>
         </div>
       )
@@ -28,7 +28,7 @@ const UnlockTable = ({ users, onUnlock }) => {
       sortable: true,
       render: (row) => (
         <div className="text-center">
-          <span className={`font-semibold ${row.attempts >= 5 ? 'text-red-600' : 'text-orange-600'}`}>
+          <span className={`font-semibold ${row.attempts >= 5 ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'}`}>
             {row.attempts}/5
           </span>
         </div>
@@ -54,9 +54,9 @@ const UnlockTable = ({ users, onUnlock }) => {
       render: (row) => (
         <div className="text-sm">
           {row.blocked_until ? (
-            <span className="text-orange-600">{formatDateTime(row.blocked_until)}</span>
+            <span className="text-orange-600 dark:text-orange-400">{formatDateTime(row.blocked_until)}</span>
           ) : (
-            <span className="text-gray-400">-</span>
+            <span className="text-gray-400 dark:text-gray-500">-</span>
           )}
         </div>
       )
@@ -65,7 +65,7 @@ const UnlockTable = ({ users, onUnlock }) => {
       key: 'last_attempt',
       header: 'Última tentativa',
       render: (row) => (
-        <span className="text-sm text-gray-600">{formatDateTime(row.last_attempt)}</span>
+        <span className="text-sm text-gray-600 dark:text-gray-400">{formatDateTime(row.last_attempt)}</span>
       )
     }
   ]
@@ -75,7 +75,7 @@ const UnlockTable = ({ users, onUnlock }) => {
       label: 'Desbloquear',
       icon: <Unlock size={16} />,
       onClick: onUnlock,
-      className: 'text-green-600 hover:text-green-800 hover:bg-green-50',
+      className: 'text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/30',
       disabled: (row) => !row.is_blocked
     }
   ]

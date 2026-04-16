@@ -1090,6 +1090,16 @@ WHERE schemaname = 'public';
       },
       {
         "Roles": [
+          "public"
+        ],
+        "USING": "(auth.uid() = id)",
+        "Tabela": "profiles",
+        "Comando": "UPDATE",
+        "Política": "Users can update own preferences",
+        "WITH_CHECK": "(auth.uid() = id)"
+      },
+      {
+        "Roles": [
           "authenticated"
         ],
         "USING": "(id = auth.uid())",

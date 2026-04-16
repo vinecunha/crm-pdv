@@ -246,7 +246,7 @@ const FormInput = ({
               ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-200 dark:focus:ring-red-800' 
               : 'border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-200 dark:focus:ring-blue-800'
             }
-            ${disabled ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white'}
+            ${disabled ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white cursor-not-allowed' : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white'}
             placeholder-gray-400 dark:placeholder-gray-500
           `}
         />
