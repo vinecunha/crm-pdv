@@ -138,5 +138,6 @@ export {
   History,
   Wallet,
   AlignJustify,
-  LayoutGrid
+  LayoutGrid,
+  Monitor
 } from 'lucide-react'

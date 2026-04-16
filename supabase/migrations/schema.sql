@@ -531,6 +531,7 @@ create table public.profiles (
   registration_number character varying(20) null,
   sidebar_collapsed boolean null default false,
   table_density text null default 'comfortable'::text,
+  theme_mode text null default 'manual'::text,
   constraint profiles_pkey primary key (id),
   constraint profiles_registration_number_key unique (registration_number),
   constraint profiles_id_fkey foreign KEY (id) references auth.users (id),
@@ -542,6 +543,13 @@ create table public.profiles (
           'comfortable'::text,
           'spacious'::text
         ]
+      )
+    )
+  ),
+  constraint check_theme_mode check (
+    (
+      theme_mode = any (
+        array['auto'::text, 'system'::text, 'manual'::text]
       )
     )
   ),

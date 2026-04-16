@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import ThemeToggle from '../components/ui/ThemeToggle'
+import ThemeSelector from './ui/ThemeSelector'
 import { useClock } from '../hooks/useClock'
 import { useNotifications } from '../hooks/useNotifications'
 import { 
@@ -109,7 +109,7 @@ const Header = ({ collapsed }) => {
           </div>
           
           <div className="flex items-center justify-between gap-1">
-            <ThemeToggle />
+            <ThemeSelector />
             <button
               onClick={handleRefresh}
               disabled={isRefreshing}

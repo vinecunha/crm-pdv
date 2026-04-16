@@ -99,6 +99,7 @@ const Profile = () => {
   
   const [preferences, setPreferences] = useState({
     dark_mode: false,
+    theme_mode: 'manual',
     sidebar_collapsed: false,
     table_density: 'comfortable'
   })
@@ -176,6 +177,7 @@ const Profile = () => {
       
       setPreferences({
         dark_mode: profileData.dark_mode || false,
+        theme_mode: profileData.theme_mode || 'manual',
         sidebar_collapsed: profileData.sidebar_collapsed || false,
         table_density: profileData.table_density || 'comfortable'
       })
@@ -203,6 +205,7 @@ const Profile = () => {
       profileData: formData,  // Passar formData completo
       preferences: {           // Passar preferences separado
         dark_mode: preferences.dark_mode,
+        theme_mode: preferences.theme_mode,
         sidebar_collapsed: preferences.sidebar_collapsed,
         table_density: preferences.table_density
       }
