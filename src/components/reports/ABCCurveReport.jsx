@@ -5,9 +5,9 @@ import { Award, TrendingUp, Package } from '../../lib/icons'
 import { formatCurrency, formatNumber } from '../../utils/formatters'
 import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
 import StatCard from '../ui/StatCard'
+import DataTable from '../ui/DataTable'
 
 const fetchABCData = async (startDate, endDate) => {
-  // Buscar vendas do período
   const { data, error } = await supabase
     .from('sale_items')
     .select(`
@@ -34,7 +34,6 @@ const ABCCurveReport = ({ dateRange, customDateRange }) => {
   const abcData = useMemo(() => {
     if (!data) return { items: [], totalValue: 0 }
 
-    // Agrupar por produto
     const productMap = {}
     data.forEach(item => {
       const productId = item.product?.code || 'unknown'
@@ -51,14 +50,11 @@ const ABCCurveReport = ({ dateRange, customDateRange }) => {
       }
       productMap[productId].revenue += item.total_price || 0
       productMap[productId].quantity += item.quantity || 0
-      productMap[productId].profit += (item.product?.price - item.product?.cost_price) * (item.quantity || 0)
     })
 
-    // Ordenar por receita (decrescente)
     const sorted = Object.values(productMap).sort((a, b) => b.revenue - a.revenue)
     const totalValue = sorted.reduce((sum, p) => sum + p.revenue, 0)
 
-    // Classificar ABC
     let cumulativePercent = 0
     const classified = sorted.map(product => {
       const percent = (product.revenue / totalValue) * 100
@@ -83,6 +79,67 @@ const ABCCurveReport = ({ dateRange, customDateRange }) => {
   const aRevenue = abcData.items.filter(p => p.classification === 'A').reduce((sum, p) => sum + p.revenue, 0)
   const bRevenue = abcData.items.filter(p => p.classification === 'B').reduce((sum, p) => sum + p.revenue, 0)
   const cRevenue = abcData.items.filter(p => p.classification === 'C').reduce((sum, p) => sum + p.revenue, 0)
+
+  // Colunas para o DataTable
+  const columns = [
+    {
+      key: 'classification',
+      header: 'Classificação',
+      width: '100px',
+      render: (row) => (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+          row.classification === 'A' 
+            ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' 
+            : row.classification === 'B' 
+              ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' 
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
+        }`}>
+          {row.classification}
+        </span>
+      )
+    },
+    {
+      key: 'name',
+      header: 'Produto',
+      sortable: true,
+      width: '30%',
+      minWidth: '200px',
+      render: (row) => (
+        <div>
+          <p className="font-medium text-gray-900 dark:text-white">{row.name}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{row.code}</p>
+        </div>
+      )
+    },
+    {
+      key: 'revenue',
+      header: 'Receita',
+      sortable: true,
+      width: '120px',
+      render: (row) => <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(row.revenue)}</span>
+    },
+    {
+      key: 'percent',
+      header: '% Individual',
+      sortable: true,
+      width: '110px',
+      render: (row) => <span className="text-gray-700 dark:text-gray-300">{row.percent.toFixed(2)}%</span>
+    },
+    {
+      key: 'cumulativePercent',
+      header: '% Acumulado',
+      sortable: true,
+      width: '110px',
+      render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.cumulativePercent.toFixed(2)}%</span>
+    },
+    {
+      key: 'quantity',
+      header: 'Quantidade',
+      sortable: true,
+      width: '100px',
+      render: (row) => <span className="text-gray-700 dark:text-gray-300">{formatNumber(row.quantity)}</span>
+    }
+  ]
 
   return (
     <div className="space-y-6">
@@ -111,54 +168,23 @@ const ABCCurveReport = ({ dateRange, customDateRange }) => {
         />
       </div>
 
-      {/* Tabela ABC */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="font-semibold text-gray-900">Classificação ABC dos Produtos</h3>
-          <p className="text-sm text-gray-500">Baseado na receita do período selecionado</p>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr className="text-xs text-gray-500 uppercase">
-                <th className="px-6 py-3 text-left">Classificação</th>
-                <th className="px-6 py-3 text-left">Produto</th>
-                <th className="px-6 py-3 text-right">Receita</th>
-                <th className="px-6 py-3 text-right">% Individual</th>
-                <th className="px-6 py-3 text-right">% Acumulado</th>
-                <th className="px-6 py-3 text-right">Quantidade</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {abcData.items.slice(0, 20).map((product, index) => (
-                <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-6 py-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      product.classification === 'A' ? 'bg-green-100 text-green-800' :
-                      product.classification === 'B' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {product.classification}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3">
-                    <p className="font-medium text-gray-900">{product.name}</p>
-                    <p className="text-xs text-gray-500">{product.code}</p>
-                  </td>
-                  <td className="px-6 py-3 text-right font-medium">{formatCurrency(product.revenue)}</td>
-                  <td className="px-6 py-3 text-right">{product.percent.toFixed(2)}%</td>
-                  <td className="px-6 py-3 text-right">{product.cumulativePercent.toFixed(2)}%</td>
-                  <td className="px-6 py-3 text-right">{formatNumber(product.quantity)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* Tabela com DataTable */}
+      <DataTable
+        columns={columns}
+        data={abcData.items.slice(0, 20)}
+        emptyMessage="Nenhum produto encontrado no período"
+        striped
+        hover
+        pagination={abcData.items.length > 20}
+        itemsPerPageOptions={[20, 50, 100]}
+        defaultItemsPerPage={20}
+        showTotalItems
+        showActionsLegend={false}
+      />
 
       {/* Resumo */}
-      <div className="bg-blue-50 rounded-lg p-4">
-        <p className="text-sm text-blue-800">
+      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+        <p className="text-sm text-blue-800 dark:text-blue-300">
           <strong>📊 Interpretação:</strong> 
           <br />• <strong>Curva A:</strong> {aCount} produtos ({((aCount / abcData.items.length) * 100).toFixed(1)}%) 
           representam {((aRevenue / abcData.totalValue) * 100).toFixed(1)}% da receita - Foco principal!

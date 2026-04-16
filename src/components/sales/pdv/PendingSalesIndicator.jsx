@@ -15,7 +15,7 @@ const PendingSalesIndicator = () => {
     }
     
     checkPending()
-    const interval = setInterval(checkPending, 10000) // A cada 10 segundos
+    const interval = setInterval(checkPending, 10000)
     
     return () => clearInterval(interval)
   }, [])
@@ -26,7 +26,10 @@ const PendingSalesIndicator = () => {
     <div className="fixed bottom-20 left-4 z-50">
       <div className={`
         flex items-center gap-2 px-4 py-2 rounded-full shadow-lg
-        ${isOnline ? 'bg-blue-500' : 'bg-orange-500'} text-white
+        ${isOnline 
+          ? 'bg-blue-500 dark:bg-blue-600' 
+          : 'bg-orange-500 dark:bg-orange-600'
+        } text-white
       `}>
         {isOnline ? (
           <RefreshCw size={16} className="animate-spin" />

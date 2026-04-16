@@ -106,20 +106,20 @@ Time: ${new Date().toLocaleString()}
       const hint = this.getErrorHint(error)
 
       return (
-        <div className="bg-gradient-to-br from-red-50 to-orange-50 border border-red-200 rounded-xl p-6 mx-8 shadow-lg">
+        <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950 dark:to-orange-950 border border-red-200 dark:border-red-800 rounded-xl p-6 mx-8 shadow-lg">
           {/* Ícone e título */}
           <div className="flex items-start gap-4">
-            <div className="bg-red-100 rounded-full p-3">
-              <AlertCircle className="w-8 h-8 text-red-600" />
+            <div className="bg-red-100 dark:bg-red-900/50 rounded-full p-3">
+              <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-red-800 mb-1">
+              <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-1">
                 {this.props.title || 'Erro ao carregar esta seção'}
               </h3>
-              <p className="text-sm text-red-600 mb-3">
+              <p className="text-sm text-red-600 dark:text-red-400 mb-3">
                 {friendlyMessage}
               </p>
-              <p className="text-xs text-gray-600 mb-4">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-4">
                 💡 {hint}
               </p>
             </div>
@@ -129,7 +129,7 @@ Time: ${new Date().toLocaleString()}
           <div className="flex flex-wrap gap-2 mt-4">
             <button
               onClick={this.handleRetry}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-600 transition-colors text-sm font-medium"
             >
               <RefreshCw className="w-4 h-4" />
               Tentar novamente
@@ -137,7 +137,7 @@ Time: ${new Date().toLocaleString()}
             
             <button
               onClick={() => window.location.reload()}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
             >
               <RefreshCw className="w-4 h-4" />
               Recarregar página
@@ -145,7 +145,7 @@ Time: ${new Date().toLocaleString()}
 
             <button
               onClick={this.toggleDetails}
-              className="inline-flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 text-sm"
+              className="inline-flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm"
             >
               <Bug className="w-4 h-4" />
               {showDetails ? 'Ocultar detalhes' : 'Ver detalhes técnicos'}
@@ -156,17 +156,17 @@ Time: ${new Date().toLocaleString()}
           {/* Detalhes técnicos expansíveis */}
           {showDetails && (
             <div className="mt-4 space-y-3">
-              <div className="bg-gray-900 rounded-lg p-4 overflow-auto max-h-96">
+              <div className="bg-gray-900 dark:bg-black rounded-lg p-4 overflow-auto max-h-96">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-gray-400">Detalhes do erro</span>
+                  <span className="text-xs font-medium text-gray-400 dark:text-gray-500">Detalhes do erro</span>
                   <button
                     onClick={this.copyError}
-                    className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors"
+                    className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-white dark:hover:text-gray-300 transition-colors"
                   >
                     {copied ? (
                       <>
-                        <Check className="w-3 h-3 text-green-500" />
-                        <span className="text-green-500">Copiado!</span>
+                        <Check className="w-3 h-3 text-green-500 dark:text-green-400" />
+                        <span className="text-green-500 dark:text-green-400">Copiado!</span>
                       </>
                     ) : (
                       <>
@@ -203,7 +203,7 @@ Time: ${new Date().toLocaleString()}
                     </div>
                   )}
 
-                  <div className="border-t border-gray-700 pt-2 mt-2">
+                  <div className="border-t border-gray-700 dark:border-gray-800 pt-2 mt-2">
                     <span className="text-gray-400">Informações adicionais:</span>
                     <ul className="text-gray-400 mt-1 space-y-1">
                       <li><strong>URL:</strong> {window.location.href}</li>
@@ -215,7 +215,7 @@ Time: ${new Date().toLocaleString()}
                 </div>
               </div>
 
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-gray-500">
                 Envie estas informações para o suporte técnico se o problema persistir.
               </p>
             </div>

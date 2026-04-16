@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { TrendingUp, TrendingDown, DollarSign, Percent } from '../../lib/icons'
 import { formatCurrency, formatNumber } from '../../utils/formatters'
 import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
+import DataTable from '../ui/DataTable'
 import StatCard from '../ui/StatCard'
 
 const fetchProfitabilityData = async (startDate, endDate, categoryFilter) => {
@@ -20,7 +21,6 @@ const fetchProfitabilityData = async (startDate, endDate, categoryFilter) => {
 
   if (error) throw error
   
-  // Filtrar por categoria se necessário
   let filtered = data || []
   if (categoryFilter) {
     filtered = filtered.filter(item => item.product?.category === categoryFilter)
@@ -58,9 +58,7 @@ const ProfitabilityReport = ({ dateRange, customDateRange, categoryFilter }) => 
   const profitabilityData = useMemo(() => {
     if (!data) return { byProduct: [], byCategory: [], totals: { revenue: 0, cost: 0, profit: 0 } }
 
-    // Por produto
     const productMap = {}
-    // Por categoria
     const categoryMap = {}
 
     data.forEach(item => {
@@ -71,7 +69,6 @@ const ProfitabilityReport = ({ dateRange, customDateRange, categoryFilter }) => 
       const cost = (product.cost_price || 0) * (item.quantity || 0)
       const profit = revenue - cost
 
-      // Agrupar por produto
       const key = product.code || product.name
       if (!productMap[key]) {
         productMap[key] = {
@@ -90,7 +87,6 @@ const ProfitabilityReport = ({ dateRange, customDateRange, categoryFilter }) => 
       productMap[key].profit += profit
       productMap[key].quantity += item.quantity || 0
 
-      // Agrupar por categoria
       const cat = product.category || 'Sem categoria'
       if (!categoryMap[cat]) {
         categoryMap[cat] = { revenue: 0, cost: 0, profit: 0, quantity: 0 }
@@ -101,7 +97,6 @@ const ProfitabilityReport = ({ dateRange, customDateRange, categoryFilter }) => 
       categoryMap[cat].quantity += item.quantity || 0
     })
 
-    // Calcular margens
     Object.values(productMap).forEach(p => {
       p.margin = p.revenue > 0 ? (p.profit / p.revenue) * 100 : 0
     })
@@ -121,6 +116,113 @@ const ProfitabilityReport = ({ dateRange, customDateRange, categoryFilter }) => 
 
     return { byProduct, byCategory, totals }
   }, [data])
+
+  // Colunas para Categorias
+  const categoryColumns = [
+    {
+      key: 'name',
+      header: 'Categoria',
+      sortable: true,
+      width: '25%',
+      render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.name}</span>
+    },
+    {
+      key: 'revenue',
+      header: 'Receita',
+      sortable: true,
+      width: '150px',
+      render: (row) => <span className="text-gray-900 dark:text-white">{formatCurrency(row.revenue)}</span>
+    },
+    {
+      key: 'cost',
+      header: 'Custo',
+      sortable: true,
+      width: '150px',
+      render: (row) => <span className="text-gray-900 dark:text-white">{formatCurrency(row.cost)}</span>
+    },
+    {
+      key: 'profit',
+      header: 'Lucro',
+      sortable: true,
+      width: '150px',
+      render: (row) => <span className="font-medium text-green-600 dark:text-green-400">{formatCurrency(row.profit)}</span>
+    },
+    {
+      key: 'margin',
+      header: 'Margem',
+      sortable: true,
+      width: '120px',
+      render: (row) => (
+        <span className={`${
+          row.margin > 30 ? 'text-green-600 dark:text-green-400' : 
+          row.margin > 15 ? 'text-yellow-600 dark:text-yellow-400' : 
+          'text-red-600 dark:text-red-400'
+        }`}>
+          {row.margin.toFixed(1)}%
+        </span>
+      )
+    }
+  ]
+
+  // Colunas para Produtos
+  const productColumns = [
+    {
+      key: 'name',
+      header: 'Produto',
+      sortable: true,
+      width: '25%',
+      minWidth: '200px',
+      render: (row) => (
+        <div>
+          <p className="font-medium text-gray-900 dark:text-white">{row.name}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{row.code}</p>
+        </div>
+      )
+    },
+    {
+      key: 'category',
+      header: 'Categoria',
+      sortable: true,
+      width: '150px',
+      render: (row) => <span className="text-sm text-gray-600 dark:text-gray-400">{row.category || '-'}</span>
+    },
+    {
+      key: 'quantity',
+      header: 'Qtd',
+      sortable: true,
+      width: '100px',
+      render: (row) => <span className="text-gray-900 dark:text-white">{formatNumber(row.quantity)}</span>
+    },
+    {
+      key: 'revenue',
+      header: 'Receita',
+      sortable: true,
+      width: '150px',
+      render: (row) => <span className="text-gray-900 dark:text-white">{formatCurrency(row.revenue)}</span>
+    },
+    {
+      key: 'profit',
+      header: 'Lucro',
+      sortable: true,
+      width: '150px',
+      render: (row) => <span className="font-medium text-green-600 dark:text-green-400">{formatCurrency(row.profit)}</span>
+    },
+    {
+      key: 'margin',
+      header: 'Margem',
+      sortable: true,
+      width: '120px',
+      render: (row) => (
+        <span className={`${
+          row.margin > 30 ? 'text-green-600 dark:text-green-400' : 
+          row.margin > 15 ? 'text-yellow-600 dark:text-yellow-400' : 
+          'text-red-600 dark:text-red-400'
+        }`}>
+          {row.margin.toFixed(1)}%
+        </span>
+      )
+    }
+  ]
 
   if (isLoading) return <DataLoadingSkeleton type="cards" rows={5} />
 
@@ -147,85 +249,48 @@ const ProfitabilityReport = ({ dateRange, customDateRange, categoryFilter }) => 
         <StatCard
           label="Custo Total"
           value={formatCurrency(totals.cost)}
-          sublabel={`${((totals.cost / totals.revenue) * 100).toFixed(1)}% da receita`}
+          sublabel={`${totals.revenue > 0 ? ((totals.cost / totals.revenue) * 100).toFixed(1) : 0}% da receita`}
           icon={TrendingDown}
           variant="warning"
         />
       </div>
 
       {/* Lucratividade por Categoria */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="font-semibold text-gray-900">Lucratividade por Categoria</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="font-semibold text-gray-900 dark:text-white">Lucratividade por Categoria</h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr className="text-xs text-gray-500 uppercase">
-                <th className="px-6 py-3 text-left">Categoria</th>
-                <th className="px-6 py-3 text-right">Receita</th>
-                <th className="px-6 py-3 text-right">Custo</th>
-                <th className="px-6 py-3 text-right">Lucro</th>
-                <th className="px-6 py-3 text-right">Margem</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {byCategory.map((cat, index) => (
-                <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-6 py-3 font-medium text-gray-900">{cat.name}</td>
-                  <td className="px-6 py-3 text-right">{formatCurrency(cat.revenue)}</td>
-                  <td className="px-6 py-3 text-right">{formatCurrency(cat.cost)}</td>
-                  <td className="px-6 py-3 text-right font-medium text-green-600">{formatCurrency(cat.profit)}</td>
-                  <td className="px-6 py-3 text-right">
-                    <span className={`${cat.margin > 30 ? 'text-green-600' : cat.margin > 15 ? 'text-yellow-600' : 'text-red-600'}`}>
-                      {cat.margin.toFixed(1)}%
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={categoryColumns}
+          data={byCategory}
+          emptyMessage="Nenhuma categoria encontrada"
+          striped
+          hover
+          pagination={byCategory.length > 10}
+          itemsPerPageOptions={[10, 20, 50]}
+          defaultItemsPerPage={10}
+          showTotalItems
+          showActionsLegend={false}
+        />
       </div>
 
       {/* Lucratividade por Produto */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="font-semibold text-gray-900">Lucratividade por Produto (Top 20)</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="font-semibold text-gray-900 dark:text-white">Lucratividade por Produto (Top 20)</h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr className="text-xs text-gray-500 uppercase">
-                <th className="px-6 py-3 text-left">Produto</th>
-                <th className="px-6 py-3 text-left">Categoria</th>
-                <th className="px-6 py-3 text-right">Qtd</th>
-                <th className="px-6 py-3 text-right">Receita</th>
-                <th className="px-6 py-3 text-right">Lucro</th>
-                <th className="px-6 py-3 text-right">Margem</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {byProduct.slice(0, 20).map((product, index) => (
-                <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-6 py-3">
-                    <p className="font-medium text-gray-900">{product.name}</p>
-                    <p className="text-xs text-gray-500">{product.code}</p>
-                  </td>
-                  <td className="px-6 py-3 text-sm text-gray-600">{product.category || '-'}</td>
-                  <td className="px-6 py-3 text-right">{formatNumber(product.quantity)}</td>
-                  <td className="px-6 py-3 text-right">{formatCurrency(product.revenue)}</td>
-                  <td className="px-6 py-3 text-right font-medium text-green-600">{formatCurrency(product.profit)}</td>
-                  <td className="px-6 py-3 text-right">
-                    <span className={`${product.margin > 30 ? 'text-green-600' : product.margin > 15 ? 'text-yellow-600' : 'text-red-600'}`}>
-                      {product.margin.toFixed(1)}%
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={productColumns}
+          data={byProduct.slice(0, 20)}
+          emptyMessage="Nenhum produto encontrado"
+          striped
+          hover
+          pagination={byProduct.length > 20}
+          itemsPerPageOptions={[20, 50, 100]}
+          defaultItemsPerPage={20}
+          showTotalItems
+          showActionsLegend={false}
+        />
       </div>
     </div>
   )

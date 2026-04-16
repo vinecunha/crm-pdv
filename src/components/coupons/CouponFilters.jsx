@@ -12,16 +12,16 @@ const CouponFilters = ({ searchTerm, setSearchTerm, filters, setFilters }) => {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex-1 min-w-[250px] relative">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
           <input
             type="text"
             placeholder="Buscar por código ou nome..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
           />
         </div>
         
@@ -36,7 +36,7 @@ const CouponFilters = ({ searchTerm, setSearchTerm, filters, setFilters }) => {
         {hasActiveFilters && (
           <button
             onClick={clearFilters}
-            className="text-sm text-red-600 hover:text-red-700 flex items-center gap-1"
+            className="text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 flex items-center gap-1"
           >
             <X size={14} />
             Limpar
@@ -45,11 +45,11 @@ const CouponFilters = ({ searchTerm, setSearchTerm, filters, setFilters }) => {
       </div>
 
       {showFilters && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4 pt-4 border-t border-gray-100">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
           <select
             value={filters.status || 'all'}
             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg text-sm"
           >
             <option value="all">Todos os status</option>
             <option value="active">Ativos</option>
@@ -59,7 +59,7 @@ const CouponFilters = ({ searchTerm, setSearchTerm, filters, setFilters }) => {
           <select
             value={filters.discount_type || 'all'}
             onChange={(e) => setFilters({ ...filters, discount_type: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg text-sm"
           >
             <option value="all">Todos os tipos</option>
             <option value="percent">Percentual</option>
@@ -69,7 +69,7 @@ const CouponFilters = ({ searchTerm, setSearchTerm, filters, setFilters }) => {
           <select
             value={filters.is_global || 'all'}
             onChange={(e) => setFilters({ ...filters, is_global: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg text-sm"
           >
             <option value="all">Todas abrangências</option>
             <option value="global">Global</option>

@@ -96,15 +96,15 @@ const PeriodComparisonReport = ({ dateRange, customDateRange }) => {
   return (
     <div className="space-y-6">
       {/* Períodos */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-xs text-gray-500">Período Atual</p>
-            <p className="font-medium">{formatPeriod(currentStart, currentEnd)}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Período Atual</p>
+            <p className="font-medium text-gray-900 dark:text-white">{formatPeriod(currentStart, currentEnd)}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500">Período Anterior</p>
-            <p className="font-medium">
+            <p className="text-xs text-gray-500 dark:text-gray-400">Período Anterior</p>
+            <p className="font-medium text-gray-900 dark:text-white">
               {formatPeriod(previousStart.toISOString().split('T')[0], previousEnd.toISOString().split('T')[0])}
             </p>
           </div>
@@ -152,8 +152,12 @@ const PeriodComparisonReport = ({ dateRange, customDateRange }) => {
       </div>
 
       {/* Resumo */}
-      <div className={`rounded-lg p-4 ${changes.revenue >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
-        <p className="text-sm">
+      <div className={`rounded-lg p-4 ${
+        changes.revenue >= 0 
+          ? 'bg-green-50 dark:bg-green-900/20' 
+          : 'bg-red-50 dark:bg-red-900/20'
+      }`}>
+        <p className="text-sm text-gray-900 dark:text-white">
           <strong>📊 Resumo do Período:</strong>
           <br />
           {changes.revenue >= 0 ? (
@@ -184,18 +188,20 @@ const ComparisonCard = ({ label, current, previous, change, icon: Icon, inverseC
   const isPositive = inverseColors ? change <= 0 : change >= 0
   
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm text-gray-500">{label}</span>
-        <Icon size={18} className="text-gray-400" />
+        <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
+        <Icon size={18} className="text-gray-400 dark:text-gray-500" />
       </div>
-      <p className="text-2xl font-bold text-gray-900">{current}</p>
+      <p className="text-2xl font-bold text-gray-900 dark:text-white">{current}</p>
       <div className="flex items-center gap-2 mt-1">
-        <span className={`text-xs ${isPositive ? 'text-green-600' : 'text-red-600'} flex items-center gap-0.5`}>
+        <span className={`text-xs ${
+          isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+        } flex items-center gap-0.5`}>
           {isPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
           {Math.abs(change).toFixed(1)}%
         </span>
-        <span className="text-xs text-gray-400">vs {previous}</span>
+        <span className="text-xs text-gray-400 dark:text-gray-500">vs {previous}</span>
       </div>
     </div>
   )

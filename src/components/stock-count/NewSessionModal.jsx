@@ -57,15 +57,15 @@ const NewSessionModal = ({
           icon={User}
         />
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <p className="text-sm text-blue-800">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 dark:bg-blue-900/20 dark:border-blue-800">
+          <p className="text-sm text-blue-800 dark:text-blue-300">
             <strong>Importante:</strong> Todos os produtos ativos serão incluídos automaticamente na contagem.
             Você poderá adicionar ou remover itens durante o balanço.
           </p>
         </div>
       </div>
 
-      <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+      <div className="flex justify-end gap-3 mt-6 pt-4 border-t dark:border-gray-700">
         <Button variant="outline" onClick={onClose}>
           Cancelar
         </Button>

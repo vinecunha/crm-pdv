@@ -64,19 +64,19 @@ const DateRangeFilter = ({
       />
       
       {dateRange === 'custom' && (
-        <div className="mt-3 flex gap-3">
+        <div className="mt-3 flex gap-3 items-center">
           <input
             type="date"
             value={customDateRange.start}
             onChange={(e) => setCustomDateRange(prev => ({ ...prev, start: e.target.value }))}
-            className="px-3 py-2 border border-gray-300 rounded-lg"
+            className="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg"
           />
-          <span className="text-gray-500">até</span>
+          <span className="text-gray-500 dark:text-gray-400">até</span>
           <input
             type="date"
             value={customDateRange.end}
             onChange={(e) => setCustomDateRange(prev => ({ ...prev, end: e.target.value }))}
-            className="px-3 py-2 border border-gray-300 rounded-lg"
+            className="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg"
           />
         </div>
       )}

@@ -10,15 +10,15 @@ const SecuritySection = ({ user, onChangePassword, onLogout }) => {
     <>
       <div className="space-y-6">
         {/* Alterar Senha */}
-        <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Key size={20} className="text-blue-600" />
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <Key size={20} className="text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <h4 className="font-medium text-gray-900">Alterar Senha</h4>
-                <p className="text-sm text-gray-500">
+                <h4 className="font-medium text-gray-900 dark:text-white">Alterar Senha</h4>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   Recomendamos usar uma senha forte que você não usa em outros sites
                 </p>
               </div>
@@ -30,15 +30,15 @@ const SecuritySection = ({ user, onChangePassword, onLogout }) => {
         </div>
 
         {/* Sessões Ativas */}
-        <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Shield size={20} className="text-green-600" />
+              <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                <Shield size={20} className="text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <h4 className="font-medium text-gray-900">Sessões Ativas</h4>
-                <p className="text-sm text-gray-500">
+                <h4 className="font-medium text-gray-900 dark:text-white">Sessões Ativas</h4>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   Você está logado neste dispositivo
                 </p>
               </div>
@@ -50,15 +50,15 @@ const SecuritySection = ({ user, onChangePassword, onLogout }) => {
         </div>
 
         {/* Excluir Conta */}
-        <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <AlertCircle size={20} className="text-red-600" />
+              <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                <AlertCircle size={20} className="text-red-600 dark:text-red-400" />
               </div>
               <div>
-                <h4 className="font-medium text-red-900">Excluir Conta</h4>
-                <p className="text-sm text-red-700">
+                <h4 className="font-medium text-red-900 dark:text-red-300">Excluir Conta</h4>
+                <p className="text-sm text-red-700 dark:text-red-400">
                   Esta ação é permanente e não pode ser desfeita
                 </p>
               </div>

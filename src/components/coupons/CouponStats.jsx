@@ -3,30 +3,30 @@ import { Ticket, CheckCircle, Globe, Users } from '../../lib/icons'
 
 const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) => {
   const variants = {
-    default: 'bg-white border-gray-200',
-    success: 'bg-green-50 border-green-200',
-    info: 'bg-blue-50 border-blue-200',
-    purple: 'bg-purple-50 border-purple-200',
-    orange: 'bg-orange-50 border-orange-200'
+    default: 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
+    success: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
+    info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
+    purple: 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800',
+    orange: 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
   }
 
   const iconColors = {
-    default: 'text-gray-600',
-    success: 'text-green-600',
-    info: 'text-blue-600',
-    purple: 'text-purple-600',
-    orange: 'text-orange-600'
+    default: 'text-gray-600 dark:text-gray-400',
+    success: 'text-green-600 dark:text-green-400',
+    info: 'text-blue-600 dark:text-blue-400',
+    purple: 'text-purple-600 dark:text-purple-400',
+    orange: 'text-orange-600 dark:text-orange-400'
   }
 
   return (
     <div className={`${variants[variant]} rounded-xl border p-5 transition-all hover:shadow-md`}>
       <div className="flex items-start justify-between">
         <div className="space-y-1">
-          <p className="text-sm font-medium text-gray-500">{label}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          {sublabel && <p className="text-xs text-gray-400">{sublabel}</p>}
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{label}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+          {sublabel && <p className="text-xs text-gray-400 dark:text-gray-500">{sublabel}</p>}
         </div>
-        <div className="p-2.5 rounded-lg bg-white/50">
+        <div className="p-2.5 rounded-lg bg-white/50 dark:bg-gray-700/50">
           <Icon size={22} className={iconColors[variant]} />
         </div>
       </div>

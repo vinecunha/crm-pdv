@@ -5,21 +5,21 @@ import { formatCurrency, formatDate } from '../../utils/formatters'
 const CustomerStats = ({ stats }) => {
   const StatCard = ({ icon: Icon, label, value, color }) => {
     const colors = {
-      blue: 'bg-blue-50 text-blue-600',
-      green: 'bg-green-50 text-green-600',
-      purple: 'bg-purple-50 text-purple-600',
-      orange: 'bg-orange-50 text-orange-600'
+      blue: 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
+      green: 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400',
+      purple: 'bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400',
+      orange: 'bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
     }
 
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-lg ${colors[color]}`}>
             <Icon size={20} />
           </div>
           <div>
-            <p className="text-xs text-gray-500">{label}</p>
-            <p className="text-xl font-semibold">{value}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
+            <p className="text-xl font-semibold text-gray-900 dark:text-white">{value}</p>
           </div>
         </div>
       </div>

@@ -133,5 +133,8 @@ export {
   Pen,
   Power,
   CheckSquare,
-  Square
+  Square,
+  Moon,
+  History,
+  Wallet,
 } from 'lucide-react'

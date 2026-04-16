@@ -109,8 +109,8 @@ const ProfileInfoForm = ({ formData, formErrors, onChange, showFeedback }) => {
       </div>
 
       {/* Endereço */}
-      <div className="border-t pt-4 mt-4">
-        <h4 className="font-medium text-gray-900 mb-4">Endereço</h4>
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+        <h4 className="font-medium text-gray-900 dark:text-white mb-4">Endereço</h4>
 
         <div className="space-y-4">
           {/* CEP com botão de consulta */}
@@ -127,7 +127,7 @@ const ProfileInfoForm = ({ formData, formErrors, onChange, showFeedback }) => {
               type="button"
               onClick={consultarCEP}
               disabled={loadingCEP || !formData.zip_code}
-              className="absolute right-3 top-8 p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
+              className="absolute right-3 top-8 p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors disabled:opacity-50"
               title="Consultar CEP"
             >
               <Search size={16} className={loadingCEP ? 'animate-spin' : ''} />

@@ -54,8 +54,8 @@ const CustomerForm = ({
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
       <div className="space-y-4">
-        <div className="bg-blue-50 rounded-lg p-3 mb-2">
-          <p className="text-xs text-blue-700 font-medium">Campos obrigatórios *</p>
+        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mb-2">
+          <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">Campos obrigatórios *</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -116,12 +116,12 @@ const CustomerForm = ({
           />
           
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">Status</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Status</label>
             <select
               name="status"
               value={formData.status || 'active'}
               onChange={onChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg"
             >
               <option value="active">Ativo</option>
               <option value="inactive">Inativo</option>
@@ -130,9 +130,9 @@ const CustomerForm = ({
         </div>
 
         {/* Endereço */}
-        <div className="border-t pt-4 mt-2">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">
-            Endereço <span className="text-xs text-gray-400 font-normal">(opcional)</span>
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-2">
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+            Endereço <span className="text-xs text-gray-400 dark:text-gray-500 font-normal">(opcional)</span>
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -150,7 +150,7 @@ const CustomerForm = ({
                 type="button"
                 onClick={consultarCEP}
                 disabled={loadingCEP || !formData.zip_code}
-                className="absolute right-3 top-8 p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-50"
+                className="absolute right-3 top-8 p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg disabled:opacity-50"
                 title="Consultar CEP"
               >
                 <Search size={16} className={loadingCEP ? 'animate-spin' : ''} />
@@ -186,7 +186,7 @@ const CustomerForm = ({
         </div>
       </div>
 
-      <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+      <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
           Cancelar
         </Button>

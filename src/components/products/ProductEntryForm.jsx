@@ -57,8 +57,8 @@ const ProductEntryForm = ({
     <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
       <div className="space-y-4">
         {productName && (
-          <div className="bg-blue-50 rounded-lg p-3 mb-2">
-            <p className="text-sm text-blue-700">
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mb-2">
+            <p className="text-sm text-blue-700 dark:text-blue-300">
               <span className="font-medium">Produto:</span> {productName}
             </p>
           </div>
@@ -97,7 +97,7 @@ const ProductEntryForm = ({
               type="button"
               onClick={consultarCNPJ}
               disabled={loadingCNPJ || !formData.supplier_cnpj}
-              className="absolute right-3 top-8 p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
+              className="absolute right-3 top-8 p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors disabled:opacity-50"
               title="Consultar CNPJ"
             >
               <Search size={16} className={loadingCNPJ ? 'animate-spin' : ''} />
@@ -171,9 +171,9 @@ const ProductEntryForm = ({
         </div>
         
         {formData.quantity && formData.unit_cost && (
-          <div className="bg-gray-50 rounded-lg p-3">
-            <p className="text-sm text-gray-600">Valor Total da Entrada:</p>
-            <p className="text-xl font-bold text-green-600">
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+            <p className="text-sm text-gray-600 dark:text-gray-400">Valor Total da Entrada:</p>
+            <p className="text-xl font-bold text-green-600 dark:text-green-400">
               {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
                 .format(parseFloat(formData.quantity) * parseFloat(formData.unit_cost))}
             </p>
@@ -189,7 +189,7 @@ const ProductEntryForm = ({
         />
       </div>
 
-      <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+      <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
         <Button
           type="button"
           variant="outline"

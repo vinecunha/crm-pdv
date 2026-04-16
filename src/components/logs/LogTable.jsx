@@ -41,15 +41,15 @@ const ActionsLegend = ({ actions }) => {
   }
 
   return (
-    <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2 ml-1">
-      <span className="font-medium">Ações:</span>
+    <div className="flex items-center gap-1.5 text-[11px] text-gray-400 dark:text-gray-500 mb-2 ml-1">
+      <span className="font-medium dark:text-gray-400">Ações:</span>
       {actionItems.map((item, index) => (
         <React.Fragment key={index}>
-          <div className="flex items-center gap-0.5 hover:text-gray-600 transition-colors">
+          <div className="flex items-center gap-0.5 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
             {item.icon && renderMiniIcon(item.icon)}
             <span className="whitespace-nowrap">{item.label}</span>
           </div>
-          {index < actionItems.length - 1 && <span className="text-gray-300">•</span>}
+          {index < actionItems.length - 1 && <span className="text-gray-300 dark:text-gray-600">•</span>}
         </React.Fragment>
       ))}
     </div>
@@ -65,7 +65,7 @@ const LogTable = ({ logs, onViewDetails, getActionColor, getActionLabel }) => {
       header: 'Data/Hora',
       sortable: true,
       width: '160px',
-      render: (row) => <div className="text-sm text-gray-500">{formatDateTime(row.created_at)}</div>
+      render: (row) => <div className="text-sm text-gray-500 dark:text-gray-400">{formatDateTime(row.created_at)}</div>
     },
     {
       key: 'user_email',
@@ -75,8 +75,8 @@ const LogTable = ({ logs, onViewDetails, getActionColor, getActionLabel }) => {
       minWidth: '180px',
       render: (row) => (
         <div className="min-w-0">
-          <div className="font-medium text-gray-900 truncate">{row.user_email || 'Sistema'}</div>
-          {row.user_role && <div className="text-xs text-gray-500 capitalize">{row.user_role}</div>}
+          <div className="font-medium text-gray-900 dark:text-white truncate">{row.user_email || 'Sistema'}</div>
+          {row.user_role && <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">{row.user_role}</div>}
         </div>
       )
     },
@@ -95,13 +95,13 @@ const LogTable = ({ logs, onViewDetails, getActionColor, getActionLabel }) => {
       header: 'Entidade',
       sortable: true,
       width: '120px',
-      render: (row) => <div className="text-sm text-gray-600 capitalize">{row.entity_type || '-'}</div>
+      render: (row) => <div className="text-sm text-gray-600 dark:text-gray-300 capitalize">{row.entity_type || '-'}</div>
     },
     {
       key: 'ip_address',
       header: 'IP',
       width: '130px',
-      render: (row) => <div className="text-xs font-mono text-gray-500">{row.ip_address || '-'}</div>
+      render: (row) => <div className="text-xs font-mono text-gray-500 dark:text-gray-400">{row.ip_address || '-'}</div>
     },
     {
       key: 'actions',
@@ -110,10 +110,10 @@ const LogTable = ({ logs, onViewDetails, getActionColor, getActionLabel }) => {
       render: (row) => (
         <button 
           onClick={(e) => { e.stopPropagation(); onViewDetails(row) }} 
-          className="p-2 hover:bg-blue-50 rounded-lg transition-colors group" 
+          className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors group" 
           title="Ver detalhes"
         >
-          <Eye size={16} className="text-blue-500 group-hover:text-blue-600" />
+          <Eye size={16} className="text-blue-500 dark:text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-300" />
         </button>
       )
     }

@@ -7,16 +7,16 @@ import { supabase } from '../../lib/supabase'
 import { formatCurrency, formatNumber, formatDateTime } from '../../utils/formatters'
 import SummaryCard from './SummaryCard'
 import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
+import DataTable from '../ui/DataTable'
 import Badge from '../Badge'
 import { Line, Doughnut } from 'react-chartjs-2'
-import '../../lib/chartConfig' // Importar configuração
+import '../../lib/chartConfig'
 
 const SalesReport = ({ dateRange, customDateRange, paymentMethodFilter }) => {
   const [loading, setLoading] = useState(true)
   const [salesData, setSalesData] = useState(null)
   const [recentSales, setRecentSales] = useState([])
   
-  // IDs únicos para os canvas (evita conflito)
   const lineChartId = useRef(`line-chart-${Date.now()}-${Math.random().toString(36)}`)
   const doughnutChartId = useRef(`doughnut-chart-${Date.now()}-${Math.random().toString(36)}`)
 
@@ -116,6 +116,50 @@ const SalesReport = ({ dateRange, customDateRange, paymentMethodFilter }) => {
     }
   }
 
+  // Colunas para o DataTable de últimas vendas
+  const recentSalesColumns = [
+    {
+      key: 'sale_number',
+      header: 'Nº Venda',
+      width: '150px',
+      render: (row) => <span className="text-sm font-mono text-gray-900 dark:text-white">{row.sale_number}</span>
+    },
+    {
+      key: 'customer_name',
+      header: 'Cliente',
+      width: '25%',
+      render: (row) => <span className="text-sm text-gray-900 dark:text-white">{row.customer_name || 'Cliente não identificado'}</span>
+    },
+    {
+      key: 'created_at',
+      header: 'Data',
+      width: '180px',
+      render: (row) => <span className="text-sm text-gray-600 dark:text-gray-400">{formatDateTime(row.created_at)}</span>
+    },
+    {
+      key: 'payment_method',
+      header: 'Pagamento',
+      width: '120px',
+      render: (row) => (
+        <Badge variant={
+          row.payment_method === 'cash' ? 'success' :
+          row.payment_method === 'credit' ? 'info' :
+          row.payment_method === 'debit' ? 'warning' : 'default'
+        }>
+          {row.payment_method === 'cash' ? 'Dinheiro' :
+           row.payment_method === 'credit' ? 'Crédito' :
+           row.payment_method === 'debit' ? 'Débito' : 'PIX'}
+        </Badge>
+      )
+    },
+    {
+      key: 'final_amount',
+      header: 'Total',
+      width: '120px',
+      render: (row) => <span className="text-sm font-medium text-green-600 dark:text-green-400">{formatCurrency(row.final_amount)}</span>
+    }
+  ]
+
   const salesChartData = {
     labels: salesData?.revenueByDay?.map(d => d.date) || [],
     datasets: [
@@ -165,23 +209,27 @@ const SalesReport = ({ dateRange, customDateRange, paymentMethodFilter }) => {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        display: false
-      },
+      legend: { display: false },
       tooltip: {
+        bodyColor: '#e5e5e7',
+        titleColor: '#e5e5e7',
+        backgroundColor: '#1f2937',
         callbacks: {
-          label: (context) => {
-            let value = context.raw
-            return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
-          }
+          label: (context) => `R$ ${context.raw.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
         }
       }
     },
     scales: {
       y: {
         ticks: {
+          color: '#9ca3af',
           callback: (value) => `R$ ${value}`
-        }
+        },
+        grid: { color: 'rgba(75, 85, 99, 0.3)' }
+      },
+      x: {
+        ticks: { color: '#9ca3af' },
+        grid: { display: false }
       }
     }
   }
@@ -195,10 +243,14 @@ const SalesReport = ({ dateRange, customDateRange, paymentMethodFilter }) => {
         position: 'bottom',
         labels: {
           boxWidth: 12,
-          padding: 15
+          padding: 15,
+          color: '#9ca3af'
         }
       },
       tooltip: {
+        bodyColor: '#e5e5e7',
+        titleColor: '#e5e5e7',
+        backgroundColor: '#1f2937',
         callbacks: {
           label: (context) => {
             const value = context.raw
@@ -249,29 +301,21 @@ const SalesReport = ({ dateRange, customDateRange, paymentMethodFilter }) => {
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold mb-4">Faturamento no Período</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Faturamento no Período</h3>
           <div className="h-64" key={lineChartId.current}>
-            <Line 
-              data={salesChartData} 
-              options={chartOptions} 
-              redraw={false}
-            />
+            <Line data={salesChartData} options={chartOptions} redraw={false} />
           </div>
         </div>
         
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold mb-4">Vendas por Forma de Pagamento</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Vendas por Forma de Pagamento</h3>
           <div className="h-64" key={doughnutChartId.current}>
             {salesData?.salesByPayment?.length > 0 ? (
-              <Doughnut 
-                data={paymentMethodsChartData} 
-                options={doughnutOptions}
-                redraw={false}
-              />
+              <Doughnut data={paymentMethodsChartData} options={doughnutOptions} redraw={false} />
             ) : (
               <div className="flex items-center justify-center h-full">
-                <p className="text-gray-500">Nenhum dado disponível</p>
+                <p className="text-gray-500 dark:text-gray-400">Nenhum dado disponível</p>
               </div>
             )}
           </div>
@@ -279,67 +323,38 @@ const SalesReport = ({ dateRange, customDateRange, paymentMethodFilter }) => {
       </div>
 
       {/* Últimas Vendas */}
-      <div className="bg-white rounded-lg border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">Últimas Vendas</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Últimas Vendas</h3>
         </div>
         
         {recentSales.length === 0 ? (
           <div className="p-12 text-center">
-            <ShoppingCart size={48} className="text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">Nenhuma venda no período</p>
+            <ShoppingCart size={48} className="text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-500 dark:text-gray-400">Nenhuma venda no período</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Nº Venda</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Cliente</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Data</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Pagamento</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500">Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {recentSales.map(sale => (
-                  <tr key={sale.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm font-mono">{sale.sale_number}</td>
-                    <td className="px-6 py-4 text-sm">
-                      {sale.customer_name || 'Cliente não identificado'}
-                    </td>
-                    <td className="px-6 py-4 text-sm">{formatDateTime(sale.created_at)}</td>
-                    <td className="px-6 py-4 text-sm">
-                      <Badge variant={
-                        sale.payment_method === 'cash' ? 'success' :
-                        sale.payment_method === 'credit' ? 'info' :
-                        sale.payment_method === 'debit' ? 'warning' : 'default'
-                      }>
-                        {sale.payment_method === 'cash' ? 'Dinheiro' :
-                         sale.payment_method === 'credit' ? 'Crédito' :
-                         sale.payment_method === 'debit' ? 'Débito' : 'PIX'}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-right font-medium text-green-600">
-                      {formatCurrency(sale.final_amount)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            columns={recentSalesColumns}
+            data={recentSales}
+            emptyMessage="Nenhuma venda encontrada"
+            striped
+            hover
+            pagination={false}
+            showActionsLegend={false}
+          />
         )}
       </div>
 
       {/* Resumo Rápido */}
       {salesData && salesData.totalSales > 0 && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 p-4">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 rounded-lg border border-blue-200 dark:border-blue-800 p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <CreditCard size={20} className="text-blue-600" />
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <CreditCard size={20} className="text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <p className="text-sm text-blue-800">
+              <p className="text-sm text-blue-800 dark:text-blue-300">
                 <strong>Resumo do período:</strong> {formatNumber(salesData.totalSales)} vendas realizadas, 
                 totalizando {formatCurrency(salesData.totalRevenue)} em faturamento.
               </p>

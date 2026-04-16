@@ -2,9 +2,10 @@
 import React, { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
-import { Target, TrendingUp, Calendar, DollarSign } from '../../lib/icons'
+import { Target, TrendingUp, TrendingDown, Calendar, DollarSign } from '../../lib/icons'
 import { formatCurrency, formatNumber } from '../../utils/formatters'
 import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
+import DataTable from '../ui/DataTable'
 import StatCard from '../ui/StatCard'
 
 const fetchHistoricalData = async (monthsToFetch) => {
@@ -104,6 +105,88 @@ const SalesForecastReport = ({ dateRange, customDateRange }) => {
     return calculateForecast(historicalData, 3) // Prever 3 meses
   }, [historicalData])
 
+  // Colunas para Previsão
+  const forecastColumns = [
+    {
+      key: 'month',
+      header: 'Mês',
+      sortable: true,
+      width: '25%',
+      render: (row) => (
+        <span className="font-medium text-gray-900 dark:text-white">
+          {new Date(row.month + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+        </span>
+      )
+    },
+    {
+      key: 'revenue',
+      header: 'Receita Prevista',
+      sortable: true,
+      width: '150px',
+      render: (row) => <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(row.revenue)}</span>
+    },
+    {
+      key: 'sales',
+      header: 'Vendas Previstas',
+      sortable: true,
+      width: '150px',
+      render: (row) => <span className="text-gray-900 dark:text-white">{formatNumber(row.sales)}</span>
+    },
+    {
+      key: 'interval',
+      header: 'Intervalo (85-115%)',
+      width: '200px',
+      render: (row) => (
+        <span className="text-sm text-gray-500 dark:text-gray-400">
+          {formatCurrency(row.lowerBound)} - {formatCurrency(row.upperBound)}
+        </span>
+      )
+    },
+    {
+      key: 'confidence',
+      header: 'Confiabilidade',
+      width: '120px',
+      render: (row) => (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+          row.confidence === 'Alta' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
+          row.confidence === 'Média' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' :
+          'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+        }`}>
+          {row.confidence}
+        </span>
+      )
+    }
+  ]
+
+  // Colunas para Histórico
+  const historicalColumns = [
+    {
+      key: 'month',
+      header: 'Mês',
+      sortable: true,
+      width: '40%',
+      render: (row) => (
+        <span className="font-medium text-gray-900 dark:text-white">
+          {new Date(row.month + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+        </span>
+      )
+    },
+    {
+      key: 'total',
+      header: 'Receita',
+      sortable: true,
+      width: '30%',
+      render: (row) => <span className="text-gray-900 dark:text-white">{formatCurrency(row.total)}</span>
+    },
+    {
+      key: 'count',
+      header: 'Vendas',
+      sortable: true,
+      width: '30%',
+      render: (row) => <span className="text-gray-900 dark:text-white">{formatNumber(row.count)}</span>
+    }
+  ]
+
   if (isLoading) return <DataLoadingSkeleton type="cards" rows={5} />
   if (!forecastData) return null
 
@@ -138,81 +221,41 @@ const SalesForecastReport = ({ dateRange, customDateRange }) => {
       </div>
 
       {/* Tabela de Previsão */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="font-semibold text-gray-900">Previsão para os Próximos Meses</h3>
-          <p className="text-sm text-gray-500">Baseado no histórico dos últimos 6 meses</p>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="font-semibold text-gray-900 dark:text-white">Previsão para os Próximos Meses</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Baseado no histórico dos últimos 6 meses</p>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr className="text-xs text-gray-500 uppercase">
-                <th className="px-6 py-3 text-left">Mês</th>
-                <th className="px-6 py-3 text-right">Receita Prevista</th>
-                <th className="px-6 py-3 text-right">Vendas Previstas</th>
-                <th className="px-6 py-3 text-right">Intervalo (85-115%)</th>
-                <th className="px-6 py-3 text-center">Confiabilidade</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {forecast.map((item, index) => (
-                <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-6 py-3 font-medium text-gray-900">
-                    {new Date(item.month + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-                  </td>
-                  <td className="px-6 py-3 text-right font-medium">{formatCurrency(item.revenue)}</td>
-                  <td className="px-6 py-3 text-right">{formatNumber(item.sales)}</td>
-                  <td className="px-6 py-3 text-right text-sm text-gray-500">
-                    {formatCurrency(item.lowerBound)} - {formatCurrency(item.upperBound)}
-                  </td>
-                  <td className="px-6 py-3 text-center">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      item.confidence === 'Alta' ? 'bg-green-100 text-green-800' :
-                      item.confidence === 'Média' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {item.confidence}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={forecastColumns}
+          data={forecast}
+          emptyMessage="Nenhuma previsão disponível"
+          striped
+          hover
+          pagination={false}
+          showActionsLegend={false}
+        />
       </div>
 
       {/* Histórico */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="font-semibold text-gray-900">Histórico (Últimos Meses)</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="font-semibold text-gray-900 dark:text-white">Histórico (Últimos Meses)</h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr className="text-xs text-gray-500 uppercase">
-                <th className="px-6 py-3 text-left">Mês</th>
-                <th className="px-6 py-3 text-right">Receita</th>
-                <th className="px-6 py-3 text-right">Vendas</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {historical.slice(-6).map((item, index) => (
-                <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-6 py-3 font-medium text-gray-900">
-                    {new Date(item.month + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-                  </td>
-                  <td className="px-6 py-3 text-right">{formatCurrency(item.total)}</td>
-                  <td className="px-6 py-3 text-right">{formatNumber(item.count)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={historicalColumns}
+          data={historical.slice(-6)}
+          emptyMessage="Nenhum dado histórico"
+          striped
+          hover
+          pagination={false}
+          showActionsLegend={false}
+        />
       </div>
 
       {/* Disclaimer */}
-      <div className="bg-yellow-50 rounded-lg p-4">
-        <p className="text-sm text-yellow-800">
+      <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800">
+        <p className="text-sm text-yellow-800 dark:text-yellow-300">
           <strong>⚠️ Aviso:</strong> Esta é uma projeção baseada em dados históricos e pode não refletir a realidade.
           Fatores externos como sazonalidade, promoções e condições de mercado podem afetar os resultados.
         </p>

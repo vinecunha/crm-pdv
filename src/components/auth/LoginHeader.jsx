@@ -32,7 +32,7 @@ const LoginHeader = ({ companyName, logoUrl, primaryColor }) => {
       >
         {companyName}
       </h2>
-      <p className="text-gray-600 mt-2">Faça login para acessar o sistema</p>
+      <p className="text-gray-600 dark:text-gray-300 mt-2">Faça login para acessar o sistema</p>
     </div>
   )
 }

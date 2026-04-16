@@ -44,7 +44,7 @@ const ProductTable = ({
       key: 'code',
       header: 'Código',
       width: '100px',
-      render: (row) => <div className="text-sm font-mono text-gray-600">{row.code || '-'}</div>
+      render: (row) => <div className="text-sm font-mono text-gray-600 dark:text-gray-400">{row.code || '-'}</div>
     },
     {
       key: 'name',
@@ -54,12 +54,12 @@ const ProductTable = ({
       minWidth: '200px',
       render: (row) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-            <Package size={16} className="text-blue-600" />
+          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+            <Package size={16} className="text-blue-600 dark:text-blue-400" />
           </div>
           <div className="min-w-0">
-            <div className="font-medium text-gray-900 truncate">{row.name}</div>
-            <div className="text-xs text-gray-500 truncate">{row.category || 'Sem categoria'}</div>
+            <div className="font-medium text-gray-900 dark:text-white truncate">{row.name}</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{row.category || 'Sem categoria'}</div>
           </div>
         </div>
       )
@@ -74,12 +74,12 @@ const ProductTable = ({
         const StatusIcon = status.icon
         return (
           <div>
-            <div className="font-medium text-gray-900">
+            <div className="font-medium text-gray-900 dark:text-white">
               {formatNumber(row.stock_quantity)} {getUnitLabel(row.unit)}
             </div>
             <div className="flex items-center gap-1 mt-1">
-              <StatusIcon size={12} className={`text-${status.color}-500`} />
-              <span className={`text-xs text-${status.color}-600`}>{status.label}</span>
+              <StatusIcon size={12} className={`text-${status.color}-500 dark:text-${status.color}-400`} />
+              <span className={`text-xs text-${status.color}-600 dark:text-${status.color}-400`}>{status.label}</span>
             </div>
           </div>
         )
@@ -90,13 +90,13 @@ const ProductTable = ({
       header: 'Preço Venda',
       sortable: true,
       width: '120px',
-      render: (row) => <div className="font-semibold text-green-600">{formatCurrency(row.price)}</div>
+      render: (row) => <div className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(row.price)}</div>
     },
     {
       key: 'cost_price',
       header: 'Último Custo',
       width: '120px',
-      render: (row) => <div className="text-sm text-gray-600">{formatCurrency(row.cost_price)}</div>
+      render: (row) => <div className="text-sm text-gray-600 dark:text-gray-400">{formatCurrency(row.cost_price)}</div>
     },
     {
       key: 'is_active',

@@ -42,8 +42,8 @@ const UserSalesTable = ({
       sortable: true,
       render: (row) => (
         <div className="flex items-center gap-2">
-          <User size={16} className="text-gray-400" />
-          <span className="font-medium">{row.user_name || 'Sistema'}</span>
+          <User size={16} className="text-gray-400 dark:text-gray-500" />
+          <span className="font-medium text-gray-900 dark:text-white">{row.user_name || 'Sistema'}</span>
         </div>
       )
     },
@@ -51,41 +51,41 @@ const UserSalesTable = ({
       key: 'total_vendas',
       header: 'Vendas',
       sortable: true,
-      render: (row) => <div className="text-center"><span className="font-semibold">{formatNumber(row.total_vendas)}</span></div>
+      render: (row) => <div className="text-center"><span className="font-semibold text-gray-900 dark:text-white">{formatNumber(row.total_vendas)}</span></div>
     },
     {
       key: 'total_valor',
       header: 'Valor Total',
       sortable: true,
-      render: (row) => <div className="font-semibold text-green-600">{formatCurrency(row.total_valor)}</div>
+      render: (row) => <div className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(row.total_valor)}</div>
     },
     {
       key: 'total_descontos',
       header: 'Descontos',
       sortable: true,
-      render: (row) => <div className="text-orange-600">{formatCurrency(row.total_descontos)}</div>
+      render: (row) => <div className="text-orange-600 dark:text-orange-400">{formatCurrency(row.total_descontos)}</div>
     },
     {
       key: 'media_ticket',
       header: 'Ticket Médio',
       sortable: true,
-      render: (row) => <div>{formatCurrency(row.media_ticket)}</div>
+      render: (row) => <div className="text-gray-900 dark:text-white">{formatCurrency(row.media_ticket)}</div>
     }
   ]
 
   // Estados de loading e erro
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <User size={20} />
             Desempenho por Operador
           </h2>
         </div>
         <div className="animate-pulse space-y-4">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-12 bg-gray-200 rounded"></div>
+            <div key={i} className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
           ))}
         </div>
       </div>
@@ -94,18 +94,18 @@ const UserSalesTable = ({
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <User size={20} />
             Desempenho por Operador
           </h2>
         </div>
-        <div className="text-center text-red-600 py-8">
+        <div className="text-center text-red-600 dark:text-red-400 py-8">
           <p>Erro ao carregar dados: {error.message}</p>
           <button 
             onClick={() => refetch()}
-            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="mt-2 px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600"
           >
             Tentar novamente
           </button>
@@ -117,9 +117,9 @@ const UserSalesTable = ({
   if (!data?.length) return null
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
           <User size={20} />
           Desempenho por Operador
         </h2>
@@ -127,7 +127,7 @@ const UserSalesTable = ({
           <button
             onClick={() => refetch()}
             disabled={isFetching}
-            className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50"
+            className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
             title="Atualizar dados"
           >
             <RefreshCw size={18} className={isFetching ? 'animate-spin' : ''} />

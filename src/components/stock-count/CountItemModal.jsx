@@ -14,7 +14,6 @@ const CountItemModal = ({
   errors,
   onSubmit,
   isSubmitting,
-  // Novos props para navegação
   onNext,
   onPrevious,
   hasNext,
@@ -24,10 +23,8 @@ const CountItemModal = ({
 }) => {
   const quantityInputRef = useRef(null)
 
-  // Auto-focus no campo de quantidade quando abrir
   useEffect(() => {
     if (isOpen && quantityInputRef.current) {
-      // Pequeno delay para garantir que o modal está renderizado
       setTimeout(() => {
         quantityInputRef.current?.focus()
         quantityInputRef.current?.select()
@@ -41,7 +38,6 @@ const CountItemModal = ({
   const isMatched = !isNaN(countedValue) && Math.abs(countedValue - selectedItem.system_quantity) < 0.001
   const difference = !isNaN(countedValue) ? countedValue - selectedItem.system_quantity : 0
 
-  // Handler para Enter no campo de quantidade
   const handleQuantityKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -51,7 +47,6 @@ const CountItemModal = ({
     }
   }
 
-  // Handler para atalho de próximo/anterior
   const handleShortcutAction = (action) => {
     if (action === 'next' && hasNext) {
       onNext?.()
@@ -66,10 +61,10 @@ const CountItemModal = ({
       onClose={onClose}
       title={
         <div className="flex items-center gap-2">
-          <Package size={20} className="text-blue-600" />
-          <span>Contar: {selectedItem.product?.name}</span>
+          <Package size={20} className="text-blue-600 dark:text-blue-400" />
+          <span className="dark:text-white">Contar: {selectedItem.product?.name}</span>
           {totalItems > 0 && (
-            <span className="ml-auto text-sm font-normal text-gray-500">
+            <span className="ml-auto text-sm font-normal text-gray-500 dark:text-gray-400">
               {currentIndex + 1} de {totalItems}
             </span>
           )}
@@ -78,49 +73,47 @@ const CountItemModal = ({
       size="md"
     >
       <div className="space-y-4">
-        {/* Informações do Produto */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100 dark:from-blue-900/20 dark:to-indigo-900/20 dark:border-blue-800">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-gray-500 flex items-center gap-1">
+              <p className="text-xs text-gray-500 flex items-center gap-1 dark:text-gray-400">
                 <Hash size={12} />
                 Código
               </p>
-              <p className="font-mono text-sm">{selectedItem.product?.code || '-'}</p>
+              <p className="font-mono text-sm dark:text-white">{selectedItem.product?.code || '-'}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Unidade</p>
-              <p className="font-medium">{selectedItem.product?.unit || 'un'}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Unidade</p>
+              <p className="font-medium dark:text-white">{selectedItem.product?.unit || 'un'}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500 flex items-center gap-1">
+              <p className="text-xs text-gray-500 flex items-center gap-1 dark:text-gray-400">
                 <Package size={12} />
                 Estoque no Sistema
               </p>
-              <p className="text-xl font-bold text-gray-900">{selectedItem.system_quantity}</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{selectedItem.system_quantity}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Último Custo</p>
-              <p className="text-green-600 font-medium">
+              <p className="text-xs text-gray-500 dark:text-gray-400">Último Custo</p>
+              <p className="text-green-600 font-medium dark:text-green-400">
                 R$ {selectedItem.system_cost?.toFixed(2) || '0,00'}
               </p>
             </div>
           </div>
           
           {selectedItem.product?.updated_at && (
-            <div className="mt-3 pt-3 border-t border-blue-200">
-              <p className="text-xs text-gray-500 flex items-center gap-1">
+            <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800">
+              <p className="text-xs text-gray-500 flex items-center gap-1 dark:text-gray-400">
                 <Calendar size={12} />
                 Última atualização
               </p>
-              <p className="text-sm">
+              <p className="text-sm dark:text-white">
                 {new Date(selectedItem.product.updated_at).toLocaleDateString('pt-BR')}
               </p>
             </div>
           )}
         </div>
 
-        {/* Campo de Quantidade com Atalho */}
         <FormInput
           ref={quantityInputRef}
           label="Quantidade Contada"
@@ -144,7 +137,6 @@ const CountItemModal = ({
           helperText="Pressione Enter para confirmar rapidamente"
         />
 
-        {/* Campo de Observações */}
         <FormInput
           label="Observações"
           name="notes"
@@ -158,25 +150,24 @@ const CountItemModal = ({
           }}
         />
 
-        {/* Preview da Divergência */}
         {form.counted_quantity && !isNaN(countedValue) && (
           <div className={`p-3 rounded-lg border ${
             isMatched
-              ? 'bg-green-50 border-green-200'
-              : 'bg-orange-50 border-orange-200'
+              ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800'
+              : 'bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800'
           }`}>
             <p className="text-sm flex items-center gap-2">
               {isMatched ? (
                 <>
-                  <CheckCircle size={18} className="text-green-600" />
-                  <span className="text-green-700 font-medium">
+                  <CheckCircle size={18} className="text-green-600 dark:text-green-400" />
+                  <span className="text-green-700 font-medium dark:text-green-300">
                     Quantidade confere com o sistema
                   </span>
                 </>
               ) : (
                 <>
-                  <AlertTriangle size={18} className="text-orange-600" />
-                  <span className="text-orange-700 font-medium">
+                  <AlertTriangle size={18} className="text-orange-600 dark:text-orange-400" />
+                  <span className="text-orange-700 font-medium dark:text-orange-300">
                     Divergência de {difference > 0 ? '+' : ''}{difference.toFixed(2)} {selectedItem.product?.unit}
                   </span>
                 </>
@@ -185,23 +176,21 @@ const CountItemModal = ({
           </div>
         )}
 
-        {/* Indicador de Navegação */}
         {(hasPrevious || hasNext) && (
-          <div className="flex items-center justify-center gap-4 text-xs text-gray-500">
+          <div className="flex items-center justify-center gap-4 text-xs text-gray-500 dark:text-gray-400">
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-gray-100 border rounded">↑</kbd>
+              <kbd className="px-1.5 py-0.5 bg-gray-100 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">↑</kbd>
               Anterior
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-gray-100 border rounded">↓</kbd>
+              <kbd className="px-1.5 py-0.5 bg-gray-100 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">↓</kbd>
               Próximo
             </span>
           </div>
         )}
       </div>
 
-      <div className="flex justify-between items-center mt-6 pt-4 border-t">
-        {/* Navegação entre itens */}
+      <div className="flex justify-between items-center mt-6 pt-4 border-t dark:border-gray-700">
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -223,7 +212,6 @@ const CountItemModal = ({
           </Button>
         </div>
 
-        {/* Ações principais */}
         <div className="flex gap-3">
           <Button 
             variant="outline" 

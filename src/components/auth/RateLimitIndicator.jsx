@@ -3,12 +3,12 @@ import { Clock } from '../../lib/icons'
 
 export const BlockedAlert = ({ timeRemaining, formatTimeRemaining }) => {
   return (
-    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-      <div className="flex items-center gap-2 text-orange-800 mb-1">
+    <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+      <div className="flex items-center gap-2 text-orange-800 dark:text-orange-300 mb-1">
         <Clock size={18} />
         <span className="font-medium">Acesso bloqueado</span>
       </div>
-      <p className="text-sm text-orange-700">
+      <p className="text-sm text-orange-700 dark:text-orange-300">
         Muitas tentativas incorretas. Tente novamente em {formatTimeRemaining(timeRemaining)}.
       </p>
     </div>
@@ -34,7 +34,7 @@ export const AttemptsIndicator = ({ remainingAttempts, primaryColor }) => {
           {remainingAttempts} de 5
         </span>
       </div>
-      <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
+      <div className="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
         <div 
           className="h-1.5 rounded-full transition-all"
           style={{ 

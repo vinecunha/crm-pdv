@@ -26,7 +26,6 @@ const LogoUploader = ({ currentLogo, onLogoChange, disabled }) => {
       return
     }
 
-    // Preview local
     const reader = new FileReader()
     reader.onload = (e) => setPreview(e.target.result)
     reader.readAsDataURL(file)
@@ -35,7 +34,6 @@ const LogoUploader = ({ currentLogo, onLogoChange, disabled }) => {
     try {
       const compressedFile = await compressLogo(file)
       
-      // Converter para base64 ou fazer upload
       const reader = new FileReader()
       reader.onload = (e) => {
         onLogoChange(e.target.result)
@@ -63,7 +61,7 @@ const LogoUploader = ({ currentLogo, onLogoChange, disabled }) => {
   return (
     <div className="space-y-3">
       <div className="flex items-start gap-4">
-        <div className="w-24 h-24 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
+        <div className="w-24 h-24 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden dark:bg-gray-700 dark:border-gray-600">
           {displayImage ? (
             <LazyImage
               src={displayImage}
@@ -71,12 +69,12 @@ const LogoUploader = ({ currentLogo, onLogoChange, disabled }) => {
               className="w-full h-full object-contain"
               fallback={
                 <div className="w-full h-full flex items-center justify-center">
-                  <ImageIcon className="w-8 h-8 text-gray-400" />
+                  <ImageIcon className="w-8 h-8 text-gray-400 dark:text-gray-500" />
                 </div>
               }
             />
           ) : (
-            <ImageIcon className="w-8 h-8 text-gray-400" />
+            <ImageIcon className="w-8 h-8 text-gray-400 dark:text-gray-500" />
           )}
         </div>
 
@@ -93,8 +91,8 @@ const LogoUploader = ({ currentLogo, onLogoChange, disabled }) => {
               <span className={`
                 inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
                 ${disabled || uploading 
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                  : 'bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer'
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500' 
+                  : 'bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-800/50'
                 }
               `}>
                 <Upload size={16} />
@@ -106,7 +104,7 @@ const LogoUploader = ({ currentLogo, onLogoChange, disabled }) => {
               <button
                 onClick={handleClear}
                 disabled={disabled || uploading}
-                className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-sm"
+                className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-sm dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-800/50"
               >
                 <X size={16} />
               </button>
@@ -114,10 +112,10 @@ const LogoUploader = ({ currentLogo, onLogoChange, disabled }) => {
           </div>
 
           {error && (
-            <p className="text-xs text-red-600">{error}</p>
+            <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
           )}
 
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             PNG, JPG ou SVG. Será comprimida automaticamente.
           </p>
         </div>

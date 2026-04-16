@@ -2,10 +2,10 @@ import React from 'react'
 
 const DataCards = ({
   data,
-  renderCard,        // Função que renderiza o card
-  keyExtractor,      // Função para extrair a key única
-  columns = 1,       // Número de colunas (1, 2, 3, 4)
-  gap = 4,           // Gap entre cards (1-8)
+  renderCard,
+  keyExtractor,
+  columns = 1,
+  gap = 4,
   onCardClick,
   emptyMessage = "Nenhum dado encontrado",
   className = ""
@@ -30,8 +30,8 @@ const DataCards = ({
 
   if (data.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-        <p className="text-gray-500">{emptyMessage}</p>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center dark:bg-gray-800 dark:border-gray-700">
+        <p className="text-gray-500 dark:text-gray-400">{emptyMessage}</p>
       </div>
     )
   }

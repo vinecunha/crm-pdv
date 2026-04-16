@@ -23,8 +23,8 @@ const QuickCustomerForm = ({
     >
       <div className="space-y-4">
         <div className="text-center">
-          <UserPlus size={48} className="mx-auto text-blue-600 mb-3" />
-          <p className="text-gray-600 mb-2">
+          <UserPlus size={48} className="mx-auto text-blue-600 mb-3 dark:text-blue-400" />
+          <p className="text-gray-600 mb-2 dark:text-gray-400">
             Cliente não encontrado. Faça o cadastro rápido:
           </p>
         </div>
@@ -38,6 +38,7 @@ const QuickCustomerForm = ({
           error={errors.name}
           placeholder="Digite o nome completo"
           icon={User}
+          className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
         />
         
         <FormInput
@@ -51,6 +52,7 @@ const QuickCustomerForm = ({
           icon={Phone}
           disabled
           mask="phone"
+          className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
         />
         
         <FormInput
@@ -62,6 +64,7 @@ const QuickCustomerForm = ({
           error={errors.email}
           placeholder="cliente@email.com"
           icon={Mail}
+          className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
         />
         
         <div className="flex gap-3 pt-2">
@@ -82,7 +85,7 @@ const QuickCustomerForm = ({
           </Button>
         </div>
         
-        <p className="text-xs text-gray-400 text-center">
+        <p className="text-xs text-gray-400 text-center dark:text-gray-500">
           Após o cadastro, o cliente será automaticamente vinculado à venda.
         </p>
       </div>

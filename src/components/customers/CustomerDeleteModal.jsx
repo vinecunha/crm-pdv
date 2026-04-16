@@ -20,10 +20,10 @@ const CustomerDeleteModal = ({
       isLoading={isSubmitting}
     >
       <div className="space-y-4">
-        <p className="text-gray-700">
-          Tem certeza que deseja excluir o cliente <strong>{customer.name}</strong>?
+        <p className="text-gray-700 dark:text-gray-200">
+          Tem certeza que deseja excluir o cliente <strong className="dark:text-white">{customer.name}</strong>?
         </p>
-        <p className="text-sm text-red-600">
+        <p className="text-sm text-red-600 dark:text-red-400">
           Esta ação não poderá ser desfeita.
         </p>
         

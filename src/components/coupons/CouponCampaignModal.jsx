@@ -28,8 +28,8 @@ const CopyButton = ({ text, label = 'Copiar' }) => {
       onClick={handleCopy}
       className={`flex items-center gap-1 text-xs border rounded px-2 py-1 transition ${
         copied
-          ? 'text-green-700 border-green-300 bg-green-50'
-          : 'text-blue-700 border-blue-200 bg-white hover:bg-blue-50'
+          ? 'text-green-700 dark:text-green-400 border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/30'
+          : 'text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/30'
       }`}
     >
       <Copy size={12} />
@@ -44,10 +44,10 @@ const CustomerPhoneRow = ({ customer, customMessage }) => {
   const waUrl = `https://wa.me/55${customer.phoneClean}?text=${encodeURIComponent(personalizedMsg)}`
   
   return (
-    <div className="flex items-center justify-between px-3 py-2 hover:bg-gray-50">
+    <div className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700">
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-gray-800 truncate">{customer.name}</p>
-        <p className="text-xs text-gray-500 font-mono">{customer.phone}</p>
+        <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{customer.name}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">{customer.phone}</p>
       </div>
       <div className="flex items-center gap-2 ml-3 flex-shrink-0">
         <CopyButton text={customer.phoneClean} label="Copiar" />
@@ -55,7 +55,7 @@ const CustomerPhoneRow = ({ customer, customMessage }) => {
           href={waUrl}
           target="_blank"
           rel="noreferrer"
-          className="flex items-center gap-1 text-xs text-green-700 border border-green-200 bg-white hover:bg-green-50 rounded px-2 py-1 transition"
+          className="flex items-center gap-1 text-xs text-green-700 dark:text-green-400 border border-green-200 dark:border-green-700 bg-white dark:bg-gray-700 hover:bg-green-50 dark:hover:bg-green-900/30 rounded px-2 py-1 transition"
         >
           <Smartphone size={12} />
           Abrir Direto
@@ -401,11 +401,11 @@ const CouponCampaignModal = ({ isOpen, onClose, coupon, onSuccess }) => {
         {/* Step 1: Selecionar Clientes */}
         {step === 1 && (
           <div className="space-y-4">
-            <div className="bg-blue-50 rounded-lg p-3 flex items-center gap-3">
-              <Gift size={20} className="text-blue-600" />
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 flex items-center gap-3">
+              <Gift size={20} className="text-blue-600 dark:text-blue-400" />
               <div>
-                <p className="font-medium text-blue-900">{coupon.name}</p>
-                <p className="text-sm text-blue-700">
+                <p className="font-medium text-blue-900 dark:text-blue-300">{coupon.name}</p>
+                <p className="text-sm text-blue-700 dark:text-blue-400">
                   {coupon.discount_type === 'percent' ? `${coupon.discount_value}%` : `R$ ${coupon.discount_value}`} • 
                   {coupon.is_global ? ' Global' : ' Restrito'}
                 </p>
@@ -414,43 +414,43 @@ const CouponCampaignModal = ({ isOpen, onClose, coupon, onSuccess }) => {
 
             <div className="flex items-center justify-between">
               <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" size={16} />
                 <input
                   type="text"
                   placeholder="Buscar cliente..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full pl-9 pr-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg"
                 />
               </div>
-              <button onClick={handleSelectAll} className="text-sm text-blue-600 hover:underline ml-4">
+              <button onClick={handleSelectAll} className="text-sm text-blue-600 dark:text-blue-400 hover:underline ml-4">
                 {allFilteredSelected ? 'Desmarcar todos' : 'Selecionar todos'}
               </button>
             </div>
 
-            <div className="border rounded-lg max-h-80 overflow-y-auto">
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg max-h-80 overflow-y-auto">
               {loadingCustomers ? (
-                <div className="p-8 text-center text-gray-500">Carregando clientes...</div>
+                <div className="p-8 text-center text-gray-500 dark:text-gray-400">Carregando clientes...</div>
               ) : filteredCustomers.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">Nenhum cliente encontrado</div>
+                <div className="p-8 text-center text-gray-500 dark:text-gray-400">Nenhum cliente encontrado</div>
               ) : (
                 filteredCustomers.map(customer => {
                   const isSelected = selectedCustomers.has(customer.id)
                   const isAlreadyAllowed = allowedCustomerIds.has(customer.id)
                   
                   return (
-                    <label key={customer.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0">
+                    <label key={customer.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-200 dark:border-gray-700 last:border-b-0">
                       <button onClick={(e) => { e.preventDefault(); handleToggleCustomer(customer.id) }} className="flex-shrink-0">
-                        {isSelected ? <CheckSquare size={20} className="text-blue-600" /> : <Square size={20} className="text-gray-400" />}
+                        {isSelected ? <CheckSquare size={20} className="text-blue-600 dark:text-blue-400" /> : <Square size={20} className="text-gray-400 dark:text-gray-500" />}
                       </button>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium truncate">{customer.name}</span>
-                          {isAlreadyAllowed && !isSelected && <span className="text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded">Será removido</span>}
-                          {!isAlreadyAllowed && isSelected && <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">Será adicionado</span>}
-                          {isAlreadyAllowed && isSelected && <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Mantido</span>}
+                          <span className="font-medium text-gray-900 dark:text-white truncate">{customer.name}</span>
+                          {isAlreadyAllowed && !isSelected && <span className="text-xs text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 px-2 py-0.5 rounded">Será removido</span>}
+                          {!isAlreadyAllowed && isSelected && <span className="text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-0.5 rounded">Será adicionado</span>}
+                          {isAlreadyAllowed && isSelected && <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded">Mantido</span>}
                         </div>
-                        <div className="text-sm text-gray-500 truncate">{customer.email} • {customer.phone}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400 truncate">{customer.email} • {customer.phone}</div>
                       </div>
                     </label>
                   )
@@ -458,12 +458,12 @@ const CouponCampaignModal = ({ isOpen, onClose, coupon, onSuccess }) => {
               )}
             </div>
 
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 dark:text-gray-400">
               {selectedCustomers.size} cliente(s) selecionado(s)
-              {allowedCustomerIds.size > 0 && <span className="ml-2 text-blue-600">({allowedCustomerIds.size} já associado(s))</span>}
+              {allowedCustomerIds.size > 0 && <span className="ml-2 text-blue-600 dark:text-blue-400">({allowedCustomerIds.size} já associado(s))</span>}
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t">
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
               <Button variant="outline" onClick={onClose}>Cancelar</Button>
               <Button onClick={handleContinue} disabled={selectedCustomers.size === 0} icon={ChevronRight}>Continuar</Button>
             </div>
@@ -474,7 +474,7 @@ const CouponCampaignModal = ({ isOpen, onClose, coupon, onSuccess }) => {
         {step === 2 && (
           <div className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Canal de Envio</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Canal de Envio</label>
               <div className="grid grid-cols-3 gap-2">
                 {channels.map(channel => {
                   const Icon = channel.icon
@@ -483,10 +483,14 @@ const CouponCampaignModal = ({ isOpen, onClose, coupon, onSuccess }) => {
                     <button
                       key={channel.id}
                       onClick={() => setSelectedChannel(channel.id)}
-                      className={`p-3 rounded-lg border text-center transition-all ${isSelected ? `border-${channel.color}-500 bg-${channel.color}-50 ring-2 ring-${channel.color}-200` : 'border-gray-200 hover:border-gray-300'}`}
+                      className={`p-3 rounded-lg border text-center transition-all ${
+                        isSelected 
+                          ? `border-${channel.color}-500 dark:border-${channel.color}-400 bg-${channel.color}-50 dark:bg-${channel.color}-900/20 ring-2 ring-${channel.color}-200 dark:ring-${channel.color}-800` 
+                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                      }`}
                     >
-                      <Icon size={20} className={`mx-auto mb-1 text-${channel.color}-600`} />
-                      <div className="font-medium text-sm">{channel.name}</div>
+                      <Icon size={20} className={`mx-auto mb-1 text-${channel.color}-600 dark:text-${channel.color}-400`} />
+                      <div className="font-medium text-sm text-gray-900 dark:text-white">{channel.name}</div>
                     </button>
                   )
                 })}
@@ -494,48 +498,52 @@ const CouponCampaignModal = ({ isOpen, onClose, coupon, onSuccess }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Template de Mensagem</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Template de Mensagem</label>
               <div className="grid grid-cols-2 gap-2">
                 {templates.map(tpl => (
                   <button
                     key={tpl.id}
                     onClick={() => handleTemplateChange(tpl)}
-                    className={`p-3 rounded-lg border text-left transition-all ${selectedTemplate.id === tpl.id ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-200 hover:border-gray-300'}`}
+                    className={`p-3 rounded-lg border text-left transition-all ${
+                      selectedTemplate.id === tpl.id 
+                        ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-200 dark:ring-blue-800' 
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
                   >
-                    <div className="font-medium text-sm">{tpl.name}</div>
+                    <div className="font-medium text-sm text-gray-900 dark:text-white">{tpl.name}</div>
                   </button>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Mensagem</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Mensagem</label>
               <textarea
                 value={customMessage}
                 onChange={(e) => setCustomMessage(e.target.value)}
                 rows={5}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none font-mono text-sm"
+                className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg resize-none font-mono text-sm"
               />
-              <p className="text-xs text-gray-500 mt-1">Use {'{{nome}}'} para personalizar com o nome do cliente</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Use {'{{nome}}'} para personalizar com o nome do cliente</p>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-lg border">
-              <p className="text-xs font-medium text-gray-700 mb-2">📱 Pré-visualização:</p>
-              <p className="text-sm whitespace-pre-wrap">
+            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+              <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">📱 Pré-visualização:</p>
+              <p className="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">
                 {customMessage.replace(/{{nome}}/g, customers.find(c => selectedCustomers.has(c.id))?.name || 'Cliente')}
               </p>
             </div>
 
             {loadingSend && sendProgress.total > 1 && (
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <div className="text-sm text-blue-700 mb-1">Registrando comunicações... {sendProgress.current} de {sendProgress.total}</div>
-                <div className="w-full bg-blue-200 rounded-full h-2">
-                  <div className="bg-blue-600 h-2 rounded-full transition-all" style={{ width: `${(sendProgress.current / sendProgress.total) * 100}%` }} />
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                <div className="text-sm text-blue-700 dark:text-blue-300 mb-1">Registrando comunicações... {sendProgress.current} de {sendProgress.total}</div>
+                <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2">
+                  <div className="bg-blue-600 dark:bg-blue-400 h-2 rounded-full transition-all" style={{ width: `${(sendProgress.current / sendProgress.total) * 100}%` }} />
                 </div>
               </div>
             )}
 
-            <div className="flex justify-between pt-4 border-t">
+            <div className="flex justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
               <Button variant="outline" onClick={() => setStep(1)}>Voltar</Button>
               <div className="flex gap-3">
                 <Button variant="outline" onClick={onClose}>Cancelar</Button>
@@ -555,9 +563,9 @@ const CouponCampaignModal = ({ isOpen, onClose, coupon, onSuccess }) => {
       >
         <div className="space-y-4">
           {/* Instrução */}
-          <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-            <p className="text-sm text-blue-800 font-medium mb-1">Como criar uma Lista de Transmissão:</p>
-            <ol className="text-xs text-blue-700 list-decimal list-inside space-y-1">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-3">
+            <p className="text-sm text-blue-800 dark:text-blue-300 font-medium mb-1">Como criar uma Lista de Transmissão:</p>
+            <ol className="text-xs text-blue-700 dark:text-blue-400 list-decimal list-inside space-y-1">
               <li>Abra o WhatsApp Web em outra aba</li>
               <li>Crie uma Nova Lista de Transmissão</li>
               <li>Copie cada número abaixo e adicione à lista</li>
@@ -567,10 +575,10 @@ const CouponCampaignModal = ({ isOpen, onClose, coupon, onSuccess }) => {
 
           {/* Lista de clientes com número individual copiável */}
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               Clientes ({whatsAppData?.validCustomers?.length || 0})
             </p>
-            <div className="border rounded-lg divide-y max-h-48 overflow-y-auto">
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-200 dark:divide-gray-700 max-h-48 overflow-y-auto">
               {whatsAppData?.validCustomers?.map((customer) => (
                 <CustomerPhoneRow
                   key={customer.id}
@@ -582,17 +590,17 @@ const CouponCampaignModal = ({ isOpen, onClose, coupon, onSuccess }) => {
           </div>
 
           {/* Mensagem com botão copiar */}
-          <div className="bg-gray-50 border rounded-lg p-3">
+          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-gray-700">💬 Mensagem da campanha</p>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-200">💬 Mensagem da campanha</p>
               <CopyButton text={customMessage.replace(/{{nome}}/g, '[Cliente]')} label="Copiar mensagem" />
             </div>
-            <p className="text-xs text-gray-600 whitespace-pre-wrap font-mono bg-white p-2 rounded border">
+            <p className="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap font-mono bg-white dark:bg-gray-700 p-2 rounded border border-gray-200 dark:border-gray-600">
               {customMessage.replace(/{{nome}}/g, '[Cliente]')}
             </p>
           </div>
 
-          <div className="flex justify-end pt-2 border-t">
+          <div className="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
             <Button onClick={handleCloseWhatsAppPanel}>Concluir</Button>
           </div>
         </div>
@@ -638,12 +646,14 @@ const CouponCampaignModal = ({ isOpen, onClose, coupon, onSuccess }) => {
 const StepIndicator = ({ number, label, active, completed }) => (
   <>
     <div className="flex items-center">
-      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${completed ? 'bg-green-500 text-white' : active ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-500'}`}>
+      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+        completed ? 'bg-green-500 text-white' : active ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+      }`}>
         {completed ? '✓' : number}
       </div>
-      <span className={`ml-2 text-sm ${active ? 'font-medium text-gray-900' : 'text-gray-500'}`}>{label}</span>
+      <span className={`ml-2 text-sm ${active ? 'font-medium text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>{label}</span>
     </div>
-    {number < 2 && <div className="flex-1 h-0.5 bg-gray-200 mx-4" />}
+    {number < 2 && <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-700 mx-4" />}
   </>
 )
 

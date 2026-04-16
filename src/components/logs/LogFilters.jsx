@@ -56,7 +56,7 @@ const LogFilters = ({
   ]
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex-1">
           <DataFilters

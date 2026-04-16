@@ -144,19 +144,21 @@ const SeasonalityReport = ({ dateRange, customDateRange }) => {
       </div>
 
       {/* Sazonalidade Mensal */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Sazonalidade Mensal</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Sazonalidade Mensal</h3>
         
         {/* Gráfico de barras simplificado */}
         <div className="space-y-2">
           {monthlyData.map((month, index) => (
             <div key={index} className="flex items-center gap-3">
-              <span className="w-10 text-sm font-medium text-gray-700">{month.name}</span>
+              <span className="w-10 text-sm font-medium text-gray-700 dark:text-gray-300">{month.name}</span>
               <div className="flex-1">
                 <div className="relative h-8">
                   <div 
                     className={`absolute inset-y-0 left-0 rounded-r transition-all ${
-                      month.index > 110 ? 'bg-green-500' : month.index < 90 ? 'bg-red-500' : 'bg-blue-500'
+                      month.index > 110 ? 'bg-green-500 dark:bg-green-600' : 
+                      month.index < 90 ? 'bg-red-500 dark:bg-red-600' : 
+                      'bg-blue-500 dark:bg-blue-600'
                     }`}
                     style={{ width: `${Math.min(100, (month.total / maxMonthlyValue) * 100)}%` }}
                   >
@@ -167,7 +169,11 @@ const SeasonalityReport = ({ dateRange, customDateRange }) => {
                 </div>
               </div>
               <span className="w-16 text-right text-sm">
-                <span className={month.index > 110 ? 'text-green-600' : month.index < 90 ? 'text-red-600' : 'text-gray-600'}>
+                <span className={
+                  month.index > 110 ? 'text-green-600 dark:text-green-400' : 
+                  month.index < 90 ? 'text-red-600 dark:text-red-400' : 
+                  'text-gray-600 dark:text-gray-400'
+                }>
                   {month.index.toFixed(0)}%
                 </span>
               </span>
@@ -175,7 +181,7 @@ const SeasonalityReport = ({ dateRange, customDateRange }) => {
           ))}
         </div>
         
-        <p className="text-xs text-gray-500 mt-4">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
           Índice: 100% = média mensal. Acima de 110% = alta temporada, abaixo de 90% = baixa temporada.
         </p>
       </div>
@@ -183,15 +189,15 @@ const SeasonalityReport = ({ dateRange, customDateRange }) => {
       {/* Por Trimestre e Dia da Semana */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Trimestres */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="font-semibold text-gray-900 mb-4">Por Trimestre</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Por Trimestre</h3>
           <div className="space-y-3">
             {quarterData.map((quarter, index) => (
               <div key={index} className="flex items-center justify-between">
-                <span className="text-sm text-gray-700">{quarter.name}</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">{quarter.name}</span>
                 <div className="text-right">
-                  <p className="font-medium">{formatCurrency(quarter.total)}</p>
-                  <p className="text-xs text-gray-500">{formatNumber(quarter.count)} vendas</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{formatCurrency(quarter.total)}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{formatNumber(quarter.count)} vendas</p>
                 </div>
               </div>
             ))}
@@ -199,15 +205,15 @@ const SeasonalityReport = ({ dateRange, customDateRange }) => {
         </div>
 
         {/* Dias da Semana */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="font-semibold text-gray-900 mb-4">Por Dia da Semana</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Por Dia da Semana</h3>
           <div className="space-y-3">
             {weekdayData.map((day, index) => (
               <div key={index} className="flex items-center justify-between">
-                <span className="text-sm text-gray-700">{day.name}</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">{day.name}</span>
                 <div className="text-right">
-                  <p className="font-medium">{formatCurrency(day.total)}</p>
-                  <p className="text-xs text-gray-500">{formatNumber(day.count)} vendas</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{formatCurrency(day.total)}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{formatNumber(day.count)} vendas</p>
                 </div>
               </div>
             ))}
@@ -216,8 +222,8 @@ const SeasonalityReport = ({ dateRange, customDateRange }) => {
       </div>
 
       {/* Recomendações */}
-      <div className="bg-blue-50 rounded-lg p-4">
-        <p className="text-sm text-blue-800">
+      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+        <p className="text-sm text-blue-800 dark:text-blue-300">
           <strong>📊 Recomendações baseadas na sazonalidade:</strong>
           <br />
           • <strong>Alta temporada ({bestMonth.name}):</strong> Reforce o estoque e considere campanhas de marketing.

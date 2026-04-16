@@ -166,25 +166,25 @@ const CancelSaleModal = ({
       {step === 1 ? (
         // PASSO 1: Motivo do cancelamento
         <div className="space-y-4">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 dark:bg-yellow-900/20 dark:border-yellow-800">
             <div className="flex items-start gap-3">
-              <AlertCircle size={20} className="text-yellow-600 mt-0.5" />
+              <AlertCircle size={20} className="text-yellow-600 mt-0.5 dark:text-yellow-500" />
               <div>
-                <p className="text-sm font-medium text-yellow-800">Atenção! Esta ação não poderá ser desfeita.</p>
-                <p className="text-xs text-yellow-700 mt-1">
+                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">Atenção! Esta ação não poderá ser desfeita.</p>
+                <p className="text-xs text-yellow-700 mt-1 dark:text-yellow-400">
                   Venda #{sale.sale_number} no valor de {formatCurrency(sale.final_amount)}
                 </p>
-                <p className="text-xs text-yellow-700">Cliente: {sale.customer_name || 'Não identificado'}</p>
+                <p className="text-xs text-yellow-700 dark:text-yellow-400">Cliente: {sale.customer_name || 'Não identificado'}</p>
               </div>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Motivo do cancelamento *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">Motivo do cancelamento *</label>
             <select 
               value={cancelReason} 
               onChange={(e) => setCancelReason(e.target.value)} 
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500" 
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-red-400" 
               required
             >
               <option value="">Selecione um motivo</option>
@@ -193,19 +193,19 @@ const CancelSaleModal = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Observações (opcional)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">Observações (opcional)</label>
             <textarea 
               value={cancelNotes} 
               onChange={(e) => setCancelNotes(e.target.value)} 
               rows={3} 
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500" 
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-red-400" 
               placeholder="Informações adicionais..." 
             />
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-3">
-            <p className="text-xs text-gray-600"><strong>O que acontece após o cancelamento?</strong></p>
-            <ul className="text-xs text-gray-500 mt-2 space-y-1 list-disc list-inside">
+          <div className="bg-gray-50 rounded-lg p-3 dark:bg-gray-800">
+            <p className="text-xs text-gray-600 dark:text-gray-300"><strong>O que acontece após o cancelamento?</strong></p>
+            <ul className="text-xs text-gray-500 mt-2 space-y-1 list-disc list-inside dark:text-gray-400">
               <li>Os produtos voltam ao estoque</li>
               <li>O cupom é liberado para novo uso (se aplicável)</li>
               <li>O total de compras do cliente é atualizado</li>
@@ -214,8 +214,8 @@ const CancelSaleModal = ({
           </div>
 
           {!canCancelDirectly && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-xs text-blue-700 flex items-center gap-1">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 dark:bg-blue-900/20 dark:border-blue-800">
+              <p className="text-xs text-blue-700 flex items-center gap-1 dark:text-blue-300">
                 <Shield size={14} />
                 Você precisará da aprovação de um gerente ou administrador.
               </p>
@@ -239,12 +239,12 @@ const CancelSaleModal = ({
       ) : (
         // PASSO 2: Aprovação do Gerente/Admin
         <div className="space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 dark:bg-blue-900/20 dark:border-blue-800">
             <div className="flex items-start gap-3">
-              <Shield size={20} className="text-blue-600 mt-0.5" />
+              <Shield size={20} className="text-blue-600 mt-0.5 dark:text-blue-400" />
               <div>
-                <p className="text-sm font-medium text-blue-800">Aprovação necessária</p>
-                <p className="text-xs text-blue-700 mt-1">
+                <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Aprovação necessária</p>
+                <p className="text-xs text-blue-700 mt-1 dark:text-blue-400">
                   Um gerente ou administrador precisa aprovar este cancelamento.
                 </p>
               </div>
@@ -252,34 +252,34 @@ const CancelSaleModal = ({
           </div>
 
           {/* Resumo da venda */}
-          <div className="bg-gray-50 rounded-lg p-3">
-            <p className="text-xs text-gray-500 mb-2">Venda a ser cancelada:</p>
-            <p className="text-sm font-medium">#{sale.sale_number} - {formatCurrency(sale.final_amount)}</p>
-            <p className="text-xs text-gray-500 mt-1">Motivo: {cancelReason}</p>
+          <div className="bg-gray-50 rounded-lg p-3 dark:bg-gray-800">
+            <p className="text-xs text-gray-500 mb-2 dark:text-gray-400">Venda a ser cancelada:</p>
+            <p className="text-sm font-medium dark:text-white">#{sale.sale_number} - {formatCurrency(sale.final_amount)}</p>
+            <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">Motivo: {cancelReason}</p>
           </div>
 
           {/* Seleção do Aprovador */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
               Selecione o aprovador *
             </label>
             
             {/* Busca */}
             <div className="relative mb-2">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" size={16} />
               <input
                 type="text"
                 placeholder="Buscar aprovador..."
                 value={searchApprover}
                 onChange={(e) => setSearchApprover(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm"
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
               />
             </div>
 
             {/* Lista de aprovadores */}
-            <div className="border rounded-lg max-h-48 overflow-y-auto">
+            <div className="border rounded-lg max-h-48 overflow-y-auto dark:border-gray-600">
               {filteredApprovers.length === 0 ? (
-                <p className="text-center text-gray-500 py-4 text-sm">
+                <p className="text-center text-gray-500 py-4 text-sm dark:text-gray-400">
                   Nenhum aprovador encontrado
                 </p>
               ) : (
@@ -288,7 +288,8 @@ const CancelSaleModal = ({
                     key={approver.id}
                     className={`
                       flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50 transition-colors
-                      ${selectedApprover === approver.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''}
+                      dark:hover:bg-gray-700
+                      ${selectedApprover === approver.id ? 'bg-blue-50 border-l-4 border-l-blue-500 dark:bg-blue-900/30 dark:border-l-blue-400' : ''}
                     `}
                   >
                     <input
@@ -297,17 +298,19 @@ const CancelSaleModal = ({
                       value={approver.id}
                       checked={selectedApprover === approver.id}
                       onChange={() => handleApproverSelect(approver.id)}
-                      className="text-blue-600 focus:ring-blue-500"
+                      className="text-blue-600 focus:ring-blue-500 dark:bg-gray-700"
                     />
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
                         {approver.full_name || approver.email}
                       </p>
-                      <p className="text-xs text-gray-500">{approver.email}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{approver.email}</p>
                     </div>
                     <span className={`
                       text-xs px-2 py-0.5 rounded-full
-                      ${approver.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}
+                      ${approver.role === 'admin' 
+                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' 
+                        : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'}
                     `}>
                       {approver.role === 'admin' ? 'Admin' : 'Gerente'}
                     </span>
@@ -320,7 +323,7 @@ const CancelSaleModal = ({
           {/* Senha do Aprovador */}
           {selectedApprover && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                 Senha do aprovador *
               </label>
               <div className="relative">
@@ -332,13 +335,13 @@ const CancelSaleModal = ({
                     setApprovalError('')
                   }}
                   placeholder="Digite a senha"
-                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-blue-400"
                   onKeyPress={(e) => e.key === 'Enter' && handleValidateApproval()}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -347,8 +350,8 @@ const CancelSaleModal = ({
           )}
 
           {approvalError && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-xs text-red-700 flex items-center gap-1">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 dark:bg-red-900/20 dark:border-red-800">
+              <p className="text-xs text-red-700 flex items-center gap-1 dark:text-red-300">
                 <AlertCircle size={14} />
                 {approvalError}
               </p>

@@ -94,13 +94,13 @@ const FormInput = ({
   step = null,
   
   // NOVAS PROPS PARA ATALHOS
-  shortcut = null,           // { key: 'f', ctrl: true, description: 'Buscar' }
-  shortcutAction = null,     // Função executada quando o atalho é acionado
+  shortcut = null,
+  shortcutAction = null,
   autoFocus = false,
-  focusOnShortcut = true,    // Se true, foca o input quando o atalho é acionado
-  onShortcutTriggered = null, // Callback quando atalho é acionado
-  showShortcutHint = true,   // Mostrar dica visual do atalho
-  shortcutEnabled = true     // Habilitar/desabilitar atalho
+  focusOnShortcut = true,
+  onShortcutTriggered = null,
+  showShortcutHint = true,
+  shortcutEnabled = true
 }) => {
   const inputRef = useRef(null)
 
@@ -198,15 +198,15 @@ const FormInput = ({
     <div className="space-y-1">
       {label && (
         <div className="flex items-center justify-between">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
             {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className="text-red-500 dark:text-red-400 ml-1">*</span>}
           </label>
           
           {/* Indicador de atalho no label */}
           {shortcutHint && (
-            <span className="text-xs text-gray-400 font-mono flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded text-gray-600">
+            <span className="text-xs text-gray-400 dark:text-gray-500 font-mono flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-600 dark:text-gray-300">
                 {shortcutHint}
               </kbd>
               {shortcut.description && (
@@ -219,7 +219,7 @@ const FormInput = ({
       
       <div className="relative">
         {Icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
             <Icon size={18} />
           </div>
         )}
@@ -243,17 +243,18 @@ const FormInput = ({
             ${Icon ? 'pl-10' : ''}
             ${shortcutHint && showShortcutHint ? 'pr-16' : ''}
             ${error 
-              ? 'border-red-300 focus:border-red-500 focus:ring-red-200' 
-              : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+              ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-200 dark:focus:ring-red-800' 
+              : 'border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-200 dark:focus:ring-blue-800'
             }
-            ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
+            ${disabled ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white'}
+            placeholder-gray-400 dark:placeholder-gray-500
           `}
         />
         
         {/* Indicador de atalho dentro do input */}
         {shortcutHint && showShortcutHint && !Icon && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded text-gray-500">
+            <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-500 dark:text-gray-400">
               {shortcutHint}
             </kbd>
           </div>
@@ -262,7 +263,7 @@ const FormInput = ({
         {/* Indicador de atalho quando tem ícone (posição ajustada) */}
         {shortcutHint && showShortcutHint && Icon && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded text-gray-500">
+            <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-500 dark:text-gray-400">
               {shortcutHint}
             </kbd>
           </div>
@@ -270,17 +271,17 @@ const FormInput = ({
       </div>
       
       {error && (
-        <p className="text-xs text-red-600 mt-1">{error}</p>
+        <p className="text-xs text-red-600 dark:text-red-400 mt-1">{error}</p>
       )}
       
       {helperText && !error && (
-        <p className="text-xs text-gray-500 mt-1">{helperText}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{helperText}</p>
       )}
       
       {/* Dica de atalho adicional */}
       {shortcut && shortcut.description && showShortcutHint && (
-        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-          <span className="inline-block w-1 h-1 bg-gray-300 rounded-full"></span>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1">
+          <span className="inline-block w-1 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></span>
           Atalho: {shortcut.description}
         </p>
       )}

@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase'
 import { formatCurrency, formatNumber } from '../../utils/formatters'
 import SummaryCard from './SummaryCard'
 import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
+import DataTable from '../ui/DataTable'
 import '../../lib/chartConfig' 
 
 const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }) => {
@@ -65,7 +66,6 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
     try {
       const { startDate, endDate } = getDateRange()
 
-      // Buscar todos os perfis que podem vender
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
@@ -73,7 +73,6 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
 
       if (profilesError) throw profilesError
 
-      // Buscar vendas no período
       let query = supabase
         .from('sales')
         .select('*')
@@ -88,7 +87,6 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
       const { data: sales, error: salesError } = await query
       if (salesError) throw salesError
 
-      // Processar dados por operador
       const operatorStats = {}
       
       profiles?.forEach(profile => {
@@ -103,12 +101,10 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
           totalDiscount: 0,
           averageTicket: 0,
           itemsSold: 0,
-          // Para ranking
           rank: 0
         }
       })
 
-      // Buscar itens vendidos para contar produtos
       const { data: saleItems, error: itemsError } = await supabase
         .from('sale_items')
         .select(`
@@ -120,7 +116,6 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
 
       if (itemsError) throw itemsError
 
-      // Criar mapa de sale_id -> created_by
       const saleOperatorMap = {}
       sales?.forEach(sale => {
         if (sale.created_by) {
@@ -128,7 +123,6 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
         }
       })
 
-      // Contar itens por operador
       const operatorItems = {}
       saleItems?.forEach(item => {
         const operatorId = saleOperatorMap[item.sale_id]
@@ -137,7 +131,6 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
         }
       })
 
-      // Processar vendas
       sales?.forEach(sale => {
         const operatorId = sale.created_by
         if (operatorId && operatorStats[operatorId]) {
@@ -147,32 +140,27 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
         }
       })
 
-      // Adicionar contagem de itens
       Object.keys(operatorItems).forEach(operatorId => {
         if (operatorStats[operatorId]) {
           operatorStats[operatorId].itemsSold = operatorItems[operatorId]
         }
       })
 
-      // Calcular ticket médio
       Object.keys(operatorStats).forEach(id => {
         const op = operatorStats[id]
         op.averageTicket = op.salesCount > 0 ? op.totalRevenue / op.salesCount : 0
       })
 
-      // Converter para array, filtrar quem tem vendas, ordenar por receita
       const operatorsArray = Object.values(operatorStats)
         .filter(op => op.salesCount > 0)
         .sort((a, b) => b.totalRevenue - a.totalRevenue)
 
-      // Atribuir ranking
       operatorsArray.forEach((op, index) => {
         op.rank = index + 1
       })
 
       setOperators(operatorsArray)
 
-      // Calcular estatísticas gerais
       const activeOperators = operatorsArray.length
       const totalSales = operatorsArray.reduce((sum, op) => sum + op.salesCount, 0)
       const totalRevenue = operatorsArray.reduce((sum, op) => sum + op.totalRevenue, 0)
@@ -193,9 +181,9 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
 
   const getRoleBadge = (role) => {
     const configs = {
-      admin: { label: 'Admin', color: 'bg-purple-100 text-purple-800' },
-      gerente: { label: 'Gerente', color: 'bg-blue-100 text-blue-800' },
-      operador: { label: 'Operador', color: 'bg-gray-100 text-gray-800' }
+      admin: { label: 'Admin', color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300' },
+      gerente: { label: 'Gerente', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' },
+      operador: { label: 'Operador', color: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300' }
     }
     const config = configs[role] || configs.operador
     return (
@@ -206,11 +194,84 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
   }
 
   const getRankIcon = (rank) => {
-    if (rank === 1) return <Medal size={20} className="text-yellow-500" />
-    if (rank === 2) return <Medal size={20} className="text-gray-400" />
-    if (rank === 3) return <Medal size={20} className="text-amber-600" />
-    return <span className="text-sm font-medium text-gray-500">#{rank}</span>
+    if (rank === 1) return <Medal size={20} className="text-yellow-500 dark:text-yellow-400" />
+    if (rank === 2) return <Medal size={20} className="text-gray-400 dark:text-gray-500" />
+    if (rank === 3) return <Medal size={20} className="text-amber-600 dark:text-amber-400" />
+    return <span className="text-sm font-medium text-gray-500 dark:text-gray-400">#{rank}</span>
   }
+
+  // Colunas para o DataTable
+  const columns = [
+    {
+      key: 'rank',
+      header: '#',
+      width: '60px',
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          {getRankIcon(row.rank)}
+        </div>
+      )
+    },
+    {
+      key: 'name',
+      header: 'Operador',
+      sortable: true,
+      width: '25%',
+      minWidth: '200px',
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+            {row.name.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <p className="font-medium text-gray-900 dark:text-white">{row.name}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{row.email}</p>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'role',
+      header: 'Função',
+      width: '100px',
+      render: (row) => getRoleBadge(row.role)
+    },
+    {
+      key: 'salesCount',
+      header: 'Vendas',
+      sortable: true,
+      width: '90px',
+      render: (row) => <span className="text-gray-900 dark:text-white">{row.salesCount}</span>
+    },
+    {
+      key: 'itemsSold',
+      header: 'Itens',
+      sortable: true,
+      width: '90px',
+      render: (row) => <span className="text-gray-900 dark:text-white">{formatNumber(row.itemsSold)}</span>
+    },
+    {
+      key: 'averageTicket',
+      header: 'Ticket Médio',
+      sortable: true,
+      width: '130px',
+      render: (row) => <span className="text-gray-900 dark:text-white">{formatCurrency(row.averageTicket)}</span>
+    },
+    {
+      key: 'totalDiscount',
+      header: 'Descontos',
+      sortable: true,
+      width: '120px',
+      render: (row) => <span className="text-orange-600 dark:text-orange-400">{formatCurrency(row.totalDiscount)}</span>
+    },
+    {
+      key: 'totalRevenue',
+      header: 'Faturamento',
+      sortable: true,
+      width: '140px',
+      render: (row) => <span className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(row.totalRevenue)}</span>
+    }
+  ]
 
   if (loading) {
     return <DataLoadingSkeleton type="cards" rows={4} />
@@ -248,34 +309,34 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
       </div>
 
       {/* Ranking de Operadores */}
-      <div className="bg-white rounded-lg border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Award className="text-yellow-500" size={20} />
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-white">
+            <Award className="text-yellow-500 dark:text-yellow-400" size={20} />
             Ranking de Desempenho
           </h3>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Baseado no faturamento total no período
           </p>
         </div>
 
         {operators.length === 0 ? (
           <div className="p-12 text-center">
-            <User size={48} className="text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">Nenhuma venda registrada no período</p>
+            <User size={48} className="text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-500 dark:text-gray-400">Nenhuma venda registrada no período</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <>
             {/* Top 3 - Destaque */}
-            <div className="p-6 bg-gradient-to-r from-gray-50 to-white">
+            <div className="p-6 bg-gradient-to-r from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
               <div className="grid grid-cols-3 gap-4">
                 {operators.slice(0, 3).map((operator, index) => (
                   <div 
                     key={operator.id}
                     className={`text-center p-4 rounded-lg ${
-                      index === 0 ? 'bg-yellow-50 border border-yellow-200' :
-                      index === 1 ? 'bg-gray-50 border border-gray-200' :
-                      'bg-amber-50 border border-amber-200'
+                      index === 0 ? 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800' :
+                      index === 1 ? 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700' :
+                      'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800'
                     }`}
                   >
                     <div className="flex justify-center mb-2">
@@ -284,12 +345,12 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
                     <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
                       {operator.name.charAt(0).toUpperCase()}
                     </div>
-                    <p className="font-medium text-gray-900 truncate">{operator.name}</p>
-                    <p className="text-xs text-gray-500 mb-1">{getRoleBadge(operator.role)}</p>
-                    <p className="text-lg font-bold text-green-600">
+                    <p className="font-medium text-gray-900 dark:text-white truncate">{operator.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{getRoleBadge(operator.role)}</p>
+                    <p className="text-lg font-bold text-green-600 dark:text-green-400">
                       {formatCurrency(operator.totalRevenue)}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       {operator.salesCount} vendas
                     </p>
                   </div>
@@ -297,105 +358,63 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
               </div>
             </div>
 
-            {/* Lista completa */}
+            {/* Tabela com DataTable */}
             <div className="p-6">
-              <table className="min-w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 text-xs font-medium text-gray-500">#</th>
-                    <th className="text-left py-3 text-xs font-medium text-gray-500">Operador</th>
-                    <th className="text-center py-3 text-xs font-medium text-gray-500">Função</th>
-                    <th className="text-right py-3 text-xs font-medium text-gray-500">Vendas</th>
-                    <th className="text-right py-3 text-xs font-medium text-gray-500">Itens</th>
-                    <th className="text-right py-3 text-xs font-medium text-gray-500">Ticket Médio</th>
-                    <th className="text-right py-3 text-xs font-medium text-gray-500">Descontos</th>
-                    <th className="text-right py-3 text-xs font-medium text-gray-500">Faturamento</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {operators.map((operator) => (
-                    <tr key={operator.id} className="hover:bg-gray-50">
-                      <td className="py-3">
-                        <div className="flex items-center gap-2">
-                          {getRankIcon(operator.rank)}
-                        </div>
-                      </td>
-                      <td className="py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
-                            {operator.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{operator.name}</p>
-                            <p className="text-xs text-gray-500">{operator.email}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3 text-center">
-                        {getRoleBadge(operator.role)}
-                      </td>
-                      <td className="py-3 text-right text-sm">
-                        {operator.salesCount}
-                      </td>
-                      <td className="py-3 text-right text-sm">
-                        {formatNumber(operator.itemsSold)}
-                      </td>
-                      <td className="py-3 text-right text-sm">
-                        {formatCurrency(operator.averageTicket)}
-                      </td>
-                      <td className="py-3 text-right text-sm text-orange-600">
-                        {formatCurrency(operator.totalDiscount)}
-                      </td>
-                      <td className="py-3 text-right font-semibold text-green-600">
-                        {formatCurrency(operator.totalRevenue)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <DataTable
+                columns={columns}
+                data={operators}
+                emptyMessage="Nenhum operador encontrado"
+                striped
+                hover
+                pagination={operators.length > 10}
+                itemsPerPageOptions={[10, 20, 50]}
+                defaultItemsPerPage={10}
+                showTotalItems
+                showActionsLegend={false}
+              />
             </div>
-          </div>
+          </>
         )}
       </div>
 
       {/* Métricas Adicionais */}
       {operators.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Melhor Ticket Médio</h4>
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">Melhor Ticket Médio</h4>
             {[...operators].sort((a, b) => b.averageTicket - a.averageTicket).slice(0, 1).map(op => (
               <div key={op.id} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Star size={16} className="text-yellow-500" />
-                  <span className="font-medium">{op.name}</span>
+                  <Star size={16} className="text-yellow-500 dark:text-yellow-400" />
+                  <span className="font-medium text-gray-900 dark:text-white">{op.name}</span>
                 </div>
-                <span className="font-bold text-blue-600">{formatCurrency(op.averageTicket)}</span>
+                <span className="font-bold text-blue-600 dark:text-blue-400">{formatCurrency(op.averageTicket)}</span>
               </div>
             ))}
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Mais Itens Vendidos</h4>
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">Mais Itens Vendidos</h4>
             {[...operators].sort((a, b) => b.itemsSold - a.itemsSold).slice(0, 1).map(op => (
               <div key={op.id} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <ShoppingBag size={16} className="text-green-500" />
-                  <span className="font-medium">{op.name}</span>
+                  <ShoppingBag size={16} className="text-green-500 dark:text-green-400" />
+                  <span className="font-medium text-gray-900 dark:text-white">{op.name}</span>
                 </div>
-                <span className="font-bold text-green-600">{formatNumber(op.itemsSold)} itens</span>
+                <span className="font-bold text-green-600 dark:text-green-400">{formatNumber(op.itemsSold)} itens</span>
               </div>
             ))}
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Maior Número de Vendas</h4>
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">Maior Número de Vendas</h4>
             {[...operators].sort((a, b) => b.salesCount - a.salesCount).slice(0, 1).map(op => (
               <div key={op.id} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Target size={16} className="text-purple-500" />
-                  <span className="font-medium">{op.name}</span>
+                  <Target size={16} className="text-purple-500 dark:text-purple-400" />
+                  <span className="font-medium text-gray-900 dark:text-white">{op.name}</span>
                 </div>
-                <span className="font-bold text-purple-600">{op.salesCount} vendas</span>
+                <span className="font-bold text-purple-600 dark:text-purple-400">{op.salesCount} vendas</span>
               </div>
             ))}
           </div>

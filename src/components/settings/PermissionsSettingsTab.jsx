@@ -95,14 +95,18 @@ const PermissionsSettingsTab = () => {
     return { granted, total: perms.length, allGranted: granted === perms.length }
   }
 
-  if (loading) return <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" /></div>
+  if (loading) return (
+    <div className="flex justify-center py-12">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400" />
+    </div>
+  )
 
   return (
     <div className="space-y-6">
       {feedback.show && <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />}
 
       <div>
-        <h2 className="block font-medium text-gray-700 m-3">Função</h2>
+        <h2 className="block font-medium text-gray-700 m-3 dark:text-gray-300">Função</h2>
         <div className="flex gap-2 mx-3">
           {Object.entries(roleConfig).map(([role, config]) => {
             const Icon = config.icon
@@ -116,7 +120,7 @@ const PermissionsSettingsTab = () => {
                 } ${
                   selectedRole === role 
                     ? `bg-gradient-to-r ${config.gradient} text-white shadow-md` 
-                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700'
                 }`}
               >
                 <Icon size={16} /> {config.name}
@@ -125,7 +129,7 @@ const PermissionsSettingsTab = () => {
           })}
         </div>
         {selectedRole === 'admin' && (
-          <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-800">
+          <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-800 dark:bg-purple-900/20 dark:border-purple-800 dark:text-purple-300">
             Administrador possui todas as permissões automaticamente.
           </div>
         )}
@@ -137,41 +141,41 @@ const PermissionsSettingsTab = () => {
           const moduleNames = { dashboard: 'Dashboard', sales: 'Vendas', products: 'Produtos', customers: 'Clientes', cashier: 'Caixa', coupons: 'Cupons', reports: 'Relatórios', users: 'Usuários', system: 'Sistema' }
           
           return (
-            <div key={module} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+            <div key={module} className="bg-white rounded-lg border border-gray-200 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
+              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 dark:bg-gray-900/50 dark:border-gray-700">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <h4 className="font-medium text-gray-900">{moduleNames[module] || module}</h4>
-                    <span className="text-xs text-gray-500">{stats.granted}/{stats.total}</span>
+                    <h4 className="font-medium text-gray-900 dark:text-white">{moduleNames[module] || module}</h4>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{stats.granted}/{stats.total}</span>
                   </div>
                   {selectedRole !== 'admin' && (
-                    <button onClick={() => handleToggleModule(modulePerms)} className="text-xs text-blue-600 hover:text-blue-700">
+                    <button onClick={() => handleToggleModule(modulePerms)} className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
                       {stats.allGranted ? 'Desmarcar todos' : 'Marcar todos'}
                     </button>
                   )}
                 </div>
                 {selectedRole !== 'admin' && (
-                  <div className="mt-2 w-full bg-gray-200 rounded-full h-1">
-                    <div className={`h-1 rounded-full transition-all ${stats.allGranted ? 'bg-green-500' : stats.granted > 0 ? 'bg-yellow-500' : 'bg-gray-300'}`} style={{ width: `${(stats.granted / stats.total) * 100}%` }} />
+                  <div className="mt-2 w-full bg-gray-200 rounded-full h-1 dark:bg-gray-700">
+                    <div className={`h-1 rounded-full transition-all ${stats.allGranted ? 'bg-green-500' : stats.granted > 0 ? 'bg-yellow-500' : 'bg-gray-300 dark:bg-gray-600'}`} style={{ width: `${(stats.granted / stats.total) * 100}%` }} />
                   </div>
                 )}
               </div>
               
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-gray-100 dark:divide-gray-700">
                 {modulePerms.map(permission => {
                   const granted = selectedRole === 'admin' ? true : rolePermissions[selectedRole]?.[permission.id] || false
                   return (
-                    <div key={permission.id} className={`px-4 py-2 flex items-center justify-between ${selectedRole !== 'admin' ? 'cursor-pointer hover:bg-gray-50' : ''}`} onClick={() => selectedRole !== 'admin' && handleTogglePermission(permission.id)}>
+                    <div key={permission.id} className={`px-4 py-2 flex items-center justify-between ${selectedRole !== 'admin' ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700' : ''}`} onClick={() => selectedRole !== 'admin' && handleTogglePermission(permission.id)}>
                       <div className="flex items-center gap-2">
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center ${granted ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300'}`}>
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center ${granted ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 dark:border-gray-600'}`}>
                           {granted && <CheckCircle size={10} />}
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{permission.name}</p>
-                          <p className="text-xs text-gray-500">{permission.description}</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">{permission.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{permission.description}</p>
                         </div>
                       </div>
-                      <span className={`text-xs ${granted ? 'text-green-600' : 'text-red-500'}`}>{granted ? 'Permitido' : 'Negado'}</span>
+                      <span className={`text-xs ${granted ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>{granted ? 'Permitido' : 'Negado'}</span>
                     </div>
                   )
                 })}
@@ -182,7 +186,7 @@ const PermissionsSettingsTab = () => {
       </div>
 
       {hasChanges && (
-        <div className="flex justify-end gap-2 pt-4 border-t">
+        <div className="flex justify-end gap-2 pt-4 border-t dark:border-gray-700">
           <Button variant="outline" size="sm" onClick={() => setShowResetModal(true)} icon={RotateCcw}>Restaurar</Button>
           <Button variant="outline" size="sm" onClick={loadData}>Descartar</Button>
           <Button size="sm" onClick={handleSave} loading={saving} icon={Save}>Salvar</Button>
@@ -191,7 +195,7 @@ const PermissionsSettingsTab = () => {
 
       <Modal isOpen={showResetModal} onClose={() => setShowResetModal(false)} title="Restaurar Padrão" size="sm">
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">Restaurar permissões padrão para {roleConfig[selectedRole].name}?</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Restaurar permissões padrão para {roleConfig[selectedRole].name}?</p>
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => setShowResetModal(false)}>Cancelar</Button>
             <Button variant="danger" onClick={async () => { setShowResetModal(false); await loadData(); setHasChanges(false) }}>Restaurar</Button>

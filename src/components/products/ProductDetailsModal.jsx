@@ -36,42 +36,42 @@ const ProductDetailsModal = ({
     >
       <div className="space-y-6">
         {/* Informações do Produto */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Informações do Produto</h3>
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">Informações do Produto</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <p className="text-xs text-gray-500">Código</p>
-              <p className="text-sm font-mono">{product.code || '-'}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Código</p>
+              <p className="text-sm font-mono text-gray-900 dark:text-white">{product.code || '-'}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Categoria</p>
-              <p className="text-sm">{product.category || '-'}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Categoria</p>
+              <p className="text-sm text-gray-900 dark:text-white">{product.category || '-'}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Unidade</p>
-              <p className="text-sm">{getUnitLabel(product.unit)}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Unidade</p>
+              <p className="text-sm text-gray-900 dark:text-white">{getUnitLabel(product.unit)}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Status</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Status</p>
               <p className="text-sm">{getStatusBadge(product.is_active)}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Estoque Atual</p>
-              <p className="text-sm font-semibold">
+              <p className="text-xs text-gray-500 dark:text-gray-400">Estoque Atual</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">
                 {formatNumber(product.stock_quantity)} {getUnitLabel(product.unit)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Estoque Mínimo</p>
-              <p className="text-sm">{formatNumber(product.min_stock)}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Estoque Mínimo</p>
+              <p className="text-sm text-gray-900 dark:text-white">{formatNumber(product.min_stock)}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Preço de Venda</p>
-              <p className="text-sm font-semibold text-green-600">{formatCurrency(product.price)}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Preço de Venda</p>
+              <p className="text-sm font-semibold text-green-600 dark:text-green-400">{formatCurrency(product.price)}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Último Custo</p>
-              <p className="text-sm">{formatCurrency(product.cost_price)}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Último Custo</p>
+              <p className="text-sm text-gray-900 dark:text-white">{formatCurrency(product.cost_price)}</p>
             </div>
           </div>
         </div>
@@ -79,22 +79,22 @@ const ProductDetailsModal = ({
         {/* Últimas Entradas */}
         {entries.length > 0 && (
           <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Últimas Entradas</h3>
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">Últimas Entradas</h3>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {entries.slice(0, 5).map(entry => (
-                <div key={entry.id} className="bg-gray-50 rounded-lg p-3">
+                <div key={entry.id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-sm font-medium">NF {entry.invoice_number}</p>
-                      <p className="text-xs text-gray-500">{entry.supplier_name || 'Fornecedor não informado'}</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">NF {entry.invoice_number}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{entry.supplier_name || 'Fornecedor não informado'}</p>
                       {entry.batch_number && (
-                        <p className="text-xs text-gray-500">Lote: {entry.batch_number}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Lote: {entry.batch_number}</p>
                       )}
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold text-green-600">{formatCurrency(entry.unit_cost)}/un</p>
-                      <p className="text-xs text-gray-500">{formatNumber(entry.quantity)} unidades</p>
-                      <p className="text-xs text-gray-400">{new Date(entry.entry_date).toLocaleDateString('pt-BR')}</p>
+                      <p className="text-sm font-semibold text-green-600 dark:text-green-400">{formatCurrency(entry.unit_cost)}/un</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{formatNumber(entry.quantity)} unidades</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">{new Date(entry.entry_date).toLocaleDateString('pt-BR')}</p>
                     </div>
                   </div>
                 </div>
@@ -106,30 +106,30 @@ const ProductDetailsModal = ({
         {/* Últimas Movimentações */}
         {movements.length > 0 && (
           <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Últimas Movimentações</h3>
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">Últimas Movimentações</h3>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {movements.map(movement => (
-                <div key={movement.id} className="bg-gray-50 rounded-lg p-3">
+                <div key={movement.id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
                       {movement.movement_type === 'ENTRY' ? (
-                        <TrendingUp size={16} className="text-green-500" />
+                        <TrendingUp size={16} className="text-green-500 dark:text-green-400" />
                       ) : movement.movement_type === 'SALE' ? (
-                        <TrendingDown size={16} className="text-red-500" />
+                        <TrendingDown size={16} className="text-red-500 dark:text-red-400" />
                       ) : (
-                        <RefreshCw size={16} className="text-blue-500" />
+                        <RefreshCw size={16} className="text-blue-500 dark:text-blue-400" />
                       )}
-                      <span className="text-sm">
+                      <span className="text-sm text-gray-900 dark:text-white">
                         {movement.movement_type === 'ENTRY' ? 'Entrada' : 
                          movement.movement_type === 'SALE' ? 'Venda' : 
                          movement.movement_type === 'ADJUSTMENT' ? 'Ajuste' : movement.movement_type}
                       </span>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-medium">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
                         {movement.quantity > 0 ? `+${formatNumber(movement.quantity)}` : formatNumber(movement.quantity)}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         {new Date(movement.created_at).toLocaleString('pt-BR')}
                       </p>
                     </div>

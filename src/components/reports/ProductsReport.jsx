@@ -74,7 +74,6 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
         end: endDate.toISOString()
       })
 
-      // Buscar itens de venda - APENAS colunas que existem
       const { data: saleItems, error: itemsError } = await supabase
         .from('sale_items')
         .select(`
@@ -96,7 +95,6 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
 
       logger.log(`✅ ${saleItems?.length || 0} itens encontrados`)
 
-      // Buscar produtos separadamente
       const productIds = [...new Set(saleItems?.map(item => item.product_id).filter(Boolean)) || []]
       
       let productsMap = {}
@@ -114,7 +112,6 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
         }
       }
 
-      // Processar itens
       if (saleItems && saleItems.length > 0) {
         processSaleItems(saleItems, productsMap)
       } else {
@@ -127,7 +124,6 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
         setTopProducts([])
       }
 
-      // Buscar produtos ativos
       await fetchActiveProducts()
 
     } catch (error) {
@@ -253,16 +249,48 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: { y: { beginAtZero: true, ticks: { callback: (v) => Math.floor(v) } } }
+    plugins: { 
+      legend: { display: false },
+      tooltip: {
+        bodyColor: '#e5e5e7',
+        titleColor: '#e5e5e7',
+        backgroundColor: '#1f2937'
+      }
+    },
+    scales: { 
+      y: { 
+        beginAtZero: true, 
+        ticks: { 
+          callback: (v) => Math.floor(v),
+          color: '#9ca3af'
+        },
+        grid: { color: 'rgba(75, 85, 99, 0.3)' }
+      },
+      x: {
+        ticks: { color: '#9ca3af' },
+        grid: { display: false }
+      }
+    }
   }
 
   const doughnutOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { display: true, position: 'bottom', labels: { boxWidth: 12, padding: 15, font: { size: 11 } } },
+      legend: { 
+        display: true, 
+        position: 'bottom', 
+        labels: { 
+          boxWidth: 12, 
+          padding: 15, 
+          font: { size: 11 },
+          color: '#9ca3af'
+        }
+      },
       tooltip: {
+        bodyColor: '#e5e5e7',
+        titleColor: '#e5e5e7',
+        backgroundColor: '#1f2937',
         callbacks: {
           label: (ctx) => {
             const val = ctx.raw
@@ -279,10 +307,10 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
-        <AlertCircle size={48} className="text-red-400 mx-auto mb-3" />
-        <p className="text-red-600 font-medium">Erro ao carregar relatório</p>
-        <p className="text-sm text-red-500 mt-1">{error}</p>
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-8 text-center">
+        <AlertCircle size={48} className="text-red-400 dark:text-red-500 mx-auto mb-3" />
+        <p className="text-red-600 dark:text-red-400 font-medium">Erro ao carregar relatório</p>
+        <p className="text-sm text-red-500 dark:text-red-400 mt-1">{error}</p>
       </div>
     )
   }
@@ -299,48 +327,55 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
       </div>
 
       {!hasData ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-          <Package size={48} className="text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 font-medium">Nenhuma venda no período</p>
-          <p className="text-sm text-gray-400 mt-1">Tente selecionar outro período</p>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
+          <Package size={48} className="text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+          <p className="text-gray-500 dark:text-gray-400 font-medium">Nenhuma venda no período</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Tente selecionar outro período</p>
         </div>
       ) : (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold mb-4">Top 10 Produtos</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top 10 Produtos</h3>
               <div className="h-64"><Bar data={topProductsChartData} options={chartOptions} /></div>
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold mb-4">Vendas por Categoria</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Vendas por Categoria</h3>
               <div className="h-64">
                 {productsData?.categoryStats?.length > 0 ? (
                   <Doughnut data={categoryChartData} options={doughnutOptions} />
                 ) : (
-                  <div className="flex items-center justify-center h-full"><p className="text-gray-500">Nenhum dado</p></div>
+                  <div className="flex items-center justify-center h-full"><p className="text-gray-500 dark:text-gray-400">Nenhum dado</p></div>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold flex items-center gap-2"><TrendingUp className="text-green-600" size={20} />Ranking de Produtos</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-white">
+                <TrendingUp className="text-green-600 dark:text-green-400" size={20} />Ranking de Produtos
+              </h3>
             </div>
             <div className="p-6">
               <div className="space-y-3">
                 {topProducts.map((p, i) => (
-                  <div key={p.product?.id || i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100">
+                  <div key={p.product?.id || i} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600">
                     <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${i === 0 ? 'bg-yellow-100 text-yellow-700' : i === 1 ? 'bg-gray-200 text-gray-600' : i === 2 ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-600'}`}>#{i + 1}</div>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                        i === 0 ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' : 
+                        i === 1 ? 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300' : 
+                        i === 2 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' : 
+                        'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300'
+                      }`}>#{i + 1}</div>
                       <div>
-                        <p className="font-medium text-gray-900">{p.product?.name || 'Produto'}</p>
-                        <p className="text-xs text-gray-500">{p.product?.category || 'Sem categoria'} | Estoque: {p.product?.stock_quantity || 0} {p.product?.unit || 'UN'}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{p.product?.name || 'Produto'}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{p.product?.category || 'Sem categoria'} | Estoque: {p.product?.stock_quantity || 0} {p.product?.unit || 'UN'}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-gray-900">{formatNumber(p.quantity)} vendidos</p>
-                      <p className="text-sm text-green-600">{formatCurrency(p.revenue)}</p>
+                      <p className="font-semibold text-gray-900 dark:text-white">{formatNumber(p.quantity)} vendidos</p>
+                      <p className="text-sm text-green-600 dark:text-green-400">{formatCurrency(p.revenue)}</p>
                     </div>
                   </div>
                 ))}
@@ -351,18 +386,20 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
       )}
 
       {productsData?.lowStockProducts?.length > 0 && (
-        <div className="bg-orange-50 rounded-lg border border-orange-200 p-6">
-          <h3 className="text-lg font-semibold text-orange-800 mb-4 flex items-center gap-2"><AlertCircle size={20} />Produtos com Estoque Baixo</h3>
+        <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800 p-6">
+          <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-300 mb-4 flex items-center gap-2">
+            <AlertCircle size={20} />Produtos com Estoque Baixo
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {productsData.lowStockProducts.map(p => (
-              <div key={p.id} className="bg-white rounded-lg p-3 border border-orange-100">
-                <p className="font-medium text-gray-900 truncate">{p.name}</p>
+              <div key={p.id} className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-orange-100 dark:border-orange-800">
+                <p className="font-medium text-gray-900 dark:text-white truncate">{p.name}</p>
                 <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-gray-500">Estoque:</span>
-                  <span className="text-sm font-semibold text-orange-600">{p.stock_quantity || 0} / {p.min_stock || 5} {p.unit || 'UN'}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Estoque:</span>
+                  <span className="text-sm font-semibold text-orange-600 dark:text-orange-400">{p.stock_quantity || 0} / {p.min_stock || 5} {p.unit || 'UN'}</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                  <div className="bg-orange-500 h-1.5 rounded-full" style={{ width: `${Math.min(((p.stock_quantity || 0) / (p.min_stock || 5)) * 100, 100)}%` }} />
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-2">
+                  <div className="bg-orange-500 dark:bg-orange-600 h-1.5 rounded-full" style={{ width: `${Math.min(((p.stock_quantity || 0) / (p.min_stock || 5)) * 100, 100)}%` }} />
                 </div>
               </div>
             ))}

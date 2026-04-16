@@ -6,9 +6,9 @@ import { formatCurrency, formatDate, formatDateTime } from '../../utils/formatte
 
 const CashierHistoryModal = ({ isOpen, onClose, history, users, onViewDetails, onPrint }) => {
   const getDifferenceColor = (diff) => {
-    if (diff === 0) return 'text-green-600'
-    if (Math.abs(diff) < 10) return 'text-yellow-600'
-    return 'text-red-600'
+    if (diff === 0) return 'text-green-600 dark:text-green-400'
+    if (Math.abs(diff) < 10) return 'text-yellow-600 dark:text-yellow-400'
+    return 'text-red-600 dark:text-red-400'
   }
 
   const columns = [
@@ -21,13 +21,35 @@ const CashierHistoryModal = ({ isOpen, onClose, history, users, onViewDetails, o
   ]
 
   const actions = [
-    { label: 'Ver detalhes', icon: <Eye size={18} />, className: 'text-blue-600 hover:text-blue-800', onClick: onViewDetails },
-    { label: 'Imprimir', icon: <Printer size={18} />, className: 'text-gray-600 hover:text-gray-800', onClick: onPrint }
+    { 
+      id: 'details',
+      label: 'Ver detalhes', 
+      icon: Eye,  // ✅ Componente, não elemento JSX
+      className: 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300', 
+      onClick: onViewDetails 
+    },
+    { 
+      id: 'print',
+      label: 'Imprimir', 
+      icon: Printer,  // ✅ Componente, não elemento JSX
+      className: 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200', 
+      onClick: onPrint 
+    }
   ]
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Histórico de Fechamentos" size="xl">
-      <DataTable columns={columns} data={history} actions={actions} emptyMessage="Nenhum fechamento encontrado" striped hover pagination itemsPerPageOptions={[20, 50, 100]} defaultItemsPerPage={20} />
+      <DataTable 
+        columns={columns} 
+        data={history} 
+        actions={actions} 
+        emptyMessage="Nenhum fechamento encontrado" 
+        striped 
+        hover 
+        pagination 
+        itemsPerPageOptions={[20, 50, 100]} 
+        defaultItemsPerPage={20} 
+      />
     </Modal>
   )
 }

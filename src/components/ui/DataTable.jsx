@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react'
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from '../../lib/icons'
 
-// ============= MAPEAMENTO DE LABELS =============
 const DEFAULT_ACTION_LABELS = {
   'edit': 'Editar', 'delete': 'Excluir', 'view': 'Visualizar', 'details': 'Ver detalhes',
   'campaign': 'Campanha', 'communicate': 'Comunicar', 'manage': 'Gerenciar', 
@@ -11,8 +10,6 @@ const DEFAULT_ACTION_LABELS = {
   'copy': 'Copiar', 'print': 'Imprimir', 'refresh': 'Atualizar', 'send': 'Enviar',
 }
 
-
-// ============= SUBCOMPONENTE: LEGENDA SUTIL =============
 const ActionsLegend = ({ actions }) => {
   if (!actions || actions.length === 0) return null
 
@@ -22,7 +19,6 @@ const ActionsLegend = ({ actions }) => {
   const actionItems = validActions.map(action => {
     let label = ''
     
-    // ✅ Tentar obter label de várias formas
     if (typeof action.label === 'string') {
       label = action.label
     } else if (action.id) {
@@ -30,15 +26,13 @@ const ActionsLegend = ({ actions }) => {
     } else if (action.name) {
       label = DEFAULT_ACTION_LABELS[action.name] || action.name
     } else {
-      // Tentar extrair do texto do botão ou título
       label = action.title || 'Ação'
     }
     
-    // Capitalizar primeira letra
     label = label.charAt(0).toUpperCase() + label.slice(1)
     
     return { label, icon: action.icon }
-  }).filter(item => item.label && item.label !== 'Ação') // ✅ Filtrar ações sem label adequada
+  }).filter(item => item.label && item.label !== 'Ação')
 
   if (actionItems.length === 0) return null
 
@@ -52,27 +46,26 @@ const ActionsLegend = ({ actions }) => {
   }
 
   return (
-    <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2 ml-1">
+    <div className="flex items-center gap-1.5 text-[11px] text-gray-400 dark:text-gray-500 mb-2 ml-1">
       <span className="font-medium">Ações:</span>
       {actionItems.map((item, index) => (
         <React.Fragment key={index}>
-          <div className="flex items-center gap-0.5 hover:text-gray-600 transition-colors">
+          <div className="flex items-center gap-0.5 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
             {item.icon && renderMiniIcon(item.icon)}
             <span className="whitespace-nowrap">{item.label}</span>
           </div>
-          {index < actionItems.length - 1 && <span className="text-gray-300">•</span>}
+          {index < actionItems.length - 1 && <span className="text-gray-300 dark:text-gray-600">•</span>}
         </React.Fragment>
       ))}
     </div>
   )
 }
 
-// ============= COMPONENTE PRINCIPAL =============
 const DataTable = ({ 
   columns, data, onRowClick, actions, emptyMessage = "Nenhum dado encontrado",
   className = "", striped = true, hover = true, pagination = true,
   itemsPerPageOptions = [20, 50, 100], defaultItemsPerPage = 20, showTotalItems = true,
-  showActionsLegend = true, // ✅ Prop para controlar a legenda
+  showActionsLegend = true,
 }) => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   const [sortedData, setSortedData] = useState([])
@@ -175,21 +168,20 @@ const DataTable = ({
   const hasActions = actions && Array.isArray(actions) && actions.length > 0
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${className}`}>
-      {/* ✅ LEGENDA SUTIL ACIMA DOS TÍTULOS */}
+    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden ${className}`}>
       {hasActions && showActionsLegend && (
-        <div className="px-6 pt-4 pb-2 border-b border-gray-100">
+        <div className="px-6 pt-4 pb-2 border-b border-gray-100 dark:border-gray-700">
           <ActionsLegend actions={actions} />
         </div>
       )}
 
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-900/50">
             <tr>
               {columns.filter(col => col != null).map((column, idx) => (
                 <th key={idx} onClick={() => column.sortable !== false && column.key && handleSort(column.key)}
-                  className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${column.sortable !== false && column.key ? 'cursor-pointer hover:bg-gray-100' : ''}`}
+                  className={`px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider ${column.sortable !== false && column.key ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700' : ''}`}
                   style={column.width ? { width: column.width } : {}}>
                   <div className="flex items-center gap-1">
                     {column.header}
@@ -197,18 +189,18 @@ const DataTable = ({
                   </div>
                 </th>
               ))}
-              {hasActions && <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>}
+              {hasActions && <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>}
             </tr>
           </thead>
-          <tbody className={`divide-y divide-gray-200 ${hover ? 'hover:divide-gray-300' : ''}`}>
+          <tbody className={`divide-y divide-gray-200 dark:divide-gray-700 ${hover ? 'hover:divide-gray-300 dark:hover:divide-gray-600' : ''}`}>
             {currentItems.length === 0 ? (
-              <tr><td colSpan={columns.length + (hasActions ? 1 : 0)} className="px-6 py-12 text-center text-gray-500">{emptyMessage}</td></tr>
+              <tr><td colSpan={columns.length + (hasActions ? 1 : 0)} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">{emptyMessage}</td></tr>
             ) : (
               currentItems.map((row, rowIndex) => {
                 const validActions = getValidActions(row)
                 return (
                   <tr key={row?.id || rowIndex} onClick={() => row && onRowClick?.(row, rowIndex)}
-                    className={`${onRowClick ? 'cursor-pointer' : ''} ${hover ? 'hover:bg-gray-50 transition-colors' : ''} ${striped && rowIndex % 2 === 1 ? 'bg-gray-50' : ''}`}>
+                    className={`${onRowClick ? 'cursor-pointer' : ''} ${hover ? 'hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors' : ''} ${striped && rowIndex % 2 === 1 ? 'bg-gray-50 dark:bg-gray-900/50' : ''}`}>
                     {columns.filter(col => col != null).map((column, colIndex) => (
                       <td key={colIndex} className={`px-6 py-4 whitespace-nowrap text-sm ${column.className || ''}`}>
                         {renderCell(row, column, indexOfFirstItem + rowIndex)}
@@ -219,7 +211,7 @@ const DataTable = ({
                         <div className="flex justify-end gap-2">
                           {validActions.map((action, actionIndex) => (
                             <button key={actionIndex} onClick={(e) => { e.stopPropagation(); action.onClick(row, indexOfFirstItem + rowIndex) }}
-                              className={`p-1.5 rounded-lg transition-colors ${typeof action.className === 'function' ? action.className(row) : (action.className || 'text-gray-600 hover:text-gray-900 hover:bg-gray-100')} ${isActionDisabled(action, row) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              className={`p-1.5 rounded-lg transition-colors ${typeof action.className === 'function' ? action.className(row) : (action.className || 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700')} ${isActionDisabled(action, row) ? 'opacity-50 cursor-not-allowed' : ''}`}
                               title={getActionLabel(action, row)} disabled={isActionDisabled(action, row)}>
                               {renderActionIcon(action)}
                             </button>
@@ -236,25 +228,25 @@ const DataTable = ({
       </div>
 
       {pagination && totalItems > 0 && (
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            {showTotalItems && <div className="text-sm text-gray-600">Mostrando {indexOfFirstItem + 1} a {Math.min(indexOfLastItem, totalItems)} de {totalItems} registros</div>}
+            {showTotalItems && <div className="text-sm text-gray-600 dark:text-gray-400">Mostrando {indexOfFirstItem + 1} a {Math.min(indexOfLastItem, totalItems)} de {totalItems} registros</div>}
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Itens por página:</span>
-              <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="px-2 py-1 border border-gray-300 rounded-md text-sm">
+              <span className="text-sm text-gray-600 dark:text-gray-400">Itens por página:</span>
+              <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="px-2 py-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md text-sm">
                 {itemsPerPageOptions.map(option => <option key={option} value={option}>{option}</option>)}
               </select>
             </div>
             <div className="flex items-center gap-1">
-              <button onClick={goToFirstPage} disabled={currentPage === 1} className={`p-2 rounded-md ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-200'}`}><ChevronsLeft size={18} /></button>
-              <button onClick={goToPreviousPage} disabled={currentPage === 1} className={`p-2 rounded-md ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-200'}`}><ChevronLeft size={18} /></button>
+              <button onClick={goToFirstPage} disabled={currentPage === 1} className={`p-2 rounded-md ${currentPage === 1 ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}><ChevronsLeft size={18} /></button>
+              <button onClick={goToPreviousPage} disabled={currentPage === 1} className={`p-2 rounded-md ${currentPage === 1 ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}><ChevronLeft size={18} /></button>
               <div className="flex gap-1 mx-1">
                 {getPageNumbers().map(pageNum => (
-                  <button key={pageNum} onClick={() => setCurrentPage(pageNum)} className={`min-w-[32px] h-8 px-2 rounded-md text-sm font-medium ${currentPage === pageNum ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-200'}`}>{pageNum}</button>
+                  <button key={pageNum} onClick={() => setCurrentPage(pageNum)} className={`min-w-[32px] h-8 px-2 rounded-md text-sm font-medium ${currentPage === pageNum ? 'bg-blue-600 text-white dark:bg-blue-700' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>{pageNum}</button>
                 ))}
               </div>
-              <button onClick={goToNextPage} disabled={currentPage === totalPages} className={`p-2 rounded-md ${currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-200'}`}><ChevronRight size={18} /></button>
-              <button onClick={goToLastPage} disabled={currentPage === totalPages} className={`p-2 rounded-md ${currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-200'}`}><ChevronsRight size={18} /></button>
+              <button onClick={goToNextPage} disabled={currentPage === totalPages} className={`p-2 rounded-md ${currentPage === totalPages ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}><ChevronRight size={18} /></button>
+              <button onClick={goToLastPage} disabled={currentPage === totalPages} className={`p-2 rounded-md ${currentPage === totalPages ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}><ChevronsRight size={18} /></button>
             </div>
           </div>
         </div>

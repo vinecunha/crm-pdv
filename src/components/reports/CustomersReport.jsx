@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase'
 import { formatCurrency, formatNumber, formatDate } from '../../utils/formatters'
 import SummaryCard from './SummaryCard'
 import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
+import DataTable from '../ui/DataTable'
 import Badge from '../Badge'
 import CouponAnalytics from './CouponAnalytics'
 
@@ -129,6 +130,88 @@ const CustomersReport = ({ dateRange, customDateRange }) => {
     }
   }
 
+  // Colunas para o DataTable
+  const topCustomersColumns = [
+    {
+      key: 'rank',
+      header: '#',
+      width: '60px',
+      render: (_, index) => (
+        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+          index === 0 ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' :
+          index === 1 ? 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300' :
+          index === 2 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' :
+          'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300'
+        }`}>
+          {index + 1}
+        </div>
+      )
+    },
+    {
+      key: 'name',
+      header: 'Cliente',
+      sortable: true,
+      width: '25%',
+      minWidth: '200px',
+      render: (row) => (
+        <div>
+          <p className="font-medium text-gray-900 dark:text-white">{row.name}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Cliente desde {formatDate(row.created_at)}
+          </p>
+        </div>
+      )
+    },
+    {
+      key: 'contact',
+      header: 'Contato',
+      width: '180px',
+      render: (row) => (
+        <div className="space-y-1">
+          <p className="text-sm flex items-center gap-1 text-gray-700 dark:text-gray-300">
+            <Phone size={12} className="text-gray-400 dark:text-gray-500" />
+            {row.phone || '-'}
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+            <Mail size={12} className="text-gray-400 dark:text-gray-500" />
+            {row.email || '-'}
+          </p>
+        </div>
+      )
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      width: '100px',
+      render: (row) => (
+        <Badge variant={row.status === 'active' ? 'success' : 'danger'}>
+          {row.status === 'active' ? 'Ativo' : 'Inativo'}
+        </Badge>
+      )
+    },
+    {
+      key: 'period_purchases',
+      header: 'Compras',
+      sortable: true,
+      width: '100px',
+      render: (row) => <span className="text-gray-900 dark:text-white">{row.period_purchases}</span>
+    },
+    {
+      key: 'period_total',
+      header: 'Total (Período)',
+      sortable: true,
+      width: '150px',
+      render: (row) => <span className="font-medium text-green-600 dark:text-green-400">{formatCurrency(row.period_total)}</span>
+    },
+    {
+      key: 'total_purchases',
+      header: 'Total Histórico',
+      sortable: true,
+      width: '150px',
+      render: (row) => <span className="text-gray-600 dark:text-gray-400">{formatCurrency(row.total_purchases)}</span>
+    }
+  ]
+
   if (loading) {
     return <DataLoadingSkeleton type="cards" rows={4} />
   }
@@ -191,14 +274,14 @@ const CustomersReport = ({ dateRange, customDateRange }) => {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-200 dark:border-gray-700">
         <nav className="flex gap-4">
           <button
             onClick={() => setActiveTab('overview')}
             className={`pb-2 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'overview'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
             <Users size={16} className="inline mr-1" />
@@ -208,8 +291,8 @@ const CustomersReport = ({ dateRange, customDateRange }) => {
             onClick={() => setActiveTab('coupons')}
             className={`pb-2 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'coupons'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
             <Ticket size={16} className="inline mr-1" />
@@ -220,91 +303,32 @@ const CustomersReport = ({ dateRange, customDateRange }) => {
 
       {/* Conteúdo das Tabs */}
       {activeTab === 'overview' && (
-        <div className="bg-white rounded-lg border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Award className="text-yellow-500" size={20} />
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-white">
+              <Award className="text-yellow-500 dark:text-yellow-400" size={20} />
               Top Clientes do Período
             </h3>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Clientes que mais compraram no período selecionado
             </p>
           </div>
 
           {topCustomers.length === 0 ? (
             <div className="p-12 text-center">
-              <Users size={48} className="text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">Nenhuma compra de clientes cadastrados no período</p>
+              <Users size={48} className="text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+              <p className="text-gray-500 dark:text-gray-400">Nenhuma compra de clientes cadastrados no período</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">#</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Cliente</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Contato</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500">Status</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500">Compras</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500">Total (Período)</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500">Total Histórico</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {topCustomers.map((customer, index) => (
-                    <tr key={customer.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <div className={`
-                            w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold
-                            ${index === 0 ? 'bg-yellow-100 text-yellow-700' :
-                              index === 1 ? 'bg-gray-200 text-gray-600' :
-                              index === 2 ? 'bg-amber-100 text-amber-700' :
-                              'bg-blue-100 text-blue-600'}
-                          `}>
-                            {index + 1}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div>
-                          <p className="font-medium text-gray-900">{customer.name}</p>
-                          <p className="text-xs text-gray-500">
-                            Cliente desde {formatDate(customer.created_at)}
-                          </p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="space-y-1">
-                          <p className="text-sm flex items-center gap-1">
-                            <Phone size={12} className="text-gray-400" />
-                            {customer.phone || '-'}
-                          </p>
-                          <p className="text-xs text-gray-500 flex items-center gap-1">
-                            <Mail size={12} className="text-gray-400" />
-                            {customer.email || '-'}
-                          </p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <Badge variant={customer.status === 'active' ? 'success' : 'danger'}>
-                          {customer.status === 'active' ? 'Ativo' : 'Inativo'}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 text-center text-sm">
-                        {customer.period_purchases}
-                      </td>
-                      <td className="px-6 py-4 text-right text-sm font-medium text-green-600">
-                        {formatCurrency(customer.period_total)}
-                      </td>
-                      <td className="px-6 py-4 text-right text-sm text-gray-600">
-                        {formatCurrency(customer.total_purchases)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              columns={topCustomersColumns}
+              data={topCustomers}
+              emptyMessage="Nenhum cliente encontrado"
+              striped
+              hover
+              pagination={false}
+              showActionsLegend={false}
+            />
           )}
         </div>
       )}

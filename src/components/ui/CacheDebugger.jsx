@@ -37,14 +37,13 @@ const CacheDebugger = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
-  // Só mostrar em desenvolvimento
   if (process.env.NODE_ENV !== 'development') return null
 
   return (
     <>
       <button
         onClick={handleOpen}
-        className="fixed bottom-4 right-14 z-50 p-2 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700"
+        className="fixed bottom-4 right-14 z-50 p-2 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600"
         title="Cache Debugger"
       >
         <Database size={20} />
@@ -58,31 +57,31 @@ const CacheDebugger = () => {
       >
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-blue-50 rounded-lg p-3">
-              <p className="text-xs text-blue-600">Cache em Memória</p>
-              <p className="text-2xl font-bold text-blue-700">{stats.memoryEntries || 0}</p>
-              <p className="text-xs text-blue-500">queries ativas</p>
+            <div className="bg-blue-50 rounded-lg p-3 dark:bg-blue-900/20">
+              <p className="text-xs text-blue-600 dark:text-blue-400">Cache em Memória</p>
+              <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{stats.memoryEntries || 0}</p>
+              <p className="text-xs text-blue-500 dark:text-blue-400">queries ativas</p>
             </div>
-            <div className="bg-green-50 rounded-lg p-3">
-              <p className="text-xs text-green-600">Cache Persistido</p>
-              <p className="text-2xl font-bold text-green-700">{stats.entries || 0}</p>
-              <p className="text-xs text-green-500">entradas</p>
+            <div className="bg-green-50 rounded-lg p-3 dark:bg-green-900/20">
+              <p className="text-xs text-green-600 dark:text-green-400">Cache Persistido</p>
+              <p className="text-2xl font-bold text-green-700 dark:text-green-300">{stats.entries || 0}</p>
+              <p className="text-xs text-green-500 dark:text-green-400">entradas</p>
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-3">
-            <p className="text-xs text-gray-600 mb-1">Tamanho do Cache</p>
-            <p className="text-xl font-semibold text-gray-800">{formatBytes(stats.size || 0)}</p>
+          <div className="bg-gray-50 rounded-lg p-3 dark:bg-gray-800">
+            <p className="text-xs text-gray-600 mb-1 dark:text-gray-400">Tamanho do Cache</p>
+            <p className="text-xl font-semibold text-gray-800 dark:text-white">{formatBytes(stats.size || 0)}</p>
           </div>
 
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <p className="text-xs text-yellow-800 mb-2">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 dark:bg-yellow-900/20 dark:border-yellow-800">
+            <p className="text-xs text-yellow-800 mb-2 dark:text-yellow-300">
               <strong>⚠️ Atenção:</strong> Limpar o cache irá recarregar todos os dados do servidor.
             </p>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t dark:border-gray-700">
           <Button variant="outline" onClick={loadStats} icon={RefreshCw}>
             Atualizar
           </Button>

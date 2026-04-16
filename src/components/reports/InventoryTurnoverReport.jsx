@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
-import { RefreshCw, Package, TrendingUp, TrendingDown } from '../../lib/icons'
+import { RefreshCw, Package } from '../../lib/icons'
 import { formatCurrency, formatNumber } from '../../utils/formatters'
 import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
+import DataTable from '../ui/DataTable'
 import StatCard from '../ui/StatCard'
 
 const fetchInventoryData = async (startDate, endDate) => {
@@ -84,6 +85,74 @@ const InventoryTurnoverReport = ({ dateRange, customDateRange }) => {
   const normalTurnover = turnoverData.items.filter(p => p.status === 'normal').length
   const highTurnover = turnoverData.items.filter(p => p.status === 'high').length
 
+  // Colunas para o DataTable
+  const columns = [
+    {
+      key: 'name',
+      header: 'Produto',
+      sortable: true,
+      width: '25%',
+      minWidth: '200px',
+      render: (row) => (
+        <div>
+          <p className="font-medium text-gray-900 dark:text-white">{row.name}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{row.code}</p>
+        </div>
+      )
+    },
+    {
+      key: 'stock',
+      header: 'Estoque Atual',
+      sortable: true,
+      width: '120px',
+      render: (row) => <span className="text-gray-900 dark:text-white">{formatNumber(row.stock)}</span>
+    },
+    {
+      key: 'sold',
+      header: 'Vendido no Período',
+      sortable: true,
+      width: '140px',
+      render: (row) => <span className="text-gray-900 dark:text-white">{formatNumber(row.sold)}</span>
+    },
+    {
+      key: 'costValue',
+      header: 'Valor em Estoque',
+      sortable: true,
+      width: '140px',
+      render: (row) => <span className="text-gray-900 dark:text-white">{formatCurrency(row.costValue)}</span>
+    },
+    {
+      key: 'turnover',
+      header: 'Giro Mensal',
+      sortable: true,
+      width: '120px',
+      render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.turnover.toFixed(2)}x</span>
+    },
+    {
+      key: 'daysToSell',
+      header: 'Dias p/ Vender',
+      sortable: true,
+      width: '120px',
+      render: (row) => <span className="text-gray-900 dark:text-white">{Math.round(row.daysToSell)} dias</span>
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      width: '100px',
+      render: (row) => (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+          row.status === 'high' 
+            ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' 
+            : row.status === 'normal' 
+              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' 
+              : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+        }`}>
+          {row.status === 'high' ? 'Alto' : row.status === 'normal' ? 'Normal' : 'Baixo'}
+        </span>
+      )
+    }
+  ]
+
   return (
     <div className="space-y-6">
       {/* Cards de Resumo */}
@@ -111,59 +180,24 @@ const InventoryTurnoverReport = ({ dateRange, customDateRange }) => {
         />
       </div>
 
-      {/* Tabela de Giro */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="font-semibold text-gray-900">Giro de Estoque por Produto</h3>
-          <p className="text-sm text-gray-500">
-            Produtos com baixo giro representam capital parado
-          </p>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr className="text-xs text-gray-500 uppercase">
-                <th className="px-6 py-3 text-left">Produto</th>
-                <th className="px-6 py-3 text-right">Estoque Atual</th>
-                <th className="px-6 py-3 text-right">Vendido no Período</th>
-                <th className="px-6 py-3 text-right">Valor em Estoque</th>
-                <th className="px-6 py-3 text-right">Giro Mensal</th>
-                <th className="px-6 py-3 text-right">Dias p/ Vender</th>
-                <th className="px-6 py-3 text-center">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {turnoverData.items.slice(0, 30).map((product) => (
-                <tr key={product.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-3">
-                    <p className="font-medium text-gray-900">{product.name}</p>
-                    <p className="text-xs text-gray-500">{product.code}</p>
-                  </td>
-                  <td className="px-6 py-3 text-right">{formatNumber(product.stock)}</td>
-                  <td className="px-6 py-3 text-right">{formatNumber(product.sold)}</td>
-                  <td className="px-6 py-3 text-right">{formatCurrency(product.costValue)}</td>
-                  <td className="px-6 py-3 text-right font-medium">{product.turnover.toFixed(2)}x</td>
-                  <td className="px-6 py-3 text-right">{Math.round(product.daysToSell)} dias</td>
-                  <td className="px-6 py-3 text-center">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      product.status === 'high' ? 'bg-green-100 text-green-800' :
-                      product.status === 'normal' ? 'bg-blue-100 text-blue-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {product.status === 'high' ? 'Alto' : product.status === 'normal' ? 'Normal' : 'Baixo'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* Tabela com DataTable */}
+      <DataTable
+        columns={columns}
+        data={turnoverData.items.slice(0, 30)}
+        emptyMessage="Nenhum produto encontrado"
+        striped
+        hover
+        pagination={turnoverData.items.length > 20}
+        itemsPerPageOptions={[20, 50, 100]}
+        defaultItemsPerPage={20}
+        showTotalItems
+        showActionsLegend={false}
+      />
 
       {/* Explicação */}
-      <div className="bg-blue-50 rounded-lg p-4">
-        <p className="text-sm text-blue-800">
-          <strong>📊 Como interpretar:</strong>
+      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+        <p className="text-sm text-blue-800 dark:text-blue-300">
+          <strong className="dark:text-blue-200">📊 Como interpretar:</strong>
           <br />• <strong>Giro &gt; 2:</strong> Produto vende bem, estoque adequado
           <br />• <strong>Giro entre 0.5 e 2:</strong> Situação normal
           <br />• <strong>Giro &lt; 0.5:</strong> Produto parado, avaliar descontinuação ou promoção

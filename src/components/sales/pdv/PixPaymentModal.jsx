@@ -6,7 +6,6 @@ import Modal from '../../ui/Modal'
 import { formatCurrency } from '../../../utils/formatters'
 import { supabase } from '../../../lib/supabase'
 
-// ─── Geração do payload PIX (EMV/BR Code) ────────────────────────────────────
 const generatePixLocally = (amount, description, saleId) => {
   const PIX_KEY      = "65182624000112"
   const MERCHANT_NAME = "65.182.624 VINICIUS CUNHA MARTINS"
@@ -52,18 +51,17 @@ const generatePixLocally = (amount, description, saleId) => {
   }
 }
 
-// ─── Componente principal ─────────────────────────────────────────────────────
 const PixPaymentModal = ({
   isOpen,
   onClose,
   saleId,
   amount,
   description,
-  onPaymentConfirmed   // callback chamado após conclusão da venda
+  onPaymentConfirmed
 }) => {
   const [qrcodeText, setQrcodeText]   = useState('')
   const [expiresAt, setExpiresAt]     = useState(null)
-  const [status, setStatus]           = useState('loading')  // loading | pending | confirming | paid | expired | error
+  const [status, setStatus]           = useState('loading')
   const [timeLeft, setTimeLeft]       = useState('')
   const [copied, setCopied]           = useState(false)
   const [error, setError]             = useState('')
@@ -72,7 +70,6 @@ const PixPaymentModal = ({
   const intervalRef = useRef(null)
   const mountedRef  = useRef(true)
 
-  // ── Inicialização ──────────────────────────────────────────────────────────
   useEffect(() => {
     mountedRef.current = true
     if (isOpen && saleId && amount) generatePixQrCode()
@@ -82,7 +79,6 @@ const PixPaymentModal = ({
     }
   }, [isOpen, saleId, amount])
 
-  // ── Countdown ──────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!expiresAt || status !== 'pending') return
     updateTimeLeft()
@@ -90,7 +86,6 @@ const PixPaymentModal = ({
     return () => clearInterval(intervalRef.current)
   }, [expiresAt, status])
 
-  // ── Gerar QR Code ──────────────────────────────────────────────────────────
   const generatePixQrCode = async () => {
     setStatus('loading')
     setError('')
@@ -116,7 +111,6 @@ const PixPaymentModal = ({
     }
   }
 
-  // ── Countdown helper ───────────────────────────────────────────────────────
   const updateTimeLeft = () => {
     if (!expiresAt) return
     const diff = expiresAt - new Date()
@@ -131,7 +125,6 @@ const PixPaymentModal = ({
     setTimeLeft(`${m}:${s.toString().padStart(2, '0')}`)
   }
 
-  // ── Copiar código PIX ──────────────────────────────────────────────────────
   const copyToClipboard = () => {
     if (!qrcodeText) return
     navigator.clipboard?.writeText(qrcodeText)
@@ -139,12 +132,10 @@ const PixPaymentModal = ({
     setTimeout(() => setCopied(false), 2000)
   }
 
-  // ── CONFIRMAR MANUALMENTE + DAR BAIXA NA VENDA ────────────────────────────
   const handleConfirmPayment = async () => {
     setConfirming(true)
 
     try {
-      // 1. Atualiza pix_charges → paid
       const { error: pixError } = await supabase
         .from('pix_charges')
         .update({
@@ -155,25 +146,20 @@ const PixPaymentModal = ({
 
       if (pixError) throw pixError
 
-      // 2. Dá baixa na venda (tabela sales)
       const { error: saleError } = await supabase
         .from('sales')
         .update({
-          payment_status: 'paid',       // character varying(20)
-          payment_method: 'pix',        // character varying(50)
+          payment_status: 'paid',
+          payment_method: 'pix',
           updated_at:     new Date().toISOString()
-          // ⚠️ Não existe paid_at em sales — registrado em pix_charges.paid_at
-          // status permanece 'completed' (já é o default)
         })
         .eq('id', saleId)
 
       if (saleError) throw saleError
 
-      // 3. Atualiza UI → sucesso
       clearInterval(intervalRef.current)
       setStatus('paid')
 
-      // 4. Notifica o pai após 2s (tempo de exibir a tela de sucesso)
       setTimeout(() => {
         if (mountedRef.current) onPaymentConfirmed?.()
       }, 2000)
@@ -184,7 +170,6 @@ const PixPaymentModal = ({
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
   return (
     <Modal
       isOpen={isOpen}
@@ -195,22 +180,20 @@ const PixPaymentModal = ({
     >
       <div className="space-y-6">
 
-        {/* ── CARREGANDO ── */}
         {status === 'loading' && (
           <div className="text-center py-8">
-            <RefreshCw size={32} className="animate-spin mx-auto text-blue-600 mb-4" />
-            <p className="text-gray-600">Gerando QR Code...</p>
+            <RefreshCw size={32} className="animate-spin mx-auto text-blue-600 mb-4 dark:text-blue-400" />
+            <p className="text-gray-600 dark:text-gray-400">Gerando QR Code...</p>
           </div>
         )}
 
-        {/* ── ERRO ── */}
         {status === 'error' && (
           <div className="text-center py-8">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle size={32} className="text-red-600" />
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-red-900/30">
+              <AlertCircle size={32} className="text-red-600 dark:text-red-400" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Erro</h3>
-            <p className="text-gray-600 mb-4">{error || 'Tente novamente'}</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2 dark:text-white">Erro</h3>
+            <p className="text-gray-600 mb-4 dark:text-gray-400">{error || 'Tente novamente'}</p>
             <div className="flex gap-3 justify-center">
               <Button onClick={generatePixQrCode}>Tentar novamente</Button>
               <Button variant="outline" onClick={onClose}>Cancelar</Button>
@@ -218,44 +201,42 @@ const PixPaymentModal = ({
           </div>
         )}
 
-        {/* ── AGUARDANDO PAGAMENTO ── */}
         {status === 'pending' && (
           <>
-            {/* Valor */}
             <div className="text-center">
-              <p className="text-sm text-gray-500 mb-1">Valor a pagar</p>
-              <p className="text-4xl font-bold text-gray-900">{formatCurrency(amount)}</p>
+              <p className="text-sm text-gray-500 mb-1 dark:text-gray-400">Valor a pagar</p>
+              <p className="text-4xl font-bold text-gray-900 dark:text-white">{formatCurrency(amount)}</p>
             </div>
 
-            {/* QR Code */}
             <div className="flex justify-center">
-              <div className="bg-white p-4 rounded-xl border-2 border-gray-200">
+              <div className="bg-white p-4 rounded-xl border-2 border-gray-200 dark:bg-gray-800 dark:border-gray-700">
                 {qrcodeText && (
                   <QRCodeSVG
                     value={qrcodeText}
                     size={220}
                     level="M"
                     includeMargin={true}
+                    bgColor="transparent"
+                    fgColor="currentColor"
+                    className="dark:text-white"
                   />
                 )}
               </div>
             </div>
 
-            {/* Countdown */}
-            <div className="flex items-center justify-center gap-2 text-amber-600">
+            <div className="flex items-center justify-center gap-2 text-amber-600 dark:text-amber-400">
               <Clock size={18} />
               <span className="font-medium">Expira em {timeLeft}</span>
             </div>
 
-            {/* PIX Copia e Cola */}
             <div>
-              <p className="text-sm text-gray-600 mb-2">PIX Copia e Cola:</p>
+              <p className="text-sm text-gray-600 mb-2 dark:text-gray-400">PIX Copia e Cola:</p>
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={qrcodeText}
                   readOnly
-                  className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono truncate"
+                  className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono truncate dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 />
                 <Button
                   variant="outline"
@@ -267,9 +248,8 @@ const PixPaymentModal = ({
               </div>
             </div>
 
-            {/* Instrução */}
-            <div className="bg-blue-50 rounded-lg p-4">
-              <p className="text-sm text-blue-800">
+            <div className="bg-blue-50 rounded-lg p-4 dark:bg-blue-900/20 dark:border dark:border-blue-800">
+              <p className="text-sm text-blue-800 dark:text-blue-300">
                 <strong>📱 Como pagar:</strong><br />
                 1. Abra o app do seu banco<br />
                 2. Escolha PIX e escaneie o QR Code<br />
@@ -278,13 +258,12 @@ const PixPaymentModal = ({
               </p>
             </div>
 
-            {/* ── BOTÃO CONFIRMAR RECEBIMENTO ── */}
-            <div className="border-t pt-4">
-              <p className="text-xs text-gray-500 mb-3 text-center">
+            <div className="border-t pt-4 dark:border-gray-700">
+              <p className="text-xs text-gray-500 mb-3 text-center dark:text-gray-400">
                 Após o cliente realizar o pagamento, confirme para dar baixa na venda.
               </p>
               <Button
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 text-base"
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 text-base dark:bg-green-700 dark:hover:bg-green-600"
                 onClick={handleConfirmPayment}
                 disabled={confirming}
               >
@@ -295,7 +274,6 @@ const PixPaymentModal = ({
               </Button>
             </div>
 
-            {/* Ações secundárias */}
             <div className="flex gap-3">
               <Button
                 variant="outline"
@@ -315,28 +293,26 @@ const PixPaymentModal = ({
           </>
         )}
 
-        {/* ── PAGO / CONCLUÍDO ── */}
         {status === 'paid' && (
           <div className="text-center py-8">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle size={40} className="text-green-600" />
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-green-900/30">
+              <CheckCircle size={40} className="text-green-600 dark:text-green-400" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">Venda Concluída!</h3>
-            <p className="text-gray-500 text-sm">Pagamento PIX confirmado com sucesso.</p>
-            <div className="mt-4 bg-green-50 rounded-lg p-3 text-sm text-green-800 font-medium">
+            <h3 className="text-2xl font-bold text-gray-900 mb-1 dark:text-white">Venda Concluída!</h3>
+            <p className="text-gray-500 text-sm dark:text-gray-400">Pagamento PIX confirmado com sucesso.</p>
+            <div className="mt-4 bg-green-50 rounded-lg p-3 text-sm text-green-800 font-medium dark:bg-green-900/20 dark:text-green-300">
               {formatCurrency(amount)} recebido ✅
             </div>
           </div>
         )}
 
-        {/* ── EXPIRADO ── */}
         {status === 'expired' && (
           <div className="text-center py-8">
-            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Clock size={32} className="text-amber-600" />
+            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-amber-900/30">
+              <Clock size={32} className="text-amber-600 dark:text-amber-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">QR Code Expirado</h3>
-            <p className="text-gray-600 mb-4">O tempo para pagamento expirou.</p>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2 dark:text-white">QR Code Expirado</h3>
+            <p className="text-gray-600 mb-4 dark:text-gray-400">O tempo para pagamento expirou.</p>
             <div className="flex gap-3 justify-center">
               <Button onClick={generatePixQrCode}>Gerar novo QR Code</Button>
               <Button variant="outline" onClick={onClose}>Cancelar</Button>

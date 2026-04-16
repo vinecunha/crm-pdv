@@ -1,0 +1,151 @@
+/* src/styles/dark-mode.css */
+
+/* ================================================
+   VARIÁVEIS DE CORES
+   ================================================ */
+:root {
+  color-scheme: light;
+  
+  /* Backgrounds */
+  --bg-white: 255 255 255;
+  --bg-gray-50: 249 250 251;
+  --bg-gray-100: 243 244 246;
+  --bg-gray-200: 229 231 235;
+  
+  /* Textos */
+  --text-gray-900: 17 24 39;
+  --text-gray-800: 31 41 55;
+  --text-gray-700: 55 65 81;
+  --text-gray-600: 75 85 99;
+  --text-gray-500: 107 114 128;
+  --text-gray-400: 156 163 175;
+  
+  /* Bordas */
+  --border-gray-100: 243 244 246;
+  --border-gray-200: 229 231 235;
+  --border-gray-300: 209 213 219;
+  
+  /* Hover */
+  --hover-gray-50: 249 250 251;
+  --hover-gray-100: 243 244 246;
+  
+  /* Dividers */
+  --divide-gray-200: 229 231 235;
+  --divide-gray-300: 209 213 219;
+}
+
+.dark {
+  color-scheme: dark;
+  
+  /* Backgrounds */
+  --bg-white: 31 41 55;        /* gray-800 */
+  --bg-gray-50: 17 24 39;      /* gray-900 */
+  --bg-gray-100: 55 65 81;     /* gray-700 */
+  --bg-gray-200: 75 85 99;     /* gray-600 */
+  
+  /* Textos */
+  --text-gray-900: 243 244 246; /* gray-100 */
+  --text-gray-800: 229 231 235; /* gray-200 */
+  --text-gray-700: 209 213 219; /* gray-300 */
+  --text-gray-600: 156 163 175; /* gray-400 */
+  --text-gray-500: 107 114 128; /* gray-500 */
+  --text-gray-400: 75 85 99;    /* gray-600 */
+  
+  /* Bordas */
+  --border-gray-100: 55 65 81;   /* gray-700 */
+  --border-gray-200: 75 85 99;   /* gray-600 */
+  --border-gray-300: 107 114 128; /* gray-500 */
+  
+  /* Hover */
+  --hover-gray-50: 55 65 81;     /* gray-700 */
+  --hover-gray-100: 75 85 99;    /* gray-600 */
+  
+  /* Dividers */
+  --divide-gray-200: 75 85 99;   /* gray-600 */
+  --divide-gray-300: 107 114 128; /* gray-500 */
+}
+
+/* ================================================
+   MAPEAMENTO COMPLETO - BACKGROUNDS
+   ================================================ */
+.bg-white { background-color: rgb(var(--bg-white)) !important; }
+.bg-gray-50 { background-color: rgb(var(--bg-gray-50)) !important; }
+.bg-gray-100 { background-color: rgb(var(--bg-gray-100)) !important; }
+.bg-gray-200 { background-color: rgb(var(--bg-gray-200)) !important; }
+
+/* ================================================
+   MAPEAMENTO COMPLETO - TEXTOS
+   ================================================ */
+.text-gray-900 { color: rgb(var(--text-gray-900)) !important; }
+.text-gray-800 { color: rgb(var(--text-gray-800)) !important; }
+.text-gray-700 { color: rgb(var(--text-gray-700)) !important; }
+.text-gray-600 { color: rgb(var(--text-gray-600)) !important; }
+.text-gray-500 { color: rgb(var(--text-gray-500)) !important; }
+.text-gray-400 { color: rgb(var(--text-gray-400)) !important; }
+
+/* ================================================
+   MAPEAMENTO COMPLETO - BORDAS
+   ================================================ */
+.border-gray-100 { border-color: rgb(var(--border-gray-100)) !important; }
+.border-gray-200 { border-color: rgb(var(--border-gray-200)) !important; }
+.border-gray-300 { border-color: rgb(var(--border-gray-300)) !important; }
+
+/* ================================================
+   MAPEAMENTO COMPLETO - HOVER
+   ================================================ */
+.hover\:bg-gray-50:hover { background-color: rgb(var(--hover-gray-50)) !important; }
+.hover\:bg-gray-100:hover { background-color: rgb(var(--hover-gray-100)) !important; }
+
+/* ================================================
+   MAPEAMENTO COMPLETO - DIVIDERS
+   ================================================ */
+.divide-gray-200 > * + * { border-color: rgb(var(--divide-gray-200)) !important; }
+.divide-gray-300 > * + * { border-color: rgb(var(--divide-gray-300)) !important; }
+
+/* ================================================
+   TABELAS ESPECÍFICAS
+   ================================================ */
+table { background-color: rgb(var(--bg-white)) !important; }
+thead { background-color: rgb(var(--bg-gray-50)) !important; }
+tbody tr:hover { background-color: rgb(var(--hover-gray-50)) !important; }
+
+/* ================================================
+   INPUTS, SELECTS, TEXTAREAS
+   ================================================ */
+input, select, textarea {
+  background-color: rgb(var(--bg-white)) !important;
+  color: rgb(var(--text-gray-900)) !important;
+  border-color: rgb(var(--border-gray-300)) !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: rgb(var(--text-gray-400)) !important;
+}
+
+/* ================================================
+   CARDS E CONTAINERS COMUNS
+   ================================================ */
+[class*="bg-white"], 
+[class*="bg-gray-50"], 
+[class*="bg-gray-100"] {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* ================================================
+   SCROLLBAR
+   ================================================ */
+::-webkit-scrollbar-track {
+  background: rgb(var(--bg-gray-100)) !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--border-gray-300)) !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--text-gray-400)) !important;
+}
+
+* {
+  scrollbar-color: rgb(var(--border-gray-300)) rgb(var(--bg-gray-100)) !important;
+}
