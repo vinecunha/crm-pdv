@@ -217,7 +217,7 @@ const ThemeSelector = () => {
                   <span className="dark:text-white">Tema {effectiveTheme === 'dark' ? 'Escuro' : 'Claro'}</span>
                 </div>
                 <div className={`relative w-11 h-6 rounded-full transition-colors ${
-                  effectiveTheme === 'dark' ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                  effectiveTheme === 'dark' ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'
                 }`}>
                   <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
                     effectiveTheme === 'dark' ? 'translate-x-5' : ''

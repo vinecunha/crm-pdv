@@ -389,7 +389,7 @@ const RolePermissions = () => {
                       <div 
                         className={`h-1.5 rounded-full transition-all ${
                           stats.allGranted ? 'bg-green-500' : 
-                          stats.someGranted ? 'bg-yellow-500' : 'bg-gray-300 dark:bg-gray-600'
+                          stats.someGranted ? 'bg-yellow-500' : 'bg-gray-300 dark:bg-gray-700'
                         }`}
                         style={{ width: `${(stats.granted / stats.total) * 100}%` }}
                       />

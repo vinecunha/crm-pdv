@@ -156,7 +156,7 @@ const PermissionsSettingsTab = () => {
                 </div>
                 {selectedRole !== 'admin' && (
                   <div className="mt-2 w-full bg-gray-200 rounded-full h-1 dark:bg-gray-800">
-                    <div className={`h-1 rounded-full transition-all ${stats.allGranted ? 'bg-green-500' : stats.granted > 0 ? 'bg-yellow-500' : 'bg-gray-300 dark:bg-gray-600'}`} style={{ width: `${(stats.granted / stats.total) * 100}%` }} />
+                    <div className={`h-1 rounded-full transition-all ${stats.allGranted ? 'bg-green-500' : stats.granted > 0 ? 'bg-yellow-500' : 'bg-gray-300 dark:bg-gray-700'}`} style={{ width: `${(stats.granted / stats.total) * 100}%` }} />
                   </div>
                 )}
               </div>

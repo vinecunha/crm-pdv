@@ -281,7 +281,7 @@ const FormInput = ({
       {/* Dica de atalho adicional */}
       {shortcut && shortcut.description && showShortcutHint && (
         <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1">
-          <span className="inline-block w-1 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></span>
+          <span className="inline-block w-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-full"></span>
           Atalho: {shortcut.description}
         </p>
       )}

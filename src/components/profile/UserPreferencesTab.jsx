@@ -159,7 +159,7 @@ const UserPreferencesTab = ({ preferences, setPreferences, onSave, saving }) => 
             <button
               onClick={() => handleChange('sidebar_collapsed', !preferences?.sidebar_collapsed)}
               className={`relative w-12 h-6 rounded-full transition-colors ${
-                preferences?.sidebar_collapsed ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                preferences?.sidebar_collapsed ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'
               }`}
             >
               <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${

@@ -35,11 +35,11 @@ const DataLoadingSkeleton = ({
             <tr>
               {Array(columns).fill().map((_, i) => (
                 <th key={i} className="px-6 py-3">
-                  <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-20"></div>
+                  <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-20"></div>
                 </th>
               ))}
               <th className="px-6 py-3">
-                <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-16"></div>
+                <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-16"></div>
               </th>
             </tr>
           </thead>

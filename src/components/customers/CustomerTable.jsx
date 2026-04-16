@@ -205,7 +205,7 @@ const CustomerTable = ({ customers, onEdit, onDelete, onCommunicate, onSendCampa
           }
           return (
             <button key={option.value} onClick={() => setFilterType(option.value)} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border ${isActive ? (colorClasses[option.color] || 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700') : 'bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
-              <Icon size={14} /><span>{option.label}</span><span className={`px-1.5 py-0.5 rounded-full text-xs ${isActive ? 'bg-white/50 dark:bg-black/20' : 'bg-gray-200 dark:bg-gray-600 dark:text-gray-300'}`}>{option.count}</span>
+              <Icon size={14} /><span>{option.label}</span><span className={`px-1.5 py-0.5 rounded-full text-xs ${isActive ? 'bg-white/50 dark:bg-black/20' : 'bg-gray-200 dark:bg-gray-700 dark:text-gray-300'}`}>{option.count}</span>
             </button>
           )
         })}

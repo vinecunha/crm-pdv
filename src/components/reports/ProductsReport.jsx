@@ -364,7 +364,7 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                         i === 0 ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' : 
-                        i === 1 ? 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300' : 
+                        i === 1 ? 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300' : 
                         i === 2 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' : 
                         'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300'
                       }`}>#{i + 1}</div>
