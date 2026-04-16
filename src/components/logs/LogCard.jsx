@@ -3,7 +3,7 @@ import { Eye, ChevronRight } from '../../lib/icons'
 
 const LogCard = ({ log, onViewDetails, getActionColor, getActionLabel, formatDateCard }) => {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
@@ -45,7 +45,7 @@ const LogCard = ({ log, onViewDetails, getActionColor, getActionLabel, formatDat
       
       <button
         onClick={() => onViewDetails(log)}
-        className="w-full mt-3 py-2 bg-gray-50 dark:bg-gray-700 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 text-sm flex items-center justify-center gap-2 transition-colors"
+        className="w-full mt-3 py-2 bg-gray-50 dark:bg-gray-800 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 text-sm flex items-center justify-center gap-2 transition-colors"
       >
         <Eye size={16} /> Ver detalhes
       </button>

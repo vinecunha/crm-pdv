@@ -100,7 +100,7 @@ const AvatarUploader = ({ user, avatarUrl, fullName, displayName, onAvatarUpdate
   return (
     <>
       <div className="relative inline-block">
-        <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 border-4 border-white dark:border-gray-800 shadow-md mx-auto">
+        <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 border-4 border-white dark:border-gray-800 shadow-md mx-auto">
           {avatarUrl ? (
             <LazyImage
               src={avatarUrl}
@@ -142,7 +142,7 @@ const AvatarUploader = ({ user, avatarUrl, fullName, displayName, onAvatarUpdate
           )}
 
           <div className="flex justify-center">
-            <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700">
+            <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800">
               {tempAvatarUrl ? (
                 <LazyImage
                   src={tempAvatarUrl}
@@ -170,7 +170,7 @@ const AvatarUploader = ({ user, avatarUrl, fullName, displayName, onAvatarUpdate
               type="text"
               value={tempAvatarUrl}
               onChange={(e) => setTempAvatarUrl(e.target.value)}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
+              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
               placeholder="https://exemplo.com/avatar.jpg"
               disabled={saving}
             />
@@ -199,7 +199,7 @@ const AvatarUploader = ({ user, avatarUrl, fullName, displayName, onAvatarUpdate
               </label>
             </div>
             {saving && (
-              <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 flex items-center justify-center rounded-lg">
+              <div className="absolute inset-0 bg-white/50 dark:bg-gray-950/50 flex items-center justify-center rounded-lg">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 dark:border-blue-400" />
               </div>
             )}

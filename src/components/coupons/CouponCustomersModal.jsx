@@ -56,7 +56,7 @@ const CouponCustomersModal = ({
             placeholder="Buscar cliente para adicionar..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg placeholder-gray-400 dark:placeholder-gray-500"
+            className="w-full pl-9 pr-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg placeholder-gray-400 dark:placeholder-gray-500"
           />
         </div>
 

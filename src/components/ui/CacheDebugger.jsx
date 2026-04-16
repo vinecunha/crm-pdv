@@ -43,7 +43,7 @@ const CacheDebugger = () => {
     <>
       <button
         onClick={handleOpen}
-        className="fixed bottom-4 right-14 z-50 p-2 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600"
+        className="fixed bottom-4 right-14 z-50 p-2 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-600"
         title="Cache Debugger"
       >
         <Database size={20} />
@@ -69,7 +69,7 @@ const CacheDebugger = () => {
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-3 dark:bg-gray-800">
+          <div className="bg-gray-50 rounded-lg p-3 dark:bg-gray-900">
             <p className="text-xs text-gray-600 mb-1 dark:text-gray-400">Tamanho do Cache</p>
             <p className="text-xl font-semibold text-gray-800 dark:text-white">{formatBytes(stats.size || 0)}</p>
           </div>

@@ -14,7 +14,7 @@ const StockCountSessionCard = ({ session, onContinue, onViewDetails }) => {
   const StatusIcon = config.icon
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow dark:bg-gray-800 dark:border-gray-700 dark:hover:shadow-lg dark:hover:shadow-gray-900/50">
+    <div className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow dark:bg-gray-900 dark:border-gray-700 dark:hover:shadow-lg dark:hover:shadow-gray-900/50">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center dark:bg-blue-900/30">

@@ -267,7 +267,7 @@ const RolePermissions = () => {
   if (isLoading) return <DataLoadingSkeleton type="cards" rows={4} />
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao carregar permissões</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">{error.message}</p>
@@ -280,7 +280,7 @@ const RolePermissions = () => {
   const isMutating = saveMutation.isPending || resetMutation.isPending
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <div className="flex items-center justify-between">
@@ -331,7 +331,7 @@ const RolePermissions = () => {
                   flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all
                   ${selectedRole === role 
                     ? `bg-gradient-to-r ${roleColors[role]} text-white shadow-md` 
-                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }
                 `}
                 disabled={isMutating}
@@ -361,8 +361,8 @@ const RolePermissions = () => {
             const stats = getModuleStats(modulePermissions)
             
             return (
-              <div key={module} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+              <div key={module} className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div className="px-6 py-4 bg-gray-50 dark:bg-gray-950/50 border-b border-gray-200 dark:border-gray-700">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <h3 className="font-semibold text-gray-900 dark:text-white capitalize">
@@ -385,7 +385,7 @@ const RolePermissions = () => {
                   </div>
                   
                   {selectedRole !== 'admin' && (
-                    <div className="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                    <div className="mt-2 w-full bg-gray-200 dark:bg-gray-800 rounded-full h-1.5">
                       <div 
                         className={`h-1.5 rounded-full transition-all ${
                           stats.allGranted ? 'bg-green-500' : 
@@ -464,7 +464,7 @@ const RolePermissions = () => {
         </div>
 
         {hasChanges && (
-          <div className="fixed bottom-6 right-6 flex gap-2 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+          <div className="fixed bottom-6 right-6 flex gap-2 bg-white dark:bg-gray-900 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
             <Button variant="outline" size="sm" onClick={() => setShowResetModal(true)} disabled={isMutating}>
               Restaurar Padrão
             </Button>

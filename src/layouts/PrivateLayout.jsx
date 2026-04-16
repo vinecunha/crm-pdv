@@ -28,7 +28,7 @@ const PrivateLayout = ({ children }) => {
   return (
     <>
       <ThemeInitializer />
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
         <Header collapsed={collapsed} />
         <div className={`transition-all duration-300 ${collapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>

@@ -17,7 +17,7 @@ const UserDeleteModal = ({ isOpen, onClose, user, onConfirm, isSubmitting }) => 
         <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Tem certeza?</h3>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Você está prestes a excluir o usuário:</p>
         
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 mb-4">
+        <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 mb-4">
           <p className="font-medium text-gray-900 dark:text-white">{user.full_name || user.email?.split('@')[0]}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400 break-all">{user.email}</p>
           <span className="inline-block mt-1">

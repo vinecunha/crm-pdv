@@ -49,7 +49,7 @@ const LogDetailsModal = ({ isOpen, onClose, log, getActionLabel }) => {
         {log.old_data && (
           <div>
             <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Dados Antigos</label>
-            <pre className="mt-1 p-3 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-200 rounded-lg text-xs overflow-x-auto max-h-40">
+            <pre className="mt-1 p-3 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-200 rounded-lg text-xs overflow-x-auto max-h-40">
               {JSON.stringify(log.old_data, null, 2)}
             </pre>
           </div>
@@ -58,7 +58,7 @@ const LogDetailsModal = ({ isOpen, onClose, log, getActionLabel }) => {
         {log.new_data && (
           <div>
             <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Dados Novos</label>
-            <pre className="mt-1 p-3 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-200 rounded-lg text-xs overflow-x-auto max-h-40">
+            <pre className="mt-1 p-3 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-200 rounded-lg text-xs overflow-x-auto max-h-40">
               {JSON.stringify(log.new_data, null, 2)}
             </pre>
           </div>
@@ -67,7 +67,7 @@ const LogDetailsModal = ({ isOpen, onClose, log, getActionLabel }) => {
         {log.details && (
           <div>
             <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Detalhes Adicionais</label>
-            <pre className="mt-1 p-3 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-200 rounded-lg text-xs overflow-x-auto max-h-40">
+            <pre className="mt-1 p-3 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-200 rounded-lg text-xs overflow-x-auto max-h-40">
               {JSON.stringify(log.details, null, 2)}
             </pre>
           </div>

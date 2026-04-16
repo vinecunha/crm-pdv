@@ -70,7 +70,7 @@ const NotFound = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       <div className="max-w-lg w-full">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl overflow-hidden">
           
           <div 
             className="px-6 py-12 text-center"
@@ -86,13 +86,13 @@ const NotFound = () => {
                 }}
               />
             ) : (
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-white dark:bg-gray-700 rounded-full shadow-lg mb-4"
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-white dark:bg-gray-800 rounded-full shadow-lg mb-4"
                    style={{ backgroundColor: `${primaryColor}20` }}>
                 <Building size={32} style={{ color: primaryColor }} />
               </div>
             )}
             
-            <div className="inline-flex items-center justify-center w-24 h-24 bg-white dark:bg-gray-700 rounded-full shadow-lg mb-4">
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-white dark:bg-gray-800 rounded-full shadow-lg mb-4">
               <span className="text-6xl font-bold" style={{ color: primaryColor }}>404</span>
             </div>
             
@@ -113,7 +113,7 @@ const NotFound = () => {
               
               <Link 
                 to="/dashboard"
-                className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors group"
+                className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors group"
               >
                 <div 
                   className="p-2 rounded-lg transition-colors group-hover:scale-110"
@@ -129,7 +129,7 @@ const NotFound = () => {
               
               <button
                 onClick={() => window.history.back()}
-                className="w-full flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-left group"
+                className="w-full flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-left group"
               >
                 <div 
                   className="p-2 rounded-lg transition-colors group-hover:scale-110"
@@ -145,7 +145,7 @@ const NotFound = () => {
               
               <Link
                 to="/products"
-                className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors group"
+                className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors group"
               >
                 <div 
                   className="p-2 rounded-lg transition-colors group-hover:scale-110"
@@ -161,7 +161,7 @@ const NotFound = () => {
             </div>
 
             {companySettings && (companySettings.email || companySettings.phone) && (
-              <div className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4 mb-4">
+              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-4 mb-4">
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Entre em contato:
                 </p>
@@ -192,7 +192,7 @@ const NotFound = () => {
             </div>
           </div>
 
-          <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 text-center">
+          <div className="px-6 py-4 bg-gray-50 dark:bg-gray-950/50 border-t border-gray-200 dark:border-gray-700 text-center">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
               {companyName}
             </p>

@@ -34,7 +34,7 @@ export const AttemptsIndicator = ({ remainingAttempts, primaryColor }) => {
           {remainingAttempts} de 5
         </span>
       </div>
-      <div className="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+      <div className="mt-2 w-full bg-gray-200 dark:bg-gray-800 rounded-full h-1.5">
         <div 
           className="h-1.5 rounded-full transition-all"
           style={{ 

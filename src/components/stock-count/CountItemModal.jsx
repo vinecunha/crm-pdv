@@ -179,11 +179,11 @@ const CountItemModal = ({
         {(hasPrevious || hasNext) && (
           <div className="flex items-center justify-center gap-4 text-xs text-gray-500 dark:text-gray-400">
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-gray-100 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">↑</kbd>
+              <kbd className="px-1.5 py-0.5 bg-gray-100 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300">↑</kbd>
               Anterior
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-gray-100 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">↓</kbd>
+              <kbd className="px-1.5 py-0.5 bg-gray-100 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300">↓</kbd>
               Próximo
             </span>
           </div>

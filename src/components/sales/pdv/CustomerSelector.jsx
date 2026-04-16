@@ -6,7 +6,7 @@ const CustomerSelector = ({ customer, onClear, onOpenModal }) => {
     return (
       <button
         onClick={onOpenModal}
-        className="w-full flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors dark:bg-gray-800 dark:hover:bg-gray-700"
+        className="w-full flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors dark:bg-gray-900 dark:hover:bg-gray-700"
       >
         <div className="flex items-center gap-2">
           <User size={16} className="text-gray-500 dark:text-gray-400" />

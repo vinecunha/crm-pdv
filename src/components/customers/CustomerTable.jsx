@@ -107,7 +107,7 @@ const CustomerTable = ({ customers, onEdit, onDelete, onCommunicate, onSendCampa
       'C2': 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 border-orange-300 dark:border-orange-700',
       'C3': 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-300 dark:border-red-700'
     }
-    const colorClass = colors[score] || 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 border-gray-300 dark:border-gray-600'
+    const colorClass = colors[score] || 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 border-gray-300 dark:border-gray-600'
     const label = rfvLabels[score] || score
     return (
       <span title={`${label} (Recência • Frequência • Valor)`} className={`px-2 py-0.5 rounded-full text-xs font-medium border ${colorClass} cursor-help`}>
@@ -201,10 +201,10 @@ const CustomerTable = ({ customers, onEdit, onDelete, onCommunicate, onSendCampa
             pink: 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 border-pink-300 dark:border-pink-700', 
             yellow: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700', 
             orange: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-700', 
-            gray: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600' 
+            gray: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600' 
           }
           return (
-            <button key={option.value} onClick={() => setFilterType(option.value)} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border ${isActive ? (colorClasses[option.color] || 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700') : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
+            <button key={option.value} onClick={() => setFilterType(option.value)} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border ${isActive ? (colorClasses[option.color] || 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700') : 'bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
               <Icon size={14} /><span>{option.label}</span><span className={`px-1.5 py-0.5 rounded-full text-xs ${isActive ? 'bg-white/50 dark:bg-black/20' : 'bg-gray-200 dark:bg-gray-600 dark:text-gray-300'}`}>{option.count}</span>
             </button>
           )

@@ -151,7 +151,7 @@ const ThemeSelector = () => {
             onClick={() => setIsOpen(false)} 
           />
           
-          <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 p-2">
+          <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 p-2">
             {/* Opções de modo */}
             <div className="space-y-1 mb-3">
               <button
@@ -228,7 +228,7 @@ const ThemeSelector = () => {
 
             {/* Informações do horário (modo auto) */}
             {themeMode === 'auto' && (
-              <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   🌅 Nascer do sol: {sunTimes.sunrise}
                 </p>
@@ -243,7 +243,7 @@ const ThemeSelector = () => {
             
             {/* Informações do sistema (modo system) */}
             {themeMode === 'system' && (
-              <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Sistema: {systemTheme === 'dark' ? '🌙 Escuro' : '☀️ Claro'}
                 </p>

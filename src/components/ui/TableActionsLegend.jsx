@@ -100,9 +100,9 @@ const TableActionsLegend = ({
   const hasMore = actionItems.length > maxItems
 
   const variantClasses = {
-    subtle: 'bg-gray-50 dark:bg-gray-900/50 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700',
-    outline: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600',
-    filled: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600'
+    subtle: 'bg-gray-50 dark:bg-gray-950/50 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700',
+    outline: 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600',
+    filled: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600'
   }
 
   const sizeClasses = {
@@ -142,7 +142,7 @@ const TableActionsLegend = ({
         {displayItems.map((item, index) => (
           <div 
             key={index} 
-            className="flex items-center bg-white/50 dark:bg-gray-800/50 rounded-full px-2 py-0.5 border border-gray-200 dark:border-gray-600 shadow-sm"
+            className="flex items-center bg-white/50 dark:bg-gray-900/50 rounded-full px-2 py-0.5 border border-gray-200 dark:border-gray-600 shadow-sm"
             title={item.label}
           >
             {showIcon && item.icon && (
@@ -193,7 +193,7 @@ export const TableActionsLegendCompact = ({ actions = [], className = '' }) => {
       </button>
       
       {showTooltip && (
-        <div className="absolute bottom-full left-0 mb-2 p-2 bg-gray-800 dark:bg-gray-900 text-white text-xs rounded-lg shadow-lg z-50 min-w-[150px]">
+        <div className="absolute bottom-full left-0 mb-2 p-2 bg-gray-800 dark:bg-gray-950 text-white text-xs rounded-lg shadow-lg z-50 min-w-[150px]">
           <div className="font-medium mb-1">Ações disponíveis:</div>
           <div className="space-y-1">
             {validActions.map((action, index) => {

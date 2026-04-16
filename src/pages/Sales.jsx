@@ -490,7 +490,7 @@ const Sales = () => {
   if (isLoading) return <DataLoadingSkeleton />
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
       {!isOnline && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-500 dark:bg-yellow-600 text-white py-2 px-4 text-center text-sm font-medium shadow-md">
           <div className="flex items-center justify-center gap-2">
@@ -525,7 +525,7 @@ const Sales = () => {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 sticky top-4">
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 sticky top-4">
               <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <ShoppingCart size={18} /> Carrinho
@@ -563,7 +563,7 @@ const Sales = () => {
                 onRemoveItem={removeFromCart} onClearCart={handleClearCart} onCheckout={() => setShowPaymentModal(true)}
                 selectedItemIndex={selectedCartItemIndex} onSelectItem={setSelectedCartItemIndex} disabled={isMutating} />
 
-              <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 rounded-b-lg">
+              <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-950/50 rounded-b-lg">
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm"><span className="text-gray-600 dark:text-gray-400">Subtotal</span><span className="font-medium dark:text-white">{formatCurrency(subtotal)}</span></div>
                   {discount > 0 && <div className="flex justify-between text-sm text-green-600 dark:text-green-400"><span>Desconto</span><span>- {formatCurrency(discount)}</span></div>}
@@ -582,7 +582,7 @@ const Sales = () => {
           <div className="space-y-4">
             <div className="text-center"><div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-3"><Phone size={28} className="text-blue-600 dark:text-blue-400" /></div><p className="text-gray-600 dark:text-gray-400 mb-4">Digite o telefone do cliente</p></div>
             <input type="tel" placeholder="(11) 99999-9999" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-lg text-center placeholder-gray-400 dark:placeholder-gray-500"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-lg text-center placeholder-gray-400 dark:placeholder-gray-500"
               onKeyPress={(e) => e.key === 'Enter' && searchCustomer()} autoFocus disabled={searchCustomerMutation.isPending} />
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setShowCustomerModal(false)} className="flex-1">Cancelar (ESC)</Button>

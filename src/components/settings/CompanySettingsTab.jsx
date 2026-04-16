@@ -36,7 +36,7 @@ const CompanySettingsTab = ({ settings, setSettings, onSave, saving }) => {
             <select
               value={settings.company_logo_url}
               onChange={(e) => handleChange('company_logo_url', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400"
               disabled={saving}
             >
               <option value="">Selecione uma logo</option>
@@ -53,7 +53,7 @@ const CompanySettingsTab = ({ settings, setSettings, onSave, saving }) => {
             type="text"
             value={settings.company_name || ''}
             onChange={(e) => handleChange('company_name', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-blue-400"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-blue-400"
             placeholder="Nome da sua empresa"
             disabled={saving}
           />
@@ -66,7 +66,7 @@ const CompanySettingsTab = ({ settings, setSettings, onSave, saving }) => {
               type="text"
               value={settings.cnpj || ''}
               onChange={(e) => handleChange('cnpj', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
               placeholder="00.000.000/0001-00"
               disabled={saving}
             />
@@ -77,7 +77,7 @@ const CompanySettingsTab = ({ settings, setSettings, onSave, saving }) => {
               type="email"
               value={settings.email || ''}
               onChange={(e) => handleChange('email', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
               placeholder="contato@empresa.com"
               disabled={saving}
             />
@@ -88,7 +88,7 @@ const CompanySettingsTab = ({ settings, setSettings, onSave, saving }) => {
               type="text"
               value={settings.phone || ''}
               onChange={(e) => handleChange('phone', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
               placeholder="(00) 0000-0000"
               disabled={saving}
             />
@@ -99,7 +99,7 @@ const CompanySettingsTab = ({ settings, setSettings, onSave, saving }) => {
               type="text"
               value={settings.domain || ''}
               onChange={(e) => handleChange('domain', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
               placeholder="www.empresa.com.br"
               disabled={saving}
             />
@@ -113,7 +113,7 @@ const CompanySettingsTab = ({ settings, setSettings, onSave, saving }) => {
               type="text"
               value={settings.address || ''}
               onChange={(e) => handleChange('address', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
               placeholder="Rua, número"
               disabled={saving}
             />
@@ -124,7 +124,7 @@ const CompanySettingsTab = ({ settings, setSettings, onSave, saving }) => {
               type="text"
               value={settings.city || ''}
               onChange={(e) => handleChange('city', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
               placeholder="Cidade"
               disabled={saving}
             />
@@ -135,7 +135,7 @@ const CompanySettingsTab = ({ settings, setSettings, onSave, saving }) => {
               type="text"
               value={settings.state || ''}
               onChange={(e) => handleChange('state', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
               placeholder="UF"
               maxLength={2}
               disabled={saving}
@@ -149,7 +149,7 @@ const CompanySettingsTab = ({ settings, setSettings, onSave, saving }) => {
             type="text"
             value={settings.zip_code || ''}
             onChange={(e) => handleChange('zip_code', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
             placeholder="00000-000"
             disabled={saving}
           />

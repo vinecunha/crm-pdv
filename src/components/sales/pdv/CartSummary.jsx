@@ -25,7 +25,7 @@ const CartSummary = ({
 
   return (
     <>
-      <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between dark:bg-gray-800 dark:border-gray-700">
+      <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between dark:bg-gray-900 dark:border-gray-700">
         <span className="text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Itens</span>
         <button
           onClick={onClearCart}

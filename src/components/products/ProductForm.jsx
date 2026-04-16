@@ -58,7 +58,7 @@ const ProductForm = ({
               name="category"
               value={formData.category}
               onChange={onChange}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Selecione uma categoria</option>
               {categories.map(cat => (
@@ -75,7 +75,7 @@ const ProductForm = ({
               name="unit"
               value={formData.unit}
               onChange={onChange}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {units.map(unit => (
                 <option key={unit.value} value={unit.value}>{unit.label}</option>
@@ -151,7 +151,7 @@ const ProductForm = ({
             name="is_active"
             checked={formData.is_active}
             onChange={onChange}
-            className="w-4 h-4 text-blue-600 dark:text-blue-400 rounded focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+            className="w-4 h-4 text-blue-600 dark:text-blue-400 rounded focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
           />
           <label className="text-sm text-gray-700 dark:text-gray-200">
             Produto ativo para venda no PDV

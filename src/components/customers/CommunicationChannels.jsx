@@ -3,7 +3,7 @@ import { MessageSquare, ChevronRight } from '../../lib/icons'
 
 const CommunicationChannels = ({ channels, customer, onSelectChannel }) => {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+    <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
       <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
         <MessageSquare size={20} className="text-blue-600 dark:text-blue-400" />
         Canais de Comunicação
@@ -21,7 +21,7 @@ const CommunicationChannels = ({ channels, customer, onSelectChannel }) => {
                 w-full flex items-center gap-3 p-3 rounded-lg border transition-all
                 ${channel.available 
                   ? `${channel.bgColor} ${channel.borderColor} ${channel.hoverColor} cursor-pointer dark:bg-opacity-20 dark:border-opacity-50` 
-                  : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed'
+                  : 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed'
                 }
               `}
             >

@@ -356,7 +356,7 @@ const Budgets = () => {
   const isMutating = searchCustomerMutation.isPending || createCustomerMutation.isPending || validateCouponMutation.isPending || createBudgetMutation.isPending
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {feedback.show && <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />}
         <div className="mb-6">
@@ -385,7 +385,7 @@ const Budgets = () => {
 
         {mode === 'list' && (
           <>
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
               <div className="flex items-center gap-3">
                 <div className="flex-1 relative">
                   <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
@@ -394,13 +394,13 @@ const Budgets = () => {
                     placeholder="Buscar por número, cliente ou telefone..."
                     value={searchTermList}
                     onChange={(e) => setSearchTermList(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
                   />
                 </div>
                 <select
                   value={filters.status || 'all'}
                   onChange={(e) => setFilters({ status: e.target.value })}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm"
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm"
                 >
                   <option value="all">Todos</option>
                   <option value="pending">Pendentes</option>
@@ -495,7 +495,7 @@ const Budgets = () => {
               placeholder="(11) 99999-9999"
               value={customerPhone}
               onChange={(e) => setCustomerPhone(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-lg text-center placeholder-gray-400 dark:placeholder-gray-500"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-lg text-center placeholder-gray-400 dark:placeholder-gray-500"
               onKeyPress={(e) => e.key === 'Enter' && searchCustomer()}
               autoFocus
               disabled={searchCustomerMutation.isPending}
@@ -632,7 +632,7 @@ const Budgets = () => {
               </div>
 
               {selectedBudget.notes && (
-                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3">
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Observações</p>
                   <p className="text-sm text-gray-700 dark:text-gray-300">{selectedBudget.notes}</p>
                 </div>

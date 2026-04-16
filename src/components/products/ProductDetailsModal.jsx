@@ -36,7 +36,7 @@ const ProductDetailsModal = ({
     >
       <div className="space-y-6">
         {/* Informações do Produto */}
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+        <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
           <h3 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">Informações do Produto</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
@@ -82,7 +82,7 @@ const ProductDetailsModal = ({
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">Últimas Entradas</h3>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {entries.slice(0, 5).map(entry => (
-                <div key={entry.id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                <div key={entry.id} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3">
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-sm font-medium text-gray-900 dark:text-white">NF {entry.invoice_number}</p>
@@ -109,7 +109,7 @@ const ProductDetailsModal = ({
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">Últimas Movimentações</h3>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {movements.map(movement => (
-                <div key={movement.id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                <div key={movement.id} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
                       {movement.movement_type === 'ENTRY' ? (

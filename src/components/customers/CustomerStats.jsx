@@ -12,7 +12,7 @@ const CustomerStats = ({ stats }) => {
     }
 
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-lg ${colors[color]}`}>
             <Icon size={20} />

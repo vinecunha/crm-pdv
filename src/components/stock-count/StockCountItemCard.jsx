@@ -7,13 +7,13 @@ const StockCountItemCard = ({ item, onClick }) => {
 
   return (
     <div
-      className={`bg-white rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md dark:bg-gray-800
+      className={`bg-white rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md dark:bg-gray-900
         ${isCounted ? 'border-l-4 ' + (hasDifference ? 'border-l-orange-500 dark:border-l-orange-400' : 'border-l-green-500 dark:border-l-green-400') : 'border-gray-200 dark:border-gray-700'}
       `}
       onClick={onClick}
     >
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 dark:bg-gray-700">
+        <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 dark:bg-gray-800">
           <Package size={18} className="text-gray-600 dark:text-gray-400" />
         </div>
         <div className="flex-1 min-w-0">

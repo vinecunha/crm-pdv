@@ -57,7 +57,7 @@ const ChangePasswordModal = ({ isOpen, onClose, onChangePassword }) => {
           type={show ? 'text' : 'password'}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full px-3 py-2 pr-10 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg placeholder-gray-400 dark:placeholder-gray-500"
+          className="w-full px-3 py-2 pr-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg placeholder-gray-400 dark:placeholder-gray-500"
           placeholder="••••••••"
         />
         <button

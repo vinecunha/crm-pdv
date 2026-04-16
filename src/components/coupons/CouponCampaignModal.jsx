@@ -29,7 +29,7 @@ const CopyButton = ({ text, label = 'Copiar' }) => {
       className={`flex items-center gap-1 text-xs border rounded px-2 py-1 transition ${
         copied
           ? 'text-green-700 dark:text-green-400 border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/30'
-          : 'text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/30'
+          : 'text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/30'
       }`}
     >
       <Copy size={12} />
@@ -55,7 +55,7 @@ const CustomerPhoneRow = ({ customer, customMessage }) => {
           href={waUrl}
           target="_blank"
           rel="noreferrer"
-          className="flex items-center gap-1 text-xs text-green-700 dark:text-green-400 border border-green-200 dark:border-green-700 bg-white dark:bg-gray-700 hover:bg-green-50 dark:hover:bg-green-900/30 rounded px-2 py-1 transition"
+          className="flex items-center gap-1 text-xs text-green-700 dark:text-green-400 border border-green-200 dark:border-green-700 bg-white dark:bg-gray-800 hover:bg-green-50 dark:hover:bg-green-900/30 rounded px-2 py-1 transition"
         >
           <Smartphone size={12} />
           Abrir Direto
@@ -420,7 +420,7 @@ const CouponCampaignModal = ({ isOpen, onClose, coupon, onSuccess }) => {
                   placeholder="Buscar cliente..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg"
+                  className="w-full pl-9 pr-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg"
                 />
               </div>
               <button onClick={handleSelectAll} className="text-sm text-blue-600 dark:text-blue-400 hover:underline ml-4">
@@ -522,12 +522,12 @@ const CouponCampaignModal = ({ isOpen, onClose, coupon, onSuccess }) => {
                 value={customMessage}
                 onChange={(e) => setCustomMessage(e.target.value)}
                 rows={5}
-                className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg resize-none font-mono text-sm"
+                className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg resize-none font-mono text-sm"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Use {'{{nome}}'} para personalizar com o nome do cliente</p>
             </div>
 
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
               <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">📱 Pré-visualização:</p>
               <p className="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">
                 {customMessage.replace(/{{nome}}/g, customers.find(c => selectedCustomers.has(c.id))?.name || 'Cliente')}
@@ -590,12 +590,12 @@ const CouponCampaignModal = ({ isOpen, onClose, coupon, onSuccess }) => {
           </div>
 
           {/* Mensagem com botão copiar */}
-          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+          <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-medium text-gray-700 dark:text-gray-200">💬 Mensagem da campanha</p>
               <CopyButton text={customMessage.replace(/{{nome}}/g, '[Cliente]')} label="Copiar mensagem" />
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap font-mono bg-white dark:bg-gray-700 p-2 rounded border border-gray-200 dark:border-gray-600">
+            <p className="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap font-mono bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-600">
               {customMessage.replace(/{{nome}}/g, '[Cliente]')}
             </p>
           </div>
@@ -647,13 +647,13 @@ const StepIndicator = ({ number, label, active, completed }) => (
   <>
     <div className="flex items-center">
       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-        completed ? 'bg-green-500 text-white' : active ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+        completed ? 'bg-green-500 text-white' : active ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
       }`}>
         {completed ? '✓' : number}
       </div>
       <span className={`ml-2 text-sm ${active ? 'font-medium text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>{label}</span>
     </div>
-    {number < 2 && <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-700 mx-4" />}
+    {number < 2 && <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-800 mx-4" />}
   </>
 )
 

@@ -75,16 +75,16 @@ const VirtualTable = ({
 
   if (sortedData.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
+      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
         <p className="text-gray-500 dark:text-gray-400">{emptyMessage}</p>
       </div>
     )
   }
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden ${className}`}>
+    <div className={`bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden ${className}`}>
       {/* Cabeçalho da Tabela */}
-      <div className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+      <div className="bg-gray-50 dark:bg-gray-950/50 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
         <div className="flex items-center">
           {columns.map((column, index) => {
             const width = column.width || `${100 / columns.length}%`
@@ -161,8 +161,8 @@ const VirtualTable = ({
                 className={`
                   flex items-center border-b border-gray-100 dark:border-gray-700
                   ${striped && rowIndex % 2 === 0 
-                    ? 'bg-gray-50 dark:bg-gray-900/50' 
-                    : 'bg-white dark:bg-gray-800'}
+                    ? 'bg-gray-50 dark:bg-gray-950/50' 
+                    : 'bg-white dark:bg-gray-900'}
                   ${hover ? 'hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors' : ''}
                   ${onRowClick ? 'cursor-pointer' : ''}
                 `}

@@ -21,7 +21,7 @@ const SaleDetailsModal = ({
     <Modal isOpen={isOpen} onClose={onClose} title={`Detalhes da Venda #${sale.sale_number || ''}`} size="lg">
       <div className="space-y-6">
         {/* Informações da venda */}
-        <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg dark:bg-gray-800">
+        <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg dark:bg-gray-900">
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400">Data da venda</p>
             <p className="text-sm font-medium dark:text-white">{formatDateTime(sale.created_at)}</p>
@@ -83,7 +83,7 @@ const SaleDetailsModal = ({
           <h3 className="text-sm font-medium text-gray-900 mb-3 dark:text-white">Itens da Venda</h3>
           <div className="space-y-2 max-h-80 overflow-y-auto">
             {items.map((item, idx) => (
-              <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg dark:bg-gray-800">
+              <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg dark:bg-gray-900">
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">{item.product_name}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">

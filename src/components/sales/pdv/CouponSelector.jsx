@@ -36,7 +36,7 @@ const CouponSelector = ({
               onChange={(e) => {
                 setCouponCode(e.target.value.toUpperCase())
               }}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-blue-400"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-blue-400"
               onKeyPress={(e) => e.key === 'Enter' && onApplyCoupon()}
               autoFocus
             />
@@ -99,7 +99,7 @@ const CouponSelector = ({
         )}
 
         <div className="text-xs text-gray-500 text-center pt-2 border-t dark:text-gray-400 dark:border-gray-700">
-          Dica: Use <kbd className="px-1.5 py-0.5 bg-gray-100 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">Alt + U</kbd> para abrir este menu
+          Dica: Use <kbd className="px-1.5 py-0.5 bg-gray-100 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300">Alt + U</kbd> para abrir este menu
         </div>
       </div>
     </Modal>

@@ -12,7 +12,7 @@ const CouponFilters = ({ searchTerm, setSearchTerm, filters, setFilters }) => {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
+    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex-1 min-w-[250px] relative">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
@@ -21,7 +21,7 @@ const CouponFilters = ({ searchTerm, setSearchTerm, filters, setFilters }) => {
             placeholder="Buscar por código ou nome..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
+            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
           />
         </div>
         
@@ -49,7 +49,7 @@ const CouponFilters = ({ searchTerm, setSearchTerm, filters, setFilters }) => {
           <select
             value={filters.status || 'all'}
             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-            className="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg text-sm"
+            className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg text-sm"
           >
             <option value="all">Todos os status</option>
             <option value="active">Ativos</option>
@@ -59,7 +59,7 @@ const CouponFilters = ({ searchTerm, setSearchTerm, filters, setFilters }) => {
           <select
             value={filters.discount_type || 'all'}
             onChange={(e) => setFilters({ ...filters, discount_type: e.target.value })}
-            className="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg text-sm"
+            className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg text-sm"
           >
             <option value="all">Todos os tipos</option>
             <option value="percent">Percentual</option>
@@ -69,7 +69,7 @@ const CouponFilters = ({ searchTerm, setSearchTerm, filters, setFilters }) => {
           <select
             value={filters.is_global || 'all'}
             onChange={(e) => setFilters({ ...filters, is_global: e.target.value })}
-            className="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg text-sm"
+            className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg text-sm"
           >
             <option value="all">Todas abrangências</option>
             <option value="global">Global</option>

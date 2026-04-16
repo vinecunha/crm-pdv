@@ -48,7 +48,7 @@ const CouponForm = ({
             value={formData.code}
             onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
             placeholder="Ex: PRIMEIRACOMPRA"
-            className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 uppercase placeholder-gray-400 dark:placeholder-gray-500"
+            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 uppercase placeholder-gray-400 dark:placeholder-gray-500"
             disabled={isEditing}
           />
         </div>
@@ -60,7 +60,7 @@ const CouponForm = ({
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             placeholder="Ex: Desconto Primeira Compra"
-            className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
+            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
           />
         </div>
       </div>
@@ -72,7 +72,7 @@ const CouponForm = ({
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           rows={2}
           placeholder="Descrição do cupom..."
-          className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
+          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
         />
       </div>
 
@@ -82,7 +82,7 @@ const CouponForm = ({
           <select
             value={formData.discount_type}
             onChange={(e) => setFormData({ ...formData, discount_type: e.target.value })}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
           >
             <option value="percent">Percentual (%)</option>
             <option value="fixed">Valor Fixo (R$)</option>
@@ -99,7 +99,7 @@ const CouponForm = ({
               value={formData.discount_value}
               onChange={(e) => setFormData({ ...formData, discount_value: e.target.value })}
               placeholder={formData.discount_type === 'percent' ? 'Ex: 10' : 'Ex: 10.00'}
-              className="w-full px-3 py-2 pr-8 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
+              className="w-full px-3 py-2 pr-8 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
               {formData.discount_type === 'percent' ? '%' : 'R$'}
@@ -118,7 +118,7 @@ const CouponForm = ({
             value={formData.max_discount}
             onChange={(e) => setFormData({ ...formData, max_discount: e.target.value })}
             placeholder="Ex: 50.00"
-            className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
+            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
           />
         </div>
       )}
@@ -132,7 +132,7 @@ const CouponForm = ({
           value={formData.min_purchase}
           onChange={(e) => setFormData({ ...formData, min_purchase: e.target.value })}
           placeholder="Ex: 100.00"
-          className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
+          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
         />
       </div>
 
@@ -143,7 +143,7 @@ const CouponForm = ({
             type="date"
             value={formData.valid_from}
             onChange={(e) => setFormData({ ...formData, valid_from: e.target.value })}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
           />
         </div>
         
@@ -153,7 +153,7 @@ const CouponForm = ({
             type="date"
             value={formData.valid_to}
             onChange={(e) => setFormData({ ...formData, valid_to: e.target.value })}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
@@ -167,7 +167,7 @@ const CouponForm = ({
             value={formData.usage_limit}
             onChange={(e) => setFormData({ ...formData, usage_limit: e.target.value })}
             placeholder="Sem limite"
-            className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
+            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
           />
         </div>
         
@@ -179,7 +179,7 @@ const CouponForm = ({
               ...formData, 
               is_global: e.target.value === 'global'
             })}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
           >
             <option value="global">Global (todos os clientes)</option>
             <option value="restricted">Restrito (clientes específicos)</option>
@@ -199,7 +199,7 @@ const CouponForm = ({
                   placeholder="Buscar clientes..."
                   value={customerSearch}
                   onChange={(e) => handleCustomerSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg text-sm placeholder-gray-400 dark:placeholder-gray-500"
+                  className="w-full pl-9 pr-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg text-sm placeholder-gray-400 dark:placeholder-gray-500"
                 />
               </div>
             </div>
@@ -210,7 +210,7 @@ const CouponForm = ({
                     type="checkbox"
                     checked={selectedCustomers.includes(customer.id)}
                     onChange={() => toggleCustomerSelection(customer.id)}
-                    className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:bg-gray-700"
+                    className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:bg-gray-800"
                   />
                   <div className="flex-1">
                     <div className="text-sm font-medium text-gray-900 dark:text-white">{customer.name}</div>
@@ -235,7 +235,7 @@ const CouponForm = ({
             type="checkbox"
             checked={formData.is_active}
             onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-            className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:bg-gray-700"
+            className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:bg-gray-800"
           />
           <span className="text-sm text-gray-700 dark:text-gray-200">Cupom ativo</span>
         </label>

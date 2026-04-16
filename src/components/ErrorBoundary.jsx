@@ -110,7 +110,7 @@ class ErrorBoundary extends React.Component {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
         <div className="max-w-2xl w-full">
           {/* Card de erro */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl overflow-hidden">
             {/* Header com logo */}
             <div 
               className="px-6 py-8 text-center"
@@ -155,7 +155,7 @@ class ErrorBoundary extends React.Component {
                 </button>
                 <button
                   onClick={this.handleGoBack}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 dark:bg-gray-800 text-white rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
                   Voltar
@@ -196,7 +196,7 @@ class ErrorBoundary extends React.Component {
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-center">
+            <div className="px-6 py-4 bg-gray-50 dark:bg-gray-950 border-t border-gray-200 dark:border-gray-700 text-center">
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 {companyName} - Sistema de Gestão Integrada
               </p>

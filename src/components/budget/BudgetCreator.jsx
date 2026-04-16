@@ -46,7 +46,7 @@ const BudgetCreator = ({
       </div>
 
       <div className="lg:col-span-1">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 sticky top-4">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 sticky top-4">
           {/* Header */}
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -107,7 +107,7 @@ const BudgetCreator = ({
                 value={validUntil}
                 onChange={(e) => setValidUntil(e.target.value)}
                 min={new Date().toISOString().split('T')[0]}
-                className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg text-sm"
+                className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg text-sm"
                 disabled={isMutating}
               />
             </div>
@@ -119,7 +119,7 @@ const BudgetCreator = ({
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
                 placeholder="Observações do orçamento..."
-                className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg text-sm resize-none placeholder-gray-400 dark:placeholder-gray-500"
+                className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg text-sm resize-none placeholder-gray-400 dark:placeholder-gray-500"
                 disabled={isMutating}
               />
             </div>
@@ -141,7 +141,7 @@ const BudgetCreator = ({
           />
 
           {/* Totais e Botão */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-b-lg">
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-950 rounded-b-lg">
             <div className="space-y-2 mb-4">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600 dark:text-gray-400">Subtotal</span>

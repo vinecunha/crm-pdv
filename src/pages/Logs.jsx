@@ -173,7 +173,7 @@ const Logs = () => {
       LOGIN_SUCCESS: 'text-purple-600 bg-purple-100 dark:text-purple-400 dark:bg-purple-900/30',
       LOGIN_FAILED: 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/30',
       LOGOUT: 'text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30',
-      VIEW: 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-700',
+      VIEW: 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-800',
       ERROR: 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/30'
     }
     return colors[action] || colors.VIEW
@@ -251,7 +251,7 @@ const Logs = () => {
 
   if (!canView) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
         <div className="text-center">
           <div className="bg-red-100 dark:bg-red-900/30 rounded-full p-4 inline-block mb-4">
             <X className="h-12 w-12 text-red-600 dark:text-red-400" />
@@ -264,7 +264,7 @@ const Logs = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {feedback.show && (
           <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />

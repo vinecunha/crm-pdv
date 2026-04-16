@@ -16,7 +16,7 @@ const UserPreferencesTab = ({ preferences, setPreferences, onSave, saving }) => 
       
       <div className="space-y-6">
         {/* Modo do Tema */}
-        <div className="bg-gray-50 rounded-xl p-5 border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+        <div className="bg-gray-50 rounded-xl p-5 border border-gray-200 dark:bg-gray-900 dark:border-gray-700">
           <h3 className="font-medium text-gray-900 mb-4 dark:text-white">Modo do Tema</h3>
           
           <div className="space-y-3">
@@ -76,7 +76,7 @@ const UserPreferencesTab = ({ preferences, setPreferences, onSave, saving }) => 
 
         {/* Tema Manual (só aparece se modo manual estiver selecionado) */}
         {(preferences?.theme_mode === 'manual' || !preferences?.theme_mode) && (
-          <div className="bg-gray-50 rounded-xl p-5 border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+          <div className="bg-gray-50 rounded-xl p-5 border border-gray-200 dark:bg-gray-900 dark:border-gray-700">
             <h3 className="font-medium text-gray-900 mb-4 dark:text-white">Tema</h3>
             
             <div className="grid grid-cols-2 gap-4">
@@ -112,7 +112,7 @@ const UserPreferencesTab = ({ preferences, setPreferences, onSave, saving }) => 
         )}
 
         {/* Densidade da Tabela */}
-        <div className="bg-gray-50 rounded-xl p-5 border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+        <div className="bg-gray-50 rounded-xl p-5 border border-gray-200 dark:bg-gray-900 dark:border-gray-700">
           <h3 className="font-medium text-gray-900 mb-4 dark:text-white">Densidade das Tabelas</h3>
           
           <div className="grid grid-cols-3 gap-3">
@@ -148,7 +148,7 @@ const UserPreferencesTab = ({ preferences, setPreferences, onSave, saving }) => 
         </div>
 
         {/* Sidebar Collapsed */}
-        <div className="bg-gray-50 rounded-xl p-5 border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+        <div className="bg-gray-50 rounded-xl p-5 border border-gray-200 dark:bg-gray-900 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium text-gray-900 dark:text-white">Sidebar Recolhida</h3>

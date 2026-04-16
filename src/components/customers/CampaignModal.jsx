@@ -232,7 +232,7 @@ const CampaignModal = ({ isOpen, onClose, onSend, customer, loading }) => {
                   disabled={!channel.available}
                   className={`
                     p-3 rounded-lg border text-center transition-all
-                    ${channel.available ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800'}
+                    ${channel.available ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-900'}
                     ${isSelected 
                       ? `border-${channel.color}-500 dark:border-${channel.color}-400 bg-${channel.color}-50 dark:bg-${channel.color}-900/20 ring-2 ring-${channel.color}-200 dark:ring-${channel.color}-800` 
                       : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
@@ -298,7 +298,7 @@ const CampaignModal = ({ isOpen, onClose, onSend, customer, loading }) => {
                 setSelectedCoupon(coupon || null)
                 logger.log('📌 [CampaignModal] Cupom selecionado:', coupon?.code)
               }}
-              className="flex-1 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg disabled:bg-gray-100 dark:disabled:bg-gray-800"
+              className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg disabled:bg-gray-100 dark:disabled:bg-gray-800"
               disabled={loadingCoupons || isCreatingCoupon}
             >
               <option value="">+ Criar novo cupom automaticamente</option>
@@ -350,7 +350,7 @@ const CampaignModal = ({ isOpen, onClose, onSend, customer, loading }) => {
             value={customMessage}
             onChange={(e) => setCustomMessage(e.target.value)}
             rows={5}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg resize-none font-mono text-sm placeholder-gray-400 dark:placeholder-gray-500"
+            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg resize-none font-mono text-sm placeholder-gray-400 dark:placeholder-gray-500"
             placeholder="Digite a mensagem..."
           />
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -363,7 +363,7 @@ const CampaignModal = ({ isOpen, onClose, onSend, customer, loading }) => {
           <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2">
             📱 Pré-visualização ({previewChannelName}):
           </p>
-          <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm">
+          <div className="bg-white dark:bg-gray-900 p-3 rounded-lg shadow-sm">
             <p className="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">{customMessage}</p>
           </div>
         </div>

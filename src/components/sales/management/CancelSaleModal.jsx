@@ -184,7 +184,7 @@ const CancelSaleModal = ({
             <select 
               value={cancelReason} 
               onChange={(e) => setCancelReason(e.target.value)} 
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-red-400" 
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:focus:ring-red-400" 
               required
             >
               <option value="">Selecione um motivo</option>
@@ -198,12 +198,12 @@ const CancelSaleModal = ({
               value={cancelNotes} 
               onChange={(e) => setCancelNotes(e.target.value)} 
               rows={3} 
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-red-400" 
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-red-400" 
               placeholder="Informações adicionais..." 
             />
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-3 dark:bg-gray-800">
+          <div className="bg-gray-50 rounded-lg p-3 dark:bg-gray-900">
             <p className="text-xs text-gray-600 dark:text-gray-300"><strong>O que acontece após o cancelamento?</strong></p>
             <ul className="text-xs text-gray-500 mt-2 space-y-1 list-disc list-inside dark:text-gray-400">
               <li>Os produtos voltam ao estoque</li>
@@ -252,7 +252,7 @@ const CancelSaleModal = ({
           </div>
 
           {/* Resumo da venda */}
-          <div className="bg-gray-50 rounded-lg p-3 dark:bg-gray-800">
+          <div className="bg-gray-50 rounded-lg p-3 dark:bg-gray-900">
             <p className="text-xs text-gray-500 mb-2 dark:text-gray-400">Venda a ser cancelada:</p>
             <p className="text-sm font-medium dark:text-white">#{sale.sale_number} - {formatCurrency(sale.final_amount)}</p>
             <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">Motivo: {cancelReason}</p>
@@ -272,7 +272,7 @@ const CancelSaleModal = ({
                 placeholder="Buscar aprovador..."
                 value={searchApprover}
                 onChange={(e) => setSearchApprover(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
               />
             </div>
 
@@ -298,7 +298,7 @@ const CancelSaleModal = ({
                       value={approver.id}
                       checked={selectedApprover === approver.id}
                       onChange={() => handleApproverSelect(approver.id)}
-                      className="text-blue-600 focus:ring-blue-500 dark:bg-gray-700"
+                      className="text-blue-600 focus:ring-blue-500 dark:bg-gray-800"
                     />
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900 dark:text-white">
@@ -335,7 +335,7 @@ const CancelSaleModal = ({
                     setApprovalError('')
                   }}
                   placeholder="Digite a senha"
-                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-blue-400"
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-blue-400"
                   onKeyPress={(e) => e.key === 'Enter' && handleValidateApproval()}
                 />
                 <button

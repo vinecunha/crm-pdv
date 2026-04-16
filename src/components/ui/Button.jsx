@@ -46,7 +46,7 @@ const Button = ({
 }) => {
   const variants = {
     primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-sm dark:bg-blue-700 dark:hover:bg-blue-600',
-    secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600',
+    secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-600',
     danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 dark:bg-red-700 dark:hover:bg-red-600',
     success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 dark:bg-green-700 dark:hover:bg-green-600',
     warning: 'bg-yellow-500 text-white hover:bg-yellow-600 focus:ring-yellow-500 dark:bg-yellow-600 dark:hover:bg-yellow-500',
@@ -94,7 +94,7 @@ const Button = ({
       )}
       
       {shortcut && showShortcut && shortcutPosition === 'corner' && (
-        <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-mono bg-gray-800 text-white rounded-full dark:bg-gray-900">
+        <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-mono bg-gray-800 text-white rounded-full dark:bg-gray-950">
           {formatShortcutCompact(shortcut)}
         </span>
       )}

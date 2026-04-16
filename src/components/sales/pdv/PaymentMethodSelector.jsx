@@ -87,14 +87,14 @@ const PaymentMethodSelector = ({ selected, onSelect }) => {
                 p-4 rounded-xl border-2 transition-all relative
                 ${isSelected 
                   ? `${borderColor} ${bgColor} shadow-md` 
-                  : 'border-gray-200 hover:border-gray-300 bg-white dark:border-gray-700 dark:hover:border-gray-600 dark:bg-gray-800'
+                  : 'border-gray-200 hover:border-gray-300 bg-white dark:border-gray-700 dark:hover:border-gray-600 dark:bg-gray-900'
                 }
               `}
             >
               <div className="flex flex-col items-center gap-2">
                 <div className={`
                   w-12 h-12 rounded-full flex items-center justify-center
-                  ${isSelected ? bgColor : 'bg-gray-100 dark:bg-gray-700'}
+                  ${isSelected ? bgColor : 'bg-gray-100 dark:bg-gray-800'}
                   transition-colors
                 `}>
                   <Icon size={24} className={isSelected ? iconColor : 'text-gray-600 dark:text-gray-400'} />

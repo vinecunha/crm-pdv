@@ -17,7 +17,7 @@ import useLogger from '../hooks/useLogger'
 
 const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) => {
   const variants = {
-    default: 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
+    default: 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700',
     success: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
     warning: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800',
     danger: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
@@ -40,7 +40,7 @@ const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) =
           <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
           {sublabel && <p className="text-xs text-gray-400 dark:text-gray-500">{sublabel}</p>}
         </div>
-        <div className="p-2.5 rounded-lg bg-white/50 dark:bg-gray-900/50">
+        <div className="p-2.5 rounded-lg bg-white/50 dark:bg-gray-950/50">
           <Icon size={22} className={iconColors[variant]} />
         </div>
       </div>
@@ -337,7 +337,7 @@ const CashierClosing = () => {
 
   if (summaryError) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
         <div className="text-center">
           <AlertCircle size={48} className="text-red-500 dark:text-red-400 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao carregar dados</h2>
@@ -353,7 +353,7 @@ const CashierClosing = () => {
   if (isLoadingSummary && !summary) return <DataLoadingSkeleton />
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {feedback.show && (
           <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />
@@ -387,7 +387,7 @@ const CashierClosing = () => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
               <Calendar size={16} className="text-gray-400 dark:text-gray-500" />
@@ -395,14 +395,14 @@ const CashierClosing = () => {
                 type="date"
                 value={dateRange.start}
                 onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm"
+                className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm"
               />
               <span className="text-gray-400 dark:text-gray-500">—</span>
               <input
                 type="date"
                 value={dateRange.end}
                 onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm"
+                className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -410,7 +410,7 @@ const CashierClosing = () => {
               <select
                 value={selectedUser}
                 onChange={(e) => setSelectedUser(e.target.value)}
-                className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm"
+                className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm"
               >
                 <option value="all">Todos os operadores</option>
                 {users.map(user => (
@@ -490,7 +490,7 @@ const CashierClosing = () => {
         {showClosingModal && summary && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/30 dark:bg-black/50" onClick={() => !closingMutation.isPending && setShowClosingModal(false)} />
-            <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
                 <div>
                   <h3 className="text-lg font-semibold dark:text-white">Fechamento de Caixa</h3>
@@ -533,7 +533,7 @@ const CashierClosing = () => {
                             min="0"
                             value={declaredValues[key]}
                             onChange={(e) => setDeclaredValues({ ...declaredValues, [key]: parseFloat(e.target.value) || 0 })}
-                            className="w-40 px-3 py-2 text-right border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                            className="w-40 px-3 py-2 text-right border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                             disabled={closingMutation.isPending}
                           />
                         </div>
@@ -573,7 +573,7 @@ const CashierClosing = () => {
                     value={declaredValues.notes}
                     onChange={(e) => setDeclaredValues({ ...declaredValues, notes: e.target.value })}
                     rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg placeholder-gray-400 dark:placeholder-gray-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg placeholder-gray-400 dark:placeholder-gray-500"
                     placeholder="Observações sobre este fechamento..."
                     disabled={closingMutation.isPending}
                   />
@@ -595,7 +595,7 @@ const CashierClosing = () => {
         {showHistoryModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/30 dark:bg-black/50" onClick={() => setShowHistoryModal(false)} />
-            <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-6xl max-h-[85vh] overflow-hidden">
+            <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-6xl max-h-[85vh] overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
                 <h3 className="text-lg font-semibold dark:text-white">Histórico de Fechamentos</h3>
                 <button onClick={() => setShowHistoryModal(false)} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">✕</button>

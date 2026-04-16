@@ -141,13 +141,13 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       <>
         <button
           onClick={() => setIsMobileOpen(true)}
-          className="fixed top-4 left-4 z-30 lg:hidden p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
+          className="fixed top-4 left-4 z-30 lg:hidden p-2 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
         >
           <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-        <div className="hidden lg:flex flex-col fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-800 shadow-2xl z-30 items-center justify-center">
+        <div className="hidden lg:flex flex-col fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-900 shadow-2xl z-30 items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400" />
         </div>
       </>
@@ -163,7 +163,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
           onClick={() => setIsMobileOpen(false)}
         />
         
-        <div className="fixed left-0 top-0 h-full w-72 bg-white dark:bg-gray-800 z-50 shadow-2xl animate-slideInRight lg:hidden">
+        <div className="fixed left-0 top-0 h-full w-72 bg-white dark:bg-gray-900 z-50 shadow-2xl animate-slideInRight lg:hidden">
           <div className="flex flex-col h-full overflow-hidden">
             <div className="p-5 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
               <div className="flex items-center justify-between">
@@ -263,7 +263,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     <>
       <button
         onClick={() => setIsMobileOpen(true)}
-        className="fixed top-4 left-4 z-30 lg:hidden p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
+        className="fixed top-4 left-4 z-30 lg:hidden p-2 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
       >
         <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -271,7 +271,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       </button>
 
       <div className={`
-        hidden lg:flex flex-col fixed left-0 top-0 h-full bg-white dark:bg-gray-800 shadow-2xl transition-all duration-300 z-30 overflow-hidden
+        hidden lg:flex flex-col fixed left-0 top-0 h-full bg-white dark:bg-gray-900 shadow-2xl transition-all duration-300 z-30 overflow-hidden
         ${collapsed ? 'w-20' : 'w-64'}
       `}>
         {/* Header com Logo */}
@@ -328,7 +328,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
               <div className="hover:scale-105 transition-transform">
                 <AvatarDisplay size="md" showStatus={true} />
               </div>
-              <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+              <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
                 {displayName}
               </div>
             </button>
@@ -374,7 +374,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
                 </LinkComponent>
                 
                 {collapsed && (
-                  <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+                  <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
                     {item.label}
                   </div>
                 )}

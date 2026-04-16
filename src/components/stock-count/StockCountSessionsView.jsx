@@ -69,11 +69,11 @@ const StockCountSessionsView = ({
           ]}
           onFilterChange={(filters) => setActiveFilters({ status: filters.status })}
           searchDebounceDelay={300}
-          className="dark:bg-gray-800 dark:border-gray-700"
-          inputClassName="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-          selectClassName="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+          className="dark:bg-gray-900 dark:border-gray-700"
+          inputClassName="dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+          selectClassName="dark:bg-gray-800 dark:border-gray-600 dark:text-white"
           labelClassName="dark:text-gray-300"
-          buttonClassName="dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:border-gray-600"
+          buttonClassName="dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-600 dark:border-gray-600"
         />
       </div>
 

@@ -120,7 +120,7 @@ const PermissionsSettingsTab = () => {
                 } ${
                   selectedRole === role 
                     ? `bg-gradient-to-r ${config.gradient} text-white shadow-md` 
-                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700'
+                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700'
                 }`}
               >
                 <Icon size={16} /> {config.name}
@@ -141,8 +141,8 @@ const PermissionsSettingsTab = () => {
           const moduleNames = { dashboard: 'Dashboard', sales: 'Vendas', products: 'Produtos', customers: 'Clientes', cashier: 'Caixa', coupons: 'Cupons', reports: 'Relatórios', users: 'Usuários', system: 'Sistema' }
           
           return (
-            <div key={module} className="bg-white rounded-lg border border-gray-200 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
-              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 dark:bg-gray-900/50 dark:border-gray-700">
+            <div key={module} className="bg-white rounded-lg border border-gray-200 overflow-hidden dark:bg-gray-900 dark:border-gray-700">
+              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 dark:bg-gray-950/50 dark:border-gray-700">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <h4 className="font-medium text-gray-900 dark:text-white">{moduleNames[module] || module}</h4>
@@ -155,7 +155,7 @@ const PermissionsSettingsTab = () => {
                   )}
                 </div>
                 {selectedRole !== 'admin' && (
-                  <div className="mt-2 w-full bg-gray-200 rounded-full h-1 dark:bg-gray-700">
+                  <div className="mt-2 w-full bg-gray-200 rounded-full h-1 dark:bg-gray-800">
                     <div className={`h-1 rounded-full transition-all ${stats.allGranted ? 'bg-green-500' : stats.granted > 0 ? 'bg-yellow-500' : 'bg-gray-300 dark:bg-gray-600'}`} style={{ width: `${(stats.granted / stats.total) * 100}%` }} />
                   </div>
                 )}

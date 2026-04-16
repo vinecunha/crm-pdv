@@ -27,7 +27,7 @@ const CartItem = ({
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all overflow-hidden dark:bg-gray-800 dark:border-gray-700 dark:hover:border-blue-700 dark:hover:shadow-lg dark:hover:shadow-gray-900/50">
+    <div className="bg-white rounded-xl border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all overflow-hidden dark:bg-gray-900 dark:border-gray-700 dark:hover:border-blue-700 dark:hover:shadow-lg dark:hover:shadow-gray-900/50">
       {/* Parte superior - Informações do produto */}
       <div className="flex gap-3 p-3">
         {/* Ícone do produto */}
@@ -62,7 +62,7 @@ const CartItem = ({
       {/* Parte inferior - Controles sempre visíveis */}
       <div className="flex items-center justify-between px-3 pb-3 pt-1 border-t border-gray-100 dark:border-gray-700">
         {/* Controles de quantidade */}
-        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 dark:bg-gray-700">
+        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 dark:bg-gray-800">
           <button
             onClick={handleDecrement}
             disabled={item.quantity <= 1}

@@ -243,7 +243,7 @@ const StockReport = ({ categoryFilter }) => {
       </div>
 
       {/* Estoque por Categoria */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-white">
             <Archive className="text-blue-600 dark:text-blue-400" size={20} />
@@ -269,7 +269,7 @@ const StockReport = ({ categoryFilter }) => {
             showTotalItems
             showActionsLegend={false}
             footer={
-              <div className="bg-gray-50 dark:bg-gray-700 px-6 py-3 font-medium text-gray-900 dark:text-white">
+              <div className="bg-gray-50 dark:bg-gray-800 px-6 py-3 font-medium text-gray-900 dark:text-white">
                 Total: {stockData.stockByCategory.reduce((sum, c) => sum + c.count, 0)} produtos | 
                 {formatNumber(stockData.stockByCategory.reduce((sum, c) => sum + c.quantity, 0))} unidades | 
                 {formatCurrency(stockData.totalStockValue)}
@@ -291,14 +291,14 @@ const StockReport = ({ categoryFilter }) => {
               </h3>
               <div className="space-y-2">
                 {stockData.lowStockProducts.map(product => (
-                  <div key={product.id} className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-orange-100 dark:border-orange-800">
+                  <div key={product.id} className="bg-white dark:bg-gray-900 rounded-lg p-3 border border-orange-100 dark:border-orange-800">
                     <div className="flex items-center justify-between">
                       <p className="font-medium text-gray-900 dark:text-white">{product.name}</p>
                       <span className="text-sm text-orange-600 dark:text-orange-400 font-medium">
                         {product.stock_quantity} / {product.min_stock} {product.unit}
                       </span>
                     </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-2">
+                    <div className="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-1.5 mt-2">
                       <div 
                         className="bg-orange-500 dark:bg-orange-600 h-1.5 rounded-full"
                         style={{ width: `${Math.min((product.stock_quantity / product.min_stock) * 100, 100)}%` }}
@@ -319,7 +319,7 @@ const StockReport = ({ categoryFilter }) => {
               </h3>
               <div className="space-y-2">
                 {stockData.outOfStockProducts.map(product => (
-                  <div key={product.id} className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-red-100 dark:border-red-800">
+                  <div key={product.id} className="bg-white dark:bg-gray-900 rounded-lg p-3 border border-red-100 dark:border-red-800">
                     <div className="flex items-center justify-between">
                       <p className="font-medium text-gray-900 dark:text-white">{product.name}</p>
                       <span className="text-sm text-red-600 dark:text-red-400 font-medium">
@@ -338,7 +338,7 @@ const StockReport = ({ categoryFilter }) => {
       )}
 
       {/* Movimentações Recentes */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Últimas Movimentações de Estoque</h3>
         </div>

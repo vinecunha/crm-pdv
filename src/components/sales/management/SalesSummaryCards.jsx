@@ -59,7 +59,7 @@ const SalesSummaryCards = ({ summary }) => {
             key={index} 
             className={`
               bg-white rounded-lg shadow-sm p-4 border-l-4 
-              dark:bg-gray-800 dark:shadow-gray-900/50
+              dark:bg-gray-900 dark:shadow-gray-900/50
               ${card.borderColor}
             `}
           >

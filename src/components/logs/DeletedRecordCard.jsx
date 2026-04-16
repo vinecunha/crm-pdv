@@ -8,7 +8,7 @@ const DeletedRecordCard = ({ record, onRestore, canRestore }) => {
   const Icon = record._type === 'product' ? Package : User
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-3">
         <Badge variant={record._type === 'product' ? 'info' : 'purple'}>
           {record._typeLabel}
@@ -16,7 +16,7 @@ const DeletedRecordCard = ({ record, onRestore, canRestore }) => {
       </div>
       
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+        <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
           <Icon size={20} className="text-gray-600 dark:text-gray-400" />
         </div>
         <div className="flex-1 min-w-0">

@@ -301,14 +301,14 @@ const SalesReport = ({ dateRange, customDateRange, paymentMethodFilter }) => {
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Faturamento no Período</h3>
           <div className="h-64" key={lineChartId.current}>
             <Line data={salesChartData} options={chartOptions} redraw={false} />
           </div>
         </div>
         
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Vendas por Forma de Pagamento</h3>
           <div className="h-64" key={doughnutChartId.current}>
             {salesData?.salesByPayment?.length > 0 ? (
@@ -323,7 +323,7 @@ const SalesReport = ({ dateRange, customDateRange, paymentMethodFilter }) => {
       </div>
 
       {/* Últimas Vendas */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Últimas Vendas</h3>
         </div>

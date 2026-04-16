@@ -165,7 +165,7 @@ const StatusDropdown = ({ user, onClose, onUpdateStatus }) => {
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div className="absolute z-50 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1">
+      <div className="absolute z-50 w-40 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1">
         {user.status !== 'active' && (
           <button
             onClick={() => handleSelect('active')}

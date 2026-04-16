@@ -100,7 +100,7 @@ const CustomerCommunication = () => {
 
   if (loading) return <DataLoadingSkeleton type="cards" rows={3} />
   if (!customer) return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
       <div className="text-center">
         <AlertCircle className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
         <p className="text-gray-600 dark:text-gray-400">Cliente não encontrado</p>
@@ -110,7 +110,7 @@ const CustomerCommunication = () => {
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <button onClick={() => navigate('/customers')} className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4">
           <ArrowLeft size={18} />Voltar para Clientes
@@ -149,11 +149,11 @@ const CustomerCommunication = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1 space-y-4">
             <CommunicationChannels channels={channels} customer={customer} onSelectChannel={setActiveChannel} />
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
               <h2 className="text-lg font-semibold mb-4 dark:text-white">Informações de Contato</h2>
               <div className="space-y-3">
                 {customer.phone && (
-                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div className="flex items-center gap-2">
                       <Phone size={16} className="text-gray-500 dark:text-gray-400" />
                       <span className="text-sm dark:text-white">{customer.phone}</span>
@@ -164,7 +164,7 @@ const CustomerCommunication = () => {
                   </div>
                 )}
                 {customer.email && (
-                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div className="flex items-center gap-2">
                       <AtSign size={16} className="text-gray-500 dark:text-gray-400" />
                       <span className="text-sm dark:text-white">{customer.email}</span>
@@ -175,7 +175,7 @@ const CustomerCommunication = () => {
                   </div>
                 )}
                 {customer.address && (
-                  <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
                       <MapPin size={16} className="text-gray-500 dark:text-gray-400" />
                       <span className="text-sm font-medium dark:text-white">Endereço</span>
@@ -186,7 +186,7 @@ const CustomerCommunication = () => {
                   </div>
                 )}
                 {customer.document && (
-                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div className="flex items-center gap-2">
                       <Hash size={16} className="text-gray-500 dark:text-gray-400" />
                       <span className="text-sm dark:text-white">{customer.document}</span>

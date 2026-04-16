@@ -288,7 +288,7 @@ const Profile = () => {
   const roleColors = {
     admin: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300',
     gerente: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
-    operador: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
+    operador: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300'
   }
 
   const roleNames = {
@@ -301,7 +301,7 @@ const Profile = () => {
 
   if (profileError) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao carregar perfil</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">{profileError.message}</p>
@@ -316,7 +316,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -340,7 +340,7 @@ const Profile = () => {
 
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="lg:w-72 flex-shrink-0">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center">
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center">
               <AvatarUploader
                 user={user}
                 avatarUrl={formData.avatar_url}
@@ -357,7 +357,7 @@ const Profile = () => {
               <div className="mt-2">
                 <span className={`
                   inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                  ${roleColors[profile?.role] || 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'}
+                  ${roleColors[profile?.role] || 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300'}
                 `}>
                   <Shield size={12} className="mr-1" />
                   {roleNames[profile?.role] || 'Usuário'}
@@ -382,7 +382,7 @@ const Profile = () => {
               </div>
             </div>
 
-            <div className="mt-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-2">
+            <div className="mt-4 bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-2">
               <nav className="space-y-1">
                 {tabs.map((tab) => {
                   const Icon = tab.icon
@@ -408,7 +408,7 @@ const Profile = () => {
           </div>
 
           <div className="flex-1">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
               {activeTab === 'profile' && (
                 <div className="p-6">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">

@@ -38,7 +38,7 @@ const QuickCustomerForm = ({
           error={errors.name}
           placeholder="Digite o nome completo"
           icon={User}
-          className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+          className="dark:bg-gray-800 dark:border-gray-600 dark:text-white"
         />
         
         <FormInput
@@ -52,7 +52,7 @@ const QuickCustomerForm = ({
           icon={Phone}
           disabled
           mask="phone"
-          className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+          className="dark:bg-gray-800 dark:border-gray-600 dark:text-white"
         />
         
         <FormInput
@@ -64,7 +64,7 @@ const QuickCustomerForm = ({
           error={errors.email}
           placeholder="cliente@email.com"
           icon={Mail}
-          className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+          className="dark:bg-gray-800 dark:border-gray-600 dark:text-white"
         />
         
         <div className="flex gap-3 pt-2">

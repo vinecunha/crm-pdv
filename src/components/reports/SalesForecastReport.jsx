@@ -221,7 +221,7 @@ const SalesForecastReport = ({ dateRange, customDateRange }) => {
       </div>
 
       {/* Tabela de Previsão */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h3 className="font-semibold text-gray-900 dark:text-white">Previsão para os Próximos Meses</h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">Baseado no histórico dos últimos 6 meses</p>
@@ -238,7 +238,7 @@ const SalesForecastReport = ({ dateRange, customDateRange }) => {
       </div>
 
       {/* Histórico */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h3 className="font-semibold text-gray-900 dark:text-white">Histórico (Últimos Meses)</h3>
         </div>

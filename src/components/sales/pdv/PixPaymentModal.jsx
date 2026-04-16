@@ -209,7 +209,7 @@ const PixPaymentModal = ({
             </div>
 
             <div className="flex justify-center">
-              <div className="bg-white p-4 rounded-xl border-2 border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+              <div className="bg-white p-4 rounded-xl border-2 border-gray-200 dark:bg-gray-900 dark:border-gray-700">
                 {qrcodeText && (
                   <QRCodeSVG
                     value={qrcodeText}
@@ -236,7 +236,7 @@ const PixPaymentModal = ({
                   type="text"
                   value={qrcodeText}
                   readOnly
-                  className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono truncate dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono truncate dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                 />
                 <Button
                   variant="outline"

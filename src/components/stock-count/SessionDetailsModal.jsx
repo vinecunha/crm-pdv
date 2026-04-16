@@ -147,7 +147,7 @@ const SessionDetailsModal = ({ isOpen, onClose, session, items, isLoading, onVie
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/30 dark:bg-black/50" onClick={onClose} />
-      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col dark:bg-gray-800">
+      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col dark:bg-gray-900">
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center flex-shrink-0 dark:border-gray-700">
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -170,7 +170,7 @@ const SessionDetailsModal = ({ isOpen, onClose, session, items, isLoading, onVie
           </div>
         ) : session ? (
           <div className="flex-1 overflow-y-auto">
-            <div className="p-6 border-b border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/50">
+            <div className="p-6 border-b border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-950/50">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="flex items-center gap-2">
                   <Calendar size={16} className="text-gray-400 dark:text-gray-500" />
@@ -246,7 +246,7 @@ const SessionDetailsModal = ({ isOpen, onClose, session, items, isLoading, onVie
               </div>
             </div>
 
-            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/50">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-950/50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <DollarSign size={16} className="text-gray-400 dark:text-gray-500" />
@@ -275,7 +275,7 @@ const SessionDetailsModal = ({ isOpen, onClose, session, items, isLoading, onVie
               <h4 className="text-sm font-semibold text-gray-700 mb-4 dark:text-gray-300">Itens da Contagem</h4>
               
               {!hasItems ? (
-                <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200 dark:bg-gray-900/50 dark:border-gray-700">
+                <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200 dark:bg-gray-950/50 dark:border-gray-700">
                   <PackageSearch size={48} className="text-gray-300 mx-auto mb-3 dark:text-gray-600" />
                   <p className="text-gray-500 font-medium dark:text-gray-400">Nenhum item encontrado</p>
                   <p className="text-sm text-gray-400 mt-1 dark:text-gray-500">

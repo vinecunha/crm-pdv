@@ -61,7 +61,7 @@ const LogoUploader = ({ currentLogo, onLogoChange, disabled }) => {
   return (
     <div className="space-y-3">
       <div className="flex items-start gap-4">
-        <div className="w-24 h-24 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden dark:bg-gray-700 dark:border-gray-600">
+        <div className="w-24 h-24 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden dark:bg-gray-800 dark:border-gray-600">
           {displayImage ? (
             <LazyImage
               src={displayImage}
@@ -91,7 +91,7 @@ const LogoUploader = ({ currentLogo, onLogoChange, disabled }) => {
               <span className={`
                 inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
                 ${disabled || uploading 
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500' 
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:text-gray-500' 
                   : 'bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-800/50'
                 }
               `}>

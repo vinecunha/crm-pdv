@@ -21,7 +21,7 @@ const FinishSessionModal = ({
       size="md"
     >
       <div className="space-y-4">
-        <div className="bg-gray-50 rounded-lg p-4 dark:bg-gray-800">
+        <div className="bg-gray-50 rounded-lg p-4 dark:bg-gray-900">
           <h3 className="font-medium mb-3 dark:text-white">Resumo do Balanço</h3>
           <div className="space-y-2">
             <div className="flex justify-between">

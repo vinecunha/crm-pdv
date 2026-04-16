@@ -96,7 +96,7 @@ const PeriodComparisonReport = ({ dateRange, customDateRange }) => {
   return (
     <div className="space-y-6">
       {/* Períodos */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400">Período Atual</p>
@@ -188,7 +188,7 @@ const ComparisonCard = ({ label, current, previous, change, icon: Icon, inverseC
   const isPositive = inverseColors ? change <= 0 : change >= 0
   
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
         <Icon size={18} className="text-gray-400 dark:text-gray-500" />

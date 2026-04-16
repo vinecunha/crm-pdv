@@ -36,7 +36,7 @@ const CashierClosingModal = ({
   return (
     <Modal isOpen={isOpen} onClose={() => !loading && onClose()} title="Fechamento de Caixa" size="lg" isLoading={loading}>
       <div className="space-y-6">
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+        <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
           <h3 className="font-medium text-gray-900 dark:text-white mb-3">Resumo do Período</h3>
           <div className="space-y-2">
             <div className="flex justify-between">
@@ -62,7 +62,7 @@ const CashierClosingModal = ({
           <h3 className="font-medium text-gray-900 dark:text-white mb-3">Valores Declarados</h3>
           <div className="space-y-3">
             {paymentInputs.map(({ key, label, icon: Icon, color }) => (
-              <div key={key} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div key={key} className="flex items-center justify-between p-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
                 <div className="flex items-center gap-2">
                   <Icon size={20} className={color} />
                   <span className="text-gray-700 dark:text-gray-200">{label}</span>
@@ -72,7 +72,7 @@ const CashierClosingModal = ({
                   step="0.01"
                   value={declaredValues[key]}
                   onChange={(e) => setDeclaredValues({ ...declaredValues, [key]: parseFloat(e.target.value) || 0 })}
-                  className="w-40 px-3 py-1 text-right bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-40 px-3 py-1 text-right bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             ))}
@@ -85,7 +85,7 @@ const CashierClosingModal = ({
             value={declaredValues.notes}
             onChange={(e) => setDeclaredValues({ ...declaredValues, notes: e.target.value })}
             rows={3}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
+            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
             placeholder="Informações adicionais sobre o fechamento..."
           />
         </div>

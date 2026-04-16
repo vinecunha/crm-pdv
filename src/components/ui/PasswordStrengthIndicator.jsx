@@ -20,7 +20,7 @@ const PasswordStrengthIndicator = ({ password }) => {
             {strength.message}
           </span>
         </div>
-        <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className="w-full h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
           <div 
             className={`h-full transition-all duration-300 ${strength.color}`}
             style={{ width: strength.width }}

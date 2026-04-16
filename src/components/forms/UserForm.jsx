@@ -82,7 +82,7 @@ const UserForm = ({
             value={formData.role}
             onChange={handleChange}
             disabled={isSubmitting}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800"
+            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800"
           >
             {roles.map(role => (
               <option key={role.value} value={role.value}>
@@ -99,7 +99,7 @@ const UserForm = ({
       {editingUser && !canChangeRole && (
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Papel</label>
-          <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white">
+          <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white">
             {formData.role === 'admin' && 'Administrador'}
             {formData.role === 'gerente' && 'Gerente'}
             {formData.role === 'operador' && 'Operador'}

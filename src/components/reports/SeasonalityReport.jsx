@@ -144,7 +144,7 @@ const SeasonalityReport = ({ dateRange, customDateRange }) => {
       </div>
 
       {/* Sazonalidade Mensal */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Sazonalidade Mensal</h3>
         
         {/* Gráfico de barras simplificado */}
@@ -189,7 +189,7 @@ const SeasonalityReport = ({ dateRange, customDateRange }) => {
       {/* Por Trimestre e Dia da Semana */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Trimestres */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Por Trimestre</h3>
           <div className="space-y-3">
             {quarterData.map((quarter, index) => (
@@ -205,7 +205,7 @@ const SeasonalityReport = ({ dateRange, customDateRange }) => {
         </div>
 
         {/* Dias da Semana */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Por Dia da Semana</h3>
           <div className="space-y-3">
             {weekdayData.map((day, index) => (

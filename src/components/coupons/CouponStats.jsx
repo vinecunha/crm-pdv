@@ -3,7 +3,7 @@ import { Ticket, CheckCircle, Globe, Users } from '../../lib/icons'
 
 const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) => {
   const variants = {
-    default: 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
+    default: 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700',
     success: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
     info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
     purple: 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800',
@@ -26,7 +26,7 @@ const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) =
           <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
           {sublabel && <p className="text-xs text-gray-400 dark:text-gray-500">{sublabel}</p>}
         </div>
-        <div className="p-2.5 rounded-lg bg-white/50 dark:bg-gray-700/50">
+        <div className="p-2.5 rounded-lg bg-white/50 dark:bg-gray-800/50">
           <Icon size={22} className={iconColors[variant]} />
         </div>
       </div>

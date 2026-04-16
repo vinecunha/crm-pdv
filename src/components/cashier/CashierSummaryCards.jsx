@@ -65,7 +65,7 @@ const CashierSummaryCards = ({ summary }) => {
         const Icon = card.icon
         const colors = colorClasses[card.color]
         return (
-          <div key={index} className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-l-4 ${colors.border}`}>
+          <div key={index} className={`bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4 border-l-4 ${colors.border}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">{card.title}</p>

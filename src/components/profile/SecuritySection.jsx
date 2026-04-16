@@ -10,7 +10,7 @@ const SecuritySection = ({ user, onChangePassword, onLogout }) => {
     <>
       <div className="space-y-6">
         {/* Alterar Senha */}
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3">
               <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
@@ -30,7 +30,7 @@ const SecuritySection = ({ user, onChangePassword, onLogout }) => {
         </div>
 
         {/* Sessões Ativas */}
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3">
               <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">

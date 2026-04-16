@@ -9,7 +9,7 @@ const ProtectedRoute = ({ children, requiredPermission }) => {
   // Mostrar loading enquanto verifica autenticação
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
         <div className="text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-300">Carregando...</p>
@@ -26,7 +26,7 @@ const ProtectedRoute = ({ children, requiredPermission }) => {
   // Se precisar de permissão específica e usuário não tem
   if (requiredPermission && !permissions[requiredPermission]) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center px-4">
         <div className="text-center max-w-md">
           <div className="bg-red-100 dark:bg-red-900/30 rounded-full p-4 inline-block mb-4">
             <svg className="w-12 h-12 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

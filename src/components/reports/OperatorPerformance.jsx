@@ -183,7 +183,7 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
     const configs = {
       admin: { label: 'Admin', color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300' },
       gerente: { label: 'Gerente', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' },
-      operador: { label: 'Operador', color: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300' }
+      operador: { label: 'Operador', color: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300' }
     }
     const config = configs[role] || configs.operador
     return (
@@ -309,7 +309,7 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
       </div>
 
       {/* Ranking de Operadores */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-white">
             <Award className="text-yellow-500 dark:text-yellow-400" size={20} />
@@ -335,7 +335,7 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
                     key={operator.id}
                     className={`text-center p-4 rounded-lg ${
                       index === 0 ? 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800' :
-                      index === 1 ? 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700' :
+                      index === 1 ? 'bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700' :
                       'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800'
                     }`}
                   >
@@ -380,7 +380,7 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
       {/* Métricas Adicionais */}
       {operators.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">Melhor Ticket Médio</h4>
             {[...operators].sort((a, b) => b.averageTicket - a.averageTicket).slice(0, 1).map(op => (
               <div key={op.id} className="flex items-center justify-between">
@@ -393,7 +393,7 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
             ))}
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">Mais Itens Vendidos</h4>
             {[...operators].sort((a, b) => b.itemsSold - a.itemsSold).slice(0, 1).map(op => (
               <div key={op.id} className="flex items-center justify-between">
@@ -406,7 +406,7 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
             ))}
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">Maior Número de Vendas</h4>
             {[...operators].sort((a, b) => b.salesCount - a.salesCount).slice(0, 1).map(op => (
               <div key={op.id} className="flex items-center justify-between">

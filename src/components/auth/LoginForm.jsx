@@ -24,7 +24,7 @@ const LoginForm = ({
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg transition-all focus:outline-none"
+            className="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg transition-all focus:outline-none"
             style={{
               '--tw-ring-color': `${primaryColor}20`
             }}
@@ -53,7 +53,7 @@ const LoginForm = ({
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg transition-all focus:outline-none"
+            className="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg transition-all focus:outline-none"
             onFocus={(e) => {
               e.target.style.borderColor = primaryColor
               e.target.style.boxShadow = `0 0 0 2px ${primaryColor}20`

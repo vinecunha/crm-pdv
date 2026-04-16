@@ -57,14 +57,14 @@ const PaymentMethodsTable = ({ initialData, enabled = true }) => {
   // Estados de loading e erro
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
           <CreditCard size={20} />
           Vendas por Meio de Pagamento
         </h2>
         <div className="animate-pulse space-y-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div key={i} className="h-12 bg-gray-200 dark:bg-gray-800 rounded"></div>
           ))}
         </div>
       </div>
@@ -73,7 +73,7 @@ const PaymentMethodsTable = ({ initialData, enabled = true }) => {
 
   if (error) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
           <CreditCard size={20} />
           Vendas por Meio de Pagamento
@@ -94,7 +94,7 @@ const PaymentMethodsTable = ({ initialData, enabled = true }) => {
   if (!data?.length) return null
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
+    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6 mb-6">
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
         <CreditCard size={20} />
         Vendas por Meio de Pagamento

@@ -41,7 +41,7 @@ const SecuritySettingsTab = ({ onChangePassword, onLogout }) => {
       
       <div className="space-y-4">
         {!showPasswordForm ? (
-          <div className="bg-gray-50 rounded-xl border border-gray-200 p-5 dark:bg-gray-800 dark:border-gray-700">
+          <div className="bg-gray-50 rounded-xl border border-gray-200 p-5 dark:bg-gray-900 dark:border-gray-700">
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-blue-100 rounded-lg dark:bg-blue-900/30">
@@ -56,7 +56,7 @@ const SecuritySettingsTab = ({ onChangePassword, onLogout }) => {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="bg-gray-50 rounded-xl border border-gray-200 p-5 space-y-4 dark:bg-gray-800 dark:border-gray-700">
+          <form onSubmit={handleSubmit} className="bg-gray-50 rounded-xl border border-gray-200 p-5 space-y-4 dark:bg-gray-900 dark:border-gray-700">
             {error && (
               <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm flex items-center gap-2 dark:bg-red-900/20 dark:text-red-400">
                 <AlertCircle size={16} />{error}
@@ -67,7 +67,7 @@ const SecuritySettingsTab = ({ onChangePassword, onLogout }) => {
               placeholder="Senha atual" 
               value={passwordForm.current} 
               onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })} 
-              className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" 
+              className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" 
               required 
             />
             <input 
@@ -75,7 +75,7 @@ const SecuritySettingsTab = ({ onChangePassword, onLogout }) => {
               placeholder="Nova senha" 
               value={passwordForm.new} 
               onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })} 
-              className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" 
+              className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" 
               required 
             />
             <input 
@@ -83,7 +83,7 @@ const SecuritySettingsTab = ({ onChangePassword, onLogout }) => {
               placeholder="Confirmar nova senha" 
               value={passwordForm.confirm} 
               onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })} 
-              className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" 
+              className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" 
               required 
             />
             <div className="flex gap-3">
@@ -93,7 +93,7 @@ const SecuritySettingsTab = ({ onChangePassword, onLogout }) => {
           </form>
         )}
 
-        <div className="bg-gray-50 rounded-xl border border-gray-200 p-5 dark:bg-gray-800 dark:border-gray-700">
+        <div className="bg-gray-50 rounded-xl border border-gray-200 p-5 dark:bg-gray-900 dark:border-gray-700">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3">
               <div className="p-2 bg-green-100 rounded-lg dark:bg-green-900/30">

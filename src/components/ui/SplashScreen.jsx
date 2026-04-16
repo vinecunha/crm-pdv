@@ -39,7 +39,7 @@ const SplashScreen = ({
         alt="Logo"
         className={`${logoSizes[size]} object-contain`}
         fallback={
-          <div className={`${logoSizes[size]} bg-gray-200 dark:bg-gray-700 animate-pulse rounded-full`} />
+          <div className={`${logoSizes[size]} bg-gray-200 dark:bg-gray-800 animate-pulse rounded-full`} />
         }
       />
       
@@ -58,7 +58,7 @@ const SplashScreen = ({
 
   if (fullScreen) {
     return (
-      <div className={`fixed inset-0 flex items-center justify-center z-50 ${transparent ? 'bg-black/50 dark:bg-black/70' : 'bg-white dark:bg-gray-900'}`}>
+      <div className={`fixed inset-0 flex items-center justify-center z-50 ${transparent ? 'bg-black/50 dark:bg-black/70' : 'bg-white dark:bg-gray-950'}`}>
         {content}
       </div>
     )

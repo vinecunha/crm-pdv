@@ -17,7 +17,7 @@ const ProfileSidebar = ({
   const roleColors = {
     admin: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300',
     gerente: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
-    operador: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
+    operador: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300'
   }
 
   const roleNames = {
@@ -29,7 +29,7 @@ const ProfileSidebar = ({
   return (
     <div className="lg:w-72 flex-shrink-0">
       {/* Card do Perfil */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center">
         <AvatarUploader
           user={user}
           avatarUrl={formData.avatar_url}
@@ -46,7 +46,7 @@ const ProfileSidebar = ({
         <div className="mt-2">
           <span className={`
             inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-            ${roleColors[profile?.role] || 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'}
+            ${roleColors[profile?.role] || 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300'}
           `}>
             <Shield size={12} className="mr-1" />
             {roleNames[profile?.role] || 'Usuário'}
@@ -73,7 +73,7 @@ const ProfileSidebar = ({
       </div>
 
       {/* Abas */}
-      <div className="mt-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-2">
+      <div className="mt-4 bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-2">
         <nav className="space-y-1">
           {tabs.map((tab) => {
             const Icon = tab.icon

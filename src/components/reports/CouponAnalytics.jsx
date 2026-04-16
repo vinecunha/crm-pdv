@@ -278,7 +278,7 @@ const CouponAnalytics = ({ dateRange, customDateRange }) => {
       render: (_, index) => (
         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
           index === 0 ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' :
-          index === 1 ? 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300' :
+          index === 1 ? 'bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300' :
           index === 2 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' :
           'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300'
         }`}>
@@ -504,7 +504,7 @@ const CouponAnalytics = ({ dateRange, customDateRange }) => {
 
       {/* Conteúdo das Tabs */}
       {activeTab === 'opportunities' && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-white">
               <Zap className="text-yellow-500 dark:text-yellow-400" size={20} />
@@ -586,7 +586,7 @@ const CouponAnalytics = ({ dateRange, customDateRange }) => {
       )}
 
       {activeTab === 'topUsers' && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-white">
               <Award className="text-purple-500 dark:text-purple-400" size={20} />
@@ -617,7 +617,7 @@ const CouponAnalytics = ({ dateRange, customDateRange }) => {
       )}
 
       {activeTab === 'performance' && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-white">
               <TrendingUp className="text-green-500 dark:text-green-400" size={20} />

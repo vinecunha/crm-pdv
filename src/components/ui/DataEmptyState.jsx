@@ -21,8 +21,8 @@ const DataEmptyState = ({
   const Icon = iconMap[icon] || iconMap.default
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-8 sm:p-12 text-center dark:bg-gray-800 dark:border-gray-700 ${className}`}>
-      <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4 dark:bg-gray-700">
+    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-8 sm:p-12 text-center dark:bg-gray-900 dark:border-gray-700 ${className}`}>
+      <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4 dark:bg-gray-800">
         <Icon className="h-8 w-8 text-gray-400 dark:text-gray-500" />
       </div>
       <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2 dark:text-white">

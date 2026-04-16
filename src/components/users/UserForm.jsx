@@ -58,7 +58,7 @@ const UserForm = ({
               value={formData.registration_number || ''}
               onChange={handleChange}
               placeholder="FUNC000001"
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white font-mono rounded-lg"
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white font-mono rounded-lg"
               disabled={!!editingUser || generatingCode}
               readOnly={!editingUser}
             />
@@ -95,7 +95,7 @@ const UserForm = ({
               required
               disabled={isSubmitting}
               placeholder="usuario@exemplo.com"
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
               autoComplete="off"
             />
           </div>
@@ -114,7 +114,7 @@ const UserForm = ({
             required
             disabled={isSubmitting}
             placeholder="Nome do usuário"
-            className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
+            className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
             autoComplete="off"
           />
         </div>
@@ -133,7 +133,7 @@ const UserForm = ({
               required
               disabled={isSubmitting}
               placeholder="Mínimo 6 caracteres"
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
               autoComplete="new-password"
             />
           </div>
@@ -154,7 +154,7 @@ const UserForm = ({
             value={formData.role}
             onChange={handleChange}
             disabled={isSubmitting}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:bg-gray-100 dark:disabled:bg-gray-800"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:bg-gray-100 dark:disabled:bg-gray-800"
           >
             {roles.map(role => (
               <option key={role.value} value={role.value}>{role.label}</option>
@@ -169,7 +169,7 @@ const UserForm = ({
       {editingUser && !canChangeRole && (
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Papel</label>
-          <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white">
+          <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white">
             {formData.role === 'admin' ? 'Administrador' : formData.role === 'gerente' ? 'Gerente' : 'Operador'}
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Para alterar o papel, contate um administrador</p>

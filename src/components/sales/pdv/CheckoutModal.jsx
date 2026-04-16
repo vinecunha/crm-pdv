@@ -76,7 +76,7 @@ const CheckoutModal = ({
         size="md"
       >
         <div className="space-y-4">
-          <div className="bg-gray-50 rounded-lg p-4 dark:bg-gray-800">
+          <div className="bg-gray-50 rounded-lg p-4 dark:bg-gray-900">
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Itens:</span>

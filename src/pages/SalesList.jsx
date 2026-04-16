@@ -21,7 +21,7 @@ import * as salesListService from '../services/salesListService'
 
 const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) => {
   const variants = {
-    default: 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
+    default: 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700',
     success: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
     warning: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800',
     danger: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
@@ -46,7 +46,7 @@ const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) =
           <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
           {sublabel && <p className="text-xs text-gray-400 dark:text-gray-500">{sublabel}</p>}
         </div>
-        <div className="p-2.5 rounded-lg bg-white/50 dark:bg-gray-900/50">
+        <div className="p-2.5 rounded-lg bg-white/50 dark:bg-gray-950/50">
           <Icon size={22} className={iconColors[variant]} />
         </div>
       </div>
@@ -264,7 +264,7 @@ const SalesList = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao carregar vendas</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">{error.message}</p>
@@ -277,7 +277,7 @@ const SalesList = () => {
   if (isLoading && sales.length === 0) return <DataLoadingSkeleton />
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {feedback.show && <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />}
 
@@ -301,21 +301,21 @@ const SalesList = () => {
           <StatCard label="Cancelamentos" value={formatNumber(summary.cancelledCount)} sublabel={`${((summary.cancelledCount / summary.totalCount) * 100 || 0).toFixed(1)}%`} icon={Ban} variant={summary.cancelledCount > 0 ? 'warning' : 'default'} />
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex-1 min-w-[250px] relative">
               <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-              <input type="text" placeholder="Buscar por nº venda, cliente ou telefone..." value={localSearchTerm} onChange={(e) => setLocalSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500" />
+              <input type="text" placeholder="Buscar por nº venda, cliente ou telefone..." value={localSearchTerm} onChange={(e) => setLocalSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500" />
               {localSearchTerm !== debouncedSearchTerm && <div className="absolute right-3 top-1/2 -translate-y-1/2"><div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin dark:border-blue-400" /></div>}
             </div>
             <Button variant="outline" onClick={() => setShowFilters(!showFilters)} icon={Filter}>Filtros {Object.values(filters).some(v => v && v !== 'all') && '•'}</Button>
           </div>
           {showFilters && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-              <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm"><option value="all">Todos</option><option value="completed">Concluídas</option><option value="cancelled">Canceladas</option><option value="pending">Pendentes</option></select>
-              <select value={filters.payment_method} onChange={(e) => setFilters({ ...filters, payment_method: e.target.value })} className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm"><option value="all">Todas</option><option value="cash">Dinheiro</option><option value="credit_card">Crédito</option><option value="debit_card">Débito</option><option value="pix">PIX</option></select>
-              <input type="date" value={filters.start_date} onChange={(e) => setFilters({ ...filters, start_date: e.target.value })} className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm" />
-              <input type="date" value={filters.end_date} onChange={(e) => setFilters({ ...filters, end_date: e.target.value })} className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm" />
+              <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm"><option value="all">Todos</option><option value="completed">Concluídas</option><option value="cancelled">Canceladas</option><option value="pending">Pendentes</option></select>
+              <select value={filters.payment_method} onChange={(e) => setFilters({ ...filters, payment_method: e.target.value })} className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm"><option value="all">Todas</option><option value="cash">Dinheiro</option><option value="credit_card">Crédito</option><option value="debit_card">Débito</option><option value="pix">PIX</option></select>
+              <input type="date" value={filters.start_date} onChange={(e) => setFilters({ ...filters, start_date: e.target.value })} className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm" />
+              <input type="date" value={filters.end_date} onChange={(e) => setFilters({ ...filters, end_date: e.target.value })} className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm" />
             </div>
           )}
         </div>
@@ -325,7 +325,7 @@ const SalesList = () => {
         {showDetailsModal && selectedSale && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/30 dark:bg-black/50" onClick={() => setShowDetailsModal(false)} />
-            <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden">
+            <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
                 <div><h3 className="text-lg font-semibold dark:text-white">Detalhes da Venda #{selectedSale.sale_number}</h3><p className="text-sm text-gray-500 dark:text-gray-400">{formatDateTime(selectedSale.created_at)}</p></div>
                 <button onClick={() => setShowDetailsModal(false)} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">✕</button>

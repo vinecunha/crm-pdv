@@ -23,14 +23,14 @@ const PerformanceDebugger = () => {
     <div className="fixed bottom-4 right-4 z-50">
       <button
         onClick={loadReport}
-        className="p-2 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600"
+        className="p-2 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-600"
         title="Performance Monitor"
       >
         <Activity size={20} />
       </button>
 
       {report && (
-        <div className="absolute bottom-12 right-0 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-4">
+        <div className="absolute bottom-12 right-0 w-80 bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-gray-900 dark:text-white">Performance</h3>
             <div className="flex gap-1">

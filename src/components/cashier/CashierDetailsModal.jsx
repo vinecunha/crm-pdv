@@ -17,11 +17,11 @@ const CashierDetailsModal = ({ isOpen, onClose, closing, users }) => {
     <Modal isOpen={isOpen} onClose={onClose} title={`Detalhes do Fechamento - ${closing.closing_date ? formatDate(closing.closing_date) : ''}`} size="xl">
       <div className="space-y-6">
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded">
+          <div className="bg-gray-50 dark:bg-gray-900 p-3 rounded">
             <p className="text-xs text-gray-500 dark:text-gray-400">Data do Fechamento</p>
             <p className="font-medium text-gray-900 dark:text-white">{formatDateTime(closing.closed_at)}</p>
           </div>
-          <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded">
+          <div className="bg-gray-50 dark:bg-gray-900 p-3 rounded">
             <p className="text-xs text-gray-500 dark:text-gray-400">Fechado por</p>
             <p className="font-medium text-gray-900 dark:text-white">{users.find(u => u.id === closing.closed_by)?.full_name || 'Sistema'}</p>
           </div>

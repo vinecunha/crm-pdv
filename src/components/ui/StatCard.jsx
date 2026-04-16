@@ -2,7 +2,7 @@ import React from 'react'
 
 const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) => {
   const variants = {
-    default: 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
+    default: 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700',
     success: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
     warning: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800',
     danger: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
@@ -27,7 +27,7 @@ const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) =
           <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
           {sublabel && <p className="text-xs text-gray-400 dark:text-gray-500">{sublabel}</p>}
         </div>
-        <div className="p-2.5 rounded-lg bg-white/50 dark:bg-gray-900/50">
+        <div className="p-2.5 rounded-lg bg-white/50 dark:bg-gray-950/50">
           <Icon size={22} className={iconColors[variant]} />
         </div>
       </div>

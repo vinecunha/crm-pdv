@@ -48,13 +48,13 @@ const LazyImage = ({
   }
 
   const defaultPlaceholder = (
-    <div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse flex items-center justify-center">
+    <div className="w-full h-full bg-gray-200 dark:bg-gray-800 animate-pulse flex items-center justify-center">
       <ImageIcon className="w-8 h-8 text-gray-400 dark:text-gray-500" />
     </div>
   )
 
   const errorFallback = (
-    <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+    <div className="w-full h-full bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
       <ImageIcon className="w-8 h-8 text-gray-400 dark:text-gray-500" />
     </div>
   )

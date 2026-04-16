@@ -81,7 +81,7 @@ const NetworkStatus = () => {
       {showDetails && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/30 dark:bg-black/50" onClick={() => setShowDetails(false)} />
-          <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm">
+          <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-sm">
             <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
               <h3 className="text-lg font-semibold dark:text-white">
                 {isOnline ? 'Sincronização em andamento' : 'Modo Offline'}
@@ -113,7 +113,7 @@ const NetworkStatus = () => {
               </div>
 
               {pendingCount > 0 && (
-                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+                <div className="bg-gray-50 dark:bg-gray-950/50 rounded-lg p-4">
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Vendas pendentes de sincronização
                   </p>

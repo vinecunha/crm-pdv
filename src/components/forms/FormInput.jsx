@@ -206,7 +206,7 @@ const FormInput = ({
           {/* Indicador de atalho no label */}
           {shortcutHint && (
             <span className="text-xs text-gray-400 dark:text-gray-500 font-mono flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-600 dark:text-gray-300">
+              <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-600 dark:text-gray-300">
                 {shortcutHint}
               </kbd>
               {shortcut.description && (
@@ -246,7 +246,7 @@ const FormInput = ({
               ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-200 dark:focus:ring-red-800' 
               : 'border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-200 dark:focus:ring-blue-800'
             }
-            ${disabled ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white cursor-not-allowed' : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white'}
+            ${disabled ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white cursor-not-allowed' : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white'}
             placeholder-gray-400 dark:placeholder-gray-500
           `}
         />
@@ -254,7 +254,7 @@ const FormInput = ({
         {/* Indicador de atalho dentro do input */}
         {shortcutHint && showShortcutHint && !Icon && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-500 dark:text-gray-400">
+            <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-500 dark:text-gray-400">
               {shortcutHint}
             </kbd>
           </div>
@@ -263,7 +263,7 @@ const FormInput = ({
         {/* Indicador de atalho quando tem ícone (posição ajustada) */}
         {shortcutHint && showShortcutHint && Icon && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-500 dark:text-gray-400">
+            <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-500 dark:text-gray-400">
               {shortcutHint}
             </kbd>
           </div>

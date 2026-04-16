@@ -13,7 +13,7 @@ const SummaryCard = ({ title, value, icon: Icon, color, trend, subtitle, alert }
   }
 
   return (
-    <div className={`bg-white rounded-lg border p-6 dark:bg-gray-800 dark:border-gray-700 ${alert ? 'border-red-300 dark:border-red-700' : 'border-gray-200 dark:border-gray-700'}`}>
+    <div className={`bg-white rounded-lg border p-6 dark:bg-gray-900 dark:border-gray-700 ${alert ? 'border-red-300 dark:border-red-700' : 'border-gray-200 dark:border-gray-700'}`}>
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm text-gray-500 dark:text-gray-400">{title}</p>

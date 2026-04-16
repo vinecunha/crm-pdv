@@ -11,7 +11,7 @@ const SettingsSidebar = ({ activeTab, setActiveTab }) => {
 
   return (
     <div className="lg:w-64 flex-shrink-0">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 sticky top-6 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 sticky top-6 overflow-hidden dark:bg-gray-900 dark:border-gray-700">
         <nav className="p-2">
           {tabs.map((tab) => {
             const Icon = tab.icon

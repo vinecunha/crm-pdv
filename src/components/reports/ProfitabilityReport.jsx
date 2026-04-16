@@ -256,7 +256,7 @@ const ProfitabilityReport = ({ dateRange, customDateRange, categoryFilter }) => 
       </div>
 
       {/* Lucratividade por Categoria */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h3 className="font-semibold text-gray-900 dark:text-white">Lucratividade por Categoria</h3>
         </div>
@@ -275,7 +275,7 @@ const ProfitabilityReport = ({ dateRange, customDateRange, categoryFilter }) => 
       </div>
 
       {/* Lucratividade por Produto */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h3 className="font-semibold text-gray-900 dark:text-white">Lucratividade por Produto (Top 20)</h3>
         </div>

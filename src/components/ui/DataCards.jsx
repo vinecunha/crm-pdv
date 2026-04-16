@@ -30,7 +30,7 @@ const DataCards = ({
 
   if (data.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center dark:bg-gray-800 dark:border-gray-700">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center dark:bg-gray-900 dark:border-gray-700">
         <p className="text-gray-500 dark:text-gray-400">{emptyMessage}</p>
       </div>
     )

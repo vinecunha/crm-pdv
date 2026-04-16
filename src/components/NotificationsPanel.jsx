@@ -83,7 +83,7 @@ const NotificationsPanel = () => {
       {isOpen && (
         <div
           ref={panelRef}
-          className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden flex flex-col"
+          className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden flex flex-col"
           style={{ maxHeight: 'min(70vh, 500px)' }}
         >
           {/* Cabeçalho */}
@@ -122,7 +122,7 @@ const NotificationsPanel = () => {
               </div>
             ) : notifications.length === 0 ? (
               <div className="p-8 text-center">
-                <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Bell className="w-6 h-6 text-gray-400 dark:text-gray-500" />
                 </div>
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Nenhuma notificação</p>
@@ -173,7 +173,7 @@ const NotificationsPanel = () => {
           </div>
 
           {/* Footer */}
-          <div className="flex-shrink-0 p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+          <div className="flex-shrink-0 p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
             <button
               onClick={() => setIsOpen(false)}
               className="w-full text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-center"
