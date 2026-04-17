@@ -113,7 +113,7 @@ const NetworkStatus = () => {
               </div>
 
               {pendingCount > 0 && (
-                <div className="bg-gray-50 dark:bg-gray-950/50 rounded-lg p-4">
+                <div className="bg-gray-50 dark:bg-black/50 rounded-lg p-4">
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Vendas pendentes de sincronização
                   </p>

@@ -267,7 +267,7 @@ const RolePermissions = () => {
   if (isLoading) return <DataLoadingSkeleton type="cards" rows={4} />
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao carregar permissões</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">{error.message}</p>
@@ -280,7 +280,7 @@ const RolePermissions = () => {
   const isMutating = saveMutation.isPending || resetMutation.isPending
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <div className="flex items-center justify-between">
@@ -362,7 +362,7 @@ const RolePermissions = () => {
             
             return (
               <div key={module} className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div className="px-6 py-4 bg-gray-50 dark:bg-gray-950/50 border-b border-gray-200 dark:border-gray-700">
+                <div className="px-6 py-4 bg-gray-50 dark:bg-black/50 border-b border-gray-200 dark:border-gray-700">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <h3 className="font-semibold text-gray-900 dark:text-white capitalize">

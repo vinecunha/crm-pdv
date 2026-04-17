@@ -4,6 +4,7 @@ import { ClipboardList, Plus, RotateCcw, Keyboard } from '../lib/icons'
 import Button from '../components/ui/Button'
 import FeedbackMessage from '../components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
+import PageHeader from '../components/ui/PageHeader'
 import { supabase } from '../lib/supabase'
 import useSystemLogs from '../hooks/useSystemLogs'
 import { useAuth } from '../contexts/AuthContext.jsx'
@@ -620,13 +621,56 @@ const StockCount = () => {
 
   const currentFilteredIndex = filteredItems.findIndex(item => item.id === selectedItem?.id)
 
+  // Configuração das ações do header
+  const headerActions = viewMode === 'sessions' ? [
+    {
+      label: 'Atalhos',
+      icon: Keyboard,
+      onClick: () => setShowShortcutsHelp(true),
+      variant: 'outline',
+      shortcut: { key: 'F1', description: 'Atalhos' }
+    },
+    {
+      label: 'Novo Balanço',
+      icon: Plus,
+      onClick: () => setIsNewSessionModalOpen(true),
+      variant: 'primary',
+      shortcut: { key: 'n', ctrl: true, description: 'Novo' },
+      disabled: isMutating
+    }
+  ] : [
+    {
+      label: 'Atalhos',
+      icon: Keyboard,
+      onClick: () => setShowShortcutsHelp(true),
+      variant: 'outline',
+      shortcut: { key: 'F1', description: 'Atalhos' }
+    },
+    {
+      label: 'Adicionar',
+      icon: Plus,
+      onClick: () => setIsProductSearchModalOpen(true),
+      variant: 'outline',
+      shortcut: { key: 'a', ctrl: true, description: 'Adicionar' },
+      disabled: isMutating
+    },
+    {
+      label: 'Voltar',
+      icon: RotateCcw,
+      onClick: handleBack,
+      variant: 'outline',
+      shortcut: { key: 'b', alt: true, description: 'Voltar' },
+      disabled: isMutating
+    }
+  ]
+
   if (isLoading) {
     return <DataLoadingSkeleton type="cards" rows={6} cardsPerRow={3} />
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-black">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {feedback.show && (
           <div className="mb-4">
             <FeedbackMessage
@@ -644,66 +688,15 @@ const StockCount = () => {
           />
         )}
 
-        <div className="mb-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <ClipboardList className="text-blue-600 dark:text-blue-400" />
-                Balanço de Estoque
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
-                {viewMode === 'sessions'
-                  ? 'Gerencie e realize balanços periódicos do estoque'
-                  : `Contagem: ${activeSession?.name}`
-                }
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowShortcutsHelp(true)}
-                shortcut={{ key: 'F1', description: 'Atalhos' }}
-                icon={Keyboard}
-              >
-                Atalhos (F1)
-              </Button>
-
-              {viewMode === 'sessions' ? (
-                <Button 
-                  onClick={() => setIsNewSessionModalOpen(true)} 
-                  icon={Plus}
-                  shortcut={{ key: 'n', ctrl: true, description: 'Novo' }}
-                  disabled={isMutating}
-                >
-                  Novo Balanço
-                </Button>
-              ) : (
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsProductSearchModalOpen(true)}
-                    icon={Plus}
-                    shortcut={{ key: 'a', ctrl: true, description: 'Adicionar' }}
-                    disabled={isMutating}
-                  >
-                    Adicionar Produto
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleBack}
-                    shortcut={{ key: 'b', alt: true, description: 'Voltar' }}
-                    disabled={isMutating}
-                  >
-                    <RotateCcw size={16} className="mr-1" />
-                    Voltar
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          title="Balanço de Estoque"
+          description={viewMode === 'sessions'
+            ? 'Gerencie e realize balanços periódicos do estoque'
+            : `Contagem: ${activeSession?.name}`
+          }
+          icon={ClipboardList}
+          actions={headerActions}
+        />
 
         {viewMode === 'sessions' ? (
           <StockCountSessionsView

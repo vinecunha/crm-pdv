@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 import { 
   Users, ShoppingCart, Package, TrendingUp, 
   ChevronRight, Plus, UserPlus, CreditCard,
-  DollarSign, AlertCircle
+  DollarSign, AlertCircle, LayoutDashboard
 } from '../lib/icons'
 import { formatCurrency, formatNumber, formatDate } from '../utils/formatters'
 import SectionErrorBoundary from '../components/SectionErrorBoundary'
@@ -15,6 +15,7 @@ import FeedbackMessage from '../components/ui/FeedbackMessage'
 import Button from '../components/ui/Button'
 import SummaryCard from '../components/reports/SummaryCard'
 import Badge from '../components/Badge'
+import PageHeader from '../components/ui/PageHeader'
 import { Line } from 'react-chartjs-2'
 import '../lib/chartConfig'
 
@@ -217,7 +218,7 @@ const Dashboard = () => {
       cancelled: { label: 'Cancelada', variant: 'danger' }
     }
     const { label, variant } = config[status] || config.pending
-    return <Badge variant={variant}>{label}</Badge>
+    return <Badge variant={variant} size="sm">{label}</Badge>
   }
 
   const getPaymentMethodLabel = (method) => {
@@ -253,13 +254,23 @@ const Dashboard = () => {
     }
   }
 
+  // Configuração das ações do header
+  const headerActions = quickActions.map(action => ({
+    label: action.label,
+    icon: action.icon,
+    onClick: undefined,
+    variant: 'outline',
+    asLink: true,
+    to: action.path
+  }))
+
   if (isLoading) {
     return <DataLoadingSkeleton type="cards" rows={4} />
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center px-4">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao carregar dashboard</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">{error.message}</p>
@@ -274,30 +285,26 @@ const Dashboard = () => {
   const { stats, recentSales, topProducts, chartData } = dashboardData
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Visão Geral</h1>
-            </div>
-            
-            <div className="flex gap-2">
-              {quickActions.map((action, index) => {
-                const Icon = action.icon
-                return (
-                  <Link key={index} to={action.path}>
-                    <Button size="sm" variant="outline" icon={Icon}>
-                      {action.label}
-                    </Button>
-                  </Link>
-                )
-              })}
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-black">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <PageHeader
+          title="Visão Geral"
+          description="Acompanhe os principais indicadores do seu negócio"
+          icon={LayoutDashboard}
+          actions={headerActions.map(action => ({
+            ...action,
+            render: () => (
+              <Link key={action.to} to={action.to}>
+                <Button size="sm" variant="outline" icon={action.icon}>
+                  <span className="hidden xs:inline">{action.label}</span>
+                </Button>
+              </Link>
+            )
+          }))}
+        />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {/* Cards de estatísticas - Linha 1 */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
           <SectionErrorBoundary title="Erro nas vendas de hoje">
             <SummaryCard
               title="Vendas Hoje"
@@ -341,7 +348,8 @@ const Dashboard = () => {
           </SectionErrorBoundary>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {/* Cards de estatísticas - Linha 2 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
           <SectionErrorBoundary title="Erro nos produtos">
             <SummaryCard
               title="Produtos Ativos"
@@ -371,38 +379,40 @@ const Dashboard = () => {
           </SectionErrorBoundary>
         </div>
 
+        {/* Gráfico */}
         <SectionErrorBoundary title="Erro no gráfico de vendas">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Vendas dos Últimos 7 Dias</h2>
-            <div className="h-64">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-6 mb-4 sm:mb-6">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">Vendas dos Últimos 7 Dias</h2>
+            <div className="h-48 sm:h-64">
               <Line data={chartData} options={chartOptions} />
             </div>
           </div>
         </SectionErrorBoundary>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Últimas Vendas e Produtos Mais Vendidos */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <SectionErrorBoundary title="Erro nas últimas vendas">
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Últimas Vendas</h2>
-                <Link to="/sales-list" className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-6">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Últimas Vendas</h2>
+                <Link to="/sales-list" className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1">
                   Ver todas <ChevronRight size={16} />
                 </Link>
               </div>
               
               {recentSales.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  <ShoppingCart className="h-12 w-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-                  <p>Nenhuma venda registrada ainda</p>
+                <div className="text-center py-6 sm:py-8 text-gray-500 dark:text-gray-400">
+                  <ShoppingCart className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-2 sm:mb-3 text-gray-300 dark:text-gray-600" />
+                  <p className="text-sm">Nenhuma venda registrada ainda</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {recentSales.map((sale) => (
-                    <div key={sale.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                    <div key={sale.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-2 sm:p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors gap-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <p className="font-medium text-gray-900 dark:text-white">#{sale.sale_number}</p>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">{sale.customer}</p>
+                          <p className="font-medium text-gray-900 dark:text-white text-sm">#{sale.sale_number}</p>
+                          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">{sale.customer}</p>
                         </div>
                         <div className="flex items-center gap-2 mt-1">
                           <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -410,8 +420,8 @@ const Dashboard = () => {
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-gray-900 dark:text-white">{formatCurrency(sale.amount)}</p>
+                      <div className="flex items-center justify-between sm:justify-end sm:text-right gap-2">
+                        <p className="font-semibold text-gray-900 dark:text-white text-sm">{formatCurrency(sale.amount)}</p>
                         {getStatusBadge(sale.status)}
                       </div>
                     </div>
@@ -422,25 +432,25 @@ const Dashboard = () => {
           </SectionErrorBoundary>
 
           <SectionErrorBoundary title="Erro nos produtos mais vendidos">
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Produtos Mais Vendidos</h2>
-                <Link to="/reports" className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-6">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Produtos Mais Vendidos</h2>
+                <Link to="/reports" className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1">
                   Relatórios <ChevronRight size={16} />
                 </Link>
               </div>
               
               {topProducts.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  <Package className="h-12 w-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-                  <p>Nenhuma venda registrada ainda</p>
+                <div className="text-center py-6 sm:py-8 text-gray-500 dark:text-gray-400">
+                  <Package className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-2 sm:mb-3 text-gray-300 dark:text-gray-600" />
+                  <p className="text-sm">Nenhuma venda registrada ainda</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {topProducts.map((product, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                    <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                           index === 0 ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' :
                           index === 1 ? 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300' :
                           index === 2 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' :
@@ -448,10 +458,10 @@ const Dashboard = () => {
                         }`}>
                           {index + 1}
                         </div>
-                        <span className="font-medium text-gray-900 dark:text-white">{product.name}</span>
+                        <span className="font-medium text-gray-900 dark:text-white text-sm truncate max-w-[120px] sm:max-w-none">{product.name}</span>
                       </div>
-                      <div className="text-right">
-                        <span className="font-semibold text-gray-900 dark:text-white">{formatNumber(product.quantity)}</span>
+                      <div className="text-right flex-shrink-0">
+                        <span className="font-semibold text-gray-900 dark:text-white text-sm">{formatNumber(product.quantity)}</span>
                         <p className="text-xs text-gray-500 dark:text-gray-400">unidades</p>
                       </div>
                     </div>

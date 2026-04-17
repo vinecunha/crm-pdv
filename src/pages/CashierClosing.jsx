@@ -11,6 +11,7 @@ import FeedbackMessage from '../components/ui/FeedbackMessage'
 import Button from '../components/ui/Button'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
 import DataTable from '../components/ui/DataTable'
+import PageHeader from '../components/ui/PageHeader'
 import { formatCurrency, formatNumber, formatDate, formatDateTime } from '../utils/formatters'
 import useSystemLogs from '../hooks/useSystemLogs'
 import useLogger from '../hooks/useLogger'
@@ -33,15 +34,15 @@ const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) =
   }
 
   return (
-    <div className={`${variants[variant]} rounded-xl border p-5 transition-all hover:shadow-md dark:hover:shadow-gray-900/50`}>
+    <div className={`${variants[variant]} rounded-xl border p-4 sm:p-5 transition-all hover:shadow-md dark:hover:shadow-gray-900/50`}>
       <div className="flex items-start justify-between">
         <div className="space-y-1">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{label}</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+          <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">{label}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
           {sublabel && <p className="text-xs text-gray-400 dark:text-gray-500">{sublabel}</p>}
         </div>
-        <div className="p-2.5 rounded-lg bg-white/50 dark:bg-gray-950/50">
-          <Icon size={22} className={iconColors[variant]} />
+        <div className="p-2 sm:p-2.5 rounded-lg bg-white/50 dark:bg-black/50">
+          <Icon size={20} className={iconColors[variant]} />
         </div>
       </div>
     </div>
@@ -283,26 +284,26 @@ const CashierClosing = () => {
       key: 'closing_date',
       header: 'Data',
       sortable: true,
-      render: (row) => <span className="dark:text-white">{formatDate(row.closing_date)}</span>
+      render: (row) => <span className="dark:text-white text-sm">{formatDate(row.closing_date)}</span>
     },
     {
       key: 'expected_total',
       header: 'Esperado',
       sortable: true,
-      render: (row) => <span className="dark:text-white">{formatCurrency(row.expected_total)}</span>
+      render: (row) => <span className="dark:text-white text-sm">{formatCurrency(row.expected_total)}</span>
     },
     {
       key: 'declared_total',
       header: 'Declarado',
       sortable: true,
-      render: (row) => <span className="dark:text-white">{formatCurrency(row.declared_total)}</span>
+      render: (row) => <span className="dark:text-white text-sm">{formatCurrency(row.declared_total)}</span>
     },
     {
       key: 'difference',
       header: 'Diferença',
       sortable: true,
       render: (row) => (
-        <span className={`font-medium ${getDifferenceColor(row.difference)}`}>
+        <span className={`font-medium text-sm ${getDifferenceColor(row.difference)}`}>
           {formatCurrency(row.difference)}
         </span>
       )
@@ -310,12 +311,12 @@ const CashierClosing = () => {
     {
       key: 'closed_by',
       header: 'Operador',
-      render: (row) => <span className="dark:text-gray-300">{users.find(u => u.id === row.closed_by)?.full_name || '-'}</span>
+      render: (row) => <span className="dark:text-gray-300 text-sm">{users.find(u => u.id === row.closed_by)?.full_name || '-'}</span>
     },
     {
       key: 'closed_at',
       header: 'Horário',
-      render: (row) => <span className="dark:text-gray-300">{formatDateTime(row.closed_at)}</span>
+      render: (row) => <span className="dark:text-gray-300 text-sm">{formatDateTime(row.closed_at)}</span>
     }
   ]
 
@@ -335,9 +336,33 @@ const CashierClosing = () => {
   const expectedTotal = resumo.total_liquido || 0
   const difference = totalDeclarado - expectedTotal
 
+  // Configuração das ações do header
+  const headerActions = [
+    {
+      label: 'Histórico',
+      icon: FileText,
+      onClick: () => setShowHistoryModal(true),
+      variant: 'outline'
+    },
+    {
+      label: 'Atualizar',
+      icon: RefreshCw,
+      onClick: handleRefresh,
+      loading: isFetchingSummary,
+      variant: 'outline'
+    },
+    {
+      label: 'Fechar Caixa',
+      icon: Calculator,
+      onClick: openClosingModal,
+      variant: 'primary',
+      disabled: !summary || closingMutation.isPending
+    }
+  ]
+
   if (summaryError) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center px-4">
         <div className="text-center">
           <AlertCircle size={48} className="text-red-500 dark:text-red-400 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao carregar dados</h2>
@@ -353,64 +378,50 @@ const CashierClosing = () => {
   if (isLoadingSummary && !summary) return <DataLoadingSkeleton />
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-black">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {feedback.show && (
           <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />
         )}
 
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Fechamento de Caixa</h1>
-              <div className="flex items-center gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
-                <Calendar size={14} />
-                <span>{formatDate(dateRange.start)} - {formatDate(dateRange.end)}</span>
+        <PageHeader
+          title="Fechamento de Caixa"
+          description={
+            <div className="flex items-center gap-2">
+              <Calendar size={14} />
+              <span>{formatDate(dateRange.start)} - {formatDate(dateRange.end)}</span>
+            </div>
+          }
+          icon={Calculator}
+          actions={headerActions}
+        />
+
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-3 sm:p-4 mb-4 sm:mb-6">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Calendar size={16} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
+              <div className="flex items-center gap-1 flex-1 sm:flex-initial">
+                <input
+                  type="date"
+                  value={dateRange.start}
+                  onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                  className="w-full sm:w-auto px-2 sm:px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-xs sm:text-sm"
+                />
+                <span className="text-gray-400 dark:text-gray-500">—</span>
+                <input
+                  type="date"
+                  value={dateRange.end}
+                  onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                  className="w-full sm:w-auto px-2 sm:px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-xs sm:text-sm"
+                />
               </div>
             </div>
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setShowHistoryModal(true)} icon={FileText}>
-                Histórico
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={handleRefresh} 
-                loading={isFetchingSummary} 
-                icon={RefreshCw}
-              >
-                Atualizar
-              </Button>
-              <Button onClick={openClosingModal} icon={Calculator} disabled={!summary || closingMutation.isPending}>
-                Fechar Caixa
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Calendar size={16} className="text-gray-400 dark:text-gray-500" />
-              <input
-                type="date"
-                value={dateRange.start}
-                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm"
-              />
-              <span className="text-gray-400 dark:text-gray-500">—</span>
-              <input
-                type="date"
-                value={dateRange.end}
-                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Users size={16} className="text-gray-400 dark:text-gray-500" />
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Users size={16} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
               <select
                 value={selectedUser}
                 onChange={(e) => setSelectedUser(e.target.value)}
-                className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm"
+                className="w-full sm:w-auto px-2 sm:px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-xs sm:text-sm"
               >
                 <option value="all">Todos os operadores</option>
                 {users.map(user => (
@@ -419,9 +430,9 @@ const CashierClosing = () => {
               </select>
             </div>
             {isFetchingSummary && (
-              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                 <RefreshCw size={14} className="animate-spin" />
-                Atualizando...
+                <span className="hidden sm:inline">Atualizando...</span>
               </div>
             )}
           </div>
@@ -429,7 +440,7 @@ const CashierClosing = () => {
 
         {summary && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
               <StatCard
                 label="Vendas Totais"
                 value={formatCurrency(resumo.total_vendas || 0)}
@@ -460,25 +471,25 @@ const CashierClosing = () => {
               />
             </div>
 
-            <div className="mt-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center justify-between">
+            <div className="mt-4 sm:mt-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Total do Período</p>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">{formatCurrency(resumo.total_liquido || 0)}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{formatCurrency(resumo.total_liquido || 0)}</p>
                 </div>
-                <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2 sm:gap-4 text-sm">
                   <div className="text-right">
-                    <p className="text-gray-500 dark:text-gray-400">Vendas</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs">Vendas</p>
                     <p className="font-medium dark:text-white">{formatNumber(resumo.total_vendas || 0)}</p>
                   </div>
-                  <ChevronRight size={20} className="text-gray-300 dark:text-gray-600" />
+                  <ChevronRight size={16} className="text-gray-300 dark:text-gray-600" />
                   <div className="text-right">
-                    <p className="text-gray-500 dark:text-gray-400">Descontos</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs">Descontos</p>
                     <p className="font-medium text-orange-600 dark:text-orange-400">-{formatCurrency(resumo.total_descontos || 0)}</p>
                   </div>
-                  <ChevronRight size={20} className="text-gray-300 dark:text-gray-600" />
+                  <ChevronRight size={16} className="text-gray-300 dark:text-gray-600" />
                   <div className="text-right">
-                    <p className="text-gray-500 dark:text-gray-400">Cancelamentos</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs">Cancelamentos</p>
                     <p className="font-medium text-red-500 dark:text-red-400">{formatCurrency(resumo.total_cancelamentos || 0)}</p>
                   </div>
                 </div>
@@ -488,26 +499,26 @@ const CashierClosing = () => {
         )}
 
         {showClosingModal && summary && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
             <div className="absolute inset-0 bg-black/30 dark:bg-black/50" onClick={() => !closingMutation.isPending && setShowClosingModal(false)} />
             <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+              <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
                 <div>
-                  <h3 className="text-lg font-semibold dark:text-white">Fechamento de Caixa</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{formatDate(dateRange.start)} - {formatDate(dateRange.end)}</p>
+                  <h3 className="text-base sm:text-lg font-semibold dark:text-white">Fechamento de Caixa</h3>
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{formatDate(dateRange.start)} - {formatDate(dateRange.end)}</p>
                 </div>
                 <button onClick={() => !closingMutation.isPending && setShowClosingModal(false)} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
                   <X size={20} />
                 </button>
               </div>
               
-              <div className="p-6 overflow-y-auto max-h-[60vh] space-y-4">
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-xl p-5 text-white shadow-lg">
+              <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh] space-y-4">
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-xl p-4 sm:p-5 text-white shadow-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <DollarSign size={20} />
                     <p className="text-sm font-medium opacity-90">VALOR ESPERADO PELO SISTEMA</p>
                   </div>
-                  <p className="text-4xl font-bold">{formatCurrency(expectedTotal)}</p>
+                  <p className="text-3xl sm:text-4xl font-bold">{formatCurrency(expectedTotal)}</p>
                   <p className="text-xs opacity-75 mt-1">
                     Baseado nas vendas concluídas no período
                   </p>
@@ -519,7 +530,7 @@ const CashierClosing = () => {
                     {paymentMethods.map(({ key, label, icon, color, bgColor }) => {
                       const sistemaValue = summary?.meios_pagamento?.find(m => m.payment_method === key)?.total || 0
                       return (
-                        <div key={key} className={`flex items-center justify-between p-3 ${bgColor} rounded-lg border dark:border-gray-700`}>
+                        <div key={key} className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 ${bgColor} rounded-lg border dark:border-gray-700 gap-2`}>
                           <div className="flex items-center gap-3">
                             <span className="text-xl">{icon}</span>
                             <div>
@@ -533,7 +544,7 @@ const CashierClosing = () => {
                             min="0"
                             value={declaredValues[key]}
                             onChange={(e) => setDeclaredValues({ ...declaredValues, [key]: parseFloat(e.target.value) || 0 })}
-                            className="w-40 px-3 py-2 text-right border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                            className="w-full sm:w-40 px-3 py-2 text-right border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                             disabled={closingMutation.isPending}
                           />
                         </div>
@@ -551,11 +562,11 @@ const CashierClosing = () => {
                 }`}>
                   <div className="flex justify-between items-center">
                     <span className="font-medium dark:text-white">Total Declarado</span>
-                    <span className="text-2xl font-bold dark:text-white">{formatCurrency(totalDeclarado)}</span>
+                    <span className="text-xl sm:text-2xl font-bold dark:text-white">{formatCurrency(totalDeclarado)}</span>
                   </div>
                   <div className="flex justify-between items-center mt-3 pt-3 border-t dark:border-gray-600">
                     <span className="font-medium dark:text-white">Diferença</span>
-                    <span className={`text-2xl font-bold ${getDifferenceColor(difference)}`}>
+                    <span className={`text-xl sm:text-2xl font-bold ${getDifferenceColor(difference)}`}>
                       {formatCurrency(difference)}
                     </span>
                   </div>
@@ -573,18 +584,18 @@ const CashierClosing = () => {
                     value={declaredValues.notes}
                     onChange={(e) => setDeclaredValues({ ...declaredValues, notes: e.target.value })}
                     rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg placeholder-gray-400 dark:placeholder-gray-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg placeholder-gray-400 dark:placeholder-gray-500 text-sm"
                     placeholder="Observações sobre este fechamento..."
                     disabled={closingMutation.isPending}
                   />
                 </div>
               </div>
 
-              <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setShowClosingModal(false)} disabled={closingMutation.isPending}>
+              <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-2 sm:gap-3">
+                <Button variant="outline" onClick={() => setShowClosingModal(false)} disabled={closingMutation.isPending} size="sm" className="sm:size-md">
                   Cancelar
                 </Button>
-                <Button onClick={handleClosing} loading={closingMutation.isPending} icon={Save}>
+                <Button onClick={handleClosing} loading={closingMutation.isPending} icon={Save} size="sm" className="sm:size-md">
                   Confirmar Fechamento
                 </Button>
               </div>
@@ -593,14 +604,14 @@ const CashierClosing = () => {
         )}
 
         {showHistoryModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
             <div className="absolute inset-0 bg-black/30 dark:bg-black/50" onClick={() => setShowHistoryModal(false)} />
             <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-6xl max-h-[85vh] overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-                <h3 className="text-lg font-semibold dark:text-white">Histórico de Fechamentos</h3>
+              <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                <h3 className="text-base sm:text-lg font-semibold dark:text-white">Histórico de Fechamentos</h3>
                 <button onClick={() => setShowHistoryModal(false)} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">✕</button>
               </div>
-              <div className="p-4 overflow-y-auto">
+              <div className="p-3 sm:p-4 overflow-y-auto">
                 <DataTable
                   columns={historyColumns}
                   data={closingHistory}
@@ -614,8 +625,8 @@ const CashierClosing = () => {
                   showTotalItems
                 />
               </div>
-              <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end">
-                <Button variant="outline" onClick={() => setShowHistoryModal(false)}>Fechar</Button>
+              <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end">
+                <Button variant="outline" onClick={() => setShowHistoryModal(false)} size="sm" className="sm:size-md">Fechar</Button>
               </div>
             </div>
           </div>
@@ -623,7 +634,7 @@ const CashierClosing = () => {
 
         {showDetailsModal && selectedClosing && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Modal de detalhes - conteúdo mantido conforme original */}
+            {/* Modal de detalhes */}
           </div>
         )}
       </div>

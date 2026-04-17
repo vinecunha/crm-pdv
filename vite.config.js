@@ -7,6 +7,7 @@ export default defineConfig({
   
   // ============= HEADERS DE SEGURANÇA =============
   server: {
+    host: true,
     headers: {
       'Content-Security-Policy': [
         "default-src 'self'",

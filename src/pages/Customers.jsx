@@ -1,11 +1,12 @@
 // src/pages/Customers.jsx
 import React, { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { UserPlus, RefreshCw } from '../lib/icons'
+import { UserPlus, RefreshCw, Users as UsersIcon } from '../lib/icons'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useReactQuery } from '../hooks/useReactQuery'
 import useSystemLogs from '../hooks/useSystemLogs'
+import useMediaQuery from '../hooks/useMediaQuery'
 import { supabase } from '../lib/supabase'
 
 import Button from '../components/ui/Button'
@@ -16,6 +17,9 @@ import DataEmptyState from '../components/ui/DataEmptyState'
 import ConfirmModal from '../components/ui/ConfirmModal'
 import CampaignModal from '../components/customers/CampaignModal'
 import RFVLegend from '../components/customers/RFVLegend'
+import PageHeader from '../components/ui/PageHeader'
+import DataCards from '../components/ui/DataCards' 
+import CustomerCard from '../components/customers/CustomerCard'
 
 import CustomerForm from '../components/customers/CustomerForm'
 import CustomerDeleteModal from '../components/customers/CustomerDeleteModal'
@@ -29,6 +33,10 @@ const Customers = () => {
   const { logCreate, logUpdate, logDelete, logError, logAction } = useSystemLogs()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+
+  const isMobile = useMediaQuery('(max-width: 768px)')
+  const [viewMode, setViewMode] = useState('auto')
+
   const { invalidateQueries } = useReactQuery()
   
   const [searchTerm, setSearchTerm] = useState('')
@@ -46,6 +54,10 @@ const Customers = () => {
   const [showCampaignModal, setShowCampaignModal] = useState(false)
   const [showBirthdayConfirmModal, setShowBirthdayConfirmModal] = useState(false)
   const [campaignLoading, setCampaignLoading] = useState(false)
+
+  const effectiveViewMode = viewMode === 'auto' 
+    ? (isMobile ? 'cards' : 'table')
+    : viewMode
 
   const { 
     data: customers = [], 
@@ -143,6 +155,16 @@ const Customers = () => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
   }
+
+  const renderCustomerCard = (customer) => (
+    <CustomerCard
+      customer={customer}
+      onEdit={handleOpenModal}
+      onDelete={(c) => { setSelectedCustomer(c); setIsDeleteModalOpen(true) }}
+      onCommunicate={(c) => navigate(`/customers/${c.id}/communication`)}
+      onSendCampaign={handleSendCampaign}
+    />
+  )
 
   const validateForm = () => {
     const errors = {}
@@ -374,9 +396,20 @@ const Customers = () => {
 
   const isMutating = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending
 
+  // Configuração das ações do header
+  const headerActions = [
+    {
+      label: 'Novo Cliente',
+      icon: UserPlus,
+      onClick: () => handleOpenModal(),
+      variant: 'primary',
+      disabled: isMutating
+    }
+  ]
+
   if (customersError) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center px-4">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao carregar clientes</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">{customersError.message}</p>
@@ -389,29 +422,8 @@ const Customers = () => {
   if (isLoading) return <DataLoadingSkeleton />
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Clientes</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Gerencie seus clientes cadastrados ({customers.length})
-              {isFetching && (
-                <span className="ml-2 inline-flex items-center text-xs text-gray-400 dark:text-gray-500">
-                  <RefreshCw size={12} className="animate-spin mr-1" />
-                  Atualizando...
-                </span>
-              )}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <RFVLegend />
-            <Button onClick={() => handleOpenModal()} icon={UserPlus} disabled={isMutating}>
-              Novo Cliente
-            </Button>
-          </div>
-        </div>
-
+    <div className="min-h-screen bg-gray-50 dark:bg-black">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {feedback.show && (
           <FeedbackMessage 
             type={feedback.type} 
@@ -420,7 +432,25 @@ const Customers = () => {
           />
         )}
 
-        <div className="mb-6">
+        <PageHeader
+          title="Clientes"
+          description={
+            <>
+              Gerencie seus clientes cadastrados ({customers.length})
+              {isFetching && (
+                <span className="ml-2 inline-flex items-center text-xs text-gray-400 dark:text-gray-500">
+                  <RefreshCw size={12} className="animate-spin mr-1" />
+                  Atualizando...
+                </span>
+              )}
+            </>
+          }
+          icon={UsersIcon}
+          actions={headerActions}
+          extraContent={<RFVLegend />}
+        />
+
+        <div className="mb-4 sm:mb-6">
           <CustomerFilters 
             searchTerm={searchTerm} 
             setSearchTerm={setSearchTerm} 
@@ -432,7 +462,16 @@ const Customers = () => {
           <DataEmptyState 
             title="Nenhum cliente encontrado" 
             description={searchTerm ? "Tente buscar por outro termo" : "Comece cadastrando seu primeiro cliente"} 
-            action={<Button onClick={() => handleOpenModal()} disabled={isMutating}>Cadastrar Cliente</Button>} 
+            action={<Button onClick={() => handleOpenModal()} disabled={isMutating} size="sm">Cadastrar Cliente</Button>} 
+          />
+        ) : effectiveViewMode === 'cards' ? (
+          <DataCards
+            data={filteredCustomers}
+            renderCard={renderCustomerCard}
+            keyExtractor={(customer) => customer.id}
+            columns={isMobile ? 1 : 2}
+            gap={4}
+            emptyMessage="Nenhum cliente encontrado"
           />
         ) : (
           <CustomerTable 
@@ -482,8 +521,8 @@ const Customers = () => {
           title="🎂 Campanha de Aniversário"
           message={
             <div className="space-y-2">
-              <p className="dark:text-gray-300">Deseja enviar um cupom de <strong>10% OFF</strong> para <strong>{selectedCustomer?.name}</strong>?</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="dark:text-gray-300 text-sm">Deseja enviar um cupom de <strong>10% OFF</strong> para <strong>{selectedCustomer?.name}</strong>?</p>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                 O cliente receberá o cupom <strong>ANIVERSARIO</strong> válido por 30 dias.
               </p>
             </div>

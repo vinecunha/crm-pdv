@@ -10,6 +10,7 @@ import { sanitizeObject } from '../utils/sanitize'
 import Button from '../components/ui/Button'
 import FeedbackMessage from '../components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
+import PageHeader from '../components/ui/PageHeader'
 import AvatarUploader from '../components/profile/AvatarUploader'
 import ProfileInfoForm from '../components/profile/ProfileInfoForm'
 import SecuritySection from '../components/profile/SecuritySection'
@@ -25,38 +26,6 @@ const fetchProfile = async (userId) => {
 
   if (error) throw error
   return data
-}
-
-const updateProfile = async ({ userId, profileData }) => {
-  const safeData = sanitizeObject(profileData) 
-  
-  const updateData = {
-    display_name: safeData.display_name || null,
-    phone: safeData.phone || null,
-    avatar_url: safeData.avatar_url || null,
-    address: safeData.address || null,
-    city: safeData.city || null,
-    state: safeData.state || null,
-    zip_code: safeData.zip_code || null,
-    birth_date: safeData.birth_date || null,
-    document: safeData.document || null,
-    updated_at: new Date().toISOString()
-  }
-
-  const { error } = await supabase
-    .from('profiles')
-    .update(updateData)
-    .eq('id', userId)
-
-  if (error) throw error
-
-  const { data: freshProfile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single()
-
-  return freshProfile
 }
 
 const Profile = () => {
@@ -96,7 +65,6 @@ const Profile = () => {
     staleTime: 5 * 60 * 1000,
   })
 
-  
   const [preferences, setPreferences] = useState({
     dark_mode: false,
     theme_mode: 'manual',
@@ -106,7 +74,6 @@ const Profile = () => {
 
   const updateMutation = useMutation({
     mutationFn: async ({ userId, profileData, preferences }) => {
-      // 1. Atualizar dados básicos do perfil
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -125,7 +92,6 @@ const Profile = () => {
 
       if (profileError) throw profileError
 
-      // 2. Atualizar preferências via RPC (se fornecidas)
       if (preferences) {
         const { error: prefsError } = await supabase.rpc('update_user_preferences', {
           p_user_id: userId,
@@ -135,9 +101,16 @@ const Profile = () => {
         })
 
         if (prefsError) throw prefsError
+        
+        // Atualizar theme_mode separadamente
+        if (preferences.theme_mode) {
+          await supabase
+            .from('profiles')
+            .update({ theme_mode: preferences.theme_mode })
+            .eq('id', userId)
+        }
       }
 
-      // 3. Buscar perfil atualizado com todas as informações
       const { data: freshProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
@@ -202,8 +175,8 @@ const Profile = () => {
   const handleSavePreferences = () => {
     updateMutation.mutate({
       userId: user?.id,
-      profileData: formData,  // Passar formData completo
-      preferences: {           // Passar preferences separado
+      profileData: formData,
+      preferences: {
         dark_mode: preferences.dark_mode,
         theme_mode: preferences.theme_mode,
         sidebar_collapsed: preferences.sidebar_collapsed,
@@ -233,7 +206,7 @@ const Profile = () => {
     updateMutation.mutate({
       userId: user?.id,
       profileData: formData,
-      preferences: preferences  // ← incluir preferências
+      preferences: preferences
     })
   }
 
@@ -280,10 +253,10 @@ const Profile = () => {
   }
 
   const tabs = [
-  { id: 'profile', label: 'Perfil', icon: User },
-  { id: 'preferences', label: 'Preferências', icon: Settings },
-  { id: 'security', label: 'Segurança', icon: Shield }
-]
+    { id: 'profile', label: 'Perfil', icon: User },
+    { id: 'preferences', label: 'Preferências', icon: Settings },
+    { id: 'security', label: 'Segurança', icon: Shield }
+  ]
 
   const roleColors = {
     admin: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300',
@@ -301,7 +274,7 @@ const Profile = () => {
 
   if (profileError) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center px-4">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao carregar perfil</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">{profileError.message}</p>
@@ -316,18 +289,8 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <User className="text-blue-600 dark:text-blue-400" />
-            Meu Perfil
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Gerencie suas informações pessoais e configurações de conta
-          </p>
-        </div>
-
+    <div className="min-h-screen bg-gray-50 dark:bg-black">
+      <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {feedback.show && (
           <div className="mb-4">
             <FeedbackMessage
@@ -338,9 +301,16 @@ const Profile = () => {
           </div>
         )}
 
-        <div className="flex flex-col lg:flex-row gap-6">
+        <PageHeader
+          title="Meu Perfil"
+          description="Gerencie suas informações pessoais e configurações de conta"
+          icon={User}
+        />
+
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
+          {/* Sidebar */}
           <div className="lg:w-72 flex-shrink-0">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center">
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 text-center">
               <AvatarUploader
                 user={user}
                 avatarUrl={formData.avatar_url}
@@ -349,30 +319,30 @@ const Profile = () => {
                 onAvatarUpdate={handleAvatarUpdate}
               />
 
-              <h2 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
+              <h2 className="mt-3 sm:mt-4 text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
                 {displayNameForAvatar}
               </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{user?.email}</p>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 break-all">{user?.email}</p>
               
               <div className="mt-2">
                 <span className={`
                   inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
                   ${roleColors[profile?.role] || 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300'}
                 `}>
-                  <Shield size={12} className="mr-1" />
+                  <Shield size={10} className="mr-1" />
                   {roleNames[profile?.role] || 'Usuário'}
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+              <div className="grid grid-cols-2 gap-2 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100 dark:border-gray-700">
                 <div className="text-center">
-                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <p className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
                     {profileData?.login_count || 0}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Logins</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <p className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
                     {profileData?.last_login 
                       ? new Date(profileData.last_login).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
                       : '-'}
@@ -382,8 +352,9 @@ const Profile = () => {
               </div>
             </div>
 
-            <div className="mt-4 bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-2">
-              <nav className="space-y-1">
+            {/* Tabs Navigation */}
+            <div className="mt-3 sm:mt-4 bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-1.5 sm:p-2">
+              <nav className="space-y-0.5 sm:space-y-1">
                 {tabs.map((tab) => {
                   const Icon = tab.icon
                   return (
@@ -391,15 +362,15 @@ const Profile = () => {
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       className={`
-                        w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all
+                        w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg transition-all
                         ${activeTab === tab.id 
                           ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium' 
                           : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                         }
                       `}
                     >
-                      <Icon size={18} />
-                      <span className="text-sm">{tab.label}</span>
+                      <Icon size={16} className="sm:size-18" />
+                      <span className="text-xs sm:text-sm">{tab.label}</span>
                     </button>
                   )
                 })}
@@ -407,11 +378,12 @@ const Profile = () => {
             </div>
           </div>
 
+          {/* Main Content */}
           <div className="flex-1">
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
               {activeTab === 'profile' && (
-                <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+                <div className="p-4 sm:p-6">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6">
                     Informações Pessoais
                   </h3>
 
@@ -423,11 +395,13 @@ const Profile = () => {
                   />
 
                   {hasChanges && (
-                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t dark:border-gray-700">
+                    <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 mt-4 sm:mt-6 pt-4 border-t dark:border-gray-700">
                       <Button 
                         variant="outline" 
                         onClick={handleCancelChanges}
                         disabled={updateMutation.isPending}
+                        className="order-2 sm:order-1"
+                        size="sm"
                       >
                         <RotateCcw size={16} className="mr-1" />
                         Cancelar
@@ -435,6 +409,8 @@ const Profile = () => {
                       <Button 
                         onClick={handleSaveProfile} 
                         loading={updateMutation.isPending}
+                        className="order-1 sm:order-2"
+                        size="sm"
                       >
                         <Save size={16} className="mr-1" />
                         Salvar Alterações
@@ -445,8 +421,8 @@ const Profile = () => {
               )}
 
               {activeTab === 'security' && (
-                <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+                <div className="p-4 sm:p-6">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6">
                     Segurança da Conta
                   </h3>
 

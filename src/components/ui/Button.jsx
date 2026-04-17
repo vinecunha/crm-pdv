@@ -94,7 +94,7 @@ const Button = ({
       )}
       
       {shortcut && showShortcut && shortcutPosition === 'corner' && (
-        <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-mono bg-gray-800 text-white rounded-full dark:bg-gray-950">
+        <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-mono bg-gray-800 text-white rounded-full dark:bg-black">
           {formatShortcutCompact(shortcut)}
         </span>
       )}

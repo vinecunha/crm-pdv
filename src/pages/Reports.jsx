@@ -10,6 +10,7 @@ import Button from '../components/ui/Button'
 import FeedbackMessage from '../components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
 import useSystemLogs from '../hooks/useSystemLogs'
+import PageHeader from '../components/ui/PageHeader'
 import TabButton from '../components/reports/TabButton'
 import DateRangeFilter from '../components/reports/DateRangeFilter'
 
@@ -169,56 +170,41 @@ const Reports = () => {
 
   const visibleTabs = showAdvanced ? allTabs : basicTabs
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <BarChart3 className="text-blue-600 dark:text-blue-400" />
-                Relatórios e Análises
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
-                Visualize e analise os dados do seu negócio
-              </p>
-            </div>
-            
-            <div className="flex gap-2">
-              {canViewAdvanced && (
-                <Button 
-                  variant={showAdvanced ? 'primary' : 'outline'} 
-                  onClick={() => setShowAdvanced(!showAdvanced)}
-                  icon={TrendingUp}
-                  size="sm"
-                >
-                  {showAdvanced ? 'Modo Avançado' : 'Relatórios Avançados'}
-                </Button>
-              )}
-              <Button variant="outline" onClick={handlePrint} icon={Printer}>
-                Imprimir
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleExport('csv')} 
-                icon={FileSpreadsheet}
-                loading={isExporting}
-                disabled={isExporting}
-              >
-                Exportar
-              </Button>
-              <Button 
-                onClick={handleRefresh} 
-                icon={RefreshCw}
-                loading={isRefreshing}
-                disabled={isRefreshing}
-              >
-                Atualizar
-              </Button>
-            </div>
-          </div>
-        </div>
+  // Configuração das ações do header
+  const headerActions = [
+    ...(canViewAdvanced ? [{
+      label: showAdvanced ? 'Modo Avançado' : 'Relatórios Avançados',
+      icon: TrendingUp,
+      onClick: () => setShowAdvanced(!showAdvanced),
+      variant: showAdvanced ? 'primary' : 'outline'
+    }] : []),
+    {
+      label: 'Imprimir',
+      icon: Printer,
+      onClick: handlePrint,
+      variant: 'outline'
+    },
+    {
+      label: 'Exportar',
+      icon: FileSpreadsheet,
+      onClick: () => handleExport('csv'),
+      loading: isExporting,
+      disabled: isExporting,
+      variant: 'outline'
+    },
+    {
+      label: 'Atualizar',
+      icon: RefreshCw,
+      onClick: handleRefresh,
+      loading: isRefreshing,
+      disabled: isRefreshing,
+      variant: 'primary'
+    }
+  ]
 
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-black">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {feedback.show && (
           <div className="mb-4">
             <FeedbackMessage
@@ -229,8 +215,16 @@ const Reports = () => {
           </div>
         )}
 
-        <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
-          <nav className="flex flex-wrap gap-1">
+        <PageHeader
+          title="Relatórios e Análises"
+          description="Visualize e analise os dados do seu negócio"
+          icon={BarChart3}
+          actions={headerActions}
+        />
+
+        {/* Tabs - com scroll horizontal no mobile */}
+        <div className="mb-4 sm:mb-6 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+          <nav className="flex gap-1 pb-1 min-w-max">
             {visibleTabs.map(tab => (
               <TabButton
                 key={tab.id}
@@ -257,7 +251,7 @@ const Reports = () => {
           setCategoryFilter={setCategoryFilter}
         />
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           <Suspense fallback={<DataLoadingSkeleton type="cards" rows={3} />}>
             {activeTab === 'sales' && (
               <SalesReport

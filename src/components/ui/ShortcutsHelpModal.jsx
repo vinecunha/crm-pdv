@@ -63,7 +63,7 @@ const ShortcutsHelpModal = ({ isOpen, onClose, shortcuts }) => {
       <div className="space-y-4 max-h-[60vh] overflow-y-auto">
         {Object.entries(categories).map(([category, categoryShortcuts]) => (
           <div key={category} className="border dark:border-gray-700 rounded-lg overflow-hidden">
-            <div className="bg-gray-50 dark:bg-gray-950/50 px-4 py-2 border-b dark:border-gray-700">
+            <div className="bg-gray-50 dark:bg-black/50 px-4 py-2 border-b dark:border-gray-700">
               <h3 className="font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
                 <span>{categoryIcons[category] || '•'}</span>
                 {category}

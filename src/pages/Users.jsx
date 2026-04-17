@@ -11,6 +11,7 @@ import DataEmptyState from '../components/ui/DataEmptyState'
 import DataCards from '../components/ui/DataCards'
 import DataTable from '../components/ui/DataTable'
 import Badge from '../components/Badge'
+import PageHeader from '../components/ui/PageHeader'
 import useSystemLogs from '../hooks/useSystemLogs'
 import { formatDateTime } from '../utils/formatters'
 
@@ -22,6 +23,27 @@ import UserTable from '../components/users/UserTable'
 import UserFilters from '../components/users/UserFilters'
 import UserDeleteModal from '../components/users/UserDeleteModal'
 import UserRoleBadge from '../components/users/UserRoleBadge'
+
+const StatCard = ({ label, value, color, icon: Icon, active, onClick }) => {
+  const colors = { 
+    green: { bg: 'bg-green-50 dark:bg-green-900/30', text: 'text-green-600 dark:text-green-400', border: 'border-green-500 dark:border-green-400' }, 
+    yellow: { bg: 'bg-yellow-50 dark:bg-yellow-900/30', text: 'text-yellow-600 dark:text-yellow-400', border: 'border-yellow-500 dark:border-yellow-400' }, 
+    red: { bg: 'bg-red-50 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400', border: 'border-red-500 dark:border-red-400' } 
+  }
+  return (
+    <div className={`bg-white dark:bg-gray-900 rounded-xl border-2 p-4 sm:p-5 cursor-pointer transition-all hover:shadow-md dark:hover:shadow-gray-900/50 ${active ? colors[color].border : 'border-gray-200 dark:border-gray-700'}`} onClick={onClick}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{label}</p>
+          <p className={`text-xl sm:text-2xl font-bold ${colors[color].text}`}>{value}</p>
+        </div>
+        <div className={`p-2 sm:p-3 ${colors[color].bg} rounded-full`}>
+          <Icon size={20} className={`sm:size-24 ${colors[color].text}`} />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const Users = () => {
   const { profile } = useAuth()
@@ -223,30 +245,30 @@ const Users = () => {
     }
     const config = configs[status] || configs.active
     const Icon = config.icon
-    return <Badge variant={config.variant}><Icon size={12} className="mr-1" />{config.label}</Badge>
+    return <Badge variant={config.variant} size="sm"><Icon size={12} className="mr-1" />{config.label}</Badge>
   }
 
   const unlockColumns = [
     { 
       key: 'registration_number', 
       header: 'Matrícula', 
-      render: (row) => <span className="font-mono text-sm text-gray-600 dark:text-gray-400">{row.registration_number || '-'}</span> 
+      render: (row) => <span className="font-mono text-xs sm:text-sm text-gray-600 dark:text-gray-400">{row.registration_number || '-'}</span> 
     },
     { 
       key: 'email', 
       header: 'Usuário', 
       render: (row) => (
         <div className="flex items-center gap-2">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium ${
+          <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0 ${
             row.status === 'active' ? 'bg-gradient-to-br from-green-500 to-green-600' : 
             row.status === 'inactive' ? 'bg-gradient-to-br from-gray-400 to-gray-500' : 
             'bg-gradient-to-br from-red-500 to-red-600'
           }`}>
             {row.email?.charAt(0).toUpperCase() || 'U'}
           </div>
-          <div>
-            <p className="font-medium text-gray-900 dark:text-white">{row.display_name || row.full_name || row.email?.split('@')[0]}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{row.email}</p>
+          <div className="min-w-0">
+            <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{row.display_name || row.full_name || row.email?.split('@')[0]}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{row.email}</p>
           </div>
         </div>
       ) 
@@ -255,7 +277,7 @@ const Users = () => {
       key: 'role', 
       header: 'Função', 
       render: (row) => (
-        <Badge variant={row.role === 'admin' ? 'purple' : row.role === 'gerente' ? 'info' : 'default'}>
+        <Badge variant={row.role === 'admin' ? 'purple' : row.role === 'gerente' ? 'info' : 'default'} size="sm">
           {row.role === 'admin' ? 'Admin' : row.role === 'gerente' ? 'Gerente' : 'Operador'}
         </Badge>
       ) 
@@ -264,7 +286,7 @@ const Users = () => {
     { 
       key: 'last_login', 
       header: 'Último Acesso', 
-      render: (row) => <span className="text-sm text-gray-600 dark:text-gray-400">{row.last_login ? formatDateTime(row.last_login) : 'Nunca'}</span> 
+      render: (row) => <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{row.last_login ? formatDateTime(row.last_login) : 'Nunca'}</span> 
     }
   ]
 
@@ -277,20 +299,20 @@ const Users = () => {
   }]
 
   const renderUserCard = (user) => (
-    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md dark:hover:shadow-gray-900/50 transition-shadow">
-      <div className="flex items-start justify-between mb-3">
+    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4 hover:shadow-md dark:hover:shadow-gray-900/50 transition-shadow">
+      <div className="flex items-start justify-between mb-2 sm:mb-3">
         <UserRoleBadge role={user.role} size="sm" />
         {user.id === profile?.id && <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full text-xs">Você</span>}
       </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 font-mono mb-1">{user.registration_number || 'Sem matrícula'}</p>
-      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{user.full_name || user.email?.split('@')[0]}</h3>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 break-all">{user.email}</p>
-      <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
+      <h3 className="font-semibold text-gray-900 dark:text-white mb-1 sm:mb-2 text-sm sm:text-base">{user.full_name || user.email?.split('@')[0]}</h3>
+      <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-2 sm:mb-3 break-all">{user.email}</p>
+      <div className="flex gap-2 pt-2 sm:pt-3 border-t border-gray-100 dark:border-gray-700">
         {canEditUser && (!isAdmin ? user.role !== 'admin' : true) && (
-          <button onClick={() => handleEdit(user)} className="flex-1 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800/50 text-sm">Editar</button>
+          <button onClick={() => handleEdit(user)} className="flex-1 py-1.5 sm:py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800/50 text-xs sm:text-sm">Editar</button>
         )}
         {canDeleteUser && user.id !== profile?.id && (!isAdmin ? user.role !== 'admin' : true) && (
-          <button onClick={() => { setUserToDelete(user); setShowDeleteModal(true) }} className="flex-1 py-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-800/50 text-sm">Excluir</button>
+          <button onClick={() => { setUserToDelete(user); setShowDeleteModal(true) }} className="flex-1 py-1.5 sm:py-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-800/50 text-xs sm:text-sm">Excluir</button>
         )}
       </div>
     </div>
@@ -303,45 +325,76 @@ const Users = () => {
 
   const isMutating = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || updateStatusMutation.isPending || unlockMutation.isPending || unlockAllMutation.isPending
 
+  // Configuração das ações do header
+  const getHeaderActions = () => {
+    if (activeTab === 'users') {
+      return [
+        {
+          label: 'Atualizar',
+          icon: RefreshCw,
+          onClick: () => refetchUsers(),
+          loading: loadingUsers,
+          variant: 'outline'
+        },
+        ...(canCreateUser ? [{
+          label: 'Novo Usuário',
+          icon: Plus,
+          onClick: () => { resetForm(); setShowModal(true) },
+          variant: 'primary',
+          disabled: isMutating
+        }] : [])
+      ]
+    } else {
+      return [
+        {
+          label: 'Atualizar',
+          icon: RefreshCw,
+          onClick: () => refetchBlocked(),
+          loading: loadingBlocked,
+          variant: 'outline'
+        },
+        ...(unlockStats.totalBlocked > 0 ? [{
+          label: `Desbloquear Todos (${unlockStats.totalBlocked})`,
+          icon: Unlock,
+          onClick: () => setShowUnlockAllModal(true),
+          variant: 'success',
+          disabled: isMutating
+        }] : [])
+      ]
+    }
+  }
+
   if (!canCreateUser && !canEditUser) return <DataEmptyState title="Acesso Restrito" description="Você não tem permissão para acessar esta página." icon="users" />
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-black">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {feedback.show && <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <div><h1 className="text-2xl font-bold text-gray-900 dark:text-white">Usuários</h1><p className="text-gray-500 dark:text-gray-400 mt-1">Gerencie os usuários e acessos do sistema</p></div>
-            {activeTab === 'users' && (
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={() => refetchUsers()} loading={loadingUsers} icon={RefreshCw}>Atualizar</Button>
-                {canCreateUser && <Button onClick={() => { resetForm(); setShowModal(true) }} icon={Plus} disabled={isMutating}>Novo Usuário</Button>}
-              </div>
-            )}
-            {activeTab === 'unlock' && (
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={() => refetchBlocked()} loading={loadingBlocked} icon={RefreshCw}>Atualizar</Button>
-                {unlockStats.totalBlocked > 0 && <Button variant="success" onClick={() => setShowUnlockAllModal(true)} icon={Unlock} disabled={isMutating}>Desbloquear Todos ({unlockStats.totalBlocked})</Button>}
-              </div>
-            )}
-          </div>
-          <div className="border-b border-gray-200 dark:border-gray-700 mt-4">
-            <nav className="flex gap-6">
-              {tabs.map(tab => {
-                const Icon = tab.icon
-                return (
-                  <button 
-                    key={tab.id} 
-                    onClick={() => setActiveTab(tab.id)} 
-                    className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === tab.id ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
-                  >
-                    <Icon size={16} />{tab.label}
-                    {tab.badge > 0 && <span className="ml-1 px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-xs font-bold">{tab.badge}</span>}
-                  </button>
-                )
-              })}
-            </nav>
-          </div>
+        
+        <PageHeader
+          title="Usuários"
+          description="Gerencie os usuários e acessos do sistema"
+          icon={UsersIcon}
+          actions={getHeaderActions()}
+        />
+
+        {/* Tabs */}
+        <div className="border-b border-gray-200 dark:border-gray-700 mb-4 sm:mb-6">
+          <nav className="flex gap-4 sm:gap-6 overflow-x-auto">
+            {tabs.map(tab => {
+              const Icon = tab.icon
+              return (
+                <button 
+                  key={tab.id} 
+                  onClick={() => setActiveTab(tab.id)} 
+                  className={`pb-2 sm:pb-3 text-xs sm:text-sm font-medium border-b-2 transition-colors flex items-center gap-1 sm:gap-2 whitespace-nowrap ${activeTab === tab.id ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
+                >
+                  <Icon size={14} />{tab.label}
+                  {tab.badge > 0 && <span className="ml-1 px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-[10px] sm:text-xs font-bold">{tab.badge}</span>}
+                </button>
+              )
+            })}
+          </nav>
         </div>
 
         {activeTab === 'users' && (
@@ -352,7 +405,7 @@ const Users = () => {
             {!loadingUsers && filteredUsers.length === 0 && <DataEmptyState title="Nenhum usuário encontrado" description={searchTerm || filters.role ? "Tente ajustar os filtros" : "Clique em 'Novo Usuário' para adicionar"} icon="users" />}
             {!loadingUsers && filteredUsers.length > 0 && (
               <>
-                <div className="block lg:hidden"><DataCards data={filteredUsers} renderCard={renderUserCard} keyExtractor={(u) => u.id} columns={1} gap={3} /></div>
+                <div className="block lg:hidden"><DataCards data={filteredUsers} renderCard={renderUserCard} keyExtractor={(u) => u.id} columns={1} gap={2} /></div>
                 <div className="hidden lg:block"><UserTable users={filteredUsers} currentUserId={profile?.id} onEdit={handleEdit} onDelete={(u) => { setUserToDelete(u); setShowDeleteModal(true) }} onUpdateStatus={handleUpdateStatus} canEdit={canEditUser} canDelete={canDeleteUser} isAdmin={isAdmin} /></div>
               </>
             )}
@@ -365,48 +418,51 @@ const Users = () => {
 
         {activeTab === 'unlock' && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
               <StatCard label="Bloqueados" value={unlockStats.totalBlocked} color="red" icon={Lock} active={statusFilter === 'blocked'} onClick={() => setStatusFilter('blocked')} />
               <StatCard label="Inativos" value={unlockStats.totalInactive} color="yellow" icon={Shield} active={statusFilter === 'inactive'} onClick={() => setStatusFilter('inactive')} />
               <StatCard label="Ativos" value={unlockStats.totalActive} color="green" icon={CheckCircle} active={statusFilter === 'active'} onClick={() => setStatusFilter('active')} />
             </div>
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-              <div className="flex items-center gap-3">
-                <div className="flex-1 relative"><Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" /><input type="text" placeholder="Buscar por nome ou email..." value={unlockSearchTerm} onChange={(e) => setUnlockSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500" /></div>
-                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm"><option value="blocked">Bloqueados</option><option value="inactive">Inativos</option><option value="active">Ativos</option><option value="all">Todos</option></select>
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-3 sm:p-4 mb-4 sm:mb-6">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+                <div className="flex-1 relative">
+                  <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                  <input type="text" placeholder="Buscar por nome ou email..." value={unlockSearchTerm} onChange={(e) => setUnlockSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500" />
+                </div>
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg">
+                  <option value="blocked">Bloqueados</option>
+                  <option value="inactive">Inativos</option>
+                  <option value="active">Ativos</option>
+                  <option value="all">Todos</option>
+                </select>
               </div>
             </div>
             {loadingBlocked && <DataLoadingSkeleton />}
-            {!loadingBlocked && filteredBlockedUsers.length === 0 ? <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-12 text-center"><CheckCircle size={48} className="text-green-400 dark:text-green-500 mx-auto mb-3" /><p className="text-gray-500 dark:text-gray-400 font-medium">{statusFilter === 'blocked' ? 'Nenhum usuário bloqueado!' : 'Nenhum usuário encontrado'}</p><p className="text-sm text-gray-400 dark:text-gray-500 mt-1">{statusFilter === 'blocked' ? 'Todos os usuários podem acessar o sistema' : 'Tente ajustar os filtros'}</p></div> : !loadingBlocked && <DataTable columns={unlockColumns} data={filteredBlockedUsers} actions={unlockActions} striped hover pagination itemsPerPageOptions={[20, 50, 100]} defaultItemsPerPage={20} showTotalItems />}
+            {!loadingBlocked && filteredBlockedUsers.length === 0 ? (
+              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-8 sm:p-12 text-center">
+                <CheckCircle size={40} className="text-green-400 dark:text-green-500 mx-auto mb-3 sm:size-48" />
+                <p className="text-gray-500 dark:text-gray-400 font-medium text-sm sm:text-base">{statusFilter === 'blocked' ? 'Nenhum usuário bloqueado!' : 'Nenhum usuário encontrado'}</p>
+                <p className="text-xs sm:text-sm text-gray-400 dark:text-gray-500 mt-1">{statusFilter === 'blocked' ? 'Todos os usuários podem acessar o sistema' : 'Tente ajustar os filtros'}</p>
+              </div>
+            ) : !loadingBlocked && (
+              <DataTable columns={unlockColumns} data={filteredBlockedUsers} actions={unlockActions} striped hover pagination itemsPerPageOptions={[20, 50, 100]} defaultItemsPerPage={20} showTotalItems />
+            )}
             <Modal isOpen={showUnlockAllModal} onClose={() => setShowUnlockAllModal(false)} title="Desbloquear Todos" size="sm">
               <div className="space-y-4">
                 <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
-                  <div className="flex items-start gap-2"><AlertTriangle size={18} className="text-yellow-600 dark:text-yellow-400 mt-0.5" /><p className="text-sm text-yellow-800 dark:text-yellow-300">Tem certeza que deseja desbloquear todos os {unlockStats.totalBlocked} usuários?</p></div>
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle size={18} className="text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-yellow-800 dark:text-yellow-300">Tem certeza que deseja desbloquear todos os {unlockStats.totalBlocked} usuários?</p>
+                  </div>
                 </div>
-                <div className="flex gap-3 pt-4">
-                  <Button variant="outline" onClick={() => setShowUnlockAllModal(false)} disabled={unlockAllMutation.isPending} className="flex-1">Cancelar</Button>
-                  <Button variant="success" onClick={handleUnlockAll} loading={unlockAllMutation.isPending} className="flex-1">Confirmar</Button>
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
+                  <Button variant="outline" onClick={() => setShowUnlockAllModal(false)} disabled={unlockAllMutation.isPending} className="flex-1 order-2 sm:order-1">Cancelar</Button>
+                  <Button variant="success" onClick={handleUnlockAll} loading={unlockAllMutation.isPending} className="flex-1 order-1 sm:order-2">Confirmar</Button>
                 </div>
               </div>
             </Modal>
           </>
         )}
-      </div>
-    </div>
-  )
-}
-
-const StatCard = ({ label, value, color, icon: Icon, active, onClick }) => {
-  const colors = { 
-    green: { bg: 'bg-green-50 dark:bg-green-900/30', text: 'text-green-600 dark:text-green-400', border: 'border-green-500 dark:border-green-400' }, 
-    yellow: { bg: 'bg-yellow-50 dark:bg-yellow-900/30', text: 'text-yellow-600 dark:text-yellow-400', border: 'border-yellow-500 dark:border-yellow-400' }, 
-    red: { bg: 'bg-red-50 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400', border: 'border-red-500 dark:border-red-400' } 
-  }
-  return (
-    <div className={`bg-white dark:bg-gray-900 rounded-xl border-2 p-5 cursor-pointer transition-all hover:shadow-md dark:hover:shadow-gray-900/50 ${active ? colors[color].border : 'border-gray-200 dark:border-gray-700'}`} onClick={onClick}>
-      <div className="flex items-center justify-between">
-        <div><p className="text-sm text-gray-500 dark:text-gray-400">{label}</p><p className={`text-2xl font-bold ${colors[color].text}`}>{value}</p></div>
-        <div className={`p-3 ${colors[color].bg} rounded-full`}><Icon size={24} className={colors[color].text} /></div>
       </div>
     </div>
   )

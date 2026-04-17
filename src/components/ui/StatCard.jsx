@@ -27,7 +27,7 @@ const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) =
           <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
           {sublabel && <p className="text-xs text-gray-400 dark:text-gray-500">{sublabel}</p>}
         </div>
-        <div className="p-2.5 rounded-lg bg-white/50 dark:bg-gray-950/50">
+        <div className="p-2.5 rounded-lg bg-white/50 dark:bg-black/50">
           <Icon size={22} className={iconColors[variant]} />
         </div>
       </div>

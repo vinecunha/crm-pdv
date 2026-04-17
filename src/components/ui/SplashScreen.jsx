@@ -58,7 +58,7 @@ const SplashScreen = ({
 
   if (fullScreen) {
     return (
-      <div className={`fixed inset-0 flex items-center justify-center z-50 ${transparent ? 'bg-black/50 dark:bg-black/70' : 'bg-white dark:bg-gray-950'}`}>
+      <div className={`fixed inset-0 flex items-center justify-center z-50 ${transparent ? 'bg-black/50 dark:bg-black/70' : 'bg-white dark:bg-black'}`}>
         {content}
       </div>
     )

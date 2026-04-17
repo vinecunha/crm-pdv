@@ -42,7 +42,7 @@ const ShortcutFeedback = ({ shortcut, onHide }) => {
   return createPortal(
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 fade-in duration-200">
       <div className="bg-gray-900 dark:bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-3">
-        <kbd className="px-2 py-1 bg-gray-700 dark:bg-gray-950 rounded text-sm font-mono">
+        <kbd className="px-2 py-1 bg-gray-700 dark:bg-black rounded text-sm font-mono">
           {formatKeys()}
         </kbd>
         <span className="text-sm">{shortcut.description}</span>

@@ -115,6 +115,7 @@ export {
   Building2,
   Store,
   ClipboardList,
+  List,
   Home,
   Bug,
   Loader,
@@ -139,5 +140,8 @@ export {
   Wallet,
   AlignJustify,
   LayoutGrid,
-  Monitor
+  Grid,
+  Monitor,
+  Barcode,
+  Layers
 } from 'lucide-react'

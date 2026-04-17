@@ -31,7 +31,7 @@ const DataLoadingSkeleton = ({
     <div className={`bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden animate-pulse ${className}`}>
       <div className="overflow-x-auto">
         <table className="min-w-full">
-          <thead className="bg-gray-50 dark:bg-gray-950/50">
+          <thead className="bg-gray-50 dark:bg-black/50">
             <tr>
               {Array(columns).fill().map((_, i) => (
                 <th key={i} className="px-6 py-3">

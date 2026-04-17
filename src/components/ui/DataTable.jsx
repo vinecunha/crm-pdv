@@ -177,7 +177,7 @@ const DataTable = ({
 
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-950/50">
+          <thead className="bg-gray-50 dark:bg-black/50">
             <tr>
               {columns.filter(col => col != null).map((column, idx) => (
                 <th key={idx} onClick={() => column.sortable !== false && column.key && handleSort(column.key)}
@@ -200,7 +200,7 @@ const DataTable = ({
                 const validActions = getValidActions(row)
                 return (
                   <tr key={row?.id || rowIndex} onClick={() => row && onRowClick?.(row, rowIndex)}
-                    className={`${onRowClick ? 'cursor-pointer' : ''} ${hover ? 'hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors' : ''} ${striped && rowIndex % 2 === 1 ? 'bg-gray-50 dark:bg-gray-950/50' : ''}`}>
+                    className={`${onRowClick ? 'cursor-pointer' : ''} ${hover ? 'hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors' : ''} ${striped && rowIndex % 2 === 1 ? 'bg-gray-50 dark:bg-black/50' : ''}`}>
                     {columns.filter(col => col != null).map((column, colIndex) => (
                       <td
                         key={colIndex}
@@ -231,7 +231,7 @@ const DataTable = ({
       </div>
 
       {pagination && totalItems > 0 && (
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-950/50">
+        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-black/50">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             {showTotalItems && <div className="text-sm text-gray-600 dark:text-gray-400">Mostrando {indexOfFirstItem + 1} a {Math.min(indexOfLastItem, totalItems)} de {totalItems} registros</div>}
             <div className="flex items-center gap-2">

@@ -199,7 +199,7 @@ const AvatarUploader = ({ user, avatarUrl, fullName, displayName, onAvatarUpdate
               </label>
             </div>
             {saving && (
-              <div className="absolute inset-0 bg-white/50 dark:bg-gray-950/50 flex items-center justify-center rounded-lg">
+              <div className="absolute inset-0 bg-white/50 dark:bg-black/50 flex items-center justify-center rounded-lg">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 dark:border-blue-400" />
               </div>
             )}

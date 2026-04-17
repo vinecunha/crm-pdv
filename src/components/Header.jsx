@@ -86,7 +86,7 @@ const Header = ({ collapsed }) => {
 
   return (
     <header className={`
-      sticky top-0 z-20 bg-gray-50/95 dark:bg-gray-950/95 backdrop-blur-sm
+      sticky top-0 z-20 bg-gray-50/95 dark:bg-black/95 backdrop-blur-sm
       transition-all duration-300
       ${collapsed ? 'lg:ml-20' : 'lg:ml-64'}
     `}>
@@ -228,7 +228,7 @@ const Header = ({ collapsed }) => {
           </div>
 
           {/* Rodapé do Card */}
-          <div className="px-5 py-3 bg-gray-50/50 dark:bg-gray-950/50 border-t border-gray-100 dark:border-gray-700 flex items-center gap-6 text-xs text-gray-500 dark:text-gray-400">
+          <div className="px-5 py-3 bg-gray-50/50 dark:bg-black/50 border-t border-gray-100 dark:border-gray-700 flex items-center gap-6 text-xs text-gray-500 dark:text-gray-400">
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400" />
               <span>{profile?.role === 'admin' ? 'Acesso Total' : profile?.role === 'gerente' ? 'Acesso Gerencial' : 'Acesso Operacional'}</span>

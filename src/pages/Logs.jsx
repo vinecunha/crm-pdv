@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { RefreshCw, X, RotateCcw, Database, FileText } from '../lib/icons'
+import { RefreshCw, X, RotateCcw, Database, FileText, Shield } from '../lib/icons'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
@@ -9,6 +9,7 @@ import DataCards from '../components/ui/DataCards'
 import Button from '../components/ui/Button'
 import FeedbackMessage from '../components/ui/FeedbackMessage'
 import StatCard from '../components/ui/StatCard'
+import PageHeader from '../components/ui/PageHeader'
 
 import LogFilters from '../components/logs/LogFilters'
 import LogTable from '../components/logs/LogTable'
@@ -249,9 +250,27 @@ const Logs = () => {
   const isLoading = activeTab === 'logs' ? loadingLogs : loadingDeleted
   const isFetching = activeTab === 'logs' ? isFetchingLogs : isFetchingDeleted
 
+  // Configuração das ações do header
+  const headerActions = [
+    {
+      label: 'Atualizar',
+      icon: RefreshCw,
+      onClick: handleRefresh,
+      loading: isLoading,
+      variant: 'outline'
+    },
+    ...(activeTab === 'logs' && logs.length > 0 ? [{
+      label: 'Exportar CSV',
+      icon: FileText,
+      onClick: exportLogs,
+      loading: exporting,
+      variant: 'outline'
+    }] : [])
+  ]
+
   if (!canView) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center px-4">
         <div className="text-center">
           <div className="bg-red-100 dark:bg-red-900/30 rounded-full p-4 inline-block mb-4">
             <X className="h-12 w-12 text-red-600 dark:text-red-400" />
@@ -264,68 +283,51 @@ const Logs = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-black">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {feedback.show && (
           <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />
         )}
 
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Database className="text-blue-600 dark:text-blue-400" />
-                Auditoria do Sistema
-              </h1>
-              <p className="text-gray-500 dark:text-gray-400 mt-1">
-                Logs de atividades e registros excluídos
-                {isFetching && (
-                  <span className="ml-2 inline-flex items-center text-xs text-gray-400 dark:text-gray-500">
-                    <RefreshCw size={12} className="animate-spin mr-1" />
-                    Atualizando...
-                  </span>
-                )}
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button 
-                variant="outline" 
-                onClick={handleRefresh} 
-                loading={isLoading} 
-                icon={RefreshCw}
-              >
-                Atualizar
-              </Button>
-              {activeTab === 'logs' && logs.length > 0 && (
-                <Button variant="outline" onClick={exportLogs} loading={exporting}>
-                  Exportar CSV
-                </Button>
+        <PageHeader
+          title="Auditoria do Sistema"
+          description={
+            <>
+              Logs de atividades e registros excluídos
+              {isFetching && (
+                <span className="ml-2 inline-flex items-center text-xs text-gray-400 dark:text-gray-500">
+                  <RefreshCw size={12} className="animate-spin mr-1" />
+                  <span className="hidden sm:inline">Atualizando...</span>
+                </span>
               )}
-            </div>
-          </div>
-        </div>
+            </>
+          }
+          icon={Database}
+          actions={headerActions}
+        />
 
-        <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
-          <nav className="flex gap-6">
+        {/* Tabs */}
+        <div className="border-b border-gray-200 dark:border-gray-700 mb-4 sm:mb-6">
+          <nav className="flex gap-4 sm:gap-6 overflow-x-auto">
             <button
               onClick={() => setActiveTab('logs')}
-              className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+              className={`pb-2 sm:pb-3 text-xs sm:text-sm font-medium border-b-2 transition-colors flex items-center gap-1 sm:gap-2 whitespace-nowrap ${
                 activeTab === 'logs' ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
-              <FileText size={16} />
+              <FileText size={14} />
               Logs do Sistema
             </button>
             <button
               onClick={() => setActiveTab('deleted')}
-              className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+              className={`pb-2 sm:pb-3 text-xs sm:text-sm font-medium border-b-2 transition-colors flex items-center gap-1 sm:gap-2 whitespace-nowrap ${
                 activeTab === 'deleted' ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
-              <RotateCcw size={16} />
+              <RotateCcw size={14} />
               Registros Deletados
               {deletedStats.total > 0 && (
-                <span className="ml-1 px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-xs font-bold">
+                <span className="ml-1 px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-[10px] sm:text-xs font-bold">
                   {deletedStats.total}
                 </span>
               )}
@@ -335,7 +337,7 @@ const Logs = () => {
 
         {activeTab === 'logs' && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
               <StatCard label="Total de Logs" value={logStats.total} icon={FileText} variant="info" />
               <StatCard label="Erros" value={logStats.errors} icon={X} variant={logStats.errors > 0 ? 'danger' : 'default'} />
               <StatCard label="Hoje" value={logStats.today} icon={RefreshCw} variant="success" />
@@ -378,7 +380,7 @@ const Logs = () => {
                     )} 
                     keyExtractor={(l) => l.id} 
                     columns={1} 
-                    gap={3} 
+                    gap={2} 
                   />
                 </div>
                 <div className="hidden lg:block">
@@ -403,7 +405,7 @@ const Logs = () => {
 
         {activeTab === 'deleted' && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
               <StatCard label="Total Deletados" value={deletedStats.total} icon={Database} variant="warning" />
               <StatCard label="Produtos" value={deletedStats.products} icon={FileText} variant="info" />
               <StatCard label="Clientes" value={deletedStats.customers} icon={FileText} variant="purple" />
@@ -433,7 +435,7 @@ const Logs = () => {
                     )} 
                     keyExtractor={(r) => `${r._type}-${r.id}`} 
                     columns={1} 
-                    gap={3} 
+                    gap={2} 
                   />
                 </div>
                 <div className="hidden lg:block">

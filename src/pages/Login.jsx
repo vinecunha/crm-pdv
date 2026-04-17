@@ -130,7 +130,7 @@ const Login = () => {
 
   if (authLoading || loadingSettings) {
     return (
-      <div className="min-h-screen flex items-center justify-center dark:bg-gray-950" style={gradientStyle}>
+      <div className="min-h-screen flex items-center justify-center dark:bg-black" style={gradientStyle}>
         <div 
           className="animate-spin rounded-full h-10 w-10 border-b-2" 
           style={{ borderColor: primaryColor }} 
@@ -144,7 +144,7 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 dark:bg-gray-950" style={gradientStyle}>
+    <div className="min-h-screen flex items-center justify-center p-4 dark:bg-black" style={gradientStyle}>
       <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-8">
         <LoginHeader 
           companyName={companyName} 

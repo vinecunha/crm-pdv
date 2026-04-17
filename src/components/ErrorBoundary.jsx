@@ -196,7 +196,7 @@ class ErrorBoundary extends React.Component {
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 bg-gray-50 dark:bg-gray-950 border-t border-gray-200 dark:border-gray-700 text-center">
+            <div className="px-6 py-4 bg-gray-50 dark:bg-black border-t border-gray-200 dark:border-gray-700 text-center">
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 {companyName} - Sistema de Gestão Integrada
               </p>

@@ -17,7 +17,7 @@
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400 dark:bg-gray-950;
+    @apply bg-gray-400 dark:bg-black;
   }
 
   * {

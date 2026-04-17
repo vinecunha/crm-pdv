@@ -192,7 +192,7 @@ const NotFound = () => {
             </div>
           </div>
 
-          <div className="px-6 py-4 bg-gray-50 dark:bg-gray-950/50 border-t border-gray-200 dark:border-gray-700 text-center">
+          <div className="px-6 py-4 bg-gray-50 dark:bg-black/50 border-t border-gray-200 dark:border-gray-700 text-center">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
               {companyName}
             </p>

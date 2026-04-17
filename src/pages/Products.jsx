@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, ClipboardList } from '../lib/icons'
+import { Plus, ClipboardList, Package } from '../lib/icons'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import useSystemLogs from '../hooks/useSystemLogs'
+import useMediaQuery from '../hooks/useMediaQuery'
 
 import * as productService from '../services/productService'
 
@@ -13,6 +14,9 @@ import FeedbackMessage from '../components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
 import DataEmptyState from '../components/ui/DataEmptyState'
 import DataFilters from '../components/ui/DataFilters'
+import PageHeader from '../components/ui/PageHeader'
+import DataCards from '../components/ui/DataCards'
+import ProductCard from '../components/products/ProductCard' 
 
 import ProductForm from '../components/products/ProductForm'
 import ProductEntryForm from '../components/products/ProductEntryForm'
@@ -25,6 +29,9 @@ const Products = () => {
   const { logCreate, logUpdate, logDelete, logError, logAction } = useSystemLogs()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+
+  const isMobile = useMediaQuery('(max-width: 768px)')
+  const [viewMode, setViewMode] = useState('auto')
   
   const [searchTerm, setSearchTerm] = useState('')
   const [activeFilters, setActiveFilters] = useState({})
@@ -37,6 +44,10 @@ const Products = () => {
   const [viewingProductId, setViewingProductId] = useState(null)
   const [entryModalError, setEntryModalError] = useState(null)
   
+  const effectiveViewMode = viewMode === 'auto' 
+    ? (isMobile ? 'cards' : 'table')
+    : viewMode
+
   const [productForm, setProductForm] = useState({
     code: '', name: '', description: '', category: '', unit: 'UN',
     price: '', min_stock: '', max_stock: '', location: '', brand: '', weight: '',
@@ -181,6 +192,19 @@ const Products = () => {
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
   }
 
+  const renderProductCard = (product) => (
+    <ProductCard
+      product={product}
+      onViewDetails={handleViewDetails}
+      onEdit={canEdit ? handleOpenProductModal : null}
+      onDelete={canEdit ? (product) => { setSelectedProduct(product); setIsDeleteModalOpen(true) } : null}
+      onRegisterEntry={canManageStock ? handleOpenEntryModal : null}
+      canEdit={canEdit}
+      canManageStock={canManageStock}
+      units={productService.units}
+    />
+  )
+
   const handleOpenProductModal = async (product = null) => {
     if (product) {
       setSelectedProduct(product)
@@ -299,9 +323,27 @@ const Products = () => {
   const isMutating = createMutation.isPending || updateMutation.isPending || 
                      deleteMutation.isPending || entryMutation.isPending
 
+  // Configuração das ações do header
+  const headerActions = [
+    ...(canManageStock ? [{
+      label: 'Balanço',
+      icon: ClipboardList,
+      onClick: () => navigate('/stock-count'),
+      variant: 'outline',
+      disabled: isMutating
+    }] : []),
+    ...(canEdit ? [{
+      label: 'Novo Produto',
+      icon: Plus,
+      onClick: () => handleOpenProductModal(),
+      variant: 'primary',
+      disabled: isMutating
+    }] : [])
+  ]
+
   if (productsError) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center px-4">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao carregar produtos</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">{productsError.message}</p>
@@ -314,12 +356,16 @@ const Products = () => {
   if (isLoading) return <DataLoadingSkeleton />
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gestão de Estoque</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+    <div className="min-h-screen bg-gray-50 dark:bg-black">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {feedback.show && (
+          <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />
+        )}
+
+        <PageHeader
+          title="Gestão de Estoque"
+          description={
+            <>
               Gerencie produtos, entradas e controle de estoque
               {!isLoading && products.length > 0 && (
                 <span className="ml-2 text-blue-600 dark:text-blue-400">
@@ -327,28 +373,13 @@ const Products = () => {
                   {isFetching && <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">atualizando...</span>}
                 </span>
               )}
-            </p>
-          </div>
-          
-          <div className="flex gap-2">
-            {canManageStock && (
-              <Button onClick={() => navigate('/stock-count')} variant="outline" icon={ClipboardList} disabled={isMutating}>
-                Balanço
-              </Button>
-            )}
-            {canEdit && (
-              <Button onClick={() => handleOpenProductModal()} icon={Plus} disabled={isMutating}>
-                Novo Produto
-              </Button>
-            )}
-          </div>
-        </div>
+            </>
+          }
+          icon={Package}
+          actions={headerActions}
+        />
 
-        {feedback.show && (
-          <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />
-        )}
-
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <DataFilters
             searchPlaceholder="Buscar por nome, código, categoria ou marca..."
             searchValue={searchTerm}
@@ -366,17 +397,32 @@ const Products = () => {
             action={canEdit ? { label: "Cadastrar Produto", icon: <Plus size={18} />, onClick: () => handleOpenProductModal() } : null}
           />
         ) : (
-          <ProductTable
-            products={filteredProducts}
-            loading={isLoading}
-            onViewDetails={handleViewDetails}
-            onEdit={handleOpenProductModal}
-            onDelete={(product) => { setSelectedProduct(product); setIsDeleteModalOpen(true) }}
-            onRegisterEntry={handleOpenEntryModal}
-            canEdit={canEdit} canManageStock={canManageStock}
-            canViewAll={canViewAll} canViewOnlyActive={canViewOnlyActive}
-            units={productService.units}
-          />
+          <>
+            {effectiveViewMode === 'cards' ? (
+              <DataCards
+                data={filteredProducts}
+                renderCard={renderProductCard}
+                keyExtractor={(product) => product.id}
+                columns={isMobile ? 1 : 2}
+                gap={4}
+                emptyMessage="Nenhum produto encontrado"
+              />
+            ) : (
+              <ProductTable
+                products={filteredProducts}
+                loading={isLoading}
+                onViewDetails={handleViewDetails}
+                onEdit={handleOpenProductModal}
+                onDelete={(product) => { setSelectedProduct(product); setIsDeleteModalOpen(true) }}
+                onRegisterEntry={handleOpenEntryModal}
+                canEdit={canEdit} 
+                canManageStock={canManageStock}
+                canViewAll={canViewAll} 
+                canViewOnlyActive={canViewOnlyActive}
+                units={productService.units}
+              />
+            )}
+          </>
         )}
 
         <Modal isOpen={isProductModalOpen} onClose={() => !isMutating && setIsProductModalOpen(false)} title={selectedProduct ? 'Editar Produto' : 'Novo Produto'} size="lg">

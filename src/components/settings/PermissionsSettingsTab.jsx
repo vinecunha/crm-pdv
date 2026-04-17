@@ -142,7 +142,7 @@ const PermissionsSettingsTab = () => {
           
           return (
             <div key={module} className="bg-white rounded-lg border border-gray-200 overflow-hidden dark:bg-gray-900 dark:border-gray-700">
-              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 dark:bg-gray-950/50 dark:border-gray-700">
+              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 dark:bg-black/50 dark:border-gray-700">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <h4 className="font-medium text-gray-900 dark:text-white">{moduleNames[module] || module}</h4>

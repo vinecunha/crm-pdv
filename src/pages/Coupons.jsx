@@ -1,11 +1,12 @@
 // src/pages/Coupons.jsx
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, RefreshCw, Send } from '../lib/icons'
+import { Plus, RefreshCw, Send, Ticket } from '../lib/icons'
 import { useAuth } from '../contexts/AuthContext'
 import { useReactQuery } from '../hooks/useReactQuery'
 import useSystemLogs from '../hooks/useSystemLogs'
 import useLogger from '../hooks/useLogger'
+import useMediaQuery from '../hooks/useMediaQuery'
 import logger from '../utils/logger' 
 import { supabase } from '../lib/supabase'
 
@@ -16,6 +17,9 @@ import Modal from '../components/ui/Modal'
 import FeedbackMessage from '../components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
 import ConfirmModal from '../components/ui/ConfirmModal'
+import PageHeader from '../components/ui/PageHeader'
+import DataCards from '../components/ui/DataCards' 
+import CouponCard from '../components/coupons/CouponCard' 
 
 import CouponStats from '../components/coupons/CouponStats'
 import CouponForm from '../components/coupons/CouponForm'
@@ -30,6 +34,9 @@ const Coupons = () => {
   const { logComponentAction, logComponentError, logCreate, logUpdate, logDelete } = useLogger('Coupons')
   const { invalidateQueries } = useReactQuery()
   const queryClient = useQueryClient() 
+   const isMobile = useMediaQuery('(max-width: 768px)')
+  const [viewMode, setViewMode] = useState('auto')
+
   const [campaignLoading, setCampaignLoading] = useState(false)
 
   const [searchTerm, setSearchTerm] = useState('')
@@ -45,6 +52,10 @@ const Coupons = () => {
   const [selectedCustomers, setSelectedCustomers] = useState([])
   const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
   
+  const effectiveViewMode = viewMode === 'auto' 
+    ? (isMobile ? 'cards' : 'table')
+    : viewMode
+
   const [formData, setFormData] = useState({
     code: '', name: '', description: '', discount_type: 'percent',
     discount_value: '', max_discount: '', min_purchase: '0',
@@ -183,6 +194,18 @@ const Coupons = () => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000) 
   }
+
+  const renderCouponCard = (coupon) => (
+    <CouponCard
+      coupon={coupon}
+      onEdit={handleOpenModal}
+      onManageCustomers={handleOpenCustomersModal}
+      onToggleStatus={handleToggleStatus}
+      onDelete={handleDeleteCoupon}
+      onCopyCode={handleCopyCode}
+      onSendCampaign={handleOpenCampaignModal}
+    />
+  )
 
   const handleOpenModal = (coupon = null) => {
     logger.log('📝 [Coupons] Abrindo modal', { isEditing: !!coupon, couponCode: coupon?.code })
@@ -404,9 +427,20 @@ const Coupons = () => {
     logComponentAction('ACCESS_PAGE', null, { page: 'coupons' }) 
   }, [])
 
+  // Configuração das ações do header
+  const headerActions = [
+    {
+      label: 'Novo Cupom',
+      icon: Plus,
+      onClick: () => handleOpenModal(),
+      variant: 'primary',
+      disabled: isMutating
+    }
+  ]
+
   if (couponsError) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center px-4">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao carregar cupons</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">{couponsError.message}</p>
@@ -421,8 +455,8 @@ const Coupons = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-black">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {feedback.show && (
           <FeedbackMessage 
             type={feedback.type} 
@@ -431,26 +465,23 @@ const Coupons = () => {
           />
         )}
         
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Cupons de Desconto</h1>
-              <p className="text-gray-500 dark:text-gray-400 mt-1">
-                Gerencie cupons globais e restritos para seus clientes
-                {isFetchingCoupons && (
-                  <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">atualizando...</span>
-                )}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={() => handleOpenModal()} icon={Plus} disabled={isMutating}>
-                Novo Cupom
-              </Button>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          title="Cupons de Desconto"
+          description={
+            <>
+              Gerencie cupons globais e restritos para seus clientes
+              {isFetchingCoupons && (
+                <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">atualizando...</span>
+              )}
+            </>
+          }
+          icon={Ticket}
+          actions={headerActions}
+        />
 
-        <CouponStats coupons={coupons} />
+        <div className="mb-4 sm:mb-6">
+          <CouponStats coupons={coupons} />
+        </div>
         
         <CouponFilters 
           searchTerm={searchTerm} 
@@ -459,15 +490,26 @@ const Coupons = () => {
           setFilters={setFilters} 
         />
         
-        <CouponTable 
-          coupons={coupons} 
-          onEdit={handleOpenModal} 
-          onManageCustomers={handleOpenCustomersModal} 
-          onToggleStatus={handleToggleStatus} 
-          onDelete={handleDeleteCoupon} 
-          onCopyCode={handleCopyCode}
-          onSendCampaign={handleOpenCampaignModal}
-        />
+        {effectiveViewMode === 'cards' ? (
+          <DataCards
+            data={coupons}
+            renderCard={renderCouponCard}
+            keyExtractor={(coupon) => coupon.id}
+            columns={isMobile ? 1 : 2}
+            gap={4}
+            emptyMessage="Nenhum cupom encontrado"
+          />
+        ) : (
+          <CouponTable 
+            coupons={coupons} 
+            onEdit={handleOpenModal} 
+            onManageCustomers={handleOpenCustomersModal} 
+            onToggleStatus={handleToggleStatus} 
+            onDelete={handleDeleteCoupon} 
+            onCopyCode={handleCopyCode}
+            onSendCampaign={handleOpenCampaignModal}
+          />
+        )}
 
         <Modal 
           isOpen={showModal} 
@@ -484,11 +526,11 @@ const Coupons = () => {
             setSelectedCustomers={setSelectedCustomers} 
             disabled={isMutating} 
           />
-          <div className="flex gap-3 pt-4 mt-4 border-t dark:border-gray-700">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 mt-4 border-t dark:border-gray-700">
             <Button 
               variant="outline" 
               onClick={() => setShowModal(false)} 
-              className="flex-1" 
+              className="flex-1 order-2 sm:order-1" 
               disabled={isMutating}
             >
               Cancelar
@@ -496,7 +538,7 @@ const Coupons = () => {
             <Button 
               onClick={handleSaveCoupon} 
               loading={createMutation.isPending || updateMutation.isPending} 
-              className="flex-1"
+              className="flex-1 order-1 sm:order-2"
             >
               {editingCoupon ? 'Atualizar' : 'Criar'} Cupom
             </Button>
