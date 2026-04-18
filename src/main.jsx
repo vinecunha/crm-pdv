@@ -8,53 +8,96 @@ import { logger } from '../src/utils/logger'
 perfMonitor.measurePageLoad()
 perfMonitor.measureFirstInputDelay()
 
-// ============= Service Worker Registration =============
+// ============= Service Worker Registration (APENAS PRODUÇÃO) =============
+const isDevelopment = import.meta.env.DEV
+const isProduction = import.meta.env.PROD
+
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/service-worker.js', {
-        scope: '/'
-      })
-      .then((registration) => {
-        logger.log('✅ Service Worker registrado com sucesso!', {
-          scope: registration.scope,
-          state: registration.installing?.state || registration.waiting?.state || registration.active?.state
+  if (isProduction) {
+    // ============= PRODUÇÃO: Registrar Service Worker =============
+    window.addEventListener('load', () => {
+      navigator.serviceWorker
+        .register('/service-worker.js', {
+          scope: '/',
+          // Não esperar pelo SW para começar a funcionar
+          updateViaCache: 'none'
         })
+        .then((registration) => {
+          logger.log('✅ Service Worker registrado com sucesso!', {
+            scope: registration.scope,
+            state: registration.installing?.state || registration.waiting?.state || registration.active?.state
+          })
 
-        // Verificar atualizações a cada 60 minutos
-        setInterval(() => {
-          registration.update()
-          logger.log('🔄 Verificando atualizações do Service Worker...')
-        }, 60 * 60 * 1000)
+          // Verificar atualizações a cada 60 minutos
+          setInterval(() => {
+            registration.update()
+            logger.log('🔄 Verificando atualizações do Service Worker...')
+          }, 60 * 60 * 1000)
 
-        // Escutar mensagens do Service Worker
-        navigator.serviceWorker.addEventListener('message', (event) => {
-          if (event.data && event.data.type === 'SYNC_COMPLETE') {
-            logger.log(`✅ Sincronização completa: ${event.data.count} vendas sincronizadas`)
-            
-            // Opcional: Mostrar notificação para o usuário
-            if (event.data.count > 0) {
-              // Você pode usar um toast notification aqui
-              logger.log(`🎉 ${event.data.count} vendas foram sincronizadas com sucesso!`)
+          // Escutar mensagens do Service Worker
+          navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'SYNC_COMPLETE') {
+              logger.log(`✅ Sincronização completa: ${event.data.count} vendas sincronizadas`)
+              
+              // Opcional: Mostrar notificação para o usuário
+              if (event.data.count > 0) {
+                // Você pode usar um toast notification aqui
+                logger.log(`🎉 ${event.data.count} vendas foram sincronizadas com sucesso!`)
+              }
             }
-          }
-          
-          if (event.data && event.data.type === 'CACHE_UPDATED') {
-            logger.log('📦 Cache atualizado:', event.data.url)
-          }
+            
+            if (event.data && event.data.type === 'CACHE_UPDATED') {
+              logger.log('📦 Cache atualizado:', event.data.url)
+            }
+          })
         })
-      })
-      .catch((error) => {
-        console.error('❌ Erro ao registrar Service Worker:', error)
-      })
+        .catch((error) => {
+          console.error('❌ Erro ao registrar Service Worker:', error)
+        })
 
-    // Quando uma nova versão do Service Worker é encontrada
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      logger.log('🔄 Service Worker atualizado! Recarregando página...')
-      // Opcional: Recarregar a página para usar a nova versão
-      // window.location.reload()
+      // Quando uma nova versão do Service Worker é encontrada
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        logger.log('🔄 Service Worker atualizado! Recarregando página...')
+        // Opcional: Recarregar a página para usar a nova versão
+        // window.location.reload()
+      })
     })
-  })
+  } else {
+    // ============= DESENVOLVIMENTO: REMOVER Service Worker =============
+    logger.log('🔧 Modo desenvolvimento: Removendo Service Workers...')
+    
+    // Desregistrar TODOS os service workers existentes
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      if (registrations.length > 0) {
+        registrations.forEach((registration) => {
+          registration.unregister()
+          logger.log('🗑️ Service Worker removido:', registration.scope)
+        })
+        
+        // Limpar caches do Service Worker
+        if ('caches' in window) {
+          caches.keys().then((cacheNames) => {
+            cacheNames.forEach((cacheName) => {
+              if (cacheName.includes('pdv') || cacheName.includes('workbox')) {
+                caches.delete(cacheName)
+                logger.log('🗑️ Cache removido:', cacheName)
+              }
+            })
+          })
+        }
+        
+        // Recarregar após 1 segundo para garantir que tudo foi limpo
+        setTimeout(() => {
+          if (registrations.some(r => r.active)) {
+            logger.log('🔄 Recarregando para limpar Service Worker completamente...')
+            window.location.reload()
+          }
+        }, 1000)
+      } else {
+        logger.log('✅ Nenhum Service Worker ativo encontrado')
+      }
+    })
+  }
 }
 
 // ============= Verificar status da rede =============
@@ -72,19 +115,21 @@ window.addEventListener('online', updateOnlineStatus)
 window.addEventListener('offline', updateOnlineStatus)
 updateOnlineStatus() // Verificar inicial
 
-// ============= Registrar Sync quando voltar online =============
-window.addEventListener('online', () => {
-  if ('serviceWorker' in navigator && 'SyncManager' in window) {
-    navigator.serviceWorker.ready.then((registration) => {
-      registration.sync.register('sync-pending-sales')
-        .then(() => logger.log('🔄 Sincronização de vendas pendentes registrada'))
-        .catch(err => console.error('❌ Erro ao registrar sync:', err))
-    })
-  }
-})
+// ============= Registrar Sync quando voltar online (APENAS PRODUÇÃO) =============
+if (isProduction) {
+  window.addEventListener('online', () => {
+    if ('serviceWorker' in navigator && 'SyncManager' in window) {
+      navigator.serviceWorker.ready.then((registration) => {
+        registration.sync.register('sync-pending-sales')
+          .then(() => logger.log('🔄 Sincronização de vendas pendentes registrada'))
+          .catch(err => console.error('❌ Erro ao registrar sync:', err))
+      })
+    }
+  })
+}
 
 // ============= Verificar atualizações da aplicação =============
-if (import.meta.env.PROD) {
+if (isProduction) {
   // Verificar nova versão a cada 30 minutos
   setInterval(() => {
     fetch('/version.json', { cache: 'no-cache' })
@@ -139,7 +184,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 )
 
 // ============= Registrar métricas de performance =============
-if (import.meta.env.PROD) {
+if (isProduction) {
   // Web Vitals
   import('web-vitals').then(({ onCLS, onFID, onLCP, onTTFB }) => {
     onCLS(logger.log)
@@ -160,4 +205,36 @@ if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
   const style = document.createElement('style')
   style.textContent = 'input, textarea, select { font-size: 16px !important; }'
   document.head.appendChild(style)
+}
+
+// ============= DESENVOLVIMENTO: Ajuda para debug =============
+if (isDevelopment) {
+  logger.log('🔧 Modo Desenvolvimento Ativo')
+  logger.log('📌 Dicas:')
+  logger.log('  - Service Worker DESATIVADO (para evitar conflitos com HMR)')
+  logger.log('  - Use F12 > Application > Service Workers para verificar')
+  logger.log('  - HMR do Vite ativo em ws://localhost:5173')
+  
+  // Expor objetos úteis para debug no console
+  window.debug = {
+    clearAllCaches: async () => {
+      if ('caches' in window) {
+        const keys = await caches.keys()
+        for (const key of keys) {
+          await caches.delete(key)
+          console.log('🗑️ Cache removido:', key)
+        }
+        console.log('✅ Todos os caches foram limpos')
+      }
+    },
+    unregisterSW: async () => {
+      const registrations = await navigator.serviceWorker.getRegistrations()
+      for (const reg of registrations) {
+        await reg.unregister()
+        console.log('🗑️ SW removido:', reg.scope)
+      }
+    }
+  }
+  
+  console.log('💡 Dica: Use debug.clearAllCaches() ou debug.unregisterSW() se necessário')
 }

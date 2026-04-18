@@ -413,7 +413,10 @@ const Products = () => {
                 loading={isLoading}
                 onViewDetails={handleViewDetails}
                 onEdit={handleOpenProductModal}
-                onDelete={(product) => { setSelectedProduct(product); setIsDeleteModalOpen(true) }}
+                onDelete={(product) => { 
+                  setSelectedProduct(product)
+                  setIsDeleteModalOpen(true) 
+                }}
                 onRegisterEntry={handleOpenEntryModal}
                 canEdit={canEdit} 
                 canManageStock={canManageStock}

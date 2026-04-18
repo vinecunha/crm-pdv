@@ -54,6 +54,20 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
+  // ✅ NOVO: IGNORAR WebSocket e HMR do Vite
+  if (url.protocol === 'ws:' || url.protocol === 'wss:') {
+    return; // Não interceptar WebSockets
+  }
+  
+  // ✅ NOVO: IGNORAR requisições do Vite HMR
+  if (url.pathname.includes('/@vite/') || 
+      url.pathname.includes('/@react-refresh') ||
+      url.pathname.includes('/node_modules/') ||
+      url.hostname === 'localhost' && url.port === '5173') {
+    logger.log('🔄 Vite HMR - deixando passar:', url.pathname);
+    return; // Deixa o navegador lidar diretamente
+  }
+  
   // ✅ CORREÇÃO: NÃO interceptar requisições POST, PUT, PATCH, DELETE
   if (event.request.method !== 'GET') {
     logger.log('📤 Requisição', event.request.method, 'deixando passar para rede:', url.pathname);

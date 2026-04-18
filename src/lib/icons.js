@@ -143,5 +143,13 @@ export {
   Grid,
   Monitor,
   Barcode,
-  Layers
+  Layers,
+  ExternalLink,
+  Maximize2,
+  Minimize2,
+  MoreVertical,
+  Columns,
+  Cake,
+  Crown,
+  UserX
 } from 'lucide-react'

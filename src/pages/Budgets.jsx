@@ -682,6 +682,18 @@ const Budgets = () => {
                     itemsPerPageOptions={[20, 50, 100]}
                     defaultItemsPerPage={20}
                     showTotalItems
+                    
+                    id="tabela-orcamentos"           // Persiste preferências do usuário
+                    // searchable={true}                // Adiciona barra de busca
+                    // searchPlaceholder="Buscar orçamento..."
+                    // searchFields={['client_name', 'budget_number', 'status']}
+                    exportable={true}                // Adiciona botão de exportar CSV
+                    exportFilename="orcamentos.csv"
+                    refreshable={true}               // Adiciona botão de atualizar
+                    onRefresh={refetchBudgets}       // Função para recarregar dados
+                    selectable={true}                // Permite selecionar múltiplas linhas
+                    stickyHeader={true}              // Header fixo ao rolar
+                    compact={false}                  // Modo compacto para mais densidade
                   />
                 )}
               </>

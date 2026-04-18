@@ -1,7 +1,7 @@
 // src/pages/Customers.jsx
 import React, { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { UserPlus, RefreshCw, Users as UsersIcon } from '../lib/icons'
+import { Cake, Crown, UserPlus, RefreshCw, Users as UsersIcon } from '../lib/icons'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useReactQuery } from '../hooks/useReactQuery'
@@ -477,9 +477,21 @@ const Customers = () => {
           <CustomerTable 
             customers={filteredCustomers} 
             onEdit={handleOpenModal} 
-            onDelete={(c) => { setSelectedCustomer(c); setIsDeleteModalOpen(true) }} 
+            onDelete={(c) => { 
+              setSelectedCustomer(c)
+              setIsDeleteModalOpen(true) 
+            }} 
             onCommunicate={(c) => navigate(`/customers/${c.id}/communication`)} 
             onSendCampaign={handleSendCampaign}
+            
+            // Novas funcionalidades
+            onRefresh={refetchCustomers}
+            loading={isLoading}
+            // enableSearch={true}
+            enableExport={true}
+            enableRefresh={true}
+            enableSelection={true}
+            showSummary={true}
           />
         )}
 

@@ -406,7 +406,28 @@ const Users = () => {
             {!loadingUsers && filteredUsers.length > 0 && (
               <>
                 <div className="block lg:hidden"><DataCards data={filteredUsers} renderCard={renderUserCard} keyExtractor={(u) => u.id} columns={1} gap={2} /></div>
-                <div className="hidden lg:block"><UserTable users={filteredUsers} currentUserId={profile?.id} onEdit={handleEdit} onDelete={(u) => { setUserToDelete(u); setShowDeleteModal(true) }} onUpdateStatus={handleUpdateStatus} canEdit={canEditUser} canDelete={canDeleteUser} isAdmin={isAdmin} /></div>
+                  <div className="hidden lg:block">
+                    <UserTable 
+                      users={filteredUsers} 
+                      currentUserId={profile?.id} 
+                      onEdit={handleEdit} 
+                      onDelete={(u) => { 
+                        setUserToDelete(u)
+                        setShowDeleteModal(true) 
+                      }} 
+                      onUpdateStatus={handleUpdateStatus} 
+                      canEdit={canEditUser} 
+                      canDelete={canDeleteUser} 
+                      isAdmin={isAdmin}
+                      
+                      // Novas funcionalidades
+                      onRefresh={refetchUsers}
+                      enableExport={true}
+                      enableRefresh={true}
+                      enableSelection={true}
+                      showSummary={true}
+                    />
+                  </div>
               </>
             )}
             <Modal isOpen={showModal} onClose={() => !isMutating && setShowModal(false)} title={editingUser ? 'Editar Usuário' : 'Novo Usuário'}>

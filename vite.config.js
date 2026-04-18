@@ -1,21 +1,33 @@
-// vite.config.js
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+const isProduction = process.env.NODE_ENV === 'production'
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react({
+      // Fast Refresh otimizado
+      fastRefresh: true,
+      // Excluir arquivos desnecessários do processamento
+      exclude: /node_modules/,
+    })
+  ],
   
   // ============= HEADERS DE SEGURANÇA =============
   server: {
     host: true,
-    headers: {
+    port: 5173,
+    strictPort: false,
+    
+    // Headers apenas para desenvolvimento
+    headers: isProduction ? {} : {
       'Content-Security-Policy': [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co http://localhost:* ws://localhost:*",
         "style-src 'self' 'unsafe-inline'",
-        "img-src 'self' data: https: blob:", 
+        "img-src 'self' data: https: blob:",
         "font-src 'self' data:",
-        "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.ipify.org",
+        "connect-src 'self' http://localhost:* ws://localhost:* wss://localhost:* https://*.supabase.co wss://*.supabase.co https://api.ipify.org",
         "frame-ancestors 'none'",
         "base-uri 'self'",
         "form-action 'self'"
@@ -24,16 +36,29 @@ export default defineConfig({
       'X-Frame-Options': 'DENY',
       'X-XSS-Protection': '1; mode=block',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
-      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
       'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-      'Cross-Origin-Resource-Policy': 'cross-origin',
+    },
+    
+    // Configuração do HMR
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+      port: 5173,
+      overlay: true
+    },
+    
+    // Watch com menos arquivos
+    watch: {
+      ignored: ['**/node_modules/**', '**/.git/**', '**/dist/**']
     }
   },
   
-  // ============= BUILD COM TREE SHAKING OTIMIZADO =============
+  // ============= BUILD OTIMIZADO =============
   build: {
+    // Source maps apenas em dev
+    sourcemap: !isProduction,
+    
     rollupOptions: {
-      // Tree shaking agressivo
       treeshake: {
         moduleSideEffects: false,
         propertyReadSideEffects: false,
@@ -42,62 +67,81 @@ export default defineConfig({
       },
       
       output: {
-        // Agrupamento manual de chunks
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['./src/lib/icons.js'],
-          data: ['@tanstack/react-query', '@supabase/supabase-js'],
-          charts: ['chart.js', 'react-chartjs-2'],
-          virtual: ['@tanstack/react-virtual'],
-          utils: ['dompurify', 'browser-image-compression'],
+        manualChunks(id) {
+          // Chunk automático baseado no caminho
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'vendor-react'
+            }
+            if (id.includes('@supabase')) {
+              return 'vendor-supabase'
+            }
+            if (id.includes('@tanstack/react-query')) {
+              return 'vendor-query'
+            }
+            if (id.includes('chart.js') || id.includes('react-chartjs')) {
+              return 'vendor-charts'
+            }
+            if (id.includes('dompurify') || id.includes('browser-image-compression')) {
+              return 'vendor-utils'
+            }
+            return 'vendor'
+          }
+          
+          // Chunks da aplicação
+          if (id.includes('/src/components/')) {
+            return 'components'
+          }
+          if (id.includes('/src/pages/')) {
+            return 'pages'
+          }
+          if (id.includes('/src/hooks/')) {
+            return 'hooks'
+          }
         },
         
-        // Nomeação para melhor caching
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     },
     
-    // Minificação agressiva com Terser
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
+        drop_console: isProduction,
+        drop_debugger: isProduction,
+        pure_funcs: isProduction ? ['console.log', 'console.info', 'console.debug'] : [],
         passes: 2,
-        unsafe: true,
-        unsafe_math: true,
-        unsafe_methods: true,
-        unsafe_proto: true,
-        unsafe_regexp: true,
-        unsafe_undefined: true,
+        unsafe: isProduction,
+        unsafe_math: isProduction,
+        unsafe_methods: isProduction,
+        unsafe_proto: isProduction,
+        unsafe_regexp: isProduction,
         collapse_vars: true,
         reduce_vars: true,
         hoist_funs: true,
         hoist_vars: true,
-        keep_fargs: false,
-        keep_fnames: false,
         dead_code: true,
         unused: true,
       },
       mangle: {
-        properties: {
+        properties: isProduction ? {
           regex: /^_/,
-          reserved: ['__proto__', 'constructor', 'prototype']
-        }
+        } : false
       },
       format: {
         comments: false,
-        ascii_only: true,
+        ascii_only: isProduction,
       }
     },
     
     chunkSizeWarningLimit: 500,
-    sourcemap: false,
     cssCodeSplit: true,
     target: 'es2020',
+    
+    // Compressão de assets
+    assetsInlineLimit: 4096, // 4kb
   },
   
   // ============= OTIMIZAÇÃO DE DEPENDÊNCIAS =============
@@ -108,16 +152,18 @@ export default defineConfig({
       'react-router-dom',
       '@tanstack/react-query',
       '@supabase/supabase-js',
-      './src/lib/icons.js',
       'chart.js',
       'react-chartjs-2',
       'dompurify',
       'browser-image-compression'
     ],
+    exclude: [],
     esbuildOptions: {
       target: 'es2020',
       treeShaking: true,
-    }
+    },
+    // Forçar otimização mesmo com erros
+    force: false
   },
   
   // ============= ESBUILD =============
@@ -125,8 +171,36 @@ export default defineConfig({
     target: 'es2020',
     treeShaking: true,
     legalComments: 'none',
-    minifyIdentifiers: true,
-    minifySyntax: true,
-    minifyWhitespace: true,
+    minifyIdentifiers: isProduction,
+    minifySyntax: isProduction,
+    minifyWhitespace: isProduction,
+    // Suporte a JSX
+    jsxInject: `import React from 'react'`,
+  },
+  
+  // ============= RESOLVE =============
+  resolve: {
+    alias: {
+      '@': '/src',
+      '@components': '/src/components',
+      '@pages': '/src/pages',
+      '@hooks': '/src/hooks',
+      '@utils': '/src/utils',
+      '@lib': '/src/lib',
+    }
+  },
+  
+  // ============= CSS =============
+  css: {
+    devSourcemap: !isProduction,
+    modules: {
+      localsConvention: 'camelCase',
+      generateScopedName: isProduction ? '[hash:base64:8]' : '[name]__[local]__[hash:base64:5]'
+    },
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@import "@/styles/variables.scss";`
+      }
+    }
   }
 })

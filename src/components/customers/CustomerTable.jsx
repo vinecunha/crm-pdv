@@ -1,10 +1,31 @@
-import React, { useState, useMemo } from 'react'
-import { User, Phone, Gift, Star, TrendingDown, Calendar, MessageSquare, Edit, Trash2 } from '../../lib/icons'
+import React, { useState, useMemo, useCallback } from 'react'
+import { 
+  User, 
+  Phone, 
+  Gift, 
+  Star, 
+  TrendingDown, 
+  Calendar, 
+  MessageSquare, 
+  Edit, 
+  Trash2,
+  Mail,
+  MapPin,
+  Award,
+  Clock,
+  RefreshCw,
+  Download,
+  Filter,
+  Users as UsersIcon,
+  Cake,
+  Crown,
+  AlertCircle
+} from '../../lib/icons'
 import { useTableStrategy } from '../../hooks/useTableStrategy'
 import Badge from '../Badge'
 import { formatCurrency, formatDate } from '../../utils/formatters'
 
-// ✅ MAPEAMENTO DE LABELS (idêntico ao DataTable)
+// ✅ MAPEAMENTO DE LABELS (mantido)
 const DEFAULT_ACTION_LABELS = {
   'communicate': 'Comunicar',
   'campaign': 'Campanha',
@@ -12,7 +33,7 @@ const DEFAULT_ACTION_LABELS = {
   'delete': 'Excluir',
 }
 
-// ✅ Componente de Legenda IDÊNTICO ao do DataTable
+// ✅ Componente de Legenda (mantido)
 const ActionsLegend = ({ actions }) => {
   if (!actions || actions.length === 0) return null
 
@@ -59,43 +80,76 @@ const ActionsLegend = ({ actions }) => {
   )
 }
 
-const CustomerTable = ({ customers, onEdit, onDelete, onCommunicate, onSendCampaign }) => {
+const CustomerTable = ({ 
+  customers, 
+  onEdit, 
+  onDelete, 
+  onCommunicate, 
+  onSendCampaign,
+  
+  // Novas props opcionais
+  onRefresh,
+  onExport,
+  loading = false,
+  enableSearch = true,
+  enableExport = true,
+  enableRefresh = true,
+  enableSelection = false,
+  onSelectionChange,
+  compact = false,
+  showSummary = true,
+  showFilters = true
+}) => {
   const TableComponent = useTableStrategy(customers, 100)
   const [filterType, setFilterType] = useState('all')
+  const [selectedCustomers, setSelectedCustomers] = useState([])
+  const safeCustomers = Array.isArray(customers) ? customers : []
 
+  // Labels RFV
   const rfvLabels = {
-    'A1': 'VIP / Campeão', 'A2': 'Leal', 'B1': 'Potencial',
-    'B2': 'Em Atenção', 'C1': 'Em Risco', 'C3': 'Inativo'
+    'A1': 'VIP / Campeão', 
+    'A2': 'Leal', 
+    'A3': 'Promissor',
+    'B1': 'Potencial',
+    'B2': 'Em Atenção', 
+    'B3': 'Novo',
+    'C1': 'Em Risco', 
+    'C2': 'Adormecido',
+    'C3': 'Inativo'
   }
 
-  const getFilteredCustomers = useMemo(() => {
+  // Filtro de clientes
+  const filteredCustomers = useMemo(() => {
     const today = new Date()
     switch(filterType) {
       case 'birthday':
-        return customers.filter(c => {
+        return safeCustomers.filter(c => {
           if (!c.birth_date) return false
           const birth = new Date(c.birth_date)
           return birth.getMonth() === today.getMonth() && birth.getDate() === today.getDate()
         })
       case 'vip':
-        return customers.filter(c => c.rfv_score === 'A1' || c.rfv_score === 'A2' || c.rfv_score === 'B1')
+        return safeCustomers.filter(c => c.rfv_score === 'A1' || c.rfv_score === 'A2' || c.rfv_score === 'B1')
       case 'inactive':
-        return customers.filter(c => c.rfv_recency > 30 || c.rfv_score?.startsWith('C'))
+        return safeCustomers.filter(c => c.rfv_recency > 30 || c.rfv_score?.startsWith('C'))
       case 'no_purchase':
-        return customers.filter(c => !c.last_purchase || c.total_purchases === 0)
+        return safeCustomers.filter(c => !c.last_purchase || c.total_purchases === 0)
       default:
-        return customers
+        return safeCustomers
     }
-  }, [customers, filterType])
+  }, [safeCustomers, filterType])
 
-  const filteredCustomers = getFilteredCustomers
+  // Status badge
+  const getStatusBadge = useCallback((status) => {
+    return status === 'active' 
+      ? <Badge variant="success">Ativo</Badge> 
+      : <Badge variant="danger">Inativo</Badge>
+  }, [])
 
-  const getStatusBadge = (status) => {
-    return status === 'active' ? <Badge variant="success">Ativo</Badge> : <Badge variant="danger">Inativo</Badge>
-  }
-
-  const getRfvBadge = (score) => {
+  // RFV Badge
+  const getRfvBadge = useCallback((score) => {
     if (!score) return <span className="text-gray-400 dark:text-gray-500 text-xs">-</span>
+    
     const colors = {
       'A1': 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-700', 
       'A2': 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
@@ -107,117 +161,404 @@ const CustomerTable = ({ customers, onEdit, onDelete, onCommunicate, onSendCampa
       'C2': 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 border-orange-300 dark:border-orange-700',
       'C3': 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-300 dark:border-red-700'
     }
+    
     const colorClass = colors[score] || 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 border-gray-300 dark:border-gray-600'
     const label = rfvLabels[score] || score
+    
     return (
-      <span title={`${label} (Recência • Frequência • Valor)`} className={`px-2 py-0.5 rounded-full text-xs font-medium border ${colorClass} cursor-help`}>
+      <span 
+        title={`${label} (Recência • Frequência • Valor)`} 
+        className={`px-2 py-0.5 rounded-full text-xs font-medium border ${colorClass} cursor-help`}
+      >
         {score}
       </span>
     )
-  }
+  }, [])
 
-  const getFilterCount = (type) => {
+  // Verificar aniversariante
+  const isBirthday = useCallback((customer) => {
+    if (!customer?.birth_date) return false
+    const today = new Date()
+    const birth = new Date(customer.birth_date)
+    return birth.getMonth() === today.getMonth() && birth.getDate() === today.getDate()
+  }, [])
+
+  // Contagem por filtro
+  const getFilterCount = useCallback((type) => {
     const today = new Date()
     switch(type) {
       case 'birthday':
-        return customers.filter(c => {
+        return safeCustomers.filter(c => {
           if (!c.birth_date) return false
           const birth = new Date(c.birth_date)
           return birth.getMonth() === today.getMonth() && birth.getDate() === today.getDate()
         }).length
-      case 'vip': return customers.filter(c => c.rfv_score === 'A1' || c.rfv_score === 'A2' || c.rfv_score === 'B1').length
-      case 'inactive': return customers.filter(c => c.rfv_recency > 30 || c.rfv_score?.startsWith('C')).length
-      case 'no_purchase': return customers.filter(c => !c.last_purchase || c.total_purchases === 0).length
-      default: return customers.length
+      case 'vip': 
+        return safeCustomers.filter(c => c.rfv_score === 'A1' || c.rfv_score === 'A2' || c.rfv_score === 'B1').length
+      case 'inactive': 
+        return safeCustomers.filter(c => c.rfv_recency > 30 || c.rfv_score?.startsWith('C')).length
+      case 'no_purchase': 
+        return safeCustomers.filter(c => !c.last_purchase || c.total_purchases === 0).length
+      default: 
+        return safeCustomers.length
     }
-  }
+  }, [safeCustomers])
 
-  const isBirthday = (customer) => {
-    if (!customer.birth_date) return false
-    const today = new Date()
-    const birth = new Date(customer.birth_date)
-    return birth.getMonth() === today.getMonth() && birth.getDate() === today.getDate()
-  }
+  // Estatísticas
+  const stats = useMemo(() => {
+    if (!safeCustomers.length) return null
+    
+    const total = safeCustomers.length
+    const active = safeCustomers.filter(c => c.status === 'active').length
+    const vip = safeCustomers.filter(c => c.rfv_score?.startsWith('A')).length
+    const withEmail = safeCustomers.filter(c => c.email).length
+    const withPhone = safeCustomers.filter(c => c.phone).length
+    const birthdaysThisMonth = safeCustomers.filter(c => {
+      if (!c.birth_date) return false
+      const today = new Date()
+      const birth = new Date(c.birth_date)
+      return birth.getMonth() === today.getMonth()
+    }).length
+    const avgPurchases = safeCustomers.reduce((sum, c) => sum + (c.total_purchases || 0), 0) / total
+    
+    return {
+      total,
+      active,
+      vip,
+      withEmail,
+      withPhone,
+      birthdaysThisMonth,
+      avgPurchases
+    }
+  }, [safeCustomers])
 
-  const actions = [
-    { id: 'communicate', label: 'Comunicar', icon: MessageSquare },
-    { id: 'campaign', label: 'Campanha', icon: Gift, show: (row) => isBirthday(row) || row?.rfv_score?.startsWith('C') },
-    { id: 'edit', label: 'Editar', icon: Edit },
-    { id: 'delete', label: 'Excluir', icon: Trash2 }
-  ]
+  // Ações
+  const actions = useMemo(() => [
+    { 
+      id: 'communicate', 
+      label: 'Comunicar', 
+      icon: MessageSquare,
+      onClick: onCommunicate,
+      className: 'text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30'
+    },
+    { 
+      id: 'campaign', 
+      label: 'Campanha', 
+      icon: Gift, 
+      onClick: onSendCampaign,
+      show: (row) => isBirthday(row) || row?.rfv_score?.startsWith('C'),
+      className: 'text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/30'
+    },
+    { 
+      id: 'edit', 
+      label: 'Editar', 
+      icon: Edit,
+      onClick: onEdit,
+      className: 'text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+    },
+    { 
+      id: 'delete', 
+      label: 'Excluir', 
+      icon: Trash2,
+      onClick: onDelete,
+      className: 'text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30'
+    }
+  ], [onCommunicate, onSendCampaign, onEdit, onDelete, isBirthday])
 
-  const columns = [
-    { key: 'name', header: 'Cliente', sortable: true, width: '22%', minWidth: '200px',
+  // Colunas
+  const columns = useMemo(() => [
+    { 
+      key: 'name', 
+      header: 'Cliente', 
+      sortable: true, 
+      searchable: true,
+      minWidth: '220px',
       render: (row) => (
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-              <User size={16} className="text-blue-600 dark:text-blue-400" />
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+              isBirthday(row) 
+                ? 'bg-gradient-to-br from-pink-100 to-pink-200 dark:from-pink-900/30 dark:to-pink-800/30' 
+                : 'bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30'
+            }`}>
+              <User size={18} className={isBirthday(row) ? 'text-pink-600 dark:text-pink-400' : 'text-blue-600 dark:text-blue-400'} />
             </div>
-            {isBirthday(row) && <div className="absolute -top-1 -right-1 w-4 h-4 bg-pink-500 rounded-full flex items-center justify-center"><Gift size={10} className="text-white" /></div>}
+            {isBirthday(row) && (
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-pink-500 rounded-full flex items-center justify-center shadow-lg">
+                <Gift size={12} className="text-white" />
+              </div>
+            )}
+            {row.rfv_score?.startsWith('A') && !isBirthday(row) && (
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center">
+                <Crown size={10} className="text-white" />
+              </div>
+            )}
           </div>
-          <div className="min-w-0"><div className="font-medium text-gray-900 dark:text-white truncate">{row.name || '-'}</div><div className="text-xs text-gray-500 dark:text-gray-400 truncate">{row.email || '-'}</div></div>
+          <div className="min-w-0">
+            <div className="font-medium text-gray-900 dark:text-white truncate">
+              {row.name || '-'}
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center gap-1">
+              <Mail size={10} />
+              {row.email || 'Sem email'}
+            </div>
+            {row.city && (
+              <div className="text-xs text-gray-400 dark:text-gray-500 truncate flex items-center gap-1 mt-0.5">
+                <MapPin size={10} />
+                {row.city}{row.state ? `/${row.state}` : ''}
+              </div>
+            )}
+          </div>
         </div>
       )
     },
-    { key: 'rfv_score', header: 'RFV', sortable: true, width: '80px', render: (row) => getRfvBadge(row.rfv_score) },
-    { key: 'phone', header: 'Telefone', width: '140px', render: (row) => (<div className="flex items-center gap-2"><Phone size={14} className="text-gray-400 dark:text-gray-500 flex-shrink-0" /><span className="truncate text-gray-900 dark:text-white">{row.phone || '-'}</span></div>) },
-    { key: 'total_purchases', header: 'Total Compras', sortable: true, width: '120px', render: (row) => (<span className="font-medium text-green-600 dark:text-green-400">{formatCurrency(row.total_purchases)}</span>) },
-    { key: 'last_purchase', header: 'Última Compra', sortable: true, width: '120px',
+    { 
+      key: 'rfv_score', 
+      header: 'RFV', 
+      sortable: true, 
+      width: '90px', 
+      render: (row) => getRfvBadge(row.rfv_score) 
+    },
+    { 
+      key: 'phone', 
+      header: 'Telefone', 
+      searchable: true,
+      width: '150px', 
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          <Phone size={14} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
+          <span className="truncate text-gray-900 dark:text-white">{row.phone || '-'}</span>
+        </div>
+      ) 
+    },
+    { 
+      key: 'total_purchases', 
+      header: 'Total Compras', 
+      sortable: true, 
+      width: '130px', 
+      render: (row) => (
+        <div>
+          <span className="font-semibold text-green-600 dark:text-green-400">
+            {formatCurrency(row.total_purchases || 0)}
+          </span>
+          {row.purchase_count > 0 && (
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              {row.purchase_count} compra{row.purchase_count > 1 ? 's' : ''}
+            </div>
+          )}
+        </div>
+      ) 
+    },
+    { 
+      key: 'last_purchase', 
+      header: 'Última Compra', 
+      sortable: true, 
+      width: '130px',
       render: (row) => {
         if (!row.last_purchase) return <span className="text-gray-400 dark:text-gray-500">-</span>
         const days = Math.floor((new Date() - new Date(row.last_purchase)) / (1000 * 60 * 60 * 24))
-        return (<div><div className="text-gray-900 dark:text-white">{formatDate(row.last_purchase)}</div>{days > 30 && <div className="text-xs text-orange-500 dark:text-orange-400 flex items-center gap-1"><TrendingDown size={10} />{days} dias</div>}</div>)
+        const isInactive = days > 30
+        
+        return (
+          <div>
+            <div className="text-gray-900 dark:text-white">{formatDate(row.last_purchase)}</div>
+            {isInactive && (
+              <div className="text-xs text-orange-500 dark:text-orange-400 flex items-center gap-1">
+                <TrendingDown size={10} />
+                {days} dias
+              </div>
+            )}
+            {!isInactive && days <= 7 && (
+              <div className="text-xs text-green-500 dark:text-green-400 flex items-center gap-1">
+                <Clock size={10} />
+                Recente
+              </div>
+            )}
+          </div>
+        )
       }
     },
-    { key: 'status', header: 'Status', width: '90px', render: (row) => getStatusBadge(row.status) },
-    { key: 'actions', header: 'Ações', width: '120px',
-      render: (row) => (
-        <div className="flex items-center gap-2">
-          <button onClick={(e) => { e.stopPropagation(); onCommunicate(row) }} className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors group" title="Comunicar"><MessageSquare size={16} className="text-blue-500 dark:text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-300" /></button>
-          {(isBirthday(row) || row.rfv_score?.startsWith('C')) && <button onClick={(e) => { e.stopPropagation(); onSendCampaign(row) }} className="p-2 hover:bg-pink-50 dark:hover:bg-pink-900/30 rounded-lg transition-colors group" title={isBirthday(row) ? "Campanha de Aniversário" : "Campanha de Reconquista"}><Gift size={16} className="text-pink-500 dark:text-pink-400 group-hover:text-pink-600 dark:group-hover:text-pink-300" /></button>}
-          <button onClick={(e) => { e.stopPropagation(); onEdit(row) }} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group" title="Editar"><Edit size={16} className="text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300" /></button>
-          <button onClick={(e) => { e.stopPropagation(); onDelete(row) }} className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors group" title="Excluir"><Trash2 size={16} className="text-red-500 dark:text-red-400 group-hover:text-red-600 dark:group-hover:text-red-300" /></button>
-        </div>
-      )
+    { 
+      key: 'status', 
+      header: 'Status', 
+      sortable: true,
+      width: '100px', 
+      render: (row) => getStatusBadge(row.status) 
     }
-  ]
+  ], [getRfvBadge, getStatusBadge, isBirthday])
 
-  const filterOptions = [
-    { value: 'all', label: 'Todos', icon: User, count: customers.length },
-    { value: 'birthday', label: 'Aniversariantes', icon: Gift, count: getFilterCount('birthday'), color: 'pink' },
-    { value: 'vip', label: 'Clientes VIP', icon: Star, count: getFilterCount('vip'), color: 'yellow' },
-    { value: 'inactive', label: 'Inativos', icon: TrendingDown, count: getFilterCount('inactive'), color: 'orange' },
+  // Opções de filtro
+  const filterOptions = useMemo(() => [
+    { value: 'all', label: 'Todos', icon: UsersIcon, count: safeCustomers.length, color: 'blue' },
+    { value: 'birthday', label: 'Aniversariantes', icon: Cake, count: getFilterCount('birthday'), color: 'pink' },
+    { value: 'vip', label: 'Clientes VIP', icon: Crown, count: getFilterCount('vip'), color: 'yellow' },
+    { value: 'inactive', label: 'Inativos', icon: AlertCircle, count: getFilterCount('inactive'), color: 'orange' },
     { value: 'no_purchase', label: 'Sem Compras', icon: Calendar, count: getFilterCount('no_purchase'), color: 'gray' }
-  ]
+  ], [safeCustomers, getFilterCount])
+
+  // Handlers
+  const handleSelectionChange = useCallback((selectedIds) => {
+    setSelectedCustomers(selectedIds)
+    onSelectionChange?.(selectedIds)
+  }, [onSelectionChange])
+
+  const handleRefresh = useCallback(async () => {
+    if (onRefresh) {
+      await onRefresh()
+    }
+  }, [onRefresh])
+
+  const exportFilename = useMemo(() => {
+    const date = new Date().toISOString().split('T')[0]
+    return `clientes-${date}.csv`
+  }, [])
+
+  // Campos para busca
+  const searchFields = useMemo(() => 
+    columns
+      .filter(col => col.searchable)
+      .map(col => col.key)
+  , [columns])
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 flex-wrap">
-        {filterOptions.map(option => {
-          const Icon = option.icon
-          const isActive = filterType === option.value
-          const colorClasses = { 
-            pink: 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 border-pink-300 dark:border-pink-700', 
-            yellow: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700', 
-            orange: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-700', 
-            gray: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600' 
-          }
-          return (
-            <button key={option.value} onClick={() => setFilterType(option.value)} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border ${isActive ? (colorClasses[option.color] || 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700') : 'bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
-              <Icon size={14} /><span>{option.label}</span><span className={`px-1.5 py-0.5 rounded-full text-xs ${isActive ? 'bg-white/50 dark:bg-black/20' : 'bg-gray-200 dark:bg-gray-700 dark:text-gray-300'}`}>{option.count}</span>
-            </button>
-          )
-        })}
-      </div>
+      {/* Cards de estatísticas */}
+      {showSummary && stats && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+            <div className="text-xs text-gray-500 dark:text-gray-400">Total</div>
+            <div className="text-xl font-bold text-gray-900 dark:text-white">{stats.total}</div>
+          </div>
+          <div className="bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 p-3">
+            <div className="text-xs text-green-600 dark:text-green-400">Ativos</div>
+            <div className="text-xl font-bold text-green-700 dark:text-green-300">{stats.active}</div>
+          </div>
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 p-3">
+            <div className="text-xs text-yellow-600 dark:text-yellow-400">VIP</div>
+            <div className="text-xl font-bold text-yellow-700 dark:text-yellow-300">{stats.vip}</div>
+          </div>
+          <div className="bg-pink-50 dark:bg-pink-900/20 rounded-lg border border-pink-200 dark:border-pink-800 p-3">
+            <div className="text-xs text-pink-600 dark:text-pink-400">Aniversariantes deste mês</div>
+            <div className="text-xl font-bold text-pink-700 dark:text-pink-300">{stats.birthdaysThisMonth}</div>
+          </div>
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-3">
+            <div className="text-xs text-blue-600 dark:text-blue-400">Com Email</div>
+            <div className="text-xl font-bold text-blue-700 dark:text-blue-300">{stats.withEmail}</div>
+          </div>
+          <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 p-3">
+            <div className="text-xs text-purple-600 dark:text-purple-400">Com Telefone</div>
+            <div className="text-xl font-bold text-purple-700 dark:text-purple-300">{stats.withPhone}</div>
+          </div>
+          <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800 p-3">
+            <div className="text-xs text-indigo-600 dark:text-indigo-400">Média Compras</div>
+            <div className="text-xl font-bold text-indigo-700 dark:text-indigo-300">
+              {formatCurrency(stats.avgPurchases)}
+            </div>
+          </div>
+        </div>
+      )}
 
+      {/* Filtros */}
+      {showFilters && (
+        <div className="flex items-center gap-2 flex-wrap">
+          {filterOptions.map(option => {
+            const Icon = option.icon
+            const isActive = filterType === option.value
+            const colorClasses = { 
+              pink: 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 border-pink-300 dark:border-pink-700', 
+              yellow: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700', 
+              orange: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-700', 
+              gray: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600',
+              blue: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700'
+            }
+            return (
+              <button 
+                key={option.value} 
+                onClick={() => setFilterType(option.value)} 
+                className={`
+                  flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border
+                  ${isActive 
+                    ? (colorClasses[option.color] || 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700') 
+                    : 'bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }
+                `}
+              >
+                <Icon size={14} />
+                <span>{option.label}</span>
+                <span className={`
+                  px-1.5 py-0.5 rounded-full text-xs 
+                  ${isActive ? 'bg-white/50 dark:bg-black/20' : 'bg-gray-200 dark:bg-gray-700 dark:text-gray-300'}
+                `}>
+                  {option.count}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Legenda de ações */}
       <ActionsLegend actions={actions} />
 
+      {/* Tabela principal */}
       <TableComponent
-        columns={columns} data={filteredCustomers} onRowClick={onEdit}
+        // Props existentes
+        columns={columns} 
+        data={filteredCustomers} 
+        actions={actions}
+        onRowClick={onEdit}
         emptyMessage={filterType !== 'all' ? `Nenhum cliente encontrado neste filtro` : "Nenhum cliente encontrado"}
-        striped hover showTotalItems totalLabel={`${filteredCustomers.length} cliente(s)`}
+        striped 
+        hover 
+        showTotalItems
+        
+        // Novas funcionalidades
+        id="tabela-clientes"
+        // searchable={enableSearch}
+        // searchPlaceholder="Buscar por nome, email, telefone..."
+        // searchFields={searchFields}
+        exportable={enableExport}
+        exportFilename={exportFilename}
+        refreshable={enableRefresh && !!onRefresh}
+        onRefresh={handleRefresh}
+        loading={loading}
+        selectable={enableSelection}
+        onSelectionChange={handleSelectionChange}
+        compact={compact}
+        stickyHeader={true}
+        itemsPerPageOptions={[10, 20, 50, 100]}
       />
+
+      {/* Ações em massa */}
+      {enableSelection && selectedCustomers.length > 0 && (
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 flex items-center justify-between">
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            {selectedCustomers.length} cliente{selectedCustomers.length > 1 ? 's' : ''} selecionado{selectedCustomers.length > 1 ? 's' : ''}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                const selected = safeCustomers.filter(c => selectedCustomers.includes(c.id))
+                selected.forEach(c => onCommunicate(c))
+              }}
+              className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-1"
+            >
+              <MessageSquare size={14} />
+              Comunicar selecionados
+            </button>
+            <button
+              onClick={() => {
+                const selected = safeCustomers.filter(c => selectedCustomers.includes(c.id))
+                onSendCampaign(selected)
+              }}
+              className="px-3 py-1.5 text-sm bg-pink-600 text-white rounded-md hover:bg-pink-700 transition-colors flex items-center gap-1"
+            >
+              <Gift size={14} />
+              Campanha
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

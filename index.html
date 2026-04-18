@@ -15,19 +15,7 @@
     <meta name="apple-mobile-web-app-title" content="PDV" />
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
 
-    <meta http-equiv="Content-Security-Policy" content="
-      default-src 'self';
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co;
-      style-src 'self' 'unsafe-inline';
-      img-src 'self' data: https: blob:;
-      font-src 'self' data:;
-      connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.ipify.org;
-      frame-ancestors 'none';
-      base-uri 'self';
-      form-action 'self';
-    ">
-
-    <meta http-equiv="Strict-Transport-Security" content="max-age=31536000; includeSubDomains; preload">
+    <!-- CSP gerenciado pelo vite.config.js -->
     
     <title>Brasalino Pollo - Sistema de Gestão</title>
   </head>
