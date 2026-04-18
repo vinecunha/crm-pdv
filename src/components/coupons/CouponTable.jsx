@@ -92,7 +92,7 @@ const CouponTable = ({
       header: 'Código',
       sortable: true,
       searchable: true,
-      width: '120px',
+      width: '80px',
       render: (row) => (
         <div className="flex items-center gap-1 group">
           <span className="font-mono font-bold text-blue-600 dark:text-blue-400 truncate text-sm">
@@ -116,7 +116,7 @@ const CouponTable = ({
       header: 'Nome',
       sortable: true,
       searchable: true,
-      minWidth: '180px',
+      maxWidth: '120px',
       render: (row) => (
         <div className="min-w-0">
           <div className="font-medium text-gray-900 dark:text-white truncate text-sm">
@@ -134,7 +134,7 @@ const CouponTable = ({
       key: 'discount_value',
       header: 'Desconto',
       sortable: true,
-      width: '120px',
+      width: '100px',
       render: (row) => {
         if (!row) return <span>-</span>
         return (

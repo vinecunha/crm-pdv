@@ -369,7 +369,7 @@ const Profile = () => {
                         }
                       `}
                     >
-                      <Icon size={16} className="sm:size-18" />
+                      <Icon size={16} />
                       <span className="text-xs sm:text-sm">{tab.label}</span>
                     </button>
                   )

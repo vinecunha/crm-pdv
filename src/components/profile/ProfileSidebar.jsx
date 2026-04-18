@@ -83,7 +83,7 @@ const ProfileSidebar = ({
                 onClick={() => document.getElementById(`tab-${tab.id}`)?.click()}
                 className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
               >
-                <Icon size={18} />
+                <Icon size={16} />
                 <span className="text-sm">{tab.label}</span>
               </button>
             )

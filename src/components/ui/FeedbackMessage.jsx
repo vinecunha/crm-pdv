@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { 
   AlertCircle, 
   CheckCircle, 
@@ -48,7 +49,7 @@ const useProgressTimer = (duration, onComplete, isPaused = false) => {
         pausedProgressRef.current = progress
       }
     }
-  }, [duration, onComplete, isPaused, initialProgress])
+  }, [duration, onComplete, isPaused])
 
   return progress
 }
@@ -178,10 +179,11 @@ const FeedbackMessage = ({
   animate = true,
   position = 'static',
   compact = false,
-  variant = 'default' // default, solid, outlined
+  variant = 'default'
 }) => {
   const [isHovered, setIsHovered] = useState(false)
   const [isVisible, setIsVisible] = useState(true)
+  const [isLeaving, setIsLeaving] = useState(false)
   const messageRef = useRef(null)
   const { copied, copy } = useCopyToClipboard()
 
@@ -196,8 +198,11 @@ const FeedbackMessage = ({
   )
 
   const handleClose = useCallback(() => {
-    setIsVisible(false)
-    setTimeout(() => onClose?.(), 300) // Aguarda animação
+    setIsLeaving(true)
+    setTimeout(() => {
+      setIsVisible(false)
+      onClose?.()
+    }, 300)
   }, [onClose])
 
   // Auto-close com duração
@@ -244,7 +249,7 @@ const FeedbackMessage = ({
           icon: 'text-white dark:text-white'
         },
         outlined: {
-          bg: 'bg-transparent',
+          bg: 'bg-white dark:bg-gray-800',
           border: 'border-2 border-green-500 dark:border-green-400',
           text: 'text-green-700 dark:text-green-300',
           icon: 'text-green-500 dark:text-green-400'
@@ -267,7 +272,7 @@ const FeedbackMessage = ({
           icon: 'text-white dark:text-white'
         },
         outlined: {
-          bg: 'bg-transparent',
+          bg: 'bg-white dark:bg-gray-800',
           border: 'border-2 border-red-500 dark:border-red-400',
           text: 'text-red-700 dark:text-red-300',
           icon: 'text-red-500 dark:text-red-400'
@@ -290,7 +295,7 @@ const FeedbackMessage = ({
           icon: 'text-white dark:text-white'
         },
         outlined: {
-          bg: 'bg-transparent',
+          bg: 'bg-white dark:bg-gray-800',
           border: 'border-2 border-yellow-500 dark:border-yellow-400',
           text: 'text-yellow-700 dark:text-yellow-300',
           icon: 'text-yellow-500 dark:text-yellow-400'
@@ -313,7 +318,7 @@ const FeedbackMessage = ({
           icon: 'text-white dark:text-white'
         },
         outlined: {
-          bg: 'bg-transparent',
+          bg: 'bg-white dark:bg-gray-800',
           border: 'border-2 border-blue-500 dark:border-blue-400',
           text: 'text-blue-700 dark:text-blue-300',
           icon: 'text-blue-500 dark:text-blue-400'
@@ -334,19 +339,27 @@ const FeedbackMessage = ({
 
   if (!message || !isVisible) return null
 
-  return (
+  const messageContent = (
     <div
       ref={messageRef}
       className={`
         ${bgColor} border ${borderColor} rounded-lg 
         ${compact ? 'p-3' : 'p-4'} 
-        ${positionClasses[position]}
         flex items-start gap-3
-        ${animate ? 'animate-in slide-in-from-top-2 fade-in duration-300' : ''}
-        ${isVisible ? 'opacity-100' : 'opacity-0 translate-y-2'}
-        transition-all duration-300
+        transform transition-all duration-300
+        ${position !== 'static' && isLeaving 
+          ? 'opacity-0 translate-x-full scale-95' 
+          : position !== 'static'
+            ? 'opacity-100 translate-x-0 scale-100'
+            : isLeaving
+              ? 'opacity-0 translate-y-2'
+              : 'opacity-100 translate-y-0'
+        }
+        ${position !== 'static' ? 'shadow-xl hover:shadow-2xl' : 'shadow-lg hover:shadow-xl'}
+        ${positionClasses[position]}
         relative overflow-hidden
-        shadow-lg hover:shadow-xl
+        ${animate && position !== 'static' ? 'animate-in slide-in-from-right fade-in duration-300' : ''}
+        ${animate && position === 'static' ? 'animate-in slide-in-from-top-2 fade-in duration-300' : ''}
         ${className}
       `}
       role={type === 'error' ? 'alert' : 'status'}
@@ -447,6 +460,15 @@ const FeedbackMessage = ({
       )}
     </div>
   )
+
+  // A MÁGICA: Se position for 'static', renderiza inline (comportamento antigo)
+  // Se for qualquer outra posição, renderiza como toast no portal
+  if (position === 'static') {
+    return messageContent
+  }
+
+  // Para posições fixed, renderiza como toast no topo direito por padrão
+  return createPortal(messageContent, document.body)
 }
 
 // Container para múltiplas mensagens
@@ -457,11 +479,8 @@ export const FeedbackContainer = ({
 }) => {
   const displayMessages = messages.slice(0, maxMessages)
 
-  return (
+  const containerContent = (
     <div className={`
-      ${position === 'fixed' ? 'fixed top-4 right-4 z-50' : ''}
-      ${position === 'fixed-bottom' ? 'fixed bottom-4 right-4 z-50' : ''}
-      ${position === 'fixed-top-center' ? 'fixed top-4 left-1/2 -translate-x-1/2 z-50' : ''}
       space-y-2 w-full max-w-md
     `}>
       {displayMessages.map((msg, index) => (
@@ -480,6 +499,37 @@ export const FeedbackContainer = ({
       )}
     </div>
   )
+
+  // Se for fixed, renderiza no portal
+  if (position === 'fixed') {
+    return createPortal(
+      <div className="fixed top-4 right-4 z-50">
+        {containerContent}
+      </div>,
+      document.body
+    )
+  }
+
+  if (position === 'fixed-bottom') {
+    return createPortal(
+      <div className="fixed bottom-4 right-4 z-50">
+        {containerContent}
+      </div>,
+      document.body
+    )
+  }
+
+  if (position === 'fixed-top-center') {
+    return createPortal(
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full px-4">
+        {containerContent}
+      </div>,
+      document.body
+    )
+  }
+
+  // Se não for fixed, renderiza inline
+  return containerContent
 }
 
 export default FeedbackMessage
