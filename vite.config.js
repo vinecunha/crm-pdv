@@ -158,25 +158,13 @@ export default defineConfig({
       'browser-image-compression'
     ],
     exclude: [],
-    esbuildOptions: {
+    rolldownOptions: {
       target: 'es2020',
-      treeShaking: true,
     },
     // Forçar otimização mesmo com erros
     force: false
   },
-  
-  // ============= ESBUILD =============
-  esbuild: {
-    target: 'es2020',
-    treeShaking: true,
-    legalComments: 'none',
-    minifyIdentifiers: isProduction,
-    minifySyntax: isProduction,
-    minifyWhitespace: isProduction,
-    // Suporte a JSX
-    jsxInject: `import React from 'react'`,
-  },
+
   
   // ============= RESOLVE =============
   resolve: {

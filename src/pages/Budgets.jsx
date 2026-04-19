@@ -524,6 +524,11 @@ const Budgets = () => {
     }
   ]
 
+   const isMutating = searchCustomerMutation.isPending || 
+                     createCustomerMutation.isPending || 
+                     validateCouponMutation.isPending || 
+                     createBudgetMutation.isPending
+
   const headerActions = mode === 'list' ? [
     {
       label: 'Atualizar',
@@ -549,11 +554,7 @@ const Budgets = () => {
 
   const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
   const total = subtotal - discount
-  const isMutating = searchCustomerMutation.isPending || 
-                     createCustomerMutation.isPending || 
-                     validateCouponMutation.isPending || 
-                     createBudgetMutation.isPending
-
+ 
   // Renderizar card para DataCards
   const renderBudgetCard = (budget) => (
     <BudgetCard

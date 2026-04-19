@@ -5,7 +5,7 @@ import {
   Users, 
   Percent, 
   DollarSign, 
-  Send, 
+  Gift, 
   Edit, 
   Trash2, 
   UserPlus, 
@@ -288,7 +288,7 @@ const CouponTable = ({
     {
       id: 'campaign',
       label: 'Campanha',
-      icon: Send, 
+      icon: Gift, 
       onClick: onSendCampaign,
       show: (row) => row?.is_active === true && (!row?.valid_to || new Date(row.valid_to) >= new Date()),
       className: 'text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/30'
