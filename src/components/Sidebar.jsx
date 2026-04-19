@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useLocation, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useCompany } from '../hooks/useCompany'
@@ -6,7 +6,7 @@ import PrefetchLink from './PrefetchLink'
 import {
   LogOut, X, ShoppingBag, Package, Users, Settings, FileText,
   BarChart3, UserCircle, LayoutDashboard, ChevronLeft, ChevronRight,
-  ClipboardList, Ticket, Calculator, User
+  ClipboardList, Ticket, Calculator, User, Tags, Archive
 } from '../lib/icons'
 
 const Sidebar = ({ collapsed, setCollapsed }) => {
@@ -30,23 +30,72 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
                       profile?.email?.split('@')[0] || 'Usuário'
   const userInitial = displayName.charAt(0).toUpperCase()
 
-  const allMenuItems = [
-    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', permission: 'canViewDashboard', description: 'Visão geral', prefetch: true },
-    { path: '/sales', icon: ShoppingBag, label: 'PDV', permission: 'canViewSales', description: 'Ponto de venda', prefetch: true },
-    { path: '/budgets', icon: FileText, label: 'Orçamentos', permission: 'canViewSales', description: 'Gerenciar orçamentos', prefetch: true },
-    { path: '/cashier', icon: Calculator, label: 'Fechar Caixa', permission: 'canViewSales', description: 'Conciliação de vendas', prefetch: false },
-    { path: '/sales-list', icon: ClipboardList, label: 'Gestão de Vendas', permission: 'canViewSales', description: 'Histórico e cancelamentos', prefetch: true },
-    { path: '/coupons', icon: Ticket, label: 'Cupons', permission: 'canViewCoupons', description: 'Gerenciar cupons', prefetch: true },
-    { path: '/products', icon: Package, label: 'Produtos', permission: 'canViewProducts', description: 'Gerenciar produtos', prefetch: true },
-    { path: '/stock-count', icon: ClipboardList, label: 'Balanço', permission: 'canManageStock', description: 'Contagem de estoque', prefetch: true },
-    { path: '/customers', icon: Users, label: 'Clientes', permission: 'canViewCustomers', description: 'Gerenciar clientes', prefetch: true },
-    { path: '/reports', icon: BarChart3, label: 'Relatórios', permission: 'canViewReports', description: 'Análises e métricas', prefetch: false },
-    { path: '/users', icon: UserCircle, label: 'Usuários', permission: 'canViewUsers', description: 'Gerenciar usuários', prefetch: true },
-    { path: '/logs', icon: FileText, label: 'Logs', permission: 'canViewLogs', description: 'Histórico do sistema', prefetch: true },
-    { path: '/settings', icon: Settings, label: 'Configurações', permission: 'canViewSettings', description: 'Preferências do sistema', prefetch: true },
-  ]
+  const menuGroups = useMemo(() => [
+    {
+      id: 'principal',
+      label: 'Principal',
+      items: [
+        { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', permission: 'canViewDashboard', description: 'Visão geral', prefetch: true },
+      ]
+    },
+    {
+      id: 'vendas',
+      label: 'Vendas',
+      items: [
+        { path: '/sales', icon: ShoppingBag, label: 'PDV', permission: 'canViewSales', description: 'Ponto de venda', prefetch: true, highlight: true },
+        { path: '/budgets', icon: FileText, label: 'Orçamentos', permission: 'canViewSales', description: 'Gerenciar orçamentos', prefetch: true },
+        { path: '/sales-list', icon: ClipboardList, label: 'Histórico', permission: 'canViewSales', description: 'Vendas e cancelamentos', prefetch: true },
+      ]
+    },
+    {
+      id: 'financeiro',
+      label: 'Financeiro',
+      items: [
+        { path: '/cashier', icon: Calculator, label: 'Fechar Caixa', permission: 'canViewSales', description: 'Conciliação de vendas', prefetch: false },
+        { path: '/coupons', icon: Ticket, label: 'Cupons', permission: 'canViewCoupons', description: 'Gerenciar cupons', prefetch: true },
+      ]
+    },
+    {
+      id: 'catalogo',
+      label: 'Catálogo',
+      items: [
+        { path: '/products', icon: Package, label: 'Produtos', permission: 'canViewProducts', description: 'Gerenciar produtos', prefetch: true },
+        { path: '/stock-count', icon: Archive, label: 'Balanço', permission: 'canManageStock', description: 'Contagem de estoque', prefetch: true },
+      ]
+    },
+    {
+      id: 'clientes',
+      label: 'Clientes',
+      items: [
+        { path: '/customers', icon: Users, label: 'Clientes', permission: 'canViewCustomers', description: 'Gerenciar clientes', prefetch: true },
+      ]
+    },
+    {
+      id: 'analises',
+      label: 'Análises',
+      items: [
+        { path: '/reports', icon: BarChart3, label: 'Relatórios', permission: 'canViewReports', description: 'Análises e métricas', prefetch: false },
+      ]
+    },
+    {
+      id: 'administracao',
+      label: 'Administração',
+      items: [
+        { path: '/users', icon: UserCircle, label: 'Usuários', permission: 'canViewUsers', description: 'Gerenciar usuários', prefetch: true },
+        { path: '/logs', icon: FileText, label: 'Logs', permission: 'canViewLogs', description: 'Histórico do sistema', prefetch: true },
+        { path: '/settings', icon: Settings, label: 'Configurações', permission: 'canViewSettings', description: 'Preferências do sistema', prefetch: true },
+      ]
+    }
+  ], [])
 
-  const menuItems = allMenuItems.filter(item => permissions[item.permission])
+  const visibleGroups = useMemo(() => {
+    return menuGroups.map(group => ({
+      ...group,
+      items: group.items.filter(item => permissions[item.permission])
+    })).filter(group => group.items.length > 0)
+  }, [menuGroups, permissions])
+
+  const allMenuItems = visibleGroups.flatMap(g => g.items)
 
   const isActiveRoute = (path) => {
     if (path === '/dashboard') return location.pathname === '/dashboard'
@@ -136,6 +185,53 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     )
   }
 
+  const MenuItemComponent = ({ item, collapsed, isMobile = false }) => {
+    const Icon = item.icon
+    const isActive = isActiveRoute(item.path)
+    const gradientStyle = isActive ? {
+      background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`
+    } : {}
+    
+    const LinkComponent = item.prefetch ? PrefetchLink : Link
+    
+    return (
+      <div key={item.path} className="relative group">
+        <LinkComponent
+          to={item.path}
+          prefetch={item.prefetch}
+          onClick={() => isMobile && setIsMobileOpen(false)}
+          className={`
+            flex items-center rounded-xl transition-all duration-200
+            ${collapsed && !isMobile ? 'justify-center p-3' : 'gap-3 px-4 py-3'}
+            ${isActive 
+              ? 'text-white shadow-md' 
+              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}
+            ${item.highlight && !isActive ? 'border-l-4 border-blue-500 dark:border-blue-400' : ''}
+          `}
+          style={isActive ? gradientStyle : {}}
+          title={collapsed && !isMobile ? item.label : ''}
+        >
+          <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-gray-500 dark:text-gray-400'} transition-transform group-hover:scale-110`} />
+          {(!collapsed || isMobile) && (
+            <div className="flex-1 min-w-0 text-left">
+              <p className={`font-medium truncate ${isActive ? 'text-white' : 'text-gray-700 dark:text-gray-200'}`}>{item.label}</p>
+              <p className={`text-xs truncate ${isActive ? 'text-white/80' : 'text-gray-400 dark:text-gray-500'}`}>{item.description}</p>
+            </div>
+          )}
+          {(!collapsed || isMobile) && isActive && (
+            <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse flex-shrink-0" />
+          )}
+        </LinkComponent>
+        
+        {collapsed && !isMobile && (
+          <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+            {item.label}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   if (authLoading || companyLoading) {
     return (
       <>
@@ -154,7 +250,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     )
   }
 
-  // Mobile sidebar
   if (isMobileOpen) {
     return (
       <>
@@ -188,45 +283,19 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {menuItems.map((item) => {
-                const Icon = item.icon
-                const isActive = isActiveRoute(item.path)
-                const gradientStyle = isActive ? {
-                  background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`
-                } : {}
-
-                const LinkComponent = item.prefetch ? PrefetchLink : Link
-
-                return (
-                  <LinkComponent
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setIsMobileOpen(false)}
-                    prefetch={item.prefetch}
-                    className={`
-                      flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
-                      ${isActive 
-                        ? 'text-white shadow-lg' 
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}
-                    `}
-                    style={isActive ? gradientStyle : {}}
-                  >
-                    <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`} />
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-medium truncate ${isActive ? 'text-white' : 'text-gray-700 dark:text-gray-200'}`}>
-                        {item.label}
-                      </p>
-                      <p className={`text-xs truncate ${isActive ? 'text-white/80' : 'text-gray-400 dark:text-gray-500'}`}>
-                        {item.description}
-                      </p>
-                    </div>
-                    {isActive && (
-                      <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse flex-shrink-0" />
-                    )}
-                  </LinkComponent>
-                )
-              })}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {visibleGroups.map((group) => (
+                <div key={group.id}>
+                  <p className="px-3 mb-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                    {group.label}
+                  </p>
+                  <div className="space-y-1">
+                    {group.items.map((item) => (
+                      <MenuItemComponent key={item.path} item={item} collapsed={false} isMobile={true} />
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
 
             <div className="p-4 border-t border-gray-100 dark:border-gray-700 flex-shrink-0">
@@ -258,7 +327,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     )
   }
 
-  // Desktop Sidebar
   return (
     <>
       <button
@@ -274,7 +342,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         hidden lg:flex flex-col fixed left-0 top-0 h-full bg-white dark:bg-gray-900 shadow-2xl transition-all duration-300 z-30 overflow-hidden
         ${collapsed ? 'w-20' : 'w-64'}
       `}>
-        {/* Header com Logo */}
         <div className={`
           p-5 border-b border-gray-100 dark:border-gray-700 transition-all duration-300 flex-shrink-0
           ${collapsed ? 'px-3' : 'px-6'}
@@ -303,7 +370,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
           </div>
         </div>
 
-        {/* Perfil do Usuário */}
         {!collapsed && !authLoading && (
           <div 
             onClick={handleProfileClick}
@@ -335,55 +401,23 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
           </div>
         )}
 
-        {/* Menu Items */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-1.5">
-          {menuItems.map((item) => {
-            const Icon = item.icon
-            const isActive = isActiveRoute(item.path)
-            const gradientStyle = isActive ? {
-              background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`
-            } : {}
-
-            const LinkComponent = item.prefetch ? PrefetchLink : Link
-
-            return (
-              <div key={item.path} className="relative group">
-                <LinkComponent
-                  to={item.path}
-                  prefetch={item.prefetch}
-                  className={`
-                    flex items-center rounded-xl transition-all duration-200
-                    ${collapsed ? 'justify-center p-3' : 'gap-3 px-4 py-3'}
-                    ${isActive 
-                      ? 'text-white shadow-md' 
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}
-                  `}
-                  style={isActive ? gradientStyle : {}}
-                  title={collapsed ? item.label : ''}
-                >
-                  <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-gray-500 dark:text-gray-400'} transition-transform group-hover:scale-110`} />
-                  {!collapsed && (
-                    <div className="flex-1 min-w-0 text-left">
-                      <p className={`font-medium truncate ${isActive ? 'text-white' : 'text-gray-700 dark:text-gray-200'}`}>{item.label}</p>
-                      <p className={`text-xs truncate ${isActive ? 'text-white/80' : 'text-gray-400 dark:text-gray-500'}`}>{item.description}</p>
-                    </div>
-                  )}
-                  {!collapsed && isActive && (
-                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse flex-shrink-0" />
-                  )}
-                </LinkComponent>
-                
-                {collapsed && (
-                  <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
-                    {item.label}
-                  </div>
-                )}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-4">
+          {visibleGroups.map((group) => (
+            <div key={group.id}>
+              {!collapsed && (
+                <p className="px-3 mb-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                  {group.label}
+                </p>
+              )}
+              <div className="space-y-1">
+                {group.items.map((item) => (
+                  <MenuItemComponent key={item.path} item={item} collapsed={collapsed} />
+                ))}
               </div>
-            )
-          })}
+            </div>
+          ))}
         </div>
 
-        {/* Botão Sair */}
         <div className="p-4 border-t border-gray-100 dark:border-gray-700 flex-shrink-0">
           <button
             onClick={handleLogout}

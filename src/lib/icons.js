@@ -153,5 +153,6 @@ export {
   Columns,
   Cake,
   Crown,
-  UserX
+  UserX,
+  Tags
 } from 'lucide-react'
