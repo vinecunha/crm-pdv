@@ -200,22 +200,24 @@ const Login = () => {
               autoComplete="current-password"
             />
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              fullWidth
-              loading={loading}
-              disabled={isBlocked}
-              shortcut={{ key: 'Enter', description: 'Entrar' }}
-              className="mt-6"
-              style={{ 
-                backgroundColor: primaryColor,
-                '--tw-ring-color': primaryColor 
-              }}
-            >
-              Entrar
-            </Button>
+            <div className="w-full flex items-center justify-center">
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                fullWidth
+                loading={loading}
+                disabled={isBlocked}
+                shortcut={{ key: 'Enter', description: 'Entrar' }}
+                className="mt-4"
+                style={{ 
+                  backgroundColor: primaryColor,
+                  '--tw-ring-color': primaryColor 
+                }}
+              >
+                Entrar
+              </Button>
+            </div>
           </form>
         </div>
 

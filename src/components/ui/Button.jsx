@@ -326,13 +326,13 @@ const Button = forwardRef(({
       className={`
         ${variants[variant]}
         ${sizes[size]}
-        ${fullWidth ? 'w-full' : ''}
-        inline-flex items-center justify-center font-medium rounded-lg
+        ${className}
+        ${fullWidth ? 'w-full flex' : 'inline-flex'}
+        items-center justify-center font-medium rounded-lg
         focus:outline-none focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900
         transition-all duration-200 ease-out
         disabled:cursor-not-allowed
         relative overflow-hidden
-        ${className}
       `}
       {...props}
     >
