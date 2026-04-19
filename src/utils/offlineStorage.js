@@ -1,3 +1,4 @@
+// utils/offlineStorage.js
 const DB_NAME = 'pdv-offline-db'
 const DB_VERSION = 2 
 const STORE_NAME = 'pendingSales'
@@ -31,6 +32,7 @@ const openDB = () => {
   })
 }
 
+// ============= Funções existentes =============
 export const getPendingSales = async () => {
   try {
     const db = await openDB()
@@ -93,16 +95,120 @@ export const markSaleAsSynced = async (localId) => {
     
     const getRequest = store.get(localId)
     
-    getRequest.onsuccess = () => {
-      const sale = getRequest.result
-      if (sale) {
-        sale.synced = true
-        sale.syncedAt = new Date().toISOString()
-        store.put(sale)
-        console.log('✅ Venda marcada como sincronizada:', localId)
+    return new Promise((resolve, reject) => {
+      getRequest.onsuccess = () => {
+        const sale = getRequest.result
+        if (sale) {
+          sale.synced = true
+          sale.syncedAt = new Date().toISOString()
+          store.put(sale)
+          console.log('✅ Venda marcada como sincronizada:', localId)
+          resolve(true)
+        } else {
+          resolve(false)
+        }
       }
-    }
+      getRequest.onerror = () => reject(getRequest.error)
+    })
   } catch (error) {
     console.error('❌ Erro ao marcar como sincronizada:', error)
+    return false
+  }
+}
+
+// ============= NOVAS FUNÇÕES (adicionar) =============
+
+// Alias para compatibilidade com os novos componentes
+export const getOfflineSales = getPendingSales
+
+// Buscar todas as vendas (incluindo já sincronizadas)
+export const getAllSales = async () => {
+  try {
+    const db = await openDB()
+    const transaction = db.transaction([STORE_NAME], 'readonly')
+    const store = transaction.objectStore(STORE_NAME)
+    
+    const request = store.getAll()
+    
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result)
+      request.onerror = () => reject(request.error)
+    })
+  } catch (error) {
+    console.error('❌ Erro ao buscar todas as vendas:', error)
+    return []
+  }
+}
+
+// Remover uma venda offline
+export const removeOfflineSale = async (id) => {
+  try {
+    const db = await openDB()
+    const transaction = db.transaction([STORE_NAME], 'readwrite')
+    const store = transaction.objectStore(STORE_NAME)
+    
+    const request = store.delete(id)
+    
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => {
+        console.log('✅ Venda removida:', id)
+        resolve(true)
+      }
+      request.onerror = () => reject(request.error)
+    })
+  } catch (error) {
+    console.error('❌ Erro ao remover venda:', error)
+    return false
+  }
+}
+
+// Atualizar status de uma venda offline
+export const updateOfflineSaleStatus = async (id, updates) => {
+  try {
+    const db = await openDB()
+    const transaction = db.transaction([STORE_NAME], 'readwrite')
+    const store = transaction.objectStore(STORE_NAME)
+    
+    const getRequest = store.get(id)
+    
+    return new Promise((resolve, reject) => {
+      getRequest.onsuccess = () => {
+        const sale = getRequest.result
+        if (sale) {
+          const updatedSale = { ...sale, ...updates }
+          const putRequest = store.put(updatedSale)
+          
+          putRequest.onsuccess = () => {
+            console.log('✅ Venda atualizada:', id)
+            resolve(true)
+          }
+          putRequest.onerror = () => reject(putRequest.error)
+        } else {
+          resolve(false)
+        }
+      }
+      getRequest.onerror = () => reject(getRequest.error)
+    })
+  } catch (error) {
+    console.error('❌ Erro ao atualizar venda:', error)
+    return false
+  }
+}
+
+// Limpar todas as vendas sincronizadas
+export const clearSyncedSales = async () => {
+  try {
+    const allSales = await getAllSales()
+    const syncedSales = allSales.filter(sale => sale.synced === true)
+    
+    for (const sale of syncedSales) {
+      await removeOfflineSale(sale.id)
+    }
+    
+    console.log(`✅ ${syncedSales.length} vendas sincronizadas removidas`)
+    return syncedSales.length
+  } catch (error) {
+    console.error('❌ Erro ao limpar vendas sincronizadas:', error)
+    return 0
   }
 }

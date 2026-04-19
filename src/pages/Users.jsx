@@ -38,7 +38,7 @@ const StatCard = ({ label, value, color, icon: Icon, active, onClick }) => {
           <p className={`text-xl sm:text-2xl font-bold ${colors[color].text}`}>{value}</p>
         </div>
         <div className={`p-2 sm:p-3 ${colors[color].bg} rounded-full`}>
-          <Icon size={20} className={`sm:size-24 ${colors[color].text}`} />
+          <Icon size={20} className={`${colors[color].text}`} />
         </div>
       </div>
     </div>

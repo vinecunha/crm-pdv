@@ -1,7 +1,7 @@
 import React from 'react'
 import Badge from '../../Badge'
 import { Clock, CheckCircle, XCircle, AlertTriangle, Check } from '../../../lib/icons'
-import { BUDGET_STATUS } from '../../../utils/budgetUtils'
+import { BUDGET_STATUS } from '../../../utils/budgetConstants.jsx'
 
 const statusIcons = {
   [BUDGET_STATUS.PENDING]: Clock,

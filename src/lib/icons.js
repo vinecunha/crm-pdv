@@ -145,6 +145,8 @@ export {
   Barcode,
   Layers,
   ExternalLink,
+  Maximize,
+  Minimize,
   Maximize2,
   Minimize2,
   MoreVertical,

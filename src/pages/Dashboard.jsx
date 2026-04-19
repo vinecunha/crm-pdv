@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { 
   ShoppingCart, 
@@ -7,7 +7,8 @@ import {
   Plus, 
   Package,
   LayoutDashboard,
-  ChevronRight
+  ChevronRight,
+  RefreshCw
 } from '../lib/icons'
 import { useDashboardData } from '../hooks/useDashboardData'
 import { useDashboardStats } from '../hooks/useDashboardStats'
@@ -22,10 +23,10 @@ import TopProductsList from '../components/dashboard/TopProductsList'
 
 const Dashboard = () => {
   const { profile, permissions } = useAuth()
+  const navigate = useNavigate()
   const { data: rawData, isLoading, error, refetch } = useDashboardData()
   const dashboardStats = useDashboardStats(rawData)
 
-  // Ações rápidas baseadas em permissões
   const quickActions = useMemo(() => {
     const actions = []
     
@@ -33,44 +34,42 @@ const Dashboard = () => {
       actions.push({ 
         label: 'Nova Venda', 
         icon: ShoppingCart, 
-        path: '/sales', 
-        color: 'blue' 
+        onClick: () => navigate('/sales'),
+        variant: 'outline'
       })
     }
     if (permissions.canViewCustomers) {
       actions.push({ 
         label: 'Novo Cliente', 
         icon: UserPlus, 
-        path: '/customers', 
-        color: 'green' 
+        onClick: () => navigate('/customers'),
+        variant: 'outline'
       })
     }
     if (permissions.canViewProducts) {
       actions.push({ 
         label: 'Novo Produto', 
         icon: Plus, 
-        path: '/products', 
-        color: 'purple' 
+        onClick: () => navigate('/products'),
+        variant: 'outline'
       })
     }
     if (permissions.canManageStock) {
       actions.push({ 
         label: 'Balanço', 
         icon: Package, 
-        path: '/stock-count', 
-        color: 'orange' 
+        onClick: () => navigate('/stock-count'),
+        variant: 'outline'
       })
     }
     
     return actions
-  }, [permissions])
+  }, [permissions, navigate])
 
-  // Loading state
   if (isLoading) {
     return <DataLoadingSkeleton type="dashboard" />
   }
 
-  // Error state
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center px-4">
@@ -96,40 +95,26 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Header */}
         <PageHeader
           title={`Bem-vindo, ${profile?.full_name?.split(' ')[0] || 'Usuário'}!`}
           description="Acompanhe os principais indicadores do seu negócio"
           icon={LayoutDashboard}
-          actions={quickActions.map(action => ({
-            ...action,
-            render: () => (
-              <Link key={action.path} to={action.path}>
-                <Button size="sm" variant="outline" icon={action.icon}>
-                  <span className="hidden xs:inline">{action.label}</span>
-                </Button>
-              </Link>
-            )
-          }))}
+          actions={quickActions}
         />
 
-        {/* Cards de Estatísticas */}
         <DashboardStats 
           stats={dashboardStats}
           isLoading={isLoading}
           onRefresh={refetch}
         />
 
-        {/* Gráfico de Vendas */}
         <div className='mt-6'>
           <SectionErrorBoundary title="Erro no gráfico de vendas">
             <SalesChart data={chartData} />
           </SectionErrorBoundary>
         </div>
 
-        {/* Últimas Vendas e Produtos Mais Vendidos */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          {/* Últimas Vendas */}
           <SectionErrorBoundary title="Erro nas últimas vendas">
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-6">
               <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -148,7 +133,6 @@ const Dashboard = () => {
             </div>
           </SectionErrorBoundary>
 
-          {/* Produtos Mais Vendidos */}
           <SectionErrorBoundary title="Erro nos produtos mais vendidos">
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-6">
               <div className="flex items-center justify-between mb-3 sm:mb-4">

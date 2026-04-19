@@ -1,4 +1,3 @@
-// Budgets.jsx - Versão refatorada com componentização completa
 import React, { useState, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { 
@@ -46,8 +45,8 @@ import {
   getBudgetStatusConfig, 
   calculateSubtotal, 
   calculateTotal 
-} from '../utils/budgetUtils'
-import { BUDGET_COLUMNS, BUDGET_ACTIONS } from '../constants/budgetConstants'
+} from '../utils/budgetConstants.jsx'
+import { BUDGET_COLUMNS, BUDGET_ACTIONS } from '../utils/budgetConstants'
 
 // ============= Componente Principal =============
 const Budgets = () => {

@@ -1,7 +1,7 @@
 import React from 'react'
 import { CheckCircle, XCircle, Check } from '../../../lib/icons'
 import { formatDate } from '../../../utils/formatters'
-import { BUDGET_STATUS } from '../../../utils/budgetUtils'
+import { BUDGET_STATUS } from '../../../utils/budgetConstants.jsx'
 import StatusBadge from '../shared/StatusBadge'
 
 const BudgetStatusInfo = ({ budget }) => {

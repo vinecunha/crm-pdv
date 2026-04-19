@@ -1,5 +1,5 @@
 import React from 'react'
-import { BUDGET_STATUS } from '../../../utils/budgetUtils'
+import { BUDGET_STATUS } from '../../../utils/budgetConstants'
 
 const StatusFilter = ({ 
   value = 'all', 

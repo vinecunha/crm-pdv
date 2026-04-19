@@ -1,3 +1,8 @@
+import React from 'react'
+import SearchInput from './shared/SearchInput'
+import StatusFilter from './shared/StatusFilter'
+import ViewModeToggle from './shared/ViewModeToggle'
+
 const BudgetFilters = ({ 
   searchTerm, 
   onSearchChange, 
@@ -16,3 +21,5 @@ const BudgetFilters = ({
     </div>
   </div>
 )
+
+export default BudgetFilters

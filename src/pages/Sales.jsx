@@ -1,30 +1,48 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Phone, Keyboard, ShoppingCart, User, Ticket, CreditCard, WifiOff, FileText } from '../lib/icons'
+import { 
+  Phone, 
+  Keyboard, 
+  ShoppingCart, 
+  User, 
+  Ticket, 
+  CreditCard, 
+  WifiOff, 
+  FileText,
+  Maximize,
+  Minimize,
+  RotateCcw
+} from '../lib/icons'
 import { useAuth } from '../contexts/AuthContext'
 import FeedbackMessage from '../components/ui/FeedbackMessage'
 import Modal from '../components/ui/Modal'
 import Button from '../components/ui/Button'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
-import useSystemLogs from '../hooks/useSystemLogs'
-import usePDVShortcuts from '../hooks/usePDVShortcuts'
-import { saveSaleOffline } from '../utils/offlineStorage'
-import { useNetworkStatus } from '../hooks/useNetworkStatus'
-import { formatCurrency } from '../utils/formatters'
-import { supabase } from '../lib/supabase'
-
-import * as saleService from '../services/saleService'
-
 import PageHeader from '../components/ui/PageHeader'
-import ShortcutFeedback from '../components/ui/ShortcutFeedback'
-import ProductGrid from '../components/sales/pdv/ProductGrid'
-import CartSummary from '../components/sales/pdv/CartSummary'
+import ConfirmModal from '../components/ui/ConfirmModal'
 import QuickCustomerForm from '../components/sales/pdv/QuickCustomerForm'
 import CouponSelector from '../components/sales/pdv/CouponSelector'
 import CheckoutModal from '../components/sales/pdv/CheckoutModal'
 import ShortcutsHelpModal from '../components/ui/ShortcutsHelpModal'
-import ConfirmModal from '../components/ui/ConfirmModal'
+import ProductGrid from '../components/sales/pdv/ProductGrid'
+import CartSummary from '../components/sales/pdv/CartSummary'
+
+// Componentes extras
+import CompactCartView from '../components/sales/pdv/CompactCartView'
+import SyncStatus from '../components/sales/pdv/SyncStatus'
+import ShortcutFeedback from '../components/ui/ShortcutFeedback'
+
+import useSystemLogs from '../hooks/useSystemLogs'
+import usePDVShortcuts from '../hooks/usePDVShortcuts'
+import useKioskMode from '../hooks/useKioskMode'
+import { useNetworkStatus } from '../hooks/useNetworkStatus'
+import useMediaQuery from '../hooks/useMediaQuery'
+
+import { saveSaleOffline } from '../utils/offlineStorage'
+import { formatCurrency } from '../utils/formatters'
+import { supabase } from '../lib/supabase'
+import * as saleService from '../services/saleService'
 
 // ============= Componente Principal =============
 const Sales = () => {
@@ -32,6 +50,10 @@ const Sales = () => {
   const { logCreate, logAction, logError } = useSystemLogs()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const isMobile = useMediaQuery('(max-width: 1024px)')
+  
+  // Hook de modo quiosque
+  const { isKioskMode, toggleKioskMode } = useKioskMode()
   
   // Estados locais
   const [cart, setCart] = useState([])
@@ -181,14 +203,10 @@ const Sales = () => {
         customer_phone: customer?.phone || null,
         total_amount: subtotal,
         discount_amount: discount,
-        discount_percent: coupon?.discount_type === 'percent' ? coupon.discount_value : 0,
         coupon_code: coupon?.code || null,
         final_amount: total,
         payment_method: paymentMethod,
-        payment_status: 'pending',
-        status: 'pending',
         created_by: profile?.id,
-        created_by_email: profile?.email,
         items: cart.map(item => ({
           product_id: item.id,
           product_name: item.name,
@@ -201,20 +219,15 @@ const Sales = () => {
         offlineCreatedAt: new Date().toISOString(),
       }
       
-      const localId = await saveSaleOffline(offlineSaleData)
-      
-      if ('serviceWorker' in navigator && 'SyncManager' in window) {
-        const registration = await navigator.serviceWorker.ready
-        await registration.sync.register('sync-pending-sales')
-      }
+      await saveSaleOffline(offlineSaleData)
       
       updateLocalStock(cart)
       
-      await logCreate('sale', `offline-${localId}`, { 
+      await logCreate('sale', `offline-${Date.now()}`, { 
         offline: true, total_amount: subtotal, discount, final_amount: total 
       })
       
-      showFeedback('success', `✅ Venda salva OFFLINE! Sincroniza quando houver internet.`)
+      showFeedback('success', `✅ Venda salva OFFLINE!`)
       
       setCart([])
       setCustomer(null)
@@ -318,7 +331,6 @@ const Sales = () => {
 
   const removeFromCart = (productId) => {
     setCart(prev => prev.filter(item => item.id !== productId))
-    logAction({ action: 'REMOVE_FROM_CART', entityType: 'sale', details: { product_id: productId } })
   }
 
   const handleClearCart = () => {
@@ -330,7 +342,6 @@ const Sales = () => {
     setCart([])
     setShowClearCartConfirm(false)
     showFeedback('info', 'Carrinho limpo')
-    logAction({ action: 'CLEAR_CART', entityType: 'sale', details: { items_removed: cart.length } })
   }
 
   const searchCustomer = () => {
@@ -390,7 +401,6 @@ const Sales = () => {
           customer_phone: customer?.phone || null,
           total_amount: subtotal,
           discount_amount: discount,
-          discount_percent: coupon?.discount_type === 'percent' ? coupon.discount_value : 0,
           coupon_code: coupon?.code || null,
           final_amount: total,
           payment_method: 'pix',
@@ -453,20 +463,25 @@ const Sales = () => {
     if (cart.length === 0) showFeedback('warning', 'Adicione itens ao carrinho')
     else setShowPaymentModal(true)
   }, [cart])
-  const handleConfirmPayment = useCallback(async (method = null) => confirmPayment(method), [cart, discount, customer, coupon, paymentMethod, isOnline])
-  const handleCancelPayment = useCallback(() => setShowPaymentModal(false), [])
   const handleShortcutFeedback = useCallback((shortcut) => setShortcutFeedback(shortcut), [])
 
   const { shortcuts } = usePDVShortcuts({
-    onFocusSearch: handleFocusSearch, onClearSearch: handleClearSearch,
-    onRefreshProducts: handleRefreshProducts, onClearCart: handleClearCart,
-    onIncreaseQuantity: handleIncreaseQuantity, onDecreaseQuantity: handleDecreaseQuantity,
-    onRemoveItem: handleRemoveItem, onOpenCustomerModal: handleOpenCustomerModal,
-    onClearCustomer: handleClearCustomer, onOpenCouponModal: handleOpenCouponModal,
-    onRemoveCoupon: handleRemoveCoupon, onOpenPaymentModal: handleOpenPaymentModal,
-    onConfirmPayment: handleConfirmPayment, onCancelPayment: handleCancelPayment,
+    onFocusSearch: handleFocusSearch,
+    onClearSearch: handleClearSearch,
+    onRefreshProducts: handleRefreshProducts,
+    onClearCart: handleClearCart,
+    onIncreaseQuantity: handleIncreaseQuantity,
+    onDecreaseQuantity: handleDecreaseQuantity,
+    onRemoveItem: handleRemoveItem,
+    onOpenCustomerModal: handleOpenCustomerModal,
+    onClearCustomer: handleClearCustomer,
+    onOpenCouponModal: handleOpenCouponModal,
+    onRemoveCoupon: handleRemoveCoupon,
+    onOpenPaymentModal: handleOpenPaymentModal,
     onOpenHelp: () => setShowShortcutsHelp(true),
-    cartItems: cart, selectedCartItemIndex, setSelectedCartItemIndex,
+    cartItems: cart,
+    selectedCartItemIndex,
+    setSelectedCartItemIndex,
     onShortcutFeedback: handleShortcutFeedback,
     enabled: !showCustomerModal && !showQuickCustomerModal && !showCouponModal && !showPaymentModal && !showShortcutsHelp && !showClearCartConfirm
   })
@@ -476,7 +491,6 @@ const Sales = () => {
   const isMutating = searchCustomerMutation.isPending || createCustomerMutation.isPending || 
                      validateCouponMutation.isPending || createSaleMutation.isPending
 
-  // Configuração das ações do header
   const headerActions = [
     {
       label: 'Orçamentos',
@@ -488,25 +502,24 @@ const Sales = () => {
       label: 'Atalhos',
       icon: Keyboard,
       onClick: () => setShowShortcutsHelp(true),
-      variant: 'outline',
-      shortcut: { key: 'F1', description: 'Atalhos' }
+      variant: 'outline'
     }
   ]
 
   if (isLoading) return <DataLoadingSkeleton />
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-black">
+    <div className={`min-h-screen bg-gray-100 dark:bg-black ${isKioskMode ? 'kiosk-mode' : ''}`}>
       {!isOnline && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-500 dark:bg-yellow-600 text-white py-1.5 sm:py-2 px-3 sm:px-4 text-center text-xs sm:text-sm font-medium shadow-md">
-          <div className="flex items-center justify-center gap-1 sm:gap-2">
-            <WifiOff size={14} className="sm:size-16" />
-            <span className="truncate">MODO OFFLINE - Vendas salvas localmente</span>
+        <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-500 text-white py-1.5 px-3 text-center text-xs font-medium shadow-md">
+          <div className="flex items-center justify-center gap-2">
+            <WifiOff size={14} />
+            <span>MODO OFFLINE - Vendas salvas localmente</span>
           </div>
         </div>
       )}
       
-      <div className={`max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 ${!isOnline ? 'pt-10 sm:pt-12' : ''}`}>
+      <div className={`max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 ${!isOnline ? 'pt-10' : ''}`}>
         {feedback.show && <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />}
         {shortcutFeedback && <ShortcutFeedback shortcut={shortcutFeedback} onHide={() => setShortcutFeedback(null)} />}
 
@@ -533,22 +546,44 @@ const Sales = () => {
 
           <div className="lg:col-span-1 order-1 lg:order-2">
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 lg:sticky lg:top-4">
-              {/* Cabeçalho do Carrinho */}
               <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <ShoppingCart size={18} className="text-gray-600 dark:text-gray-400" />
-                  <span>Carrinho</span>
-                  {cart.length > 0 && (
-                    <span className="ml-auto text-sm text-gray-500 dark:text-gray-400">
-                      {cart.length} {cart.length === 1 ? 'item' : 'itens'}
-                    </span>
-                  )}
-                </h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <ShoppingCart size={18} className="text-gray-600 dark:text-gray-400" />
+                    <span>Carrinho</span>
+                    {cart.length > 0 && (
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        {cart.length} {cart.length === 1 ? 'item' : 'itens'}
+                      </span>
+                    )}
+                  </h2>
+                  
+                  <div className="flex items-center gap-1">
+                    {/* Botão de Modo Quiosque */}
+                    {!isMobile && (
+                      <button
+                        onClick={toggleKioskMode}
+                        className="p-1.5 text-gray-400 hover:text-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+                        title={isKioskMode ? 'Sair do modo quiosque' : 'Modo quiosque'}
+                      >
+                        {isKioskMode ? <Minimize size={16} /> : <Maximize size={16} />}
+                      </button>
+                    )}
+                    
+                    {cart.length > 0 && (
+                      <button
+                        onClick={handleClearCart}
+                        className="p-1.5 text-gray-400 hover:text-red-500 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+                        title="Limpar carrinho"
+                      >
+                        <RotateCcw size={16} />
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              {/* Cliente e Cupom */}
               <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 space-y-3">
-                {/* Cliente */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <User size={16} className="text-gray-400 dark:text-gray-500" />
@@ -556,12 +591,12 @@ const Sales = () => {
                   </div>
                   {customer ? (
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600 dark:text-gray-300 truncate max-w-[120px] sm:max-w-[150px]">
+                      <span className="text-sm text-gray-600 dark:text-gray-300 truncate max-w-[120px]">
                         {customer.name}
                       </span>
                       <button 
                         onClick={clearCustomer} 
-                        className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                        className="text-xs text-red-500 hover:text-red-700"
                         disabled={isMutating}
                       >
                         Remover
@@ -572,7 +607,6 @@ const Sales = () => {
                       size="sm" 
                       variant="outline" 
                       onClick={() => setShowCustomerModal(true)} 
-                      shortcut={{ key: 'C', alt: true, description: 'Cliente' }} 
                       disabled={isMutating}
                     >
                       Identificar
@@ -580,7 +614,6 @@ const Sales = () => {
                   )}
                 </div>
 
-                {/* Cupom */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Ticket size={16} className="text-gray-400 dark:text-gray-500" />
@@ -591,7 +624,7 @@ const Sales = () => {
                       <span className="text-sm text-green-600 dark:text-green-400 font-medium">{coupon.code}</span>
                       <button 
                         onClick={removeCoupon} 
-                        className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                        className="text-xs text-red-500 hover:text-red-700"
                         disabled={isMutating}
                       >
                         Remover
@@ -602,7 +635,6 @@ const Sales = () => {
                       size="sm" 
                       variant="outline" 
                       onClick={() => setShowCouponModal(true)} 
-                      shortcut={{ key: 'U', alt: true, description: 'Cupom' }} 
                       disabled={!customer || isMutating}
                     >
                       Aplicar
@@ -611,7 +643,6 @@ const Sales = () => {
                 </div>
               </div>
 
-              {/* Resumo do Carrinho (itens) */}
               <CartSummary 
                 cart={cart} 
                 discount={discount} 
@@ -625,7 +656,6 @@ const Sales = () => {
                 disabled={isMutating} 
               />
 
-              {/* Totais e Botão Finalizar */}
               <div className="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-b-lg">
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm">
@@ -650,21 +680,39 @@ const Sales = () => {
                   onClick={() => setShowPaymentModal(true)}
                   disabled={cart.length === 0 || isMutating} 
                   icon={CreditCard} 
-                  shortcut={{ key: 'Enter', ctrl: true, description: 'Finalizar' }}
                 >
-                  {!isOnline ? 'Salvar Venda Offline' : 'Finalizar Venda'} (Ctrl+Enter)
+                  {!isOnline ? 'Salvar Venda Offline' : 'Finalizar Venda'}
                 </Button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Modals - mantidos iguais */}
+        {/* Componentes flutuantes */}
+        <SyncStatus />
+        
+        {/* Carrinho compacto para mobile */}
+        {isMobile && (
+          <CompactCartView
+            cart={cart}
+            total={total}
+            subtotal={subtotal}
+            discount={discount}
+            products={products}
+            onUpdateQuantity={updateCartItemQuantity}
+            onRemoveItem={removeFromCart}
+            onClearCart={handleClearCart}
+            onCheckout={() => setShowPaymentModal(true)}
+            disabled={isMutating}
+          />
+        )}
+
+        {/* Modais */}
         <Modal isOpen={showCustomerModal} onClose={() => setShowCustomerModal(false)} title="Identificar Cliente" size="sm">
           <div className="space-y-4">
             <div className="text-center">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Phone size={24} className="text-blue-600 dark:text-blue-400 sm:size-28" />
+              <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Phone size={24} className="text-blue-600 dark:text-blue-400" />
               </div>
               <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">Digite o telefone do cliente</p>
             </div>
@@ -673,14 +721,14 @@ const Sales = () => {
               placeholder="(11) 99999-9999" 
               value={customerPhone} 
               onChange={(e) => setCustomerPhone(e.target.value)}
-              className="w-full px-4 py-2.5 sm:py-3 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-center"
+              className="w-full px-4 py-2.5 border rounded-lg text-center dark:bg-gray-800 dark:text-white"
               onKeyPress={(e) => e.key === 'Enter' && searchCustomer()} 
               autoFocus 
               disabled={searchCustomerMutation.isPending} 
             />
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-              <Button variant="outline" onClick={() => setShowCustomerModal(false)} className="flex-1 order-2 sm:order-1">Cancelar</Button>
-              <Button onClick={searchCustomer} loading={searchCustomerMutation.isPending} className="flex-1 order-1 sm:order-2">Buscar</Button>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setShowCustomerModal(false)} className="flex-1">Cancelar</Button>
+              <Button onClick={searchCustomer} loading={searchCustomerMutation.isPending} className="flex-1">Buscar</Button>
             </div>
           </div>
         </Modal>
@@ -730,15 +778,8 @@ const Sales = () => {
           onClose={() => setShowClearCartConfirm(false)} 
           onConfirm={confirmClearCart}
           title="Limpar Carrinho" 
-          message={
-            <div>
-              <p className="mb-2 dark:text-gray-300 text-sm">Tem certeza que deseja remover todos os itens do carrinho?</p>
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                {cart.length} {cart.length === 1 ? 'item será' : 'itens serão'} removidos.
-              </p>
-            </div>
-          }
-          confirmText="Limpar Carrinho" 
+          message="Tem certeza que deseja remover todos os itens?"
+          confirmText="Limpar" 
           cancelText="Cancelar" 
           variant="danger" 
         />
