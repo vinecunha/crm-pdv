@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { User, Mail, Phone, Calendar, MapPin, Hash, Search } from '../../lib/icons'
+import { Calendar, Search } from '../../lib/icons'
 import FormInput from '../forms/FormInput'
 import Button from '../ui/Button'
 
@@ -30,7 +30,8 @@ const CustomerForm = ({
 
     setLoadingCEP(true)
     try {
-      const response = await fetch(`https://brasilapi.com.br/api/cep/v1/${cepLimpo}`)
+      // Tentar ViaCEP primeiro (melhor compatibilidade CSP)
+      const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`)
       
       if (!response.ok) {
         throw new Error('CEP não encontrado')
@@ -38,14 +39,19 @@ const CustomerForm = ({
       
       const data = await response.json()
       
-      onChange({ target: { name: 'address', value: data.street || '' } })
-      onChange({ target: { name: 'city', value: data.city || '' } })
-      onChange({ target: { name: 'state', value: data.state || '' } })
+      if (data.erro) {
+        throw new Error('CEP não encontrado')
+      }
       
-      showFeedback?.('success', 'Endereço preenchido automaticamente!')
+      onChange({ target: { name: 'address', value: data.logradouro || '' } })
+      onChange({ target: { name: 'city', value: data.localidade || '' } })
+      onChange({ target: { name: 'state', value: data.uf || '' } })
+      
+      showFeedback?.('success', 'Endereço preenchido!')
       
     } catch (error) {
-      showFeedback?.('error', 'CEP não encontrado')
+      console.error('Erro ao consultar CEP:', error)
+      showFeedback?.('error', 'CEP não encontrado ou serviço indisponível')
     } finally {
       setLoadingCEP(false)
     }
@@ -60,49 +66,42 @@ const CustomerForm = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormInput
-            label="Nome Completo *"
+            label="Nome"
             name="name"
             value={formData.name || ''}
             onChange={onChange}
-            required
             error={formErrors.name}
-            placeholder="Digite o nome completo"
-            icon={User}
+            required
+            autoFocus
           />
-          
+
           <FormInput
-            label="E-mail *"
+            label="Email"
             name="email"
             type="email"
             value={formData.email || ''}
             onChange={onChange}
-            required
             error={formErrors.email}
-            placeholder="cliente@email.com"
-            icon={Mail}
+            required
           />
-          
+
           <FormInput
-            label="Telefone *"
+            label="Telefone"
             name="phone"
+            mask="phone"
             value={formData.phone || ''}
             onChange={onChange}
-            required
             error={formErrors.phone}
-            placeholder="(11) 99999-9999"
-            icon={Phone}
-            mask="phone"
+            required
           />
-          
+
           <FormInput
-            label="CPF/CNPJ"
+            label="Documento"
             name="document"
+            mask="cpfCnpj"
             value={formData.document || ''}
             onChange={onChange}
-            placeholder="123.456.789-00"
-            icon={Hash}
-            mask="cpfCnpj"
-            helperText="Opcional"
+            error={formErrors.document}
           />
           
           <FormInput
@@ -115,13 +114,16 @@ const CustomerForm = ({
             helperText="Opcional"
           />
           
+          {/* Status */}
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Status</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+              Status
+            </label>
             <select
               name="status"
               value={formData.status || 'active'}
               onChange={onChange}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg"
+              className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
             >
               <option value="active">Ativo</option>
               <option value="inactive">Inativo</option>
@@ -141,16 +143,16 @@ const CustomerForm = ({
               <FormInput
                 label="CEP"
                 name="zip_code"
+                mask="cep"
                 value={formData.zip_code || ''}
                 onChange={onChange}
-                placeholder="12345-678"
-                mask="cep"
+                error={formErrors.zip_code}
               />
               <button
                 type="button"
                 onClick={consultarCEP}
                 disabled={loadingCEP || !formData.zip_code}
-                className="absolute right-3 top-8 p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg disabled:opacity-50"
+                className="absolute right-3 top-8 p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg disabled:opacity-50 transition-colors"
                 title="Consultar CEP"
               >
                 <Search size={16} className={loadingCEP ? 'animate-spin' : ''} />
@@ -163,7 +165,6 @@ const CustomerForm = ({
               value={formData.address || ''}
               onChange={onChange}
               placeholder="Rua, número, complemento"
-              icon={MapPin}
             />
             
             <FormInput

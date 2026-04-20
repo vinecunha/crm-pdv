@@ -54,6 +54,11 @@ ORDER BY event_object_table, trigger_name;
   },
   {
     "trigger_info": {
+      "trigger_definition": "CREATE TRIGGER trigger_update_goals_updated_at\n   BEFORE ON public.goals\n   FOR EACH ROW\n   EXECUTE FUNCTION EXECUTE FUNCTION update_goals_updated_at()"
+    }
+  },
+  {
+    "trigger_info": {
       "trigger_definition": "CREATE TRIGGER update_login_attempts_updated_at\n   BEFORE ON public.login_attempts\n   FOR EACH ROW\n   EXECUTE FUNCTION EXECUTE FUNCTION update_updated_at_column()"
     }
   },

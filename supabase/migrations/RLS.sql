@@ -669,6 +669,46 @@ WHERE schemaname = 'public';
       },
       {
         "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",
+        "Tabela": "goals",
+        "Comando": "DELETE",
+        "Política": "enable_delete_for_admins",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "goals",
+        "Comando": "INSERT",
+        "Política": "enable_insert_for_admins_managers",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'gerente'::text])))))"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "goals",
+        "Comando": "SELECT",
+        "Política": "enable_select_for_authenticated",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'gerente'::text])))))",
+        "Tabela": "goals",
+        "Comando": "UPDATE",
+        "Política": "enable_update_for_admins_managers",
+        "WITH_CHECK": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'gerente'::text])))))"
+      },
+      {
+        "Roles": [
           "public"
         ],
         "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",

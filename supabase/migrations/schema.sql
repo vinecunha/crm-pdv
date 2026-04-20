@@ -949,3 +949,34 @@ USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'a
 CREATE POLICY "Sistema pode inserir access logs" 
 ON public.access_logs FOR INSERT TO authenticated 
 WITH CHECK (true);
+
+create table public.goals (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  goal_type text not null,
+  target_amount numeric(10, 2) not null default 0,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  created_by uuid null,
+  updated_by uuid null,
+  constraint goals_pkey primary key (id),
+  constraint goals_user_id_goal_type_key unique (user_id, goal_type),
+  constraint goals_created_by_fkey foreign KEY (created_by) references auth.users (id),
+  constraint goals_updated_by_fkey foreign KEY (updated_by) references auth.users (id),
+  constraint goals_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE,
+  constraint goals_goal_type_check check (
+    (
+      goal_type = any (
+        array['daily'::text, 'monthly'::text, 'yearly'::text]
+      )
+    )
+  )
+) TABLESPACE pg_default;
+
+create index IF not exists idx_goals_user_id on public.goals using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists idx_goals_type on public.goals using btree (goal_type) TABLESPACE pg_default;
+
+create trigger trigger_update_goals_updated_at BEFORE
+update on goals for EACH row
+execute FUNCTION update_goals_updated_at ();

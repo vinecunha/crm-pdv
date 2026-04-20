@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { Eye, EyeOff, X, CheckCircle } from '../../lib/icons'
 import useKeyboardShortcuts from '../../hooks/useKeyboardShortcuts'
 
 // Funções de máscara
@@ -80,10 +81,12 @@ const FormInput = ({
   type = 'text',
   value = '',
   onChange,
+  onBlur,
   required = false,
   disabled = false,
+  loading = false,
   placeholder,
-  error,
+  error: externalError,
   helperText,
   icon: Icon,
   autoComplete = 'off',
@@ -92,8 +95,14 @@ const FormInput = ({
   min = null,
   max = null,
   step = null,
+  rows = 3,
+  clearable = true,
+  showPasswordToggle = true,
+  showCharCounter = true,
+  validateOnBlur = true,
+  validationRules = {},
   
-  // NOVAS PROPS PARA ATALHOS
+  // Props de atalho
   shortcut = null,
   shortcutAction = null,
   autoFocus = false,
@@ -103,54 +112,79 @@ const FormInput = ({
   shortcutEnabled = true
 }) => {
   const inputRef = useRef(null)
+  const [showPassword, setShowPassword] = useState(false)
+  const [isTouched, setIsTouched] = useState(false)
+  const [isFocused, setIsFocused] = useState(false)
+  const [internalError, setInternalError] = useState('')
+
+  // Validação
+  const validate = useCallback((val) => {
+    if (required && !val) return 'Campo obrigatório'
+    
+    if (type === 'email' && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+      return 'Email inválido'
+    }
+    
+    if (validationRules.pattern && val && !validationRules.pattern.test(val)) {
+      return validationRules.message || 'Formato inválido'
+    }
+    
+    if (validationRules.minLength && val.length < validationRules.minLength) {
+      return `Mínimo ${validationRules.minLength} caracteres`
+    }
+    
+    if (validationRules.maxLength && val.length > validationRules.maxLength) {
+      return `Máximo ${validationRules.maxLength} caracteres`
+    }
+    
+    if (validationRules.custom) {
+      return validationRules.custom(val) || ''
+    }
+    
+    return ''
+  }, [required, type, validationRules])
 
   // Handler para quando o atalho é acionado
   const handleShortcut = useCallback((event) => {
-    if (disabled) return
+    if (disabled || loading) return
     if (!shortcutEnabled) return
     
-    // Focar o input se configurado
     if (focusOnShortcut && inputRef.current) {
       inputRef.current.focus()
-      
-      // Selecionar texto se já tiver valor
       if (value && inputRef.current.select) {
         inputRef.current.select()
       }
     }
     
-    // Executar ação personalizada
     if (shortcutAction) {
       shortcutAction(event, inputRef.current)
     }
     
-    // Callback de notificação
     if (onShortcutTriggered) {
       onShortcutTriggered(shortcut)
     }
-  }, [disabled, shortcutEnabled, focusOnShortcut, value, shortcutAction, onShortcutTriggered, shortcut])
+  }, [disabled, loading, shortcutEnabled, focusOnShortcut, value, shortcutAction, onShortcutTriggered, shortcut])
 
-  // Registrar atalho de teclado
+  // Registrar atalho
   useKeyboardShortcuts(
     shortcut ? [{
       ...shortcut,
       handler: handleShortcut,
-      enabled: shortcutEnabled && !disabled
+      enabled: shortcutEnabled && !disabled && !loading
     }] : [],
-    { enabled: shortcutEnabled && !disabled }
+    { enabled: shortcutEnabled && !disabled && !loading }
   )
 
   // Auto focus
   useEffect(() => {
-    if (autoFocus && inputRef.current) {
+    if (autoFocus && inputRef.current && !disabled) {
       inputRef.current.focus()
     }
-  }, [autoFocus])
+  }, [autoFocus, disabled])
 
   const handleChange = (e) => {
     let newValue = e.target.value
     
-    // Aplicar máscara se necessário
     if (mask) {
       const maskPattern = getMask(mask, newValue)
       if (maskPattern) {
@@ -158,41 +192,69 @@ const FormInput = ({
       }
     }
     
-    // Limitar tamanho
     if (maxLength && newValue.length > maxLength) {
       newValue = newValue.slice(0, maxLength)
     }
     
-    // Criar evento sintético
     const syntheticEvent = {
       ...e,
       target: {
         ...e.target,
         name,
         value: newValue
-      }
+      },
+      // Para compatibilidade com padrão React
+      preventDefault: () => {},
+      stopPropagation: () => {}
     }
     
     onChange(syntheticEvent)
-  }
-
-  // Handler para tecla Enter
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      // Prevenir submit do form se não for textarea
-      if (type !== 'textarea') {
-        e.preventDefault()
-      }
-      
-      // Disparar evento personalizado
-      const enterEvent = new CustomEvent('forminput:enter', {
-        detail: { name, value, inputRef: inputRef.current }
-      })
-      window.dispatchEvent(enterEvent)
+    
+    // Limpar erro interno ao digitar
+    if (internalError) {
+      setInternalError('')
     }
   }
 
+  const handleBlur = (e) => {
+    setIsTouched(true)
+    setIsFocused(false)
+    
+    if (validateOnBlur) {
+      const error = validate(value)
+      setInternalError(error)
+    }
+    
+    onBlur?.(e)
+  }
+
+  const handleFocus = () => {
+    setIsFocused(true)
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && type !== 'textarea') {
+      e.preventDefault()
+      window.dispatchEvent(new CustomEvent('forminput:enter', {
+        detail: { name, value, inputRef: inputRef.current }
+      }))
+    }
+  }
+
+  const handleClear = () => {
+    onChange({ target: { name, value: '' } })
+    inputRef.current?.focus()
+    setInternalError('')
+  }
+
+  const error = externalError || internalError
+  const isValid = isTouched && !error && value && !loading
+  const showClearButton = clearable && value && !disabled && !loading
+  const showPasswordButton = type === 'password' && showPasswordToggle && value && !disabled && !loading
+  const showSuccessIcon = isValid && !showClearButton && !showPasswordButton
   const shortcutHint = shortcut && showShortcutHint ? formatShortcutHint(shortcut) : null
+  
+  const InputComponent = type === 'textarea' ? 'textarea' : 'input'
 
   return (
     <div className="space-y-1">
@@ -200,13 +262,12 @@ const FormInput = ({
         <div className="flex items-center justify-between">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
             {label}
-            {required && <span className="text-red-500 dark:text-red-400 ml-1">*</span>}
+            {required && <span className="text-red-500 ml-1">*</span>}
           </label>
           
-          {/* Indicador de atalho no label */}
           {shortcutHint && (
-            <span className="text-xs text-gray-400 dark:text-gray-500 font-mono flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-600 dark:text-gray-300">
+            <span className="text-xs text-gray-400 font-mono flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded">
                 {shortcutHint}
               </kbd>
               {shortcut.description && (
@@ -218,72 +279,118 @@ const FormInput = ({
       )}
       
       <div className="relative">
+        {/* Ícone esquerdo */}
         {Icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
             <Icon size={18} />
           </div>
         )}
         
-        <input
+        {/* Input/Textarea */}
+        <InputComponent
           ref={inputRef}
-          type={type}
+          type={type === 'textarea' ? undefined : (type === 'password' && showPassword ? 'text' : type)}
           name={name}
           value={value}
           onChange={handleChange}
+          onBlur={handleBlur}
+          onFocus={handleFocus}
           onKeyDown={handleKeyDown}
           required={required}
-          disabled={disabled}
+          disabled={disabled || loading}
           placeholder={placeholder || getPlaceholder(mask)}
           autoComplete={autoComplete}
           min={min}
           max={max}
           step={step}
+          rows={type === 'textarea' ? rows : undefined}
           className={`
-            w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-all
+            w-full px-3 py-2 border rounded-lg transition-all
+            focus:outline-none focus:ring-2
             ${Icon ? 'pl-10' : ''}
-            ${shortcutHint && showShortcutHint ? 'pr-16' : ''}
+            ${(showClearButton || showPasswordButton || showSuccessIcon || loading || shortcutHint) ? 'pr-10' : ''}
+            
+            /* Estados de erro */
             ${error 
-              ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-200 dark:focus:ring-red-800' 
-              : 'border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-200 dark:focus:ring-blue-800'
+              ? 'border-red-300 dark:border-red-700 focus:border-red-500 dark:focus:border-red-400 focus:ring-red-200 dark:focus:ring-red-900/30' 
+              : isValid
+                ? 'border-green-300 dark:border-green-700 focus:border-green-500 dark:focus:border-green-400 focus:ring-green-200 dark:focus:ring-green-900/30'
+                : 'border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-200 dark:focus:ring-blue-900/30'
             }
-            ${disabled ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white cursor-not-allowed' : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white'}
+            
+            /* Estados de disabled/loading */
+            ${(disabled || loading) 
+              ? 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed' 
+              : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100'
+            }
+            
+            /* Placeholder */
             placeholder-gray-400 dark:placeholder-gray-500
+            
+            /* Textarea específico */
+            ${type === 'textarea' ? 'resize-y min-h-[80px]' : ''}
           `}
         />
         
-        {/* Indicador de atalho dentro do input */}
-        {shortcutHint && showShortcutHint && !Icon && (
+        {/* Loading spinner */}
+        {loading && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-500 dark:text-gray-400">
-              {shortcutHint}
-            </kbd>
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-blue-500" />
           </div>
         )}
         
-        {/* Indicador de atalho quando tem ícone (posição ajustada) */}
-        {shortcutHint && showShortcutHint && Icon && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-500 dark:text-gray-400">
-              {shortcutHint}
-            </kbd>
+        {/* Ícone de sucesso */}
+        {showSuccessIcon && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500">
+            <CheckCircle size={18} />
+          </div>
+        )}
+        
+        {/* Botão de mostrar senha */}
+        {showPasswordButton && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+            tabIndex={-1}
+            title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        )}
+        
+        {/* Botão de limpar */}
+        {showClearButton && !showPasswordButton && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+            tabIndex={-1}
+            title="Limpar"
+          >
+            <X size={16} />
+          </button>
+        )}
+        
+        {/* Contador de caracteres */}
+        {showCharCounter && maxLength && isFocused && (
+          <div className="absolute right-3 -bottom-5 text-xs text-gray-400">
+            {value.length}/{maxLength}
           </div>
         )}
       </div>
       
+      {/* Mensagem de erro */}
       {error && (
-        <p className="text-xs text-red-600 dark:text-red-400 mt-1">{error}</p>
-      )}
-      
-      {helperText && !error && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{helperText}</p>
-      )}
-      
-      {/* Dica de atalho adicional */}
-      {shortcut && shortcut.description && showShortcutHint && (
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1">
-          <span className="inline-block w-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-full"></span>
-          Atalho: {shortcut.description}
+        <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+          <span className="inline-block w-1 h-1 bg-red-400 rounded-full" />
+          {error}
         </p>
+      )}
+      
+      {/* Helper text */}
+      {helperText && !error && (
+        <p className="text-xs text-gray-500 mt-1">{helperText}</p>
       )}
     </div>
   )

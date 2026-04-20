@@ -2,10 +2,24 @@ import { useMemo } from 'react'
 
 export const useDashboardStats = (rawData) => {
   return useMemo(() => {
-    if (!rawData) return null
+    // ✅ Verificar se rawData existe
+    if (!rawData) {
+      return {
+        primaryStats: [],
+        secondaryStats: [],
+        recentSales: [],
+        topProducts: [],
+        chartData: { labels: [], datasets: [] },
+        hasData: false,
+        lastUpdated: new Date().toISOString()
+      }
+    }
 
-    const { customersCount, sales, products, saleItems } = rawData
-
+    // ✅ Extrair dados da nova estrutura
+    const sales = rawData.sales || []
+    const topProducts = rawData.topProducts || []
+    const totalCustomers = rawData.totalCustomers || 0
+    
     // Datas de referência
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -70,26 +84,6 @@ export const useDashboardStats = (rawData) => {
       ? ((averageTicket - averageTicketYesterday) / averageTicketYesterday) * 100
       : 0
 
-    // Produtos com estoque baixo
-    const lowStockProducts = products.filter(p => 
-      (p.stock_quantity || 0) <= (p.min_stock || 5)
-    )
-
-    // Produtos mais vendidos
-    const productSalesMap = {}
-    saleItems.forEach(item => {
-      const productId = item.product_id
-      const productName = item.product?.name || 'Produto'
-      if (!productSalesMap[productId]) {
-        productSalesMap[productId] = { name: productName, quantity: 0, id: productId }
-      }
-      productSalesMap[productId].quantity += item.quantity || 0
-    })
-
-    const topProducts = Object.values(productSalesMap)
-      .sort((a, b) => b.quantity - a.quantity)
-      .slice(0, 5)
-
     // Vendas recentes
     const recentSales = sales.slice(0, 5).map(sale => ({
       id: sale.id,
@@ -103,8 +97,6 @@ export const useDashboardStats = (rawData) => {
 
     // Histórico para sparklines
     const salesHistory = Object.values(salesByDay)
-    const customersHistory = [/* Calcular histórico de clientes */]
-    const productsHistory = [/* Calcular histórico de produtos */]
 
     return {
       // Estatísticas principais
@@ -141,16 +133,15 @@ export const useDashboardStats = (rawData) => {
           trend: ticketChange,
           trendValue: `${Math.abs(ticketChange).toFixed(1)}%`,
           sublabel: 'vs ontem',
-          goal: 100 // Meta de ticket médio
+          goal: 100
         },
         {
           id: 'customers',
           label: 'Total de Clientes',
-          value: customersCount,
+          value: totalCustomers,
           icon: 'Users',
           variant: 'info',
-          sparklineData: customersHistory,
-          trend: 5.2, // Exemplo
+          trend: 5.2,
           trendValue: 'este mês'
         }
       ],
@@ -159,22 +150,11 @@ export const useDashboardStats = (rawData) => {
       secondaryStats: [
         {
           id: 'products',
-          label: 'Produtos Ativos',
-          value: products.length,
+          label: 'Produtos Vendidos',
+          value: topProducts.length,
           icon: 'Package',
           variant: 'info',
-          sublabel: `${products.filter(p => p.category).length} categorias`,
           compact: true
-        },
-        {
-          id: 'low-stock',
-          label: 'Estoque Baixo',
-          value: lowStockProducts.length,
-          icon: 'AlertCircle',
-          variant: lowStockProducts.length > 0 ? 'warning' : 'success',
-          sublabel: lowStockProducts.length > 0 ? 'Atenção necessária' : 'Estoque ok',
-          compact: true,
-          alert: lowStockProducts.length > 0
         },
         {
           id: 'revenue',
@@ -184,7 +164,7 @@ export const useDashboardStats = (rawData) => {
           variant: 'success',
           trend: monthChange,
           compact: true,
-          blur: true
+          blur: false
         }
       ],
 
@@ -205,7 +185,7 @@ export const useDashboardStats = (rawData) => {
       
       // Metadados
       lastUpdated: new Date().toISOString(),
-      hasData: sales.length > 0 || products.length > 0
+      hasData: sales.length > 0
     }
   }, [rawData])
 }

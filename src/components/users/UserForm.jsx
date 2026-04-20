@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Mail, User, Lock, Shield, Hash } from '../../lib/icons'
+import { Shield } from '../../lib/icons'
+import FormInput from '../forms/FormInput'
 import Button from '../ui/Button'
 import * as userService from '../../services/userService'
 
@@ -32,6 +33,7 @@ const UserForm = ({
     }
   }
 
+  // ✅ Handler compatível com FormInput
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
@@ -45,20 +47,20 @@ const UserForm = ({
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
+      {/* Matrícula - Input customizado por causa do botão "Gerar" */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Matrícula
         </label>
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
             <input
               type="text"
               name="registration_number"
               value={formData.registration_number || ''}
               onChange={handleChange}
               placeholder="FUNC000001"
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white font-mono rounded-lg"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white font-mono rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
               disabled={!!editingUser || generatingCode}
               readOnly={!editingUser}
             />
@@ -82,65 +84,51 @@ const UserForm = ({
         </p>
       </div>
 
+      {/* Email - Usar FormInput */}
       {!editingUser && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email *</label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              disabled={isSubmitting}
-              placeholder="usuario@exemplo.com"
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
-              autoComplete="off"
-            />
-          </div>
-        </div>
+        <FormInput
+          label="Email"
+          name="email"
+          type="email"
+          value={formData.email || ''}
+          onChange={handleChange}
+          required
+          disabled={isSubmitting}
+          placeholder="usuario@exemplo.com"
+          autoComplete="off"
+        />
       )}
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome Completo *</label>
-        <div className="relative">
-          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
-          <input
-            type="text"
-            name="full_name"
-            value={formData.full_name}
-            onChange={handleChange}
-            required
-            disabled={isSubmitting}
-            placeholder="Nome do usuário"
-            className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
-            autoComplete="off"
-          />
-        </div>
-      </div>
+      {/* Nome Completo - Usar FormInput */}
+      <FormInput
+        label="Nome Completo"
+        name="full_name"
+        value={formData.full_name || ''}
+        onChange={handleChange}
+        required
+        disabled={isSubmitting}
+        placeholder="Nome do usuário"
+        autoComplete="off"
+      />
 
+      {/* Senha - Usar FormInput com toggle */}
       {!editingUser && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Senha *</label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              disabled={isSubmitting}
-              placeholder="Mínimo 6 caracteres"
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500"
-              autoComplete="new-password"
-            />
-          </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">A senha deve ter no mínimo 6 caracteres</p>
-        </div>
+        <FormInput
+          label="Senha"
+          name="password"
+          type="password"
+          value={formData.password || ''}
+          onChange={handleChange}
+          required
+          disabled={isSubmitting}
+          placeholder="Mínimo 6 caracteres"
+          autoComplete="new-password"
+          showPasswordToggle
+          helperText="A senha deve ter no mínimo 6 caracteres"
+        />
       )}
 
+      {/* Role - Select customizado */}
       {canChangeRole && (
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -151,10 +139,10 @@ const UserForm = ({
           </label>
           <select
             name="role"
-            value={formData.role}
+            value={formData.role || 'operador'}
             onChange={handleChange}
             disabled={isSubmitting}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:bg-gray-100 dark:disabled:bg-gray-800"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
           >
             {roles.map(role => (
               <option key={role.value} value={role.value}>{role.label}</option>
@@ -169,7 +157,7 @@ const UserForm = ({
       {editingUser && !canChangeRole && (
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Papel</label>
-          <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white">
+          <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white">
             {formData.role === 'admin' ? 'Administrador' : formData.role === 'gerente' ? 'Gerente' : 'Operador'}
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Para alterar o papel, contate um administrador</p>

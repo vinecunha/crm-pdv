@@ -8,7 +8,9 @@ import {
   Package,
   LayoutDashboard,
   ChevronRight,
-  RefreshCw
+  RefreshCw,
+  TrendingUp,
+  Users
 } from '../lib/icons'
 import { useDashboardData } from '../hooks/useDashboardData'
 import { useDashboardStats } from '../hooks/useDashboardStats'
@@ -20,6 +22,8 @@ import DashboardStats from '../components/dashboard/DashboardStats'
 import SalesChart from '../components/dashboard/SalesChart'
 import RecentSalesList from '../components/dashboard/RecentSalesList'
 import TopProductsList from '../components/dashboard/TopProductsList'
+import TeamOverview from '../components/dashboard/TeamOverview'
+import UserPerformanceCard from '../components/dashboard/UserPerformanceCard'
 
 const Dashboard = () => {
   const { profile, permissions } = useAuth()
@@ -66,6 +70,13 @@ const Dashboard = () => {
     return actions
   }, [permissions, navigate])
 
+  // Determinar título baseado no cargo
+  const getWelcomeTitle = () => {
+    const firstName = profile?.full_name?.split(' ')[0] || 'Usuário'
+    const roleEmoji = profile?.role === 'admin' ? '👑' : profile?.role === 'gerente' ? '📊' : '💼'
+    return `${roleEmoji} Bem-vindo, ${firstName}!`
+  }
+
   if (isLoading) {
     return <DataLoadingSkeleton type="dashboard" />
   }
@@ -91,16 +102,34 @@ const Dashboard = () => {
   if (!dashboardStats) return null
 
   const { recentSales, topProducts, chartData } = dashboardStats
+  const { teamData } = rawData || {}
+  const showTeamSection = profile?.role !== 'operador' && teamData
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <PageHeader
-          title={`Bem-vindo, ${profile?.full_name?.split(' ')[0] || 'Usuário'}!`}
-          description="Acompanhe os principais indicadores do seu negócio"
+          title={getWelcomeTitle()}
+          description={
+            profile?.role === 'operador' 
+              ? 'Acompanhe seu desempenho individual'
+              : profile?.role === 'gerente'
+                ? 'Gerencie sua equipe e acompanhe os resultados'
+                : 'Visão geral completa do sistema'
+          }
           icon={LayoutDashboard}
           actions={quickActions}
         />
+
+        {/* Card de desempenho do usuário (para operadores) */}
+        {profile?.role === 'operador' && (
+          <div className="mb-6">
+            <UserPerformanceCard 
+              sales={rawData?.sales || []} 
+              profile={profile} 
+            />
+          </div>
+        )}
 
         <DashboardStats 
           stats={dashboardStats}
@@ -119,7 +148,7 @@ const Dashboard = () => {
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-6">
               <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
-                  Últimas Vendas
+                  {profile?.role === 'operador' ? 'Minhas Últimas Vendas' : 'Últimas Vendas'}
                 </h2>
                 <Link 
                   to="/sales-list" 
@@ -129,7 +158,7 @@ const Dashboard = () => {
                 </Link>
               </div>
               
-              <RecentSalesList sales={recentSales} />
+              <RecentSalesList sales={recentSales} showSeller={profile?.role !== 'operador'} />
             </div>
           </SectionErrorBoundary>
 
@@ -151,6 +180,13 @@ const Dashboard = () => {
             </div>
           </SectionErrorBoundary>
         </div>
+
+        {/* Seção da Equipe (Gerentes e Admins) */}
+        {showTeamSection && (
+          <div className="mt-6">
+            <TeamOverview teamData={teamData} userRole={profile?.role} />
+          </div>
+        )}
       </div>
     </div>
   )

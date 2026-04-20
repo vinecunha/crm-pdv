@@ -1,17 +1,15 @@
+// Login.jsx refatorado
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Mail, Lock } from '../lib/icons'
 import { useAuth } from '../contexts/AuthContext'
 import { useRateLimit } from '../hooks/useRateLimit'
 import { supabase } from '../lib/supabase'
 
 import LoginHeader from '../components/auth/LoginHeader'
 import LoginFooter from '../components/auth/LoginFooter'
+import LoginForm from '../components/auth/LoginForm' // ✅ Importar
 import { BlockedAlert, AttemptsIndicator } from '../components/auth/RateLimitIndicator'
 import ErrorAlert from '../components/auth/ErrorAlert'
-import FormInput from '../components/forms/FormInput'
-import Button from '../components/ui/Button'
-import { formShortcuts } from '../utils/formShortcuts'
 
 const Login = () => {
   const [email, setEmail] = useState('')
@@ -172,53 +170,17 @@ const Login = () => {
             />
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <FormInput
-              label="Email"
-              name="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="seu@email.com"
-              required
-              disabled={loading || isBlocked}
-              icon={Mail}
-              autoComplete="email"
-              autoFocus
-            />
-
-            <FormInput
-              label="Senha"
-              name="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              disabled={loading || isBlocked}
-              icon={Lock}
-              autoComplete="current-password"
-            />
-
-            <div className="w-full flex items-center justify-center">
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                fullWidth
-                loading={loading}
-                disabled={isBlocked}
-                shortcut={{ key: 'Enter', description: 'Entrar' }}
-                className="mt-4"
-                style={{ 
-                  backgroundColor: primaryColor,
-                  '--tw-ring-color': primaryColor 
-                }}
-              >
-                Entrar
-              </Button>
-            </div>
-          </form>
+          <LoginForm
+            email={email}
+            setEmail={setEmail}
+            password={password}
+            setPassword={setPassword}
+            onSubmit={handleSubmit}
+            loading={loading}
+            isBlocked={isBlocked}
+            primaryColor={primaryColor}
+            secondaryColor={secondaryColor}
+          />
         </div>
 
         <LoginFooter 

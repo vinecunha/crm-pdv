@@ -154,5 +154,7 @@ export {
   Cake,
   Crown,
   UserX,
-  Tags
+  Tags,
+  LogIn,
+  Trophy
 } from 'lucide-react'

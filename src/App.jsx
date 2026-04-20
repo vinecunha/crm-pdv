@@ -27,6 +27,12 @@ const Dashboard = lazy(() => import(
   './pages/Dashboard'
 ))
 
+// NOVO: Detalhes do Vendedor (agrupado com dashboard)
+const SellerDetail = lazy(() => import(
+  /* webpackChunkName: "dashboard" */
+  './pages/SellerDetail'
+))
+
 // Módulo PDV (tudo relacionado a vendas)
 const Sales = lazy(() => import(
   /* webpackChunkName: "pdv" */
@@ -122,7 +128,7 @@ const NotFound = lazy(() => import(
 
 // Componente de loading com delay mínimo para evitar flicker
 const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+  <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black">
     <SplashScreen message="Carregando..." size="lg" />
   </div>
 )
@@ -148,6 +154,17 @@ function App() {
                         <PrivateLayout>
                           <SectionErrorBoundary title="Erro no Dashboard">
                             <Dashboard />
+                          </SectionErrorBoundary>
+                        </PrivateLayout>
+                      </ProtectedRoute>
+                    } />
+                    
+                    {/* NOVO: Rota de detalhes do vendedor */}
+                    <Route path="/sellers/:sellerId" element={
+                      <ProtectedRoute requiredPermission="canViewDashboard">
+                        <PrivateLayout>
+                          <SectionErrorBoundary title="Erro nos detalhes do vendedor">
+                            <SellerDetail />
                           </SectionErrorBoundary>
                         </PrivateLayout>
                       </ProtectedRoute>
