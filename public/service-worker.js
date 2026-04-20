@@ -1,4 +1,3 @@
-// public/service-worker.js
 const logger = {
   log: (...args) => console.log('[SW]', ...args),
   warn: (...args) => console.warn('[SW]', ...args),

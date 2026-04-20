@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase'
 import { sanitizeObject } from '../utils/sanitize'
 import { formatCurrency } from '../utils/formatters'
+import { logger } from '../utils/logger'
 
 /**
  * Buscar produtos ativos com estoque
@@ -164,7 +165,7 @@ export const createSale = async (cart, customer, coupon, discount, paymentMethod
       total_price: item.total
     }))
     
-    console.log('🔥 Chamando RPC create_sale_complete', {
+    logger.log('🔥 Chamando RPC create_sale_complete', {
       paymentMethod,
       itemsCount: itemsJson.length,
       total
@@ -189,16 +190,16 @@ export const createSale = async (cart, customer, coupon, discount, paymentMethod
       })
       
     if (error) {
-      console.error('❌ Erro na RPC:', error)
+      logger.error('❌ Erro na RPC:', error)
       throw error
     }
     
     if (!data.success) {
-      console.error('❌ RPC falhou:', data)
+      logger.error('❌ RPC falhou:', data)
       throw new Error(data.error || 'Erro ao criar venda')
     }
     
-    console.log('✅ Venda criada com sucesso:', data)
+    logger.log('✅ Venda criada com sucesso:', data)
     
     // Retornar objeto compatível com o formato esperado
     return {
@@ -210,7 +211,7 @@ export const createSale = async (cart, customer, coupon, discount, paymentMethod
     }
     
   } catch (error) {
-    console.error('❌ Erro em createSale:', error)
+    logger.error('❌ Erro em createSale:', error)
     throw error
   }
 }

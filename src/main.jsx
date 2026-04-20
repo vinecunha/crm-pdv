@@ -52,7 +52,7 @@ if ('serviceWorker' in navigator) {
           })
         })
         .catch((error) => {
-          console.error('❌ Erro ao registrar Service Worker:', error)
+          logger.error('❌ Erro ao registrar Service Worker:', error)
         })
 
       // Quando uma nova versão do Service Worker é encontrada
@@ -122,7 +122,7 @@ if (isProduction) {
       navigator.serviceWorker.ready.then((registration) => {
         registration.sync.register('sync-pending-sales')
           .then(() => logger.log('🔄 Sincronização de vendas pendentes registrada'))
-          .catch(err => console.error('❌ Erro ao registrar sync:', err))
+          .catch(err => logger.error('❌ Erro ao registrar sync:', err))
       })
     }
   })
@@ -222,19 +222,19 @@ if (isDevelopment) {
         const keys = await caches.keys()
         for (const key of keys) {
           await caches.delete(key)
-          console.log('🗑️ Cache removido:', key)
+          logger.log('🗑️ Cache removido:', key)
         }
-        console.log('✅ Todos os caches foram limpos')
+        logger.log('✅ Todos os caches foram limpos')
       }
     },
     unregisterSW: async () => {
       const registrations = await navigator.serviceWorker.getRegistrations()
       for (const reg of registrations) {
         await reg.unregister()
-        console.log('🗑️ SW removido:', reg.scope)
+        logger.log('🗑️ SW removido:', reg.scope)
       }
     }
   }
   
-  console.log('💡 Dica: Use debug.clearAllCaches() ou debug.unregisterSW() se necessário')
+  logger.log('💡 Dica: Use debug.clearAllCaches() ou debug.unregisterSW() se necessário')
 }

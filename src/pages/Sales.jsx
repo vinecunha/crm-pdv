@@ -27,6 +27,7 @@ import CheckoutModal from '../components/sales/pdv/CheckoutModal'
 import ShortcutsHelpModal from '../components/ui/ShortcutsHelpModal'
 import ProductGrid from '../components/sales/pdv/ProductGrid'
 import CartSummary from '../components/sales/pdv/CartSummary'
+import { logger } from '../utils/logger'
 
 // Componentes extras
 import CompactCartView from '../components/sales/pdv/CompactCartView'
@@ -183,7 +184,7 @@ const Sales = () => {
       setSelectedCartItemIndex(0)
     },
     onError: async (error) => {
-      console.error('Erro ao finalizar venda:', error)
+      logger.error('Erro ao finalizar venda:', error)
       
       if (!isOnline || error.message?.includes('network') || error.message?.includes('fetch')) {
         await handleOfflineSale()
@@ -242,7 +243,7 @@ const Sales = () => {
       setSelectedCartItemIndex(0)
       
     } catch (error) {
-      console.error('❌ Erro ao salvar offline:', error)
+      logger.error('❌ Erro ao salvar offline:', error)
       showFeedback('error', 'Erro ao salvar venda offline: ' + error.message)
     }
   }
@@ -394,7 +395,7 @@ const Sales = () => {
   const createPendingSale = async (callback) => {
     // 🛡️ Proteção contra duplo clique
     if (processingRef.current) {
-      console.warn('⚠️ Já existe um processamento em andamento');
+      logger.warn('⚠️ Já existe um processamento em andamento');
       return;
     }
     
@@ -451,9 +452,9 @@ const Sales = () => {
         throw new Error(data.error || 'Erro ao processar venda');
       }
       
-      // Se foi duplicata prevenida, avisar no console
+      // Se foi duplicata prevenida, avisar no logger
       if (data.duplicate_prevented) {
-        console.log('ℹ️ Duplicata prevenida, usando venda existente:', data.sale_id);
+        logger.log('ℹ️ Duplicata prevenida, usando venda existente:', data.sale_id);
       }
       
       // Fechar modal de pagamento IMEDIATAMENTE
@@ -465,7 +466,7 @@ const Sales = () => {
       }
       
     } catch (error) {
-      console.error('❌ Erro ao criar venda pendente:', error);
+      logger.error('❌ Erro ao criar venda pendente:', error);
       showFeedback('error', 'Erro: ' + error.message);
     } finally {
       // 🛡️ Liberar o lock após um delay (evita cliques acidentais)
@@ -479,7 +480,7 @@ const Sales = () => {
   const confirmPayment = (method = null) => {
     // 🛡️ Prevenir múltiplas chamadas
     if (processingRef.current || isProcessingPayment) {
-      console.warn('⚠️ Pagamento já em processamento');
+      logger.warn('⚠️ Pagamento já em processamento');
       return;
     }
     

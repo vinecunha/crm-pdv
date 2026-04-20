@@ -4,6 +4,8 @@ import { formatCurrency } from '../../../utils/formatters'
 import Modal from '../../ui/Modal'
 import Button from '../../ui/Button'
 import PixPaymentModal from './PixPaymentModal'
+import { logger } from '../../../utils/logger'
+
 
 const paymentMethods = [
   { id: 'cash', name: 'Dinheiro', icon: Banknote, shortcut: { key: 'F6', description: 'Dinheiro' } },
@@ -37,13 +39,13 @@ const CheckoutModal = ({
 
   const handlePixPayment = () => {
     if (!onCreatePendingSale) {
-      console.error('onCreatePendingSale não foi passado!')
+      logger.error('onCreatePendingSale não foi passado!')
       return
     }
     
     // 🛡️ Evitar múltiplas chamadas
     if (confirmInProgress.current) {
-      console.warn('⚠️ PIX já em processamento')
+      logger.warn('⚠️ PIX já em processamento')
       return
     }
     
@@ -51,7 +53,7 @@ const CheckoutModal = ({
     setIsLocalSubmitting(true)
     
     onCreatePendingSale((saleId) => {
-      console.log('✅ Venda pendente criada:', saleId)
+      logger.log('✅ Venda pendente criada:', saleId)
       setPendingSaleId(saleId)
       setShowPixModal(true)
       
@@ -79,7 +81,7 @@ const CheckoutModal = ({
   }
 
   const handleConfirmClick = () => {
-    console.log('🟡 Botão Confirmar clicado', { 
+    logger.log('🟡 Botão Confirmar clicado', { 
       paymentMethod, 
       isLocalSubmitting, 
       isSubmitting 
@@ -87,7 +89,7 @@ const CheckoutModal = ({
     
     // 🛡️ Proteção contra duplo clique
     if (isLocalSubmitting || isSubmitting || confirmInProgress.current) {
-      console.warn('⚠️ Já está processando pagamento');
+      logger.warn('⚠️ Já está processando pagamento');
       return;
     }
     

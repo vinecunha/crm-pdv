@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import ThemeSelector from './ui/ThemeSelector'
 import { useClock } from '../hooks/useClock'
 import { useNotifications } from '../hooks/useNotifications'
+import { useNetworkStatus } from '../hooks/useNetworkStatus'
 import { 
   RefreshCw, 
   Calendar, 
@@ -23,6 +24,7 @@ const Header = ({ collapsed }) => {
   const { unreadCount } = useNotifications()
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const { isOnline } = useNetworkStatus()
 
   // Usar display_name com fallback para full_name
   const displayName = profile?.display_name?.trim() || 
@@ -95,9 +97,20 @@ const Header = ({ collapsed }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
             <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500 dark:bg-green-400 animate-pulse" />
-              <span>Sistema Online</span>
-            </div>
+                <div className={`
+                  w-1.5 h-1.5 rounded-full animate-pulse
+                  ${isOnline 
+                    ? 'bg-green-500 dark:bg-green-400' 
+                    : 'bg-yellow-500 dark:bg-yellow-400'
+                  }
+                `} />
+                <span>{isOnline ? 'Sistema Online' : 'Modo Offline'}</span>
+                {!isOnline && (
+                  <span className="text-[10px] px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded">
+                    Dados locais
+                  </span>
+                )}
+              </div>
             <div className="flex items-center gap-1.5">
               <Calendar size={12} />
               <span>{formatDate()}</span>

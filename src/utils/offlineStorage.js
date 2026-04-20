@@ -1,4 +1,5 @@
-// utils/offlineStorage.js
+import { logger } from '../utils/logger'
+
 const DB_NAME = 'pdv-offline-db'
 const DB_VERSION = 2 
 const STORE_NAME = 'pendingSales'
@@ -49,7 +50,7 @@ export const getPendingSales = async () => {
       request.onerror = () => reject(request.error)
     })
   } catch (error) {
-    console.error('❌ Erro ao buscar vendas pendentes:', error)
+    logger.error('❌ Erro ao buscar vendas pendentes:', error)
     return []
   }
 }
@@ -76,13 +77,13 @@ export const saveSaleOffline = async (saleData) => {
     
     return new Promise((resolve, reject) => {
       request.onsuccess = () => {
-        console.log('✅ Venda salva offline:', request.result)
+        logger.log('✅ Venda salva offline:', request.result)
         resolve(request.result)
       }
       request.onerror = () => reject(request.error)
     })
   } catch (error) {
-    console.error('❌ Erro ao salvar offline:', error)
+    logger.error('❌ Erro ao salvar offline:', error)
     throw error
   }
 }
@@ -102,7 +103,7 @@ export const markSaleAsSynced = async (localId) => {
           sale.synced = true
           sale.syncedAt = new Date().toISOString()
           store.put(sale)
-          console.log('✅ Venda marcada como sincronizada:', localId)
+          logger.log('✅ Venda marcada como sincronizada:', localId)
           resolve(true)
         } else {
           resolve(false)
@@ -111,7 +112,7 @@ export const markSaleAsSynced = async (localId) => {
       getRequest.onerror = () => reject(getRequest.error)
     })
   } catch (error) {
-    console.error('❌ Erro ao marcar como sincronizada:', error)
+    logger.error('❌ Erro ao marcar como sincronizada:', error)
     return false
   }
 }
@@ -135,7 +136,7 @@ export const getAllSales = async () => {
       request.onerror = () => reject(request.error)
     })
   } catch (error) {
-    console.error('❌ Erro ao buscar todas as vendas:', error)
+    logger.error('❌ Erro ao buscar todas as vendas:', error)
     return []
   }
 }
@@ -151,13 +152,13 @@ export const removeOfflineSale = async (id) => {
     
     return new Promise((resolve, reject) => {
       request.onsuccess = () => {
-        console.log('✅ Venda removida:', id)
+        logger.log('✅ Venda removida:', id)
         resolve(true)
       }
       request.onerror = () => reject(request.error)
     })
   } catch (error) {
-    console.error('❌ Erro ao remover venda:', error)
+    logger.error('❌ Erro ao remover venda:', error)
     return false
   }
 }
@@ -179,7 +180,7 @@ export const updateOfflineSaleStatus = async (id, updates) => {
           const putRequest = store.put(updatedSale)
           
           putRequest.onsuccess = () => {
-            console.log('✅ Venda atualizada:', id)
+            logger.log('✅ Venda atualizada:', id)
             resolve(true)
           }
           putRequest.onerror = () => reject(putRequest.error)
@@ -190,7 +191,7 @@ export const updateOfflineSaleStatus = async (id, updates) => {
       getRequest.onerror = () => reject(getRequest.error)
     })
   } catch (error) {
-    console.error('❌ Erro ao atualizar venda:', error)
+    logger.error('❌ Erro ao atualizar venda:', error)
     return false
   }
 }
@@ -205,10 +206,10 @@ export const clearSyncedSales = async () => {
       await removeOfflineSale(sale.id)
     }
     
-    console.log(`✅ ${syncedSales.length} vendas sincronizadas removidas`)
+    logger.log(`✅ ${syncedSales.length} vendas sincronizadas removidas`)
     return syncedSales.length
   } catch (error) {
-    console.error('❌ Erro ao limpar vendas sincronizadas:', error)
+    logger.error('❌ Erro ao limpar vendas sincronizadas:', error)
     return 0
   }
 }
