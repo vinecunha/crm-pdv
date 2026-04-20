@@ -142,83 +142,75 @@ export const validateCoupon = async (code, customerId, cartSubtotal) => {
 }
 
 /**
- * Criar venda
+ * Criar venda (USANDO RPC - VERSÃO CORRIGIDA)
  */
 export const createSale = async (cart, customer, coupon, discount, paymentMethod, profile) => {
-  const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
-  const total = subtotal - discount
-  
-  // Criar venda
-  const { data: sale, error: saleError } = await supabase
-    .from('sales')
-    .insert([{
-      customer_id: customer?.id || null,
-      customer_name: customer?.name || null,
-      customer_phone: customer?.phone || null,
+  try {
+    const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
+    const total = subtotal - discount
+    
+    // Determinar status baseado no método de pagamento
+    const isPix = paymentMethod === 'pix'
+    const paymentStatus = isPix ? 'pending' : 'paid'
+    const saleStatus = isPix ? 'pending' : 'completed'
+    
+    // Preparar itens para JSONB
+    const itemsJson = cart.map(item => ({
+      product_id: item.id,
+      product_name: item.name,
+      product_code: item.code,
+      quantity: item.quantity,
+      unit_price: item.price,
+      total_price: item.total
+    }))
+    
+    console.log('🔥 Chamando RPC create_sale_complete', {
+      paymentMethod,
+      itemsCount: itemsJson.length,
+      total
+    })
+    
+    // 🔥 CHAMAR A RPC (UMA ÚNICA CHAMADA)
+    const { data, error } = await supabase
+      .rpc('create_sale_complete', {
+        p_customer_id: customer?.id || null,
+        p_customer_name: customer?.name || 'Cliente não identificado',
+        p_customer_phone: customer?.phone || null,
+        p_total_amount: subtotal,
+        p_discount_amount: discount,
+        p_discount_percent: coupon?.discount_type === 'percent' ? coupon.discount_value : 0,
+        p_coupon_code: coupon?.code || null,
+        p_final_amount: total,
+        p_payment_method: paymentMethod,
+        p_payment_status: paymentStatus,
+        p_status: saleStatus,
+        p_created_by: profile?.id,
+        p_items: itemsJson
+      })
+      
+    if (error) {
+      console.error('❌ Erro na RPC:', error)
+      throw error
+    }
+    
+    if (!data.success) {
+      console.error('❌ RPC falhou:', data)
+      throw new Error(data.error || 'Erro ao criar venda')
+    }
+    
+    console.log('✅ Venda criada com sucesso:', data)
+    
+    // Retornar objeto compatível com o formato esperado
+    return {
+      id: data.sale_id,
+      sale_number: data.sale_number,
       total_amount: subtotal,
       discount_amount: discount,
-      discount_percent: coupon?.discount_type === 'percent' ? coupon.discount_value : 0,
-      coupon_code: coupon?.code || null,
-      final_amount: total,
-      payment_method: paymentMethod,
-      payment_status: 'paid',
-      status: 'completed',
-      created_by: profile?.id
-    }])
-    .select()
-    .single()
-    
-  if (saleError) throw saleError
-  
-  // Criar itens da venda
-  const saleItems = cart.map(item => ({
-    sale_id: sale.id,
-    product_id: item.id,
-    product_name: item.name,
-    product_code: item.code,
-    quantity: item.quantity,
-    unit_price: item.price,
-    total_price: item.total
-  }))
-  
-  const { error: itemsError } = await supabase.from('sale_items').insert(saleItems)
-  if (itemsError) throw itemsError
-  
-  // Atualizar estoque
-  for (const item of cart) {
-    await supabase
-      .from('products')
-      .update({ 
-        stock_quantity: item.stock - item.quantity,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', item.id)
-  }
-  
-  // Atualizar uso do cupom
-  if (coupon) {
-    await supabase
-      .from('coupons')
-      .update({ used_count: (coupon.used_count || 0) + 1 })
-      .eq('id', coupon.id)
-      
-    if (customer) {
-      await supabase
-        .from('customer_coupons')
-        .insert([{ coupon_id: coupon.id, customer_id: customer.id, sale_id: sale.id }])
+      final_amount: total
     }
+    
+  } catch (error) {
+    console.error('❌ Erro em createSale:', error)
+    throw error
   }
-  
-  // Atualizar cliente
-  if (customer) {
-    await supabase
-      .from('customers')
-      .update({ 
-        last_purchase: new Date().toISOString(),
-        total_purchases: (customer.total_purchases || 0) + total
-      })
-      .eq('id', customer.id)
-  }
-  
-  return sale
 }

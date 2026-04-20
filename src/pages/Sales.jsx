@@ -61,7 +61,9 @@ const Sales = () => {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [categories, setCategories] = useState([])
   const { isOnline } = useNetworkStatus()
-  
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const processingRef = useRef(false);
+
   // Cliente
   const [customerPhone, setCustomerPhone] = useState('')
   const [customer, setCustomer] = useState(null)
@@ -170,6 +172,7 @@ const Sales = () => {
       queryClient.invalidateQueries({ queryKey: ['products-active'] })
       showFeedback('success', `Venda finalizada! Nº: ${sale.sale_number}`)
       
+      // Limpar estados
       setCart([])
       setCustomer(null)
       setCustomerPhone('')
@@ -389,61 +392,120 @@ const Sales = () => {
   }
 
   const createPendingSale = async (callback) => {
+    // 🛡️ Proteção contra duplo clique
+    if (processingRef.current) {
+      console.warn('⚠️ Já existe um processamento em andamento');
+      return;
+    }
+    
+    processingRef.current = true;
+    setIsProcessingPayment(true);
+    
     try {
-      const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
-      const total = subtotal - discount
+      // Validar produtos
+      const invalidProducts = cart.filter(item => {
+        const product = products.find(p => p.id === item.id);
+        return !product || !product.is_active || product.deleted_at;
+      });
       
-      const { data: sale, error } = await supabase
-        .from('sales')
-        .insert([{
-          customer_id: customer?.id || null,
-          customer_name: customer?.name || 'Cliente não identificado',
-          customer_phone: customer?.phone || null,
-          total_amount: subtotal,
-          discount_amount: discount,
-          coupon_code: coupon?.code || null,
-          final_amount: total,
-          payment_method: 'pix',
-          payment_status: 'pending',
-          status: 'pending',
-          created_by: profile?.id
-        }])
-        .select()
-        .single()
-        
-      if (error) throw error
+      if (invalidProducts.length > 0) {
+        const names = invalidProducts.map(p => p.name).join(', ');
+        throw new Error(`Produtos inválidos no carrinho: ${names}`);
+      }
+
+      const subtotal = cart.reduce((sum, item) => sum + item.total, 0);
+      const total = subtotal - discount;
       
-      const saleItems = cart.map(item => ({
-        sale_id: sale.id,
+      // Preparar itens
+      const itemsJson = cart.map(item => ({
         product_id: item.id,
         product_name: item.name,
         product_code: item.code,
         quantity: item.quantity,
         unit_price: item.price,
         total_price: item.total
-      }))
+      }));
       
-      const { error: itemsError } = await supabase.from('sale_items').insert(saleItems)
-      if (itemsError) throw itemsError
+      // Gerar chave de idempotência única
+      const idempotencyKey = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString();
       
-      callback(sale.id)
+      // 🔥 Chamar RPC (UMA ÚNICA VEZ)
+      const { data, error } = await supabase
+        .rpc('create_pending_sale', {
+          p_customer_id: customer?.id || null,
+          p_customer_name: customer?.name || 'Cliente não identificado',
+          p_customer_phone: customer?.phone || null,
+          p_total_amount: subtotal,
+          p_discount_amount: discount,
+          p_coupon_code: coupon?.code || null,
+          p_final_amount: total,
+          p_payment_method: 'pix',
+          p_created_by: profile?.id,
+          p_items: itemsJson,
+          p_idempotency_key: idempotencyKey
+        });
+        
+      if (error) throw error;
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Erro ao processar venda');
+      }
+      
+      // Se foi duplicata prevenida, avisar no console
+      if (data.duplicate_prevented) {
+        console.log('ℹ️ Duplicata prevenida, usando venda existente:', data.sale_id);
+      }
+      
+      // Fechar modal de pagamento IMEDIATAMENTE
+      setShowPaymentModal(false);
+      
+      // Callback para gerar PIX (se necessário)
+      if (callback) {
+        callback(data.sale_id);
+      }
       
     } catch (error) {
-      console.error('❌ Erro ao criar venda pendente:', error)
-      showFeedback('error', 'Erro ao processar PIX: ' + error.message)
+      console.error('❌ Erro ao criar venda pendente:', error);
+      showFeedback('error', 'Erro: ' + error.message);
+    } finally {
+      // 🛡️ Liberar o lock após um delay (evita cliques acidentais)
+      setTimeout(() => {
+        processingRef.current = false;
+        setIsProcessingPayment(false);
+      }, 2000);
     }
-  }
+  };
 
   const confirmPayment = (method = null) => {
-    const finalPaymentMethod = method || paymentMethod
-    
-    if (!isOnline) {
-      handleOfflineSale()
-      return
+    // 🛡️ Prevenir múltiplas chamadas
+    if (processingRef.current || isProcessingPayment) {
+      console.warn('⚠️ Pagamento já em processamento');
+      return;
     }
     
-    createSaleMutation.mutate({ cart, customer, coupon, discount, paymentMethod: finalPaymentMethod })
-  }
+    const finalPaymentMethod = method || paymentMethod;
+    
+    // Para PIX, usar o fluxo de venda pendente
+    if (finalPaymentMethod === 'pix') {
+      // Não chamar createSaleMutation para PIX!
+      // O fluxo PIX é gerenciado pelo modal CheckoutModal via onCreatePendingSale
+      return;
+    }
+    
+    // Para outros métodos (dinheiro, cartão), usar o fluxo normal
+    if (!isOnline) {
+      handleOfflineSale();
+      return;
+    }
+    
+    createSaleMutation.mutate({ 
+      cart, 
+      customer, 
+      coupon, 
+      discount, 
+      paymentMethod: finalPaymentMethod 
+    });
+  };
 
   // ============= Handlers para Atalhos =============
   const handleFocusSearch = useCallback(() => searchInputRef.current?.focus(), [])
@@ -674,6 +736,7 @@ const Sales = () => {
                   </div>
                 </div>
                 <Button 
+                  type="button"
                   variant="success" 
                   size="lg" 
                   fullWidth 

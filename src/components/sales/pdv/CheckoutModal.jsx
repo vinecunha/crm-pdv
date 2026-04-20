@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { CreditCard, Banknote, QrCode, Smartphone } from '../../../lib/icons'
 import { formatCurrency } from '../../../utils/formatters'
 import Modal from '../../ui/Modal'
@@ -30,6 +30,10 @@ const CheckoutModal = ({
 }) => {
   const [showPixModal, setShowPixModal] = useState(false)
   const [pendingSaleId, setPendingSaleId] = useState(null)
+  
+  // 🛡️ Proteção contra duplo clique
+  const [isLocalSubmitting, setIsLocalSubmitting] = useState(false)
+  const confirmInProgress = useRef(false)
 
   const handlePixPayment = () => {
     if (!onCreatePendingSale) {
@@ -37,10 +41,25 @@ const CheckoutModal = ({
       return
     }
     
+    // 🛡️ Evitar múltiplas chamadas
+    if (confirmInProgress.current) {
+      console.warn('⚠️ PIX já em processamento')
+      return
+    }
+    
+    confirmInProgress.current = true
+    setIsLocalSubmitting(true)
+    
     onCreatePendingSale((saleId) => {
       console.log('✅ Venda pendente criada:', saleId)
       setPendingSaleId(saleId)
       setShowPixModal(true)
+      
+      // Resetar após sucesso
+      setTimeout(() => {
+        confirmInProgress.current = false
+        setIsLocalSubmitting(false)
+      }, 1000)
     })
   }
 
@@ -60,10 +79,42 @@ const CheckoutModal = ({
   }
 
   const handleConfirmClick = () => {
+    console.log('🟡 Botão Confirmar clicado', { 
+      paymentMethod, 
+      isLocalSubmitting, 
+      isSubmitting 
+    })
+    
+    // 🛡️ Proteção contra duplo clique
+    if (isLocalSubmitting || isSubmitting || confirmInProgress.current) {
+      console.warn('⚠️ Já está processando pagamento');
+      return;
+    }
+    
     if (paymentMethod === 'pix') {
       handlePixPayment()
     } else {
+      // Marcar como em progresso
+      confirmInProgress.current = true
+      setIsLocalSubmitting(true)
+      
+      // Chamar o callback
       onConfirm(paymentMethod)
+      
+      // Resetar após um tempo (caso o onConfirm não feche o modal)
+      setTimeout(() => {
+        confirmInProgress.current = false
+        setIsLocalSubmitting(false)
+      }, 3000)
+    }
+  }
+
+  // Resetar estado quando o modal fechar
+  const handleClose = () => {
+    if (!isSubmitting) {
+      confirmInProgress.current = false
+      setIsLocalSubmitting(false)
+      onClose()
     }
   }
 
@@ -71,7 +122,7 @@ const CheckoutModal = ({
     <>
       <Modal
         isOpen={isOpen && !showPixModal}
-        onClose={onClose}
+        onClose={handleClose}
         title="Finalizar Venda"
         size="md"
       >
@@ -121,6 +172,7 @@ const CheckoutModal = ({
               {paymentMethods.map(method => (
                 <button
                   key={method.id}
+                  type="button" // 🛡️ Evitar submit de formulário
                   onClick={() => handleMethodSelect(method.id)}
                   className={`
                     p-3 rounded-lg border-2 flex flex-col items-center gap-1 transition-all
@@ -129,7 +181,7 @@ const CheckoutModal = ({
                       : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600 dark:text-gray-300'
                     }
                   `}
-                  disabled={isSubmitting || !isOnline}
+                  disabled={isSubmitting || isLocalSubmitting || !isOnline}
                 >
                   <method.icon size={24} />
                   <span className="text-sm font-medium">{method.name}</span>
@@ -147,9 +199,9 @@ const CheckoutModal = ({
         <div className="flex justify-end gap-3 mt-6 pt-4 border-t dark:border-gray-700">
           <Button 
             variant="outline" 
-            onClick={onClose}
+            onClick={handleClose}
             shortcut={{ key: 'Escape', description: 'Cancelar' }}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isLocalSubmitting}
           >
             Cancelar
           </Button>
@@ -157,9 +209,9 @@ const CheckoutModal = ({
           <Button 
             variant="success" 
             onClick={handleConfirmClick}
-            loading={isSubmitting}
+            loading={isSubmitting || isLocalSubmitting}
             shortcut={{ key: 'F2', description: paymentMethod === 'pix' ? 'Gerar PIX' : 'Confirmar' }}
-            disabled={!isOnline || cart.length === 0}
+            disabled={!isOnline || cart.length === 0 || isSubmitting || isLocalSubmitting}
           >
             {paymentMethod === 'pix' ? 'Gerar QR Code PIX' : 'Confirmar Pagamento'}
           </Button>
@@ -172,6 +224,8 @@ const CheckoutModal = ({
           onClose={() => {
             setShowPixModal(false)
             setPendingSaleId(null)
+            confirmInProgress.current = false
+            setIsLocalSubmitting(false)
           }}
           saleId={pendingSaleId}
           amount={total}

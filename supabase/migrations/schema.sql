@@ -694,6 +694,12 @@ execute FUNCTION notify_new_sale ();
 create trigger on_sale_insert BEFORE INSERT on sales for EACH row
 execute FUNCTION generate_sale_number ();
 
+create trigger trg_update_rfv_on_sale
+after INSERT
+or
+update OF status on sales for EACH row
+execute FUNCTION update_customer_rfv_on_sale ();
+
 create trigger trg_validate_sale_amounts BEFORE INSERT
 or
 update on sales for EACH row
