@@ -88,6 +88,46 @@ WHERE schemaname = 'public';
       },
       {
         "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))",
+        "Tabela": "commissions",
+        "Comando": "DELETE",
+        "Política": "commissions_delete_admin",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "commissions",
+        "Comando": "INSERT",
+        "Política": "commissions_insert_all",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "commissions",
+        "Comando": "SELECT",
+        "Política": "commissions_select_all",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'gerente'::text])))))",
+        "Tabela": "commissions",
+        "Comando": "UPDATE",
+        "Política": "commissions_update_admin_gerente",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
           "anon"
         ],
         "USING": "false",
@@ -1813,6 +1853,26 @@ WHERE schemaname = 'public';
           "authenticated"
         ],
         "USING": "true",
+        "Tabela": "task_assignment_history",
+        "Comando": "SELECT",
+        "Política": "Usuários autenticados podem ver histórico",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "task_status_history",
+        "Comando": "SELECT",
+        "Política": "Usuários autenticados podem ver histórico de status",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
         "Tabela": "tasks",
         "Comando": "DELETE",
         "Política": "allow_delete_tasks",
@@ -1847,6 +1907,26 @@ WHERE schemaname = 'public';
         "Comando": "UPDATE",
         "Política": "allow_update_tasks",
         "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'gerente'::text])))))",
+        "Tabela": "user_commission_rules",
+        "Comando": "ALL",
+        "Política": "Admins e gerentes podem gerenciar associações",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "user_commission_rules",
+        "Comando": "SELECT",
+        "Política": "Todos podem ver associações",
+        "WITH_CHECK": null
       }
     ]
   }

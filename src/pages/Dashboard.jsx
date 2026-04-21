@@ -13,7 +13,8 @@ import {
   Users,
   ClipboardList,
   BarChart3,
-  ListChecks
+  ListChecks,
+  DollarSign
 } from '../lib/icons'
 import { useDashboardData } from '../hooks/useDashboardData'
 import { useDashboardStats } from '../hooks/useDashboardStats'
@@ -29,12 +30,21 @@ import RecentSalesList from '../components/dashboard/RecentSalesList'
 import TopProductsList from '../components/dashboard/TopProductsList'
 import TeamOverview from '../components/dashboard/TeamOverview'
 import UserPerformanceCard from '../components/dashboard/UserPerformanceCard'
+import CommissionWidget from '../components/commissions/CommissionWidget'
+import { useCommissionSummary } from '../hooks/useCommissionSummary'
 
 const Dashboard = () => {
   const { profile, permissions } = useAuth()
   const navigate = useNavigate()
   const { data: rawData, isLoading, error, refetch } = useDashboardData()
   const dashboardStats = useDashboardStats(rawData)
+
+  const { data: commissionSummary, isLoading: commissionLoading } = useCommissionSummary(
+    profile?.id, 
+    profile?.role
+  )
+  
+  const isAdminOrManager = profile?.role === 'admin' || profile?.role === 'gerente'
 
   const quickActions = useMemo(() => {
     const actions = []
@@ -169,11 +179,11 @@ const Dashboard = () => {
         )}
 
         {/* ============================================= */}
-        {/* SEÇÃO 3: GRID PRINCIPAL (2 COLUNAS) */}
+        {/* SEÇÃO: GRID PRINCIPAL (GRÁFICO + WIDGETS) */}
         {/* ============================================= */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
           
-          {/* Coluna Esquerda: Gráfico (ocupa 2/3) */}
+          {/* Gráfico de Vendas (ocupa 2 colunas no desktop) */}
           <div className="lg:col-span-2">
             <SectionErrorBoundary title="Erro no gráfico de vendas">
               <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5 h-full">
@@ -188,12 +198,31 @@ const Dashboard = () => {
             </SectionErrorBoundary>
           </div>
           
-          {/* Coluna Direita: Widget de Tarefas (ocupa 1/3) */}
-          <div className="lg:col-span-1">
-            <SectionErrorBoundary title="Erro no widget de tarefas">
-              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5 h-full">
+          {/* Coluna Direita: Widgets Empilhados (Comissões + Tarefas) */}
+          <div className="lg:col-span-1 space-y-4 sm:space-y-6">
+            
+            {/* Widget de Comissões */}
+            <SectionErrorBoundary title="Erro no widget de comissões">
+              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5">
                 <div className="flex items-center gap-2 mb-3">
-                  <ClipboardList size={18} className="text-green-500" />
+                  <DollarSign size={18} className="text-green-500" />
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                    {isAdminOrManager ? 'Comissões' : 'Minhas Comissões'}
+                  </h2>
+                </div>
+                <CommissionWidget 
+                  summary={commissionSummary} 
+                  loading={commissionLoading}
+                  userRole={profile?.role}
+                />
+              </div>
+            </SectionErrorBoundary>
+            
+            {/* Widget de Tarefas */}
+            <SectionErrorBoundary title="Erro no widget de tarefas">
+              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <ClipboardList size={18} className="text-orange-500" />
                   <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
                     Tarefas Pendentes
                   </h2>
@@ -202,11 +231,12 @@ const Dashboard = () => {
                   myTasks={myTasks}
                   teamTasks={teamTasks}
                   loading={tasksLoading}
-                  maxItems={4}
+                  maxItems={3}
                   defaultTab="my"
                 />
               </div>
             </SectionErrorBoundary>
+            
           </div>
         </div>
 

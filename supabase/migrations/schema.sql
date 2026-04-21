@@ -1111,3 +1111,74 @@ create table public.task_assignment_history (
 ) TABLESPACE pg_default;
 
 create index IF not exists idx_task_assignment_history_task_id on public.task_assignment_history using btree (task_id, created_at desc) TABLESPACE pg_default;
+
+create table public.commissions (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  sale_id bigint null,
+  amount numeric(10, 2) not null,
+  percentage numeric(5, 2) not null,
+  period text not null,
+  status text null default 'pending'::text,
+  paid_at timestamp with time zone null,
+  paid_by uuid null,
+  notes text null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  constraint commissions_pkey primary key (id),
+  constraint commissions_paid_by_fkey foreign KEY (paid_by) references auth.users (id),
+  constraint commissions_sale_id_fkey foreign KEY (sale_id) references sales (id) on delete CASCADE,
+  constraint commissions_user_id_fkey foreign KEY (user_id) references auth.users (id),
+  constraint commissions_period_check check (
+    (
+      (period ~ '^\d{4}-\d{2}$'::text)
+      or (
+        period = any (
+          array['daily'::text, 'monthly'::text, 'yearly'::text]
+        )
+      )
+    )
+  ),
+  constraint commissions_status_check check (
+    (
+      status = any (
+        array['pending'::text, 'paid'::text, 'cancelled'::text]
+      )
+    )
+  )
+) TABLESPACE pg_default;
+
+create index IF not exists idx_commissions_user_id on public.commissions using btree (user_id, created_at desc) TABLESPACE pg_default;
+
+create index IF not exists idx_commissions_status on public.commissions using btree (status) TABLESPACE pg_default;
+
+create index IF not exists idx_commissions_period on public.commissions using btree (period) TABLESPACE pg_default;
+
+create table public.commission_rules (
+  id uuid not null default gen_random_uuid (),
+  name text not null,
+  percentage numeric(5, 2) not null,
+  min_sales numeric(10, 2) null default 0,
+  max_sales numeric(10, 2) null default null::numeric,
+  applies_to text[] null default array['all'::text],
+  is_active boolean null default true,
+  priority integer null default 1,
+  created_by uuid null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  description text null,
+  rule_type text null default 'percentage'::text,
+  constraint commission_rules_pkey primary key (id),
+  constraint commission_rules_created_by_fkey foreign KEY (created_by) references auth.users (id),
+  constraint commission_rules_percentage_check check (
+    (
+      (percentage >= (0)::numeric)
+      and (percentage <= (100)::numeric)
+    )
+  ),
+  constraint commission_rules_rule_type_check check (
+    (
+      rule_type = any (array['percentage'::text, 'fixed'::text])
+    )
+  )
+) TABLESPACE pg_default;

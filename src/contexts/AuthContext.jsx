@@ -101,7 +101,7 @@ export function AuthProvider({ children }) {
         canCommunicateWithCustomers: true, canViewCoupons: true, canCreateCoupons: true,
         canEditCoupons: true, canViewCashier: true, canCloseCashier: true,
         canViewReports: true, canExportReports: true, canViewUsers: true,
-        canViewLogs: true, canViewSettings: true, canViewTasks: true,
+        canViewLogs: true, canViewSettings: true, canViewTasks: true, canViewCommissions: true,
       },
       gerente: {
         roleName: 'Gerente',
@@ -113,7 +113,7 @@ export function AuthProvider({ children }) {
         canEditCustomers: true, canCommunicateWithCustomers: true, canViewCoupons: true,
         canCreateCoupons: true, canEditCoupons: true, canViewCashier: true,
         canCloseCashier: true, canViewReports: true, canExportReports: true,
-        canViewUsers: false, canViewLogs: true, canViewSettings: false,
+        canViewUsers: false, canViewLogs: true, canViewSettings: false, CanViewTasks: true
       },
       operador: {
         roleName: 'Operador',
@@ -125,7 +125,7 @@ export function AuthProvider({ children }) {
         canEditCustomers: false, canCommunicateWithCustomers: false, canViewCoupons: false,
         canCreateCoupons: false, canEditCoupons: false, canViewCashier: false,
         canCloseCashier: false, canViewReports: false, canExportReports: false,
-        canViewUsers:0, canViewLogs: false, canViewSettings: false,
+        canViewUsers:0, canViewLogs: false, canViewSettings: false, CanViewTasks: true
       }
     }
     return permissions[role] || permissions.operador

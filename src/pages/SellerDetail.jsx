@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useSellerData } from '../hooks/useSellerData'
 import { useGoals } from '../hooks/useGoals'
+import { useCommissions } from '../hooks/useCommissions'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
 import SectionErrorBoundary from '../components/SectionErrorBoundary'
 import Button from '../components/ui/Button'
@@ -13,18 +14,22 @@ import SellerGoalsSection from '../components/sellers/SellerGoalsSection'
 import SellerAchievements from '../components/sellers/SellerAchievements'
 import SellerTopProducts from '../components/sellers/SellerTopProducts'
 import SellerEvolutionChart from '../components/sellers/SellerEvolutionChart'
+import SellerCommissions from '../components/sellers/SellerCommissions'
+import UserCommissionRules from '../components/commissions/UserCommissionRules'
 import GoalSettings from '../components/goals/GoalSettings'
 import { exportSellerReport } from '../utils/exportReport'
+import { Award } from '../lib/icons'
 
 const SellerDetail = () => {
   const { sellerId } = useParams()
   const { profile } = useAuth()
   const navigate = useNavigate()
   const [showGoalSettings, setShowGoalSettings] = useState(false)
+  const [showCommissionRules, setShowCommissionRules] = useState(false)
   
-  // ✅ Passar profile.id como viewerId
   const { data, isLoading, error } = useSellerData(sellerId, profile?.role, profile?.id)
   const { goals, saveGoals, isSaving } = useGoals(sellerId)
+  const { data: commissionsData, isLoading: commissionsLoading } = useCommissions(sellerId)
   
   // Verificar se é o próprio perfil
   const isOwnProfile = profile?.id === sellerId
@@ -73,6 +78,19 @@ const SellerDetail = () => {
           canEditGoals={canEditGoals}
           onConfigureGoals={() => setShowGoalSettings(true)}
           onExportReport={handleExportReport}
+          onConfigureCommissionRules={() => setShowCommissionRules(true)}  // ✅ Nova prop
+          showCommissionRulesButton={canEditGoals}
+          extraActions={
+            canEditGoals && (
+              <Button
+                variant="outline"
+                icon={Award}
+                onClick={() => setShowCommissionRules(true)}
+              >
+                Regras de Comissão
+              </Button>
+            )
+          }
         />
         
         <SectionErrorBoundary title="Erro nas métricas">
@@ -103,6 +121,17 @@ const SellerDetail = () => {
           </SectionErrorBoundary>
         </div>
         
+        {/* Seção de Comissões */}
+        <SectionErrorBoundary title="Erro nas comissões">
+          <div className="mb-6">
+            <SellerCommissions 
+              commissions={commissionsData} 
+              isLoading={commissionsLoading} 
+            />
+          </div>
+        </SectionErrorBoundary>
+        
+        {/* Produtos Mais Vendidos */}
         <SectionErrorBoundary title="Erro nos produtos">
           <SellerTopProducts products={topProducts} />
         </SectionErrorBoundary>
@@ -114,6 +143,14 @@ const SellerDetail = () => {
         currentGoals={goals}
         onSave={handleSaveGoals}
         isSaving={isSaving}
+        userName={seller.full_name || seller.email}
+      />
+      
+      {/* Modal de Regras de Comissão */}
+      <UserCommissionRules
+        isOpen={showCommissionRules}
+        onClose={() => setShowCommissionRules(false)}
+        userId={sellerId}
         userName={seller.full_name || seller.email}
       />
     </div>

@@ -55,7 +55,6 @@ const DashboardStats = ({ stats, isLoading, onRefresh }) => {
           variant="danger"
           error={true}
           onRetry={onRefresh}
-          consistentHeight={true}
         />
       }
     >
@@ -68,8 +67,7 @@ const DashboardStats = ({ stats, isLoading, onRefresh }) => {
         loading={isLoading}
         onClick={() => handleStatClick(stat)}
         animate={!isLoading}
-        consistentHeight={true}
-        size="default"
+        className="h-full"
       />
     </SectionErrorBoundary>
   )
@@ -99,7 +97,7 @@ const DashboardStats = ({ stats, isLoading, onRefresh }) => {
           {stats.primaryStats.map(stat => (
             <div 
               key={stat.id} 
-              className="h-full min-h-[130px] sm:min-h-[140px]"
+              className="min-h-[180px] sm:min-h-[200px] h-full"
             >
               {renderStatCard(stat)}
             </div>
@@ -108,22 +106,27 @@ const DashboardStats = ({ stats, isLoading, onRefresh }) => {
       </div>
 
       {/* Cards secundários */}
-      <div>
-        <h3 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">
-          Métricas Adicionais
-        </h3>
-        
-        <StatCardGroup columns={2} gap={4}>
-          {stats.secondaryStats.map(stat => (
-            <div key={stat.id} className="h-full">
-              {renderStatCard({
-                ...stat,
-                compact: true // Cards secundários em modo compacto
-              })}
-            </div>
-          ))}
-        </StatCardGroup>
-      </div>
+      {stats.secondaryStats && stats.secondaryStats.length > 0 && (
+        <div>
+          <h3 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">
+            Métricas Adicionais
+          </h3>
+          
+          <StatCardGroup columns={2} gap={4}>
+            {stats.secondaryStats.map(stat => (
+              <div 
+                key={stat.id} 
+                className="min-h-[120px] sm:min-h-[140px] h-full"
+              >
+                {renderStatCard({
+                  ...stat,
+                  compact: true
+                })}
+              </div>
+            ))}
+          </StatCardGroup>
+        </div>
+      )}
     </div>
   )
 }

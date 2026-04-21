@@ -133,6 +133,11 @@ const NotFound = lazy(() => import(
   './pages/NotFound'
 ))
 
+const CommissionsAdmin = lazy(() => import(
+  /* webpackChunkName: "commissions" */
+  './components/CommissionsAdmin.jsx'
+))
+
 // Componente de loading com delay mínimo para evitar flicker
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black">
@@ -328,6 +333,16 @@ function App() {
                         <PrivateLayout>
                           <SectionErrorBoundary title="Erro no Perfil">
                             <Profile />
+                          </SectionErrorBoundary>
+                        </PrivateLayout>
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="/commissions/admin" element={
+                      <ProtectedRoute requiredPermission="canViewCommissions">
+                        <PrivateLayout>
+                          <SectionErrorBoundary title="Erro nas Comissões">
+                          <CommissionsAdmin />
                           </SectionErrorBoundary>
                         </PrivateLayout>
                       </ProtectedRoute>
