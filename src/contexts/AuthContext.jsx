@@ -101,7 +101,7 @@ export function AuthProvider({ children }) {
         canCommunicateWithCustomers: true, canViewCoupons: true, canCreateCoupons: true,
         canEditCoupons: true, canViewCashier: true, canCloseCashier: true,
         canViewReports: true, canExportReports: true, canViewUsers: true,
-        canViewLogs: true, canViewSettings: true,
+        canViewLogs: true, canViewSettings: true, canViewTasks: true,
       },
       gerente: {
         roleName: 'Gerente',

@@ -104,6 +104,11 @@ ORDER BY event_object_table, trigger_name;
   },
   {
     "trigger_info": {
+      "trigger_definition": "CREATE TRIGGER trigger_low_stock_notification\n   AFTER ON public.products\n   FOR EACH ROW\n   EXECUTE FUNCTION EXECUTE FUNCTION notify_low_stock()"
+    }
+  },
+  {
+    "trigger_info": {
       "trigger_definition": "CREATE TRIGGER update_products_timestamp\n   BEFORE ON public.products\n   FOR EACH ROW\n   EXECUTE FUNCTION EXECUTE FUNCTION update_products_updated_at()"
     }
   },
@@ -210,6 +215,16 @@ ORDER BY event_object_table, trigger_name;
   {
     "trigger_info": {
       "trigger_definition": "CREATE TRIGGER update_system_settings_updated_at\n   BEFORE ON public.system_settings\n   FOR EACH ROW\n   EXECUTE FUNCTION EXECUTE FUNCTION update_updated_at_column()"
+    }
+  },
+  {
+    "trigger_info": {
+      "trigger_definition": "CREATE TRIGGER task_assignment_trigger\n   AFTER ON public.tasks\n   FOR EACH ROW\n   EXECUTE FUNCTION EXECUTE FUNCTION log_task_assignment()"
+    }
+  },
+  {
+    "trigger_info": {
+      "trigger_definition": "CREATE TRIGGER task_status_trigger\n   AFTER ON public.tasks\n   FOR EACH ROW\n   EXECUTE FUNCTION EXECUTE FUNCTION log_task_status_change()"
     }
   }
 ]

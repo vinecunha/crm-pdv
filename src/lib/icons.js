@@ -18,6 +18,7 @@ export {
   Plus,
   Edit,
   Edit2,
+  Edit3,
   Trash2,
   Save,
   X,
@@ -156,5 +157,10 @@ export {
   UserX,
   Tags,
   LogIn,
-  Trophy
+  Trophy,
+  Circle,
+  Flag,
+  Pause,
+  Play,
+  GitBranch
 } from 'lucide-react'

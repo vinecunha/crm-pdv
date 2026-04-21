@@ -980,3 +980,134 @@ create index IF not exists idx_goals_type on public.goals using btree (goal_type
 create trigger trigger_update_goals_updated_at BEFORE
 update on goals for EACH row
 execute FUNCTION update_goals_updated_at ();
+
+create table public.tasks (
+  id uuid not null default gen_random_uuid (),
+  title text not null,
+  description text null,
+  type text not null,
+  priority text null default 'medium'::text,
+  status text null default 'pending'::text,
+  assigned_to uuid[] null,
+  assigned_to_name text null,
+  created_by uuid null,
+  created_by_name text null,
+  due_date date null,
+  completed_at timestamp with time zone null,
+  completed_by uuid null,
+  category text null default 'geral'::text,
+  tags text[] null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  assigned_to_names text[] null,
+  priority_order integer null default 2,
+  visibility text null default 'assigned'::text,
+  assigned_by uuid null,
+  assigned_by_name text null,
+  constraint tasks_pkey primary key (id),
+  constraint tasks_assigned_by_fkey foreign KEY (assigned_by) references auth.users (id),
+  constraint tasks_priority_check check (
+    (
+      priority = any (
+        array[
+          'low'::text,
+          'medium'::text,
+          'high'::text,
+          'urgent'::text
+        ]
+      )
+    )
+  ),
+  constraint tasks_status_check check (
+    (
+      status = any (
+        array[
+          'pending'::text,
+          'in_progress'::text,
+          'completed'::text,
+          'cancelled'::text
+        ]
+      )
+    )
+  ),
+  constraint tasks_type_check check (
+    (
+      type = any (array['personal'::text, 'team'::text])
+    )
+  ),
+  constraint tasks_visibility_check check (
+    (
+      visibility = any (
+        array['assigned'::text, 'team'::text, 'all'::text]
+      )
+    )
+  )
+) TABLESPACE pg_default;
+
+create index IF not exists idx_tasks_type on public.tasks using btree (type, status) TABLESPACE pg_default;
+
+create index IF not exists idx_tasks_created_by on public.tasks using btree (created_by) TABLESPACE pg_default;
+
+create index IF not exists idx_tasks_assigned_to on public.tasks using btree (assigned_to, status, due_date) TABLESPACE pg_default;
+
+create trigger task_assignment_trigger
+after
+update on tasks for EACH row
+execute FUNCTION log_task_assignment ();
+
+create trigger task_status_trigger
+after
+update on tasks for EACH row
+execute FUNCTION log_task_status_change ();
+
+create table public.task_status_history (
+  id uuid not null default gen_random_uuid (),
+  task_id uuid null,
+  changed_by uuid null,
+  changed_by_name text null,
+  old_status text null,
+  new_status text null,
+  created_at timestamp with time zone null default now(),
+  constraint task_status_history_pkey primary key (id),
+  constraint task_status_history_changed_by_fkey foreign KEY (changed_by) references auth.users (id),
+  constraint task_status_history_task_id_fkey foreign KEY (task_id) references tasks (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create table public.task_comments (
+  id uuid not null default gen_random_uuid (),
+  task_id uuid null,
+  user_id uuid null,
+  user_name text null,
+  content text not null,
+  created_at timestamp with time zone null default now(),
+  constraint task_comments_pkey primary key (id),
+  constraint task_comments_task_id_fkey foreign KEY (task_id) references tasks (id) on delete CASCADE,
+  constraint task_comments_user_id_fkey foreign KEY (user_id) references auth.users (id)
+) TABLESPACE pg_default;
+
+create table public.task_assignment_history (
+  id uuid not null default gen_random_uuid (),
+  task_id uuid null,
+  assigned_by uuid null,
+  assigned_by_name text null,
+  assigned_to uuid null,
+  assigned_to_name text null,
+  action text null,
+  created_at timestamp with time zone null default now(),
+  constraint task_assignment_history_pkey primary key (id),
+  constraint task_assignment_history_assigned_by_fkey foreign KEY (assigned_by) references auth.users (id),
+  constraint task_assignment_history_task_id_fkey foreign KEY (task_id) references tasks (id) on delete CASCADE,
+  constraint task_assignment_history_action_check check (
+    (
+      action = any (
+        array[
+          'assigned'::text,
+          'unassigned'::text,
+          'claimed'::text
+        ]
+      )
+    )
+  )
+) TABLESPACE pg_default;
+
+create index IF not exists idx_task_assignment_history_task_id on public.task_assignment_history using btree (task_id, created_at desc) TABLESPACE pg_default;

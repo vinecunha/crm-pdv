@@ -1,8 +1,12 @@
+// src/components/dashboard/UserPerformanceCard.jsx
 import React from 'react'
-import { TrendingUp, Target, Award, Calendar } from '../../lib/icons'
+import { useNavigate } from 'react-router-dom'
+import { TrendingUp, Target, Award, ChevronRight } from '../../lib/icons'
 import { formatCurrency } from '../../utils/formatters'
 
 const UserPerformanceCard = ({ sales, profile }) => {
+  const navigate = useNavigate()
+  
   // Calcular métricas do usuário
   const today = new Date()
   const thirtyDaysAgo = new Date(today)
@@ -13,20 +17,34 @@ const UserPerformanceCard = ({ sales, profile }) => {
   const salesCount = recentSales.length
   const averageTicket = salesCount > 0 ? totalSales / salesCount : 0
   
-  // Meta diária (exemplo: R$ 1000)
+  // Meta diária
   const dailyGoal = 1000
   const todaySales = sales
     .filter(s => new Date(s.created_at).toDateString() === today.toDateString())
     .reduce((sum, s) => sum + s.final_amount, 0)
   const goalProgress = Math.min((todaySales / dailyGoal) * 100, 100)
   
+  // Navegar para SellerDetail
+  const handleViewDetails = () => {
+    navigate(`/sellers/${profile.id}`)
+  }
+  
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl shadow-sm border border-blue-100 dark:border-blue-800 p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <TrendingUp className="text-blue-600 dark:text-blue-400" size={24} />
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Seu Desempenho
-        </h3>
+    <div 
+      className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl shadow-sm border border-blue-100 dark:border-blue-800 p-6 cursor-pointer hover:shadow-md transition-all group"
+      onClick={handleViewDetails}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="text-blue-600 dark:text-blue-400" size={24} />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Seu Desempenho
+          </h3>
+        </div>
+        <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="text-sm">Ver detalhes</span>
+          <ChevronRight size={18} />
+        </div>
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

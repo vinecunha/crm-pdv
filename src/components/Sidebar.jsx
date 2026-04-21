@@ -31,11 +31,12 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
   const userInitial = displayName.charAt(0).toUpperCase()
 
   const menuGroups = useMemo(() => [
-    {
+     {
       id: 'principal',
       label: 'Principal',
       items: [
         { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', permission: 'canViewDashboard', description: 'Visão geral', prefetch: true },
+        { path: '/tasks', icon: ClipboardList, label: 'Tarefas', permission: 'canViewTasks', description: 'Lista de tarefas', prefetch: true },
       ]
     },
     {

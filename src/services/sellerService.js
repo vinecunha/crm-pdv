@@ -3,10 +3,10 @@ import { supabase } from '../lib/supabase'
 /**
  * Buscar dados detalhados de um vendedor específico
  */
-export const fetchSellerDetails = async (sellerId, viewerRole) => {
-  // Verificar permissão
-  if (viewerRole === 'operador') {
-    throw new Error('Operadores não podem ver detalhes de outros vendedores')
+export const fetchSellerDetails = async (sellerId, viewerRole, viewerId) => {
+  // ✅ Operador pode ver a si mesmo
+  if (viewerRole === 'operador' && sellerId !== viewerId) {
+    throw new Error('Operadores só podem ver seu próprio desempenho')
   }
   
   const today = new Date()
@@ -24,8 +24,8 @@ export const fetchSellerDetails = async (sellerId, viewerRole) => {
   
   if (profileError) throw profileError
   
-  // Verificar se o viewer tem permissão
-  if (viewerRole === 'gerente' && profile.role !== 'operador') {
+  // ✅ Gerente só pode ver operadores (ou a si mesmo)
+  if (viewerRole === 'gerente' && profile.role !== 'operador' && sellerId !== viewerId) {
     throw new Error('Gerentes só podem ver detalhes de operadores')
   }
   

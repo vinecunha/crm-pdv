@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { notifyGoalAchieved } from './notificationService'
 
 /**
  * Buscar metas de um usuário
@@ -41,6 +42,14 @@ export const fetchDefaultGoals = async () => {
  * Salvar ou atualizar meta
  */
 export const saveGoal = async (userId, goalType, targetAmount, createdBy) => {
+  // Buscar meta antiga para comparação (se existir)
+  const { data: oldGoal } = await supabase
+    .from('goals')
+    .select('target_amount')
+    .eq('user_id', userId)
+    .eq('goal_type', goalType)
+    .maybeSingle()
+  
   // Verificar se já existe
   const { data: existing } = await supabase
     .from('goals')
@@ -49,20 +58,23 @@ export const saveGoal = async (userId, goalType, targetAmount, createdBy) => {
     .eq('goal_type', goalType)
     .maybeSingle()
   
+  let result
+  
   if (existing) {
     // Atualizar
     const { data, error } = await supabase
       .from('goals')
       .update({
         target_amount: targetAmount,
-        updated_by: createdBy
+        updated_by: createdBy,
+        updated_at: new Date().toISOString()
       })
       .eq('id', existing.id)
       .select()
       .single()
     
     if (error) throw error
-    return data
+    result = data
   } else {
     // Criar
     const { data, error } = await supabase
@@ -78,8 +90,10 @@ export const saveGoal = async (userId, goalType, targetAmount, createdBy) => {
       .single()
     
     if (error) throw error
-    return data
+    result = data
   }
+  
+  return result
 }
 
 /**

@@ -16,6 +16,9 @@ import { useDashboardData } from '../hooks/useDashboardData'
 import { useDashboardStats } from '../hooks/useDashboardStats'
 import SectionErrorBoundary from '../components/SectionErrorBoundary'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
+import { ClipboardList } from '../lib/icons'
+import TaskWidget from '../components/tasks/TaskWidget'
+import { useTasksQuery } from '../hooks/useTasksQuery'
 import Button from '../components/ui/Button'
 import PageHeader from '../components/ui/PageHeader'
 import DashboardStats from '../components/dashboard/DashboardStats'
@@ -69,6 +72,20 @@ const Dashboard = () => {
     
     return actions
   }, [permissions, navigate])
+
+  const { data: myTasks = [], isLoading: myTasksLoading } = useTasksQuery({
+    assignedTo: profile?.id,
+    status: 'pending',
+    limit: 10
+  })
+  
+  const { data: teamTasks = [], isLoading: teamTasksLoading } = useTasksQuery({
+    type: 'team',
+    status: 'pending',
+    limit: 10
+  })
+  
+  const tasksLoading = myTasksLoading || teamTasksLoading
 
   // Determinar título baseado no cargo
   const getWelcomeTitle = () => {
@@ -140,6 +157,20 @@ const Dashboard = () => {
         <div className='mt-6'>
           <SectionErrorBoundary title="Erro no gráfico de vendas">
             <SalesChart data={chartData} />
+          </SectionErrorBoundary>
+        </div>
+
+        <div className="my-6">
+          <SectionErrorBoundary title="Erro no widget de tarefas">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5">
+              <TaskWidget 
+                myTasks={myTasks}
+                teamTasks={teamTasks}
+                loading={tasksLoading}
+                maxItems={3}
+                defaultTab="my"
+              />
+            </div>
           </SectionErrorBoundary>
         </div>
 

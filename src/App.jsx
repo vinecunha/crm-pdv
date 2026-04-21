@@ -16,6 +16,7 @@ import CacheDebugger from './components/ui/CacheDebugger'
 import NetworkStatus from './components/ui/NetworkStatus'
 import PendingSalesIndicator from './components/sales/pdv/PendingSalesIndicator'
 import PerformanceDebugger from './components/ui/PerformanceDebugger'
+import { useNotificationTriggers } from './hooks/useNotificationTriggers'
 
 // ============= Code Splitting Avançado =============
 // Agrupando por módulos para melhor caching
@@ -27,7 +28,13 @@ const Dashboard = lazy(() => import(
   './pages/Dashboard'
 ))
 
-// NOVO: Detalhes do Vendedor (agrupado com dashboard)
+// To-do-List
+const TaskBoard = lazy(() => import(
+  /* webpackChunkName: "dashboard" */
+  './pages/TaskBoard'
+))
+
+// Detalhes do Vendedor (agrupado com dashboard)
 const SellerDetail = lazy(() => import(
   /* webpackChunkName: "dashboard" */
   './pages/SellerDetail'
@@ -133,7 +140,13 @@ const PageLoader = () => (
   </div>
 )
 
+const NotificationTriggersWrapper = () => {
+  useNotificationTriggers()
+  return null
+}
+
 function App() {
+  
   return (
     <ErrorBoundaryWithCompany>
       <QueryClientProvider client={queryClient}>
@@ -142,6 +155,7 @@ function App() {
             <CompanyProvider>
               <ThemeProvider> 
               <DynamicHead />
+              <NotificationTriggersWrapper />
               <Suspense fallback={<PageLoader />}>
                 <PrefetchRoute>
                   <Routes>
@@ -158,8 +172,17 @@ function App() {
                         </PrivateLayout>
                       </ProtectedRoute>
                     } />
+
+                    {/* Rota para TaskBoard */}
+                    <Route path="/tasks" element={
+                      <ProtectedRoute>
+                        <PrivateLayout>
+                          <TaskBoard />
+                        </PrivateLayout>
+                      </ProtectedRoute>
+                    } />
                     
-                    {/* NOVO: Rota de detalhes do vendedor */}
+                    {/* Rota de detalhes do vendedor */}
                     <Route path="/sellers/:sellerId" element={
                       <ProtectedRoute requiredPermission="canViewDashboard">
                         <PrivateLayout>

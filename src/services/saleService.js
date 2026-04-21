@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase'
 import { sanitizeObject } from '../utils/sanitize'
 import { formatCurrency } from '../utils/formatters'
 import { logger } from '../utils/logger'
+import { notifyNewSale } from './notificationService'
 
 /**
  * Buscar produtos ativos com estoque
@@ -201,14 +202,25 @@ export const createSale = async (cart, customer, coupon, discount, paymentMethod
     
     logger.log('✅ Venda criada com sucesso:', data)
     
-    // Retornar objeto compatível com o formato esperado
-    return {
+    const sale = {
       id: data.sale_id,
       sale_number: data.sale_number,
       total_amount: subtotal,
       discount_amount: discount,
       final_amount: total
     }
+    
+    // ✅ Notificar venda grande (movido para ANTES do return)
+    if (sale.final_amount >= 500) {
+      try {
+        await notifyNewSale(sale, profile?.full_name || 'Vendedor')
+      } catch (notifError) {
+        logger.warn('⚠️ Erro ao notificar venda:', notifError)
+        // Não falhar a venda se a notificação falhar
+      }
+    }
+    
+    return sale
     
   } catch (error) {
     logger.error('❌ Erro em createSale:', error)

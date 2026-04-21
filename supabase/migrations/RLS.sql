@@ -1807,6 +1807,46 @@ WHERE schemaname = 'public';
         "Comando": "SELECT",
         "Política": "Usuários podem ver configurações do sistema",
         "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "tasks",
+        "Comando": "DELETE",
+        "Política": "allow_delete_tasks",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": null,
+        "Tabela": "tasks",
+        "Comando": "INSERT",
+        "Política": "allow_insert_tasks",
+        "WITH_CHECK": "true"
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "tasks",
+        "Comando": "SELECT",
+        "Política": "allow_select_tasks",
+        "WITH_CHECK": null
+      },
+      {
+        "Roles": [
+          "authenticated"
+        ],
+        "USING": "true",
+        "Tabela": "tasks",
+        "Comando": "UPDATE",
+        "Política": "allow_update_tasks",
+        "WITH_CHECK": "true"
       }
     ]
   }
