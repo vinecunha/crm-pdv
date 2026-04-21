@@ -162,5 +162,6 @@ export {
   Flag,
   Pause,
   Play,
-  GitBranch
+  GitBranch,
+  ListChecks
 } from 'lucide-react'

@@ -97,7 +97,10 @@ const DashboardStats = ({ stats, isLoading, onRefresh }) => {
         
         <StatCardGroup columns={4} gap={4}>
           {stats.primaryStats.map(stat => (
-            <div key={stat.id} className="h-full">
+            <div 
+              key={stat.id} 
+              className="h-full min-h-[130px] sm:min-h-[140px]"
+            >
               {renderStatCard(stat)}
             </div>
           ))}
@@ -110,7 +113,7 @@ const DashboardStats = ({ stats, isLoading, onRefresh }) => {
           Métricas Adicionais
         </h3>
         
-        <StatCardGroup columns={3} gap={4}>
+        <StatCardGroup columns={2} gap={4}>
           {stats.secondaryStats.map(stat => (
             <div key={stat.id} className="h-full">
               {renderStatCard({

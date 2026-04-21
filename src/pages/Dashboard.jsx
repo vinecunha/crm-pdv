@@ -10,13 +10,15 @@ import {
   ChevronRight,
   RefreshCw,
   TrendingUp,
-  Users
+  Users,
+  ClipboardList,
+  BarChart3,
+  ListChecks
 } from '../lib/icons'
 import { useDashboardData } from '../hooks/useDashboardData'
 import { useDashboardStats } from '../hooks/useDashboardStats'
 import SectionErrorBoundary from '../components/SectionErrorBoundary'
 import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
-import { ClipboardList } from '../lib/icons'
 import TaskWidget from '../components/tasks/TaskWidget'
 import { useTasksQuery } from '../hooks/useTasksQuery'
 import Button from '../components/ui/Button'
@@ -42,7 +44,7 @@ const Dashboard = () => {
         label: 'Nova Venda', 
         icon: ShoppingCart, 
         onClick: () => navigate('/sales'),
-        variant: 'outline'
+        variant: 'primary'
       })
     }
     if (permissions.canViewCustomers) {
@@ -87,7 +89,6 @@ const Dashboard = () => {
   
   const tasksLoading = myTasksLoading || teamTasksLoading
 
-  // Determinar título baseado no cargo
   const getWelcomeTitle = () => {
     const firstName = profile?.full_name?.split(' ')[0] || 'Usuário'
     const roleEmoji = profile?.role === 'admin' ? '👑' : profile?.role === 'gerente' ? '📊' : '💼'
@@ -124,7 +125,11 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+        
+        {/* ============================================= */}
+        {/* CABEÇALHO */}
+        {/* ============================================= */}
         <PageHeader
           title={getWelcomeTitle()}
           description={
@@ -138,49 +143,88 @@ const Dashboard = () => {
           actions={quickActions}
         />
 
-        {/* Card de desempenho do usuário (para operadores) */}
+        {/* ============================================= */}
+        {/* SEÇÃO 1: MÉTRICAS PRINCIPAIS (KPIs) */}
+        {/* ============================================= */}
+        <section className="mb-6">
+          <DashboardStats 
+            stats={dashboardStats}
+            isLoading={isLoading}
+            onRefresh={refetch}
+          />
+        </section>
+
+        {/* ============================================= */}
+        {/* SEÇÃO 2: DESEMPENHO INDIVIDUAL (APENAS OPERADORES) */}
+        {/* ============================================= */}
         {profile?.role === 'operador' && (
-          <div className="mb-6">
-            <UserPerformanceCard 
-              sales={rawData?.sales || []} 
-              profile={profile} 
-            />
-          </div>
+          <section className="mb-6">
+            <SectionErrorBoundary title="Erro no card de desempenho">
+              <UserPerformanceCard 
+                sales={rawData?.sales || []} 
+                profile={profile} 
+              />
+            </SectionErrorBoundary>
+          </section>
         )}
 
-        <DashboardStats 
-          stats={dashboardStats}
-          isLoading={isLoading}
-          onRefresh={refetch}
-        />
-
-        <div className='mt-6'>
-          <SectionErrorBoundary title="Erro no gráfico de vendas">
-            <SalesChart data={chartData} />
-          </SectionErrorBoundary>
+        {/* ============================================= */}
+        {/* SEÇÃO 3: GRID PRINCIPAL (2 COLUNAS) */}
+        {/* ============================================= */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
+          
+          {/* Coluna Esquerda: Gráfico (ocupa 2/3) */}
+          <div className="lg:col-span-2">
+            <SectionErrorBoundary title="Erro no gráfico de vendas">
+              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5 h-full">
+                <div className="flex items-center gap-2 mb-3">
+                  <BarChart3 size={18} className="text-blue-500" />
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                    Evolução de Vendas (7 dias)
+                  </h2>
+                </div>
+                <SalesChart data={chartData} />
+              </div>
+            </SectionErrorBoundary>
+          </div>
+          
+          {/* Coluna Direita: Widget de Tarefas (ocupa 1/3) */}
+          <div className="lg:col-span-1">
+            <SectionErrorBoundary title="Erro no widget de tarefas">
+              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5 h-full">
+                <div className="flex items-center gap-2 mb-3">
+                  <ClipboardList size={18} className="text-green-500" />
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                    Tarefas Pendentes
+                  </h2>
+                </div>
+                <TaskWidget 
+                  myTasks={myTasks}
+                  teamTasks={teamTasks}
+                  loading={tasksLoading}
+                  maxItems={4}
+                  defaultTab="my"
+                />
+              </div>
+            </SectionErrorBoundary>
+          </div>
         </div>
 
-        <div className="my-6">
-          <SectionErrorBoundary title="Erro no widget de tarefas">
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5">
-              <TaskWidget 
-                myTasks={myTasks}
-                teamTasks={teamTasks}
-                loading={tasksLoading}
-                maxItems={3}
-                defaultTab="my"
-              />
-            </div>
-          </SectionErrorBoundary>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        {/* ============================================= */}
+        {/* SEÇÃO 4: LISTAS (ÚLTIMAS VENDAS + PRODUTOS) */}
+        {/* ============================================= */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
+          
+          {/* Últimas Vendas */}
           <SectionErrorBoundary title="Erro nas últimas vendas">
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-6">
-              <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
-                  {profile?.role === 'operador' ? 'Minhas Últimas Vendas' : 'Últimas Vendas'}
-                </h2>
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <ShoppingCart size={18} className="text-blue-500" />
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                    {profile?.role === 'operador' ? 'Minhas Últimas Vendas' : 'Últimas Vendas'}
+                  </h2>
+                </div>
                 <Link 
                   to="/sales-list" 
                   className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1"
@@ -193,12 +237,16 @@ const Dashboard = () => {
             </div>
           </SectionErrorBoundary>
 
+          {/* Produtos Mais Vendidos */}
           <SectionErrorBoundary title="Erro nos produtos mais vendidos">
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-6">
-              <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
-                  Produtos Mais Vendidos
-                </h2>
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Package size={18} className="text-purple-500" />
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                    Produtos Mais Vendidos
+                  </h2>
+                </div>
                 <Link 
                   to="/reports" 
                   className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1"
@@ -212,11 +260,23 @@ const Dashboard = () => {
           </SectionErrorBoundary>
         </div>
 
-        {/* Seção da Equipe (Gerentes e Admins) */}
+        {/* ============================================= */}
+        {/* SEÇÃO 5: EQUIPE (APENAS GERENTES E ADMINS) */}
+        {/* ============================================= */}
         {showTeamSection && (
-          <div className="mt-6">
-            <TeamOverview teamData={teamData} userRole={profile?.role} />
-          </div>
+          <section>
+            <SectionErrorBoundary title="Erro na visão da equipe">
+              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Users size={18} className="text-orange-500" />
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                    Desempenho da Equipe
+                  </h2>
+                </div>
+                <TeamOverview teamData={teamData} userRole={profile?.role} />
+              </div>
+            </SectionErrorBoundary>
+          </section>
         )}
       </div>
     </div>
