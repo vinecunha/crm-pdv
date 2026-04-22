@@ -1,7 +1,6 @@
 // src/pages/SalesList.jsx
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@lib/supabase'
 import { 
   Eye, Ban, Printer, Search, Filter, RefreshCw,
   FileText, DollarSign, Ticket, Download, XCircle, CheckCircle, Clock, ShoppingCart, Receipt
@@ -20,9 +19,9 @@ import { useSystemLogs } from '@hooks/useSystemLogs'
 import useLogger from '@hooks/useLogger'
 import useDebounce from '@hooks/useDebounce'
 import useMediaQuery from '@hooks/useMediaQuery'
-import CancelSaleModal from '@components/sales/management/CancelSaleModal'
-import ReceiptModal from '@components/sales/common/ReceiptModal'
+import SalesListModalsContainer from '@components/sales/management/SalesListModalsContainer'
 
+import { useSalesListHandlers } from '@hooks/handlers'
 import * as salesListService from '@services/salesListService'
 
 const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) => {
@@ -66,10 +65,9 @@ const SalesList = () => {
   const { logComponentAction, logComponentError } = useLogger('SalesList')
   const queryClient = useQueryClient()
 
-  // Estados para o modal de recibo
   const [showReceiptModal, setShowReceiptModal] = useState(false)
   const [receiptSale, setReceiptSale] = useState(null)
-  const [receiptItems, setReceiptItems] = useState([])  // 👈 Estado local para itens
+  const [receiptItems, setReceiptItems] = useState([])
   const [isLoadingReceiptItems, setIsLoadingReceiptItems] = useState(false)
 
   const isMobile = useMediaQuery('(max-width: 768px)')
@@ -103,7 +101,6 @@ const SalesList = () => {
   const paymentIcons = { cash: '💵', credit_card: '💳', debit_card: '🏧', pix: '📱' }
   const paymentLabels = { cash: 'Dinheiro', credit_card: 'Crédito', debit_card: 'Débito', pix: 'PIX' }
 
-  // Query para buscar itens dos detalhes da venda
   const { 
     data: saleItems = [],
     isLoading: isLoadingItems
@@ -112,41 +109,6 @@ const SalesList = () => {
     queryFn: () => salesListService.fetchSaleItems(selectedSale?.id),
     enabled: !!selectedSale?.id && showDetailsModal,
   })
-
-  // 👇 Função para abrir recibo - busca itens diretamente
-  const openReceipt = async (sale) => {
-    console.log('📌 Abrindo recibo para venda:', sale)
-    setReceiptSale(sale)
-    setShowReceiptModal(true)
-    setReceiptItems([]) // Limpar itens anteriores
-    
-    if (sale?.id) {
-      setIsLoadingReceiptItems(true)
-      try {
-        const numericSaleId = Number(sale.id)
-        console.log('🔍 Buscando itens para saleId:', numericSaleId)
-        
-        const { data, error } = await supabase
-          .from('sale_items')
-          .select('*')
-          .eq('sale_id', numericSaleId)
-        
-        console.log('📦 Resposta do Supabase:', { data, error })
-        
-        if (error) throw error
-        
-        setReceiptItems(data || [])
-        console.log('✅ Itens carregados:', data?.length || 0)
-      } catch (error) {
-        console.error('❌ Erro ao carregar itens:', error)
-        setReceiptItems([])
-      } finally {
-        setIsLoadingReceiptItems(false)
-      }
-    }
-    
-    logComponentAction('VIEW_RECEIPT', sale.id, { sale_number: sale.sale_number })
-  }
 
   const { 
     data: sales = [], 
@@ -196,49 +158,54 @@ const SalesList = () => {
     }
   })
 
-  React.useEffect(() => {
-    logComponentAction('ACCESS_PAGE', null, { page: 'sales_list', user_email: profile?.email })
-  }, [])
-
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
   }
 
-  const viewSaleDetails = (sale) => {
-    setSelectedSale(sale)
-    setShowDetailsModal(true)
-    logComponentAction('VIEW_SALE_DETAILS', sale.id, { sale_number: sale.sale_number })
-  }
+  const handlers = useSalesListHandlers({
+    profile,
+    canCancelDirectly,
+    canRequestCancellation,
+    selectedSale,
+    setSelectedSale,
+    cancelReason,
+    setCancelReason,
+    cancelNotes,
+    setCancelNotes,
+    receiptSale,
+    setReceiptSale,
+    receiptItems,
+    setReceiptItems,
+    setIsLoadingReceiptItems,
+    showReceiptModal,
+    setShowReceiptModal,
+    showDetailsModal,
+    setShowDetailsModal,
+    showCancelModal,
+    setShowCancelModal,
+    cancelMutation,
+    refetch,
+    showFeedback,
+    logComponentAction,
+    logAction
+  })
+
+  React.useEffect(() => {
+    logComponentAction('ACCESS_PAGE', null, { page: 'sales_list', user_email: profile?.email })
+  }, [])
 
   const renderSaleCard = (sale) => (
     <SalesListCard
       sale={sale}
-      onViewDetails={viewSaleDetails}
-      onReceipt={openReceipt} 
-      onCancel={(sale) => {
-        setSelectedSale(sale)
-        setCancelReason('')
-        setCancelNotes('')
-        setShowCancelModal(true)
-      }}
-      onPrint={openReceipt}
+      onViewDetails={handlers.viewSaleDetails}
+      onReceipt={handlers.openReceipt} 
+      onCancel={handlers.openCancelModal}
+      onPrint={handlers.openReceipt}
       canCancel={canCancelDirectly}
       canRequestCancellation={canRequestCancellation}
     />
   )
-
-  const handleCancelWithApproval = (approvalData) => {
-    cancelMutation.mutate({
-      saleNumber: selectedSale.sale_number,
-      cancelledBy: profile?.id,
-      approvedBy: approvalData.approvedBy,
-      reason: cancelReason,
-      notes: cancelNotes
-    })
-  }
-
-  const handleExport = () => showFeedback('info', 'Exportação em desenvolvimento')
 
   const summary = React.useMemo(() => {
     const salesArray = Array.isArray(sales) ? sales : []
@@ -326,26 +293,26 @@ const SalesList = () => {
     { 
       label: 'Ver detalhes', 
       icon: <Eye size={16} />, 
-      onClick: viewSaleDetails, 
+      onClick: handlers.viewSaleDetails, 
       className: 'text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30' 
     },
     { 
       label: 'Recibo', 
       icon: <Receipt size={16} />, 
-      onClick: openReceipt, 
+      onClick: handlers.openReceipt, 
       className: 'text-gray-500 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30' 
     },
     ...(canCancelDirectly || canRequestCancellation ? [{
       label: canCancelDirectly ? 'Cancelar' : 'Solicitar',
       icon: <Ban size={16} />,
-      onClick: (row) => { setSelectedSale(row); setCancelReason(''); setCancelNotes(''); setShowCancelModal(true) },
+      onClick: handlers.openCancelModal,
       className: canCancelDirectly ? 'text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30' : 'text-gray-500 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30',
-      disabled: (row) => row.status !== 'completed'
+      disabled: handlers.isCancelActionDisabled
     }] : []),
     { 
       label: 'Imprimir', 
       icon: <Printer size={16} />, 
-      onClick: openReceipt,
+      onClick: handlers.openReceipt,
       className: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' 
     }
   ]
@@ -354,14 +321,14 @@ const SalesList = () => {
     {
       label: 'Atualizar',
       icon: RefreshCw,
-      onClick: () => refetch(),
+      onClick: handlers.handleRefresh,
       loading: isLoading,
       variant: 'outline'
     },
     {
       label: 'Exportar',
       icon: Download,
-      onClick: handleExport,
+      onClick: handlers.handleExport,
       variant: 'outline'
     }
   ]
@@ -397,7 +364,6 @@ const SalesList = () => {
           actions={headerActions}
         />
 
-        {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
           <StatCard label="Total de Vendas" value={formatNumber(summary.totalCount)} sublabel={`${summary.completedCount} concluídas`} icon={FileText} variant="info" />
           <StatCard label="Faturamento" value={formatCurrency(summary.totalAmount)} sublabel={`Ticket: ${formatCurrency(summary.averageTicket)}`} icon={DollarSign} variant="success" />
@@ -405,7 +371,6 @@ const SalesList = () => {
           <StatCard label="Cancelamentos" value={formatNumber(summary.cancelledCount)} sublabel={`${((summary.cancelledCount / summary.totalCount) * 100 || 0).toFixed(1)}%`} icon={Ban} variant={summary.cancelledCount > 0 ? 'warning' : 'default'} />
         </div>
 
-        {/* Filtros */}
         <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-3 sm:p-4 mb-4 sm:mb-6">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
             <div className="flex-1 relative">
@@ -463,7 +428,7 @@ const SalesList = () => {
             columns={columns} 
             data={sales} 
             actions={actions} 
-            onRowClick={viewSaleDetails} 
+            onRowClick={handlers.viewSaleDetails} 
             emptyMessage="Nenhuma venda encontrada" 
             striped 
             hover 
@@ -474,141 +439,29 @@ const SalesList = () => {
           />
         )}
 
-        {/* Modal de Detalhes */}
-        {showDetailsModal && selectedSale && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-            <div className="absolute inset-0 bg-black/30 dark:bg-black/50" onClick={() => setShowDetailsModal(false)} />
-            <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden">
-              {/* ... conteúdo do modal de detalhes (mantido igual) ... */}
-              <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-                <div>
-                  <h3 className="text-base sm:text-lg font-semibold dark:text-white">Detalhes da Venda #{selectedSale.sale_number}</h3>
-                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{formatDateTime(selectedSale.created_at)}</p>
-                </div>
-                <button onClick={() => setShowDetailsModal(false)} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 text-xl">✕</button>
-              </div>
-              
-              <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh] space-y-4">
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 sm:p-4">
-                  <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-2">CLIENTE</p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium flex-shrink-0">
-                      {selectedSale.customer_name?.charAt(0) || 'C'}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-medium text-gray-900 dark:text-white text-sm sm:text-base truncate">{selectedSale.customer_name || 'Cliente não identificado'}</p>
-                      {selectedSale.customer_phone && <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">{selectedSale.customer_phone}</p>}
-                    </div>
-                  </div>
-                </div>
-
-                {selectedSale.status === 'cancelled' && (
-                  <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 sm:p-4 border border-red-200 dark:border-red-800">
-                    <p className="text-xs text-red-600 dark:text-red-400 font-medium mb-2 sm:mb-3 flex items-center gap-1">
-                      <XCircle size={14} />INFORMAÇÕES DE CANCELAMENTO
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
-                      <div><p className="text-gray-500 dark:text-gray-400 text-xs">Data/Hora</p><p className="font-medium text-gray-900 dark:text-white">{formatDateTime(selectedSale.cancelled_at)}</p></div>
-                      <div><p className="text-gray-500 dark:text-gray-400 text-xs">Cancelado por</p><p className="font-medium text-gray-900 dark:text-white">{selectedSale.cancelled_by_user?.full_name || selectedSale.cancelled_by_user?.email || 'Sistema'}</p></div>
-                      <div className="sm:col-span-2"><p className="text-gray-500 dark:text-gray-400 text-xs">Motivo</p><p className="font-medium text-gray-900 dark:text-white">{selectedSale.cancellation_reason || '-'}</p></div>
-                      {selectedSale.cancellation_notes && <div className="sm:col-span-2"><p className="text-gray-500 dark:text-gray-400 text-xs">Observações</p><p className="text-gray-700 dark:text-gray-300 text-sm">{selectedSale.cancellation_notes}</p></div>}
-                      {selectedSale.approved_by_user && (
-                        <div className="sm:col-span-2 border-t border-red-200 dark:border-red-800 pt-2 sm:pt-3 mt-1">
-                          <p className="text-gray-500 dark:text-gray-400 text-xs">Aprovado por</p>
-                          <p className="font-medium text-gray-900 dark:text-white text-sm">
-                            {selectedSale.approved_by_user.full_name || selectedSale.approved_by_user.email}
-                            <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
-                              ({selectedSale.approved_by === selectedSale.cancelled_by ? 'Auto-aprovado' : 'Aprovador'})
-                            </span>
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-2">ITENS</p>
-                  {isLoadingItems ? (
-                    <div className="text-center py-4">
-                      <RefreshCw size={20} className="animate-spin mx-auto text-gray-400 dark:text-gray-500" />
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {saleItems.map((item, i) => (
-                        <div key={i} className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                          <span className="text-gray-700 dark:text-gray-300 text-sm">{item.product_name} x{item.quantity}</span>
-                          <span className="font-medium dark:text-white text-sm">{formatCurrency(item.total_price)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="border-t dark:border-gray-700 pt-3 space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">Subtotal</span>
-                    <span className="dark:text-white">{formatCurrency(selectedSale.total_amount)}</span>
-                  </div>
-                  {selectedSale.discount_amount > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-green-600 dark:text-green-400">
-                        Desconto {selectedSale.coupon_code && `(${selectedSale.coupon_code})`}
-                      </span>
-                      <span className="text-green-600 dark:text-green-400">-{formatCurrency(selectedSale.discount_amount)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between font-bold pt-2 border-t dark:border-gray-700 text-base">
-                    <span className="dark:text-white">Total</span>
-                    <span className="text-green-600 dark:text-green-400">{formatCurrency(selectedSale.final_amount)}</span>
-                  </div>
-                </div>
-                <div className="text-xs text-gray-400 dark:text-gray-500 border-t dark:border-gray-700 pt-3">
-                  <p>Venda realizada por: {selectedSale.created_by_user?.full_name || selectedSale.created_by_user?.email || 'Sistema'}</p>
-                </div>
-              </div>
-
-              <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
-                <Button variant="outline" onClick={() => setShowDetailsModal(false)} className="order-2 sm:order-1 w-full sm:w-auto">Fechar</Button>
-                {selectedSale.status === 'completed' && (canCancelDirectly || canRequestCancellation) && (
-                  <Button 
-                    variant="danger" 
-                    onClick={() => { setShowDetailsModal(false); setCancelReason(''); setCancelNotes(''); setShowCancelModal(true) }} 
-                    disabled={cancelMutation.isPending}
-                    className="order-1 sm:order-2 w-full sm:w-auto"
-                  >
-                    {canCancelDirectly ? 'Cancelar Venda' : 'Solicitar Cancelamento'}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        <CancelSaleModal 
-          isOpen={showCancelModal} 
-          onClose={() => !cancelMutation.isPending && setShowCancelModal(false)} 
-          sale={selectedSale} 
-          cancelReason={cancelReason} 
-          setCancelReason={setCancelReason} 
-          cancelNotes={cancelNotes} 
-          setCancelNotes={setCancelNotes} 
-          onConfirm={handleCancelWithApproval} 
-          isSubmitting={cancelMutation.isPending} 
-          currentUser={profile} 
-        />
-
-        <ReceiptModal
-          isOpen={showReceiptModal}
-          onClose={() => {
-            setShowReceiptModal(false)
-            setReceiptSale(null)
-            setReceiptItems([])
-          }}
-          sale={receiptSale}
-          items={receiptItems}
-          isLoading={isLoadingReceiptItems}
-          title={`Recibo #${receiptSale?.sale_number || ''}`}
+        <SalesListModalsContainer
+          showDetailsModal={showDetailsModal}
+          closeDetailsModal={handlers.closeDetailsModal}
+          selectedSale={selectedSale}
+          saleItems={saleItems}
+          isLoadingItems={isLoadingItems}
+          canCancelDirectly={canCancelDirectly}
+          canRequestCancellation={canRequestCancellation}
+          cancelMutation={cancelMutation}
+          openCancelModal={handlers.openCancelModal}
+          showCancelModal={showCancelModal}
+          closeCancelModal={handlers.closeCancelModal}
+          cancelReason={cancelReason}
+          setCancelReason={setCancelReason}
+          cancelNotes={cancelNotes}
+          setCancelNotes={setCancelNotes}
+          handleCancelWithApproval={handlers.handleCancelWithApproval}
+          profile={profile}
+          showReceiptModal={showReceiptModal}
+          closeReceiptModal={handlers.closeReceiptModal}
+          receiptSale={receiptSale}
+          receiptItems={receiptItems}
+          isLoadingReceiptItems={isLoadingReceiptItems}
         />
       </div>
     </div>

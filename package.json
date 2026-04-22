@@ -21,7 +21,7 @@
     "test:coverage": "vitest --coverage --coverage.reporter=text --coverage.reporter=html"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.102.1",
+    "@supabase/supabase-js": "^2.185.0",
     "@tailwindcss/postcss": "^4.2.2",
     "@tanstack/query-sync-storage-persister": "^5.99.0",
     "@tanstack/react-query": "^5.99.0",

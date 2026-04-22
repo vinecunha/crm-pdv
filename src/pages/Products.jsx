@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+// src/pages/Products.jsx
+import React, { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, ClipboardList, Package } from '@lib/icons'
 import { useNavigate } from 'react-router-dom'
@@ -9,20 +10,17 @@ import useMediaQuery from '@hooks/useMediaQuery'
 import * as productService from '@services/productService'
 
 import Button from '@components/ui/Button'
-import Modal from '@components/ui/Modal'
 import FeedbackMessage from '@components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import DataEmptyState from '@components/ui/DataEmptyState'
 import DataFilters from '@components/ui/DataFilters'
 import PageHeader from '@components/ui/PageHeader'
 import DataCards from '@components/ui/DataCards'
-import ProductCard from '@components/products/ProductCard' 
-
-import ProductForm from '@components/products/ProductForm'
-import ProductEntryForm from '@components/products/ProductEntryForm'
-import ProductDetailsModal from '@components/products/ProductDetailsModal'
-import ProductDeleteModal from '@components/products/ProductDeleteModal'
+import ProductCard from '@components/products/ProductCard'
 import ProductTable from '@components/products/ProductTable'
+import ProductsModalsContainer from '@components/products/ProductsModalsContainer'
+
+import { useProductsHandlers } from '@/hooks/handlers'
 
 const Products = () => {
   const { profile } = useAuth()
@@ -31,23 +29,24 @@ const Products = () => {
   const queryClient = useQueryClient()
 
   const isMobile = useMediaQuery('(max-width: 768px)')
-  const [viewMode, setViewMode] = useState('auto')
+  const [viewMode] = useState('auto')
   
   const [searchTerm, setSearchTerm] = useState('')
   const [activeFilters, setActiveFilters] = useState({})
+  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
   
+  // Modal states
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [isEntryModalOpen, setIsEntryModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
-  const [selectedProduct, setSelectedProduct] = useState(null)
-  const [viewingProductId, setViewingProductId] = useState(null)
   const [entryModalError, setEntryModalError] = useState(null)
   
-  const effectiveViewMode = viewMode === 'auto' 
-    ? (isMobile ? 'cards' : 'table')
-    : viewMode
-
+  // Selected item
+  const [selectedProduct, setSelectedProduct] = useState(null)
+  const [viewingProductId, setViewingProductId] = useState(null)
+  
+  // Form data
   const [productForm, setProductForm] = useState({
     code: '', name: '', description: '', category: '', unit: 'UN',
     price: '', min_stock: '', max_stock: '', location: '', brand: '', weight: '',
@@ -61,8 +60,9 @@ const Products = () => {
   })
   
   const [formErrors, setFormErrors] = useState({})
-  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
-  
+
+  const effectiveViewMode = viewMode === 'auto' ? (isMobile ? 'cards' : 'table') : viewMode
+
   const isAdmin = profile?.role === 'admin'
   const isManager = profile?.role === 'gerente'
   const isOperator = profile?.role === 'operador'
@@ -78,6 +78,7 @@ const Products = () => {
     ...(canManageStock ? [{ key: 'low_stock', label: 'Estoque Baixo', type: 'select', options: [{ value: 'true', label: 'Apenas produtos com estoque baixo' }] }] : [])
   ]
 
+  // Queries
   const { 
     data: products = [], 
     isLoading,
@@ -99,7 +100,7 @@ const Products = () => {
     enabled: !!viewingProductId,
   })
 
-  const filteredProducts = React.useMemo(() => {
+  const filteredProducts = useMemo(() => {
     const productsArray = Array.isArray(products) ? products : []
     let filtered = [...productsArray]
     
@@ -123,6 +124,7 @@ const Products = () => {
     return filtered
   }, [products, searchTerm, activeFilters])
 
+  // Mutations
   const createMutation = useMutation({
     mutationFn: (data) => productService.createProduct(data, profile),
     onSuccess: async (data) => {
@@ -183,152 +185,59 @@ const Products = () => {
     }
   })
 
-  React.useEffect(() => {
-    logAction({ action: 'VIEW', entityType: 'product', details: { user_role: profile?.role } })
-  }, [])
-
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
   }
 
+  // Handlers
+  const handlers = useProductsHandlers({
+    profile,
+    selectedProduct,
+    setSelectedProduct,
+    viewingProductId,
+    setViewingProductId,
+    productForm,
+    setProductForm,
+    entryForm,
+    setEntryForm,
+    formErrors,
+    setFormErrors,
+    entryModalError,
+    setEntryModalError,
+    setIsProductModalOpen,
+    setIsEntryModalOpen,
+    setIsViewModalOpen,
+    setIsDeleteModalOpen,
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    entryMutation,
+    showFeedback,
+    canEdit,
+    canManageStock
+  })
+
   const renderProductCard = (product) => (
     <ProductCard
       product={product}
-      onViewDetails={handleViewDetails}
-      onEdit={canEdit ? handleOpenProductModal : null}
-      onDelete={canEdit ? (product) => { setSelectedProduct(product); setIsDeleteModalOpen(true) } : null}
-      onRegisterEntry={canManageStock ? handleOpenEntryModal : null}
+      onViewDetails={handlers.handleViewDetails}
+      onEdit={canEdit ? handlers.handleOpenProductModal : null}
+      onDelete={canEdit ? handlers.handleDeleteClick : null}
+      onRegisterEntry={canManageStock ? handlers.handleOpenEntryModal : null}
       canEdit={canEdit}
       canManageStock={canManageStock}
       units={productService.units}
     />
   )
 
-  const handleOpenProductModal = async (product = null) => {
-    if (product) {
-      setSelectedProduct(product)
-      setProductForm({
-        code: product.code || '', name: product.name || '', description: product.description || '',
-        category: product.category || '', unit: product.unit || 'UN', price: product.price || '',
-        min_stock: product.min_stock || '', max_stock: product.max_stock || '',
-        location: product.location || '', brand: product.brand || '', weight: product.weight || '',
-        is_active: product.is_active !== false
-      })
-    } else {
-      setSelectedProduct(null)
-      const nextCode = await productService.generateNextCode()
-      setProductForm({
-        code: nextCode, name: '', description: '', category: '', unit: 'UN',
-        price: '', min_stock: '', max_stock: '', location: '', brand: '', weight: '',
-        is_active: true
-      })
-    }
-    setFormErrors({})
-    setIsProductModalOpen(true)
-  }
-
-  const handleOpenEntryModal = (product) => {
-    setSelectedProduct(product)
-    setEntryForm({
-      invoice_number: '', invoice_series: '', supplier_name: '', supplier_cnpj: '',
-      batch_number: '', manufacture_date: '', expiration_date: '',
-      quantity: '', unit_cost: product.cost_price || '', notes: ''
-    })
-    setFormErrors({})
-    setEntryModalError(null)
-    setIsEntryModalOpen(true)
-  }
-
-  const handleViewDetails = (product) => {
-    setSelectedProduct(product)
-    setViewingProductId(product.id)
-    setIsViewModalOpen(true)
-  }
-
-  const validateProductForm = () => {
-    const errors = {}
-    if (!productForm.name?.trim()) errors.name = 'Nome é obrigatório'
-    if (productForm.price && parseFloat(productForm.price) < 0) errors.price = 'Preço inválido'
-    setFormErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
-  const validateEntryForm = () => {
-    const errors = {}
-    if (!entryForm.invoice_number?.trim()) errors.invoice_number = 'Número da NF é obrigatório'
-    if (!entryForm.quantity || parseFloat(entryForm.quantity) <= 0) errors.quantity = 'Quantidade deve ser maior que zero'
-    if (!entryForm.unit_cost || parseFloat(entryForm.unit_cost) <= 0) errors.unit_cost = 'Valor unitário deve ser maior que zero'
-    setFormErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
-  const handleProductChange = (e) => {
-    const { name, value, type, checked } = e.target
-    setProductForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
-    if (formErrors[name]) setFormErrors(prev => ({ ...prev, [name]: '' }))
-  }
-
-  const handleEntryChange = (e) => {
-    const { name, value } = e.target
-    setEntryForm(prev => ({ ...prev, [name]: value }))
-    if (formErrors[name]) setFormErrors(prev => ({ ...prev, [name]: '' }))
-  }
-
-  const handleSubmitProduct = () => {
-    if (!validateProductForm()) return
-    
-    const productData = {
-      code: productForm.code, name: productForm.name, description: productForm.description || null,
-      category: productForm.category || null, unit: productForm.unit,
-      price: parseFloat(productForm.price) || 0, min_stock: parseFloat(productForm.min_stock) || 0,
-      max_stock: parseFloat(productForm.max_stock) || 0, location: productForm.location || null,
-      brand: productForm.brand || null, weight: productForm.weight ? parseFloat(productForm.weight) : null,
-      is_active: productForm.is_active,
-    }
-
-    if (selectedProduct) {
-      updateMutation.mutate({ id: selectedProduct.id, data: productData })
-    } else {
-      createMutation.mutate(productData)
-    }
-  }
-
-  const handleSubmitEntry = () => {
-    if (!validateEntryForm()) return
-    
-    const quantity = parseFloat(entryForm.quantity)
-    const unitCost = parseFloat(entryForm.unit_cost)
-    const totalCost = quantity * unitCost
-    
-    // ✅ CORRIGIDO: usar snake_case para corresponder ao banco
-    const entryData = {
-      product_id: selectedProduct.id,
-      invoice_number: entryForm.invoice_number,
-      quantity: quantity,
-      unit_cost: unitCost,        // ✅ snake_case
-      total_cost: totalCost,      // ✅ snake_case
-      invoice_series: entryForm.invoice_series || null,
-      supplier_name: entryForm.supplier_name || null,
-      supplier_cnpj: entryForm.supplier_cnpj?.replace(/\D/g, '') || null,
-      batch_number: entryForm.batch_number || null,
-      manufacture_date: entryForm.manufacture_date || null,
-      expiration_date: entryForm.expiration_date || null,
-      entry_date: new Date().toISOString().split('T')[0],
-      notes: entryForm.notes || null,
-      created_by: profile?.id    // ✅ Adicionar created_by
-    }
-
-    console.log('📦 Enviando entrada:', entryData)
-    entryMutation.mutate(entryData)
-  }
-
-  const handleDeleteProduct = () => deleteMutation.mutate(selectedProduct.id)
+  React.useEffect(() => {
+    logAction({ action: 'VIEW', entityType: 'product', details: { user_role: profile?.role } })
+  }, [])
 
   const isMutating = createMutation.isPending || updateMutation.isPending || 
                      deleteMutation.isPending || entryMutation.isPending
 
-  // Configuração das ações do header
   const headerActions = [
     ...(canManageStock ? [{
       label: 'Balanço',
@@ -340,7 +249,7 @@ const Products = () => {
     ...(canEdit ? [{
       label: 'Novo Produto',
       icon: Plus,
-      onClick: () => handleOpenProductModal(),
+      onClick: () => handlers.handleOpenProductModal(),
       variant: 'primary',
       disabled: isMutating
     }] : [])
@@ -399,7 +308,7 @@ const Products = () => {
           <DataEmptyState
             title="Nenhum produto encontrado"
             description={searchTerm ? "Tente buscar por outro termo" : "Comece cadastrando seu primeiro produto"}
-            action={canEdit ? { label: "Cadastrar Produto", icon: <Plus size={18} />, onClick: () => handleOpenProductModal() } : null}
+            action={canEdit ? { label: "Cadastrar Produto", icon: <Plus size={18} />, onClick: () => handlers.handleOpenProductModal() } : null}
           />
         ) : (
           <>
@@ -416,16 +325,13 @@ const Products = () => {
               <ProductTable
                 products={filteredProducts}
                 loading={isLoading}
-                onViewDetails={handleViewDetails}
-                onEdit={handleOpenProductModal}
-                onDelete={(product) => { 
-                  setSelectedProduct(product)
-                  setIsDeleteModalOpen(true) 
-                }}
-                onRegisterEntry={handleOpenEntryModal}
-                canEdit={canEdit} 
+                onViewDetails={handlers.handleViewDetails}
+                onEdit={handlers.handleOpenProductModal}
+                onDelete={handlers.handleDeleteClick}
+                onRegisterEntry={handlers.handleOpenEntryModal}
+                canEdit={canEdit}
                 canManageStock={canManageStock}
-                canViewAll={canViewAll} 
+                canViewAll={canViewAll}
                 canViewOnlyActive={canViewOnlyActive}
                 units={productService.units}
               />
@@ -433,32 +339,34 @@ const Products = () => {
           </>
         )}
 
-        <Modal isOpen={isProductModalOpen} onClose={() => !isMutating && setIsProductModalOpen(false)} title={selectedProduct ? 'Editar Produto' : 'Novo Produto'} size="lg">
-          <ProductForm
-            formData={productForm} formErrors={formErrors} onChange={handleProductChange}
-            onSubmit={handleSubmitProduct} onCancel={() => setIsProductModalOpen(false)}
-            isSubmitting={createMutation.isPending || updateMutation.isPending}
-            isEditing={!!selectedProduct} units={productService.units} categories={productService.categories}
-          />
-        </Modal>
-
-        <Modal isOpen={isEntryModalOpen} onClose={() => !isMutating && setIsEntryModalOpen(false)} title={`Registrar Entrada - ${selectedProduct?.name}`} size="lg" error={entryModalError}>
-          <ProductEntryForm
-            formData={entryForm} formErrors={formErrors} onChange={handleEntryChange}
-            onSubmit={handleSubmitEntry} onCancel={() => setIsEntryModalOpen(false)}
-            isSubmitting={entryMutation.isPending} productName={selectedProduct?.name} showFeedback={showFeedback}
-          />
-        </Modal>
-
-        <ProductDetailsModal
-          isOpen={isViewModalOpen} onClose={() => { setIsViewModalOpen(false); setViewingProductId(null) }}
-          product={selectedProduct} entries={productDetails?.entries || []} movements={productDetails?.movements || []}
-          units={productService.units} isLoading={isLoadingDetails}
-        />
-
-        <ProductDeleteModal
-          isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)}
-          product={selectedProduct} onConfirm={handleDeleteProduct} isSubmitting={deleteMutation.isPending}
+        <ProductsModalsContainer
+          isProductModalOpen={isProductModalOpen}
+          onCloseProductModal={handlers.handleCloseProductModal}
+          selectedProduct={selectedProduct}
+          productForm={productForm}
+          formErrors={formErrors}
+          onProductChange={handlers.handleProductChange}
+          onSubmitProduct={handlers.handleSubmitProduct}
+          isSubmittingProduct={createMutation.isPending || updateMutation.isPending}
+          units={productService.units}
+          categories={productService.categories}
+          isEntryModalOpen={isEntryModalOpen}
+          onCloseEntryModal={handlers.handleCloseEntryModal}
+          entryForm={entryForm}
+          entryFormErrors={formErrors}
+          onEntryChange={handlers.handleEntryChange}
+          onSubmitEntry={handlers.handleSubmitEntry}
+          isSubmittingEntry={entryMutation.isPending}
+          entryModalError={entryModalError}
+          showFeedback={showFeedback}
+          isViewModalOpen={isViewModalOpen}
+          onCloseViewModal={handlers.handleCloseViewModal}
+          productDetails={productDetails}
+          isLoadingDetails={isLoadingDetails}
+          isDeleteModalOpen={isDeleteModalOpen}
+          onCloseDeleteModal={handlers.handleCloseDeleteModal}
+          onConfirmDelete={handlers.handleDeleteProduct}
+          isSubmittingDelete={deleteMutation.isPending}
         />
       </div>
     </div>

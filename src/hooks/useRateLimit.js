@@ -1,65 +1,71 @@
-import { useState, useEffect } from 'react'
-import { secureStorage } from '@utils/secureStorage'
+// src/hooks/useRateLimit.js
+import { useState, useCallback } from 'react'
+import { supabase } from '@lib/supabase'
 
-const LOGIN_ATTEMPTS_KEY = 'login_attempts'
+export const useRateLimit = () => {
+  const [isBlocked, setIsBlocked] = useState(false)
+  const [remainingAttempts, setRemainingAttempts] = useState(5)
+  const [timeRemaining, setTimeRemaining] = useState(0)
+  const [loading, setLoading] = useState(false)
 
-export const useRateLimit = (maxAttempts = 5, windowMs = 900000) => { // 15 minutos
-  const [attempts, setAttempts] = useState(0)
-  const [blockedUntil, setBlockedUntil] = useState(null)
-  
-  useEffect(() => {
-    const stored = secureStorage.get(LOGIN_ATTEMPTS_KEY)
-    if (stored) {
-      if (Date.now() < stored.blockedUntil) {
-        setBlockedUntil(stored.blockedUntil)
-        setAttempts(stored.attempts)
-      } else {
-        secureStorage.remove(LOGIN_ATTEMPTS_KEY)
-      }
+  const checkRateLimit = useCallback(async (email) => {
+    if (!email) return
+
+    try {
+      const { data, error } = await supabase.functions.invoke('rate-limit', {
+        body: { action: 'check', identifier: email.toLowerCase().trim() }
+      })
+
+      if (error) throw error
+
+      setIsBlocked(data.isBlocked)
+      setRemainingAttempts(data.remainingAttempts)
+      setTimeRemaining(data.timeRemaining)
+      
+      return data
+    } catch (error) {
+      console.error('Erro ao verificar rate limit:', error)
     }
   }, [])
-  
-  const recordAttempt = (success) => {
-    if (success) {
-      secureStorage.remove(LOGIN_ATTEMPTS_KEY)
-      setAttempts(0)
-      setBlockedUntil(null)
-      return
-    }
-    
-    const newAttempts = attempts + 1
-    setAttempts(newAttempts)
-    
-    if (newAttempts >= maxAttempts) {
-      const blockedUntil = Date.now() + windowMs
-      setBlockedUntil(blockedUntil)
-      secureStorage.set(LOGIN_ATTEMPTS_KEY, {
-        attempts: newAttempts,
-        blockedUntil
+
+  const recordAttempt = useCallback(async (success, email) => {
+    if (!email) return
+
+    setLoading(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('rate-limit', {
+        body: { 
+          action: 'record', 
+          identifier: email.toLowerCase().trim(), 
+          success 
+        }
       })
-    } else {
-      secureStorage.set(LOGIN_ATTEMPTS_KEY, {
-        attempts: newAttempts,
-        blockedUntil: null
-      })
+
+      if (error) throw error
+
+      if (success) {
+        setIsBlocked(false)
+        setRemainingAttempts(5)
+        setTimeRemaining(0)
+      } else {
+        setIsBlocked(data.isBlocked)
+        setRemainingAttempts(data.remainingAttempts)
+      }
+
+      return data
+    } catch (error) {
+      console.error('Erro ao registrar tentativa:', error)
+    } finally {
+      setLoading(false)
     }
-  }
-  
-  const isBlocked = blockedUntil && Date.now() < blockedUntil
-  const remainingAttempts = maxAttempts - attempts
-  const timeRemaining = blockedUntil ? Math.ceil((blockedUntil - Date.now()) / 60000) : 0
-  
-  const resetAttempts = () => {
-    secureStorage.remove(LOGIN_ATTEMPTS_KEY)
-    setAttempts(0)
-    setBlockedUntil(null)
-  }
-  
+  }, [])
+
   return {
     isBlocked,
     remainingAttempts,
     timeRemaining,
-    recordAttempt,
-    resetAttempts
+    loading,
+    checkRateLimit,
+    recordAttempt
   }
 }

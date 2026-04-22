@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import * as budgetService from '@services/budgetService'  // ← Faltou este import!
 
-const useBudgetCustomer = () => {
+export const useBudgetCustomer = () => {
   const [customer, setCustomer] = useState(null)
   const [customerPhone, setCustomerPhone] = useState('')
   
@@ -29,5 +29,3 @@ const useBudgetCustomer = () => {
     clearCustomer
   }
 }
-
-export default useBudgetCustomer

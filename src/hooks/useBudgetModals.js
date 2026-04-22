@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 
-const useBudgetModals = () => {
+export const useBudgetModals = () => {
   // Modal de detalhes
   const [showDetails, setShowDetails] = useState(false)
   const [selectedBudget, setSelectedBudget] = useState(null)
@@ -184,5 +184,3 @@ const useBudgetModals = () => {
     resetQuickCustomerForm,
   }
 }
-
-export default useBudgetModals

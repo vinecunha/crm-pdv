@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
 
-const useBudgetCart = (products, logAction) => {
+export const useBudgetCart = (products, logAction) => {
   const [cart, setCart] = useState([])
   
   const addToCart = useCallback((product) => {
@@ -25,5 +25,3 @@ const useBudgetCart = (products, logAction) => {
   
   return { cart, addToCart, updateQuantity, removeItem, clearCart, subtotal }
 }
-
-export default useBudgetCart

@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
-const useBudgetCoupon = (customer, cartSubtotal) => {
+export const useBudgetCoupon = (customer, cartSubtotal) => {
   const [coupon, setCoupon] = useState(null)
   const [couponCode, setCouponCode] = useState('')
   const [discount, setDiscount] = useState(0)
@@ -29,5 +29,3 @@ const useBudgetCoupon = (customer, cartSubtotal) => {
     removeCoupon
   }
 }
-
-export default useBudgetCoupon

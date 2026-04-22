@@ -3,7 +3,7 @@ import { useAuth } from '@contexts/AuthContext'
 import { useSystemLogs } from './useSystemLogs'
 import * as budgetService from '@services/budgetService'
 
-const useBudgetMutations = () => {
+export const useBudgetMutations = () => {
   const { profile } = useAuth()
   const { logCreate, logAction, logError } = useSystemLogs()
   const queryClient = useQueryClient()
@@ -72,5 +72,3 @@ const useBudgetMutations = () => {
     isMutating
   }
 }
-
-export default useBudgetMutations

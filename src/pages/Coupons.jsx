@@ -1,67 +1,66 @@
 // src/pages/Coupons.jsx
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, RefreshCw, Send, Ticket } from '@lib/icons'
+import { Plus, RefreshCw, Ticket } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
 import { useReactQuery } from '@hooks/useReactQuery'
 import { useSystemLogs } from '@hooks/useSystemLogs'
 import useLogger from '@hooks/useLogger'
 import useMediaQuery from '@hooks/useMediaQuery'
-import logger from '@utils/logger' 
-import { supabase } from '@lib/supabase'
+import logger from '@utils/logger'
 
 import * as couponService from '@services/couponService'
 
 import Button from '@components/ui/Button'
-import Modal from '@components/ui/Modal'
 import FeedbackMessage from '@components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
-import ConfirmModal from '@components/ui/ConfirmModal'
 import PageHeader from '@components/ui/PageHeader'
-import DataCards from '@components/ui/DataCards' 
-import CouponCard from '@components/coupons/CouponCard' 
+import DataCards from '@components/ui/DataCards'
+import CouponCard from '@components/coupons/CouponCard'
 
 import CouponStats from '@components/coupons/CouponStats'
-import CouponForm from '@components/coupons/CouponForm'
 import CouponTable from '@components/coupons/CouponTable'
 import CouponFilters from '@components/coupons/CouponFilters'
-import CouponCustomersModal from '@components/coupons/CouponCustomersModal'
-import CouponCampaignModal from '@components/coupons/CouponCampaignModal'
+import CouponsModalsContainer from '@components/coupons/CouponsModalsContainer'
+
+import { useCouponsHandlers } from '@/hooks/handlers'
 
 const Coupons = () => {
   const { profile, user } = useAuth()
   const { logError } = useSystemLogs()
-  const { logComponentAction, logComponentError, logCreate, logUpdate, logDelete } = useLogger('Coupons')
+  const { logComponentAction, logCreate, logUpdate, logDelete } = useLogger('Coupons')
   const { invalidateQueries } = useReactQuery()
-  const queryClient = useQueryClient() 
-   const isMobile = useMediaQuery('(max-width: 768px)')
-  const [viewMode, setViewMode] = useState('auto')
-
-  const [campaignLoading, setCampaignLoading] = useState(false)
-
+  const queryClient = useQueryClient()
+  const isMobile = useMediaQuery('(max-width: 768px)')
+  
+  const [viewMode] = useState('auto')
   const [searchTerm, setSearchTerm] = useState('')
   const [filters, setFilters] = useState({})
+  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
+  
+  // Modal states
   const [showModal, setShowModal] = useState(false)
   const [showCustomersModal, setShowCustomersModal] = useState(false)
   const [showCampaignModal, setShowCampaignModal] = useState(false)
-  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false) 
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false)
+  
+  // Selected items
   const [editingCoupon, setEditingCoupon] = useState(null)
   const [selectedCoupon, setSelectedCoupon] = useState(null)
   const [selectedCouponForCampaign, setSelectedCouponForCampaign] = useState(null)
-  const [couponToDelete, setCouponToDelete] = useState(null) 
+  const [couponToDelete, setCouponToDelete] = useState(null)
   const [selectedCustomers, setSelectedCustomers] = useState([])
-  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
   
-  const effectiveViewMode = viewMode === 'auto' 
-    ? (isMobile ? 'cards' : 'table')
-    : viewMode
-
+  // Form data
   const [formData, setFormData] = useState({
     code: '', name: '', description: '', discount_type: 'percent',
     discount_value: '', max_discount: '', min_purchase: '0',
     is_global: true, is_active: true, valid_from: '', valid_to: '', usage_limit: ''
   })
 
+  const effectiveViewMode = viewMode === 'auto' ? (isMobile ? 'cards' : 'table') : viewMode
+
+  // Queries
   const { 
     data: coupons = [], 
     isLoading: isLoadingCoupons,
@@ -71,13 +70,8 @@ const Coupons = () => {
   } = useQuery({
     queryKey: ['coupons', { searchTerm, filters }],
     queryFn: () => couponService.fetchCoupons(searchTerm, filters),
-    staleTime: 0,                    
-    gcTime: 0,                       
-    cacheTime: 0,                    
-    refetchOnMount: true,            
-    refetchOnWindowFocus: true,      
-    refetchOnReconnect: true,        
-    retry: 1,     
+    staleTime: 0,
+    refetchOnMount: true,
   })
 
   const { data: customers = [] } = useQuery({
@@ -92,351 +86,131 @@ const Coupons = () => {
     enabled: !!editingCoupon?.id && !editingCoupon?.is_global,
   })
 
+  // Mutations
   const createMutation = useMutation({
-    mutationFn: ({ couponData, allowedCustomers }) => couponService.createCoupon(couponData, allowedCustomers, profile),
+    mutationFn: ({ couponData, allowedCustomers }) => 
+      couponService.createCoupon(couponData, allowedCustomers, profile),
     onSuccess: async (coupon) => {
-      logger.log('✅ [Coupons] Cupom criado', { id: coupon.id, code: coupon.code })
       await logCreate('coupon', coupon.id, coupon)
       await invalidateQueries(['coupons'])
-      queryClient.invalidateQueries({ queryKey: ['coupons'] })
       showFeedback('success', `Cupom ${coupon.code} criado!`)
       setShowModal(false)
     },
-    onError: async (error) => { 
-      logger.error('❌ [Coupons] Erro ao criar cupom', { error: error.message })
+    onError: async (error) => {
       showFeedback('error', `Erro ao criar: ${error.message}`)
-      await logError('coupon', error, { action: 'create' }) 
+      await logError('coupon', error, { action: 'create' })
     }
   })
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, couponData, allowedCustomers }) => couponService.updateCoupon(id, couponData, allowedCustomers, profile),
+    mutationFn: ({ id, couponData, allowedCustomers }) => 
+      couponService.updateCoupon(id, couponData, allowedCustomers, profile),
     onSuccess: async (coupon) => {
-      logger.log('✅ [Coupons] Cupom atualizado', { id: coupon.id, code: coupon.code })
       await logUpdate('coupon', coupon.id, editingCoupon, coupon)
       await invalidateQueries(['coupons'])
-      queryClient.invalidateQueries({ queryKey: ['coupons'] })
       showFeedback('success', `Cupom ${coupon.code} atualizado!`)
       setShowModal(false)
     },
-    onError: async (error) => { 
-      logger.error('❌ [Coupons] Erro ao atualizar cupom', { error: error.message })
+    onError: async (error) => {
       showFeedback('error', `Erro ao atualizar: ${error.message}`)
-      await logComponentError(error, { action: 'update_coupon' }) 
     }
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => {
-      logger.log('🔄 [Coupons] deleteMutation.mutationFn', { id })
-      return couponService.deleteCoupon(id)
-    },
-    onSuccess: async (data, id) => {
-      logger.log('✅ [Coupons] deleteMutation.onSuccess', { id, data })
+    mutationFn: (id) => couponService.deleteCoupon(id),
+    onSuccess: async (_, id) => {
       await logDelete('coupon', id, couponToDelete)
       await invalidateQueries(['coupons'])
-      queryClient.invalidateQueries({ queryKey: ['coupons'] })
-      showFeedback('success', `Cupom ${couponToDelete?.code || 'excluído'}!`)
+      showFeedback('success', `Cupom excluído!`)
       setShowDeleteConfirmModal(false)
       setCouponToDelete(null)
     },
     onError: (error) => {
-      logger.error('❌ [Coupons] deleteMutation.onError', { error: error.message })
       showFeedback('error', `Erro ao excluir: ${error.message}`)
       setShowDeleteConfirmModal(false)
-      setCouponToDelete(null)
     }
   })
 
   const toggleStatusMutation = useMutation({
-    mutationFn: ({ id, currentStatus }) => couponService.toggleCouponStatus(id, currentStatus, profile),
+    mutationFn: ({ id, currentStatus }) => 
+      couponService.toggleCouponStatus(id, currentStatus, profile),
     onSuccess: async (coupon) => {
-      logger.log('🔘 [Coupons] Status alterado', { id: coupon.id, is_active: coupon.is_active })
-      await logUpdate('coupon', coupon.id, { is_active: !coupon.is_active }, coupon)
       await invalidateQueries(['coupons'])
       showFeedback('success', `Cupom ${coupon.is_active ? 'ativado' : 'desativado'}!`)
-    },
-    onError: (error) => {
-      logger.error('❌ [Coupons] Erro ao alterar status', { error: error.message })
-      showFeedback('error', `Erro ao alterar status: ${error.message}`)
     }
   })
 
   const addCustomerMutation = useMutation({
-    mutationFn: ({ couponId, customer }) => couponService.addAllowedCustomer(couponId, customer),
-    onSuccess: () => { 
-      logger.log('✅ [Coupons] Cliente adicionado ao cupom')
+    mutationFn: ({ couponId, customer }) => 
+      couponService.addAllowedCustomer(couponId, customer),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allowed-customers', selectedCoupon?.id] })
-      queryClient.invalidateQueries({ queryKey: ['coupons'] })
-      showFeedback('success', 'Cliente adicionado!') 
-    },
-    onError: (error) => {
-      logger.error('❌ [Coupons] Erro ao adicionar cliente', { error: error.message })
-      showFeedback('error', `Erro ao adicionar: ${error.message}`)
+      showFeedback('success', 'Cliente adicionado!')
     }
   })
 
   const removeCustomerMutation = useMutation({
-    mutationFn: ({ couponId, customerId }) => couponService.removeAllowedCustomer(couponId, customerId),
-    onSuccess: () => { 
-      logger.log('✅ [Coupons] Cliente removido do cupom')
+    mutationFn: ({ couponId, customerId }) => 
+      couponService.removeAllowedCustomer(couponId, customerId),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allowed-customers', selectedCoupon?.id] })
-      queryClient.invalidateQueries({ queryKey: ['coupons'] })
-      showFeedback('success', 'Cliente removido!') 
-    },
-    onError: (error) => {
-      logger.error('❌ [Coupons] Erro ao remover cliente', { error: error.message })
-      showFeedback('error', `Erro ao remover: ${error.message}`)
+      showFeedback('success', 'Cliente removido!')
     }
   })
 
-  const showFeedback = (type, message) => { 
+  const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
-    setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000) 
+    setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
   }
+
+  // Handlers
+  const handlers = useCouponsHandlers({
+    profile,
+    user,
+    editingCoupon,
+    setEditingCoupon,
+    formData,
+    setFormData,
+    selectedCustomers,
+    setSelectedCustomers,
+    selectedCoupon,
+    setSelectedCoupon,
+    selectedCouponForCampaign,
+    setSelectedCouponForCampaign,
+    couponToDelete,
+    setCouponToDelete,
+    allowedCustomers,
+    setShowModal,
+    setShowCustomersModal,
+    setShowCampaignModal,
+    setShowDeleteConfirmModal,
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    toggleStatusMutation,
+    addCustomerMutation,
+    removeCustomerMutation,
+    showFeedback
+  })
 
   const renderCouponCard = (coupon) => (
     <CouponCard
       coupon={coupon}
-      onEdit={handleOpenModal}
-      onManageCustomers={handleOpenCustomersModal}
-      onToggleStatus={handleToggleStatus}
-      onDelete={handleDeleteCoupon}
-      onCopyCode={handleCopyCode}
-      onSendCampaign={handleOpenCampaignModal}
+      onEdit={handlers.handleOpenModal}
+      onManageCustomers={handlers.handleOpenCustomersModal}
+      onToggleStatus={handlers.handleToggleStatus}
+      onDelete={handlers.handleDeleteCoupon}
+      onCopyCode={handlers.handleCopyCode}
+      onSendCampaign={handlers.handleOpenCampaignModal}
     />
   )
 
-  const handleOpenModal = (coupon = null) => {
-    logger.log('📝 [Coupons] Abrindo modal', { isEditing: !!coupon, couponCode: coupon?.code })
-    if (coupon) {
-      setEditingCoupon(coupon)
-      setFormData({
-        code: coupon.code, name: coupon.name, description: coupon.description || '',
-        discount_type: coupon.discount_type, discount_value: coupon.discount_value,
-        max_discount: coupon.max_discount || '', min_purchase: coupon.min_purchase || '0',
-        is_global: coupon.is_global, is_active: coupon.is_active,
-        valid_from: coupon.valid_from?.split('T')[0] || '', valid_to: coupon.valid_to?.split('T')[0] || '',
-        usage_limit: coupon.usage_limit || ''
-      })
-      if (!coupon.is_global && allowedCustomers.length > 0) {
-        setSelectedCustomers(allowedCustomers.map(ac => ac.customer_id))
-      }
-    } else {
-      setEditingCoupon(null)
-      setFormData({ 
-        code: '', name: '', description: '', discount_type: 'percent', 
-        discount_value: '', max_discount: '', min_purchase: '0', 
-        is_global: true, is_active: true, valid_from: '', valid_to: '', usage_limit: '' 
-      })
-      setSelectedCustomers([])
-    }
-    setShowModal(true)
-  }
-
-  const handleOpenCustomersModal = (coupon) => { 
-    logger.log('👥 [Coupons] Abrindo modal de clientes', { couponCode: coupon?.code })
-    setSelectedCoupon(coupon)
-    setShowCustomersModal(true) 
-  }
-
-  const handleOpenCampaignModal = (coupon) => {
-    logger.log('📢 [Coupons] Abrindo modal de campanha', { couponCode: coupon?.code })
-    setSelectedCouponForCampaign(coupon)
-    setShowCampaignModal(true)
-  }
-
-  const handleSaveCoupon = () => {
-    if (!formData.code || !formData.name || !formData.discount_value || formData.discount_value <= 0) {
-      showFeedback('error', 'Preencha todos os campos obrigatórios')
-      return
-    }
-    
-    const couponData = {
-      code: formData.code.toUpperCase(),
-      name: formData.name,
-      description: formData.description || null,
-      discount_type: formData.discount_type,
-      discount_value: parseFloat(formData.discount_value),
-      max_discount: formData.max_discount ? parseFloat(formData.max_discount) : null,
-      min_purchase: parseFloat(formData.min_purchase) || 0,
-      is_global: formData.is_global,
-      is_active: formData.is_active,
-      valid_from: formData.valid_from ? new Date(formData.valid_from).toISOString() : null,
-      valid_to: formData.valid_to ? new Date(formData.valid_to).toISOString() : null,
-      usage_limit: formData.usage_limit ? parseInt(formData.usage_limit) : null,
-    }
-    
-    if (editingCoupon) {
-      updateMutation.mutate({ id: editingCoupon.id, couponData, allowedCustomers: selectedCustomers })
-    } else {
-      createMutation.mutate({ couponData, allowedCustomers: selectedCustomers })
-    }
-  }
-
-  const handleDeleteCoupon = (coupon) => {
-    logger.log('🗑️ [Coupons] handleDeleteCoupon chamado', {
-      id: coupon?.id,
-      code: coupon?.code,
-      name: coupon?.name
-    })
-    
-    if (!coupon || !coupon.id) {
-      logger.error('❌ [Coupons] Cupom inválido', { coupon })
-      return
-    }
-    
-    setCouponToDelete(coupon)
-    setShowDeleteConfirmModal(true)
-  }
-
-  const handleConfirmDelete = () => {
-    logger.log('✅ [Coupons] Exclusão confirmada', {
-      id: couponToDelete?.id,
-      code: couponToDelete?.code
-    })
-    deleteMutation.mutate(couponToDelete.id)
-  }
-
-  const handleCancelDelete = () => {
-    logger.log('❌ [Coupons] Exclusão cancelada')
-    setShowDeleteConfirmModal(false)
-    setCouponToDelete(null)
-  }
-
-  const handleToggleStatus = (coupon) => {
-    logger.log('🔘 [Coupons] Toggle status', { id: coupon.id, current: coupon.is_active })
-    toggleStatusMutation.mutate({ id: coupon.id, currentStatus: coupon.is_active })
-  }
-
-  const handleCopyCode = (code) => { 
-    logger.log('📋 [Coupons] Copiando código', { code })
-    navigator.clipboard?.writeText(code)
-    showFeedback('success', `Código ${code} copiado!`) 
-  }
-
-  const handleAddCustomer = (customer) => { 
-    if (!selectedCoupon) return
-    logger.log('➕ [Coupons] Adicionando cliente', { customerId: customer.id, couponId: selectedCoupon.id })
-    addCustomerMutation.mutate({ couponId: selectedCoupon.id, customer }) 
-  }
-
-  const handleRemoveCustomer = (customerId) => { 
-    if (!selectedCoupon) return
-    logger.log('➖ [Coupons] Removendo cliente', { customerId, couponId: selectedCoupon.id })
-    removeCustomerMutation.mutate({ couponId: selectedCoupon.id, customerId }) 
-  }
-
-  const handleSendCustomCampaign = async (message, couponCode, channel) => {
-    logger.log('📧 [Coupons] Enviando campanha', { 
-      customer: selectedCouponForCampaign?.name, 
-      couponCode, 
-      channel 
-    })
-    
-    const customer = selectedCouponForCampaign
-    
-    if (!customer) {
-      logger.error('❌ [Coupons] Cliente não selecionado')
-      showFeedback('error', 'Cliente não selecionado')
-      return
-    }
-    
-    setCampaignLoading?.(true)
-    
-    try {
-      const { error: commError } = await supabase
-        .from('customer_communications')
-        .insert({
-          customer_id: customer.id,
-          channel: channel,
-          subject: channel === 'whatsapp' ? 'Campanha WhatsApp' : 'Campanha',
-          content: message,
-          status: 'sent',
-          sent_by: user?.id
-        })
-      
-      if (commError) {
-        logger.error('❌ [Coupons] Erro ao registrar comunicação', { error: commError.message })
-      }
-      
-      if (channel === 'whatsapp') {
-        const phone = customer.phone?.replace(/\D/g, '')
-        if (phone) {
-          const whatsappUrl = `https://wa.me/55${phone}?text=${encodeURIComponent(message)}`
-          logger.log('📱 [Coupons] Abrindo WhatsApp', { phone })
-          window.open(whatsappUrl, '_blank')
-        } else {
-          logger.error('❌ [Coupons] Telefone não encontrado')
-          showFeedback('error', 'Cliente não possui telefone cadastrado')
-          return
-        }
-      }
-      
-      if (channel === 'email') {
-        const email = customer.email
-        if (email) {
-          const mailtoUrl = `mailto:${email}?subject=Oferta Especial&body=${encodeURIComponent(message)}`
-          logger.log('📧 [Coupons] Abrindo Email', { email })
-          window.location.href = mailtoUrl
-        } else {
-          logger.error('❌ [Coupons] Email não encontrado')
-          showFeedback('error', 'Cliente não possui email cadastrado')
-          return
-        }
-      }
-      
-      if (channel === 'sms') {
-        const phone = customer.phone?.replace(/\D/g, '')
-        if (phone) {
-          const smsUrl = `sms:${phone}?body=${encodeURIComponent(message)}`
-          logger.log('💬 [Coupons] Abrindo SMS', { phone })
-          window.location.href = smsUrl
-        } else {
-          logger.error('❌ [Coupons] Telefone não encontrado')
-          showFeedback('error', 'Cliente não possui telefone cadastrado')
-          return
-        }
-      }
-      
-      await supabase.rpc('create_notification', {
-        p_user_id: user?.id,
-        p_title: '📧 Campanha Enviada',
-        p_message: `Campanha enviada para ${customer.name} via ${channel}`,
-        p_type: 'success',
-        p_entity_type: 'customer',
-        p_entity_id: customer.id.toString()
-      })
-      
-      showFeedback('success', `✅ Campanha enviada para ${customer.name} via ${channel}!`)
-      setShowCampaignModal(false)
-      setSelectedCouponForCampaign(null)
-      
-    } catch (error) {
-      logger.error('❌ [Coupons] Erro ao enviar campanha', { error: error.message })
-      showFeedback('error', `Erro ao enviar: ${error.message}`)
-    } finally {
-      setCampaignLoading?.(false)
-    }
-  }
-
-  const isMutating = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || toggleStatusMutation.isPending
-
-  React.useEffect(() => { 
-    logger.log('📄 [Coupons] Página acessada', { user_role: profile?.role })
-    logComponentAction('ACCESS_PAGE', null, { page: 'coupons' }) 
+  React.useEffect(() => {
+    logComponentAction('ACCESS_PAGE', null, { page: 'coupons' })
   }, [])
 
-  // Configuração das ações do header
-  const headerActions = [
-    {
-      label: 'Novo Cupom',
-      icon: Plus,
-      onClick: () => handleOpenModal(),
-      variant: 'primary',
-      disabled: isMutating
-    }
-  ]
+  const isMutating = createMutation.isPending || updateMutation.isPending || 
+                     deleteMutation.isPending || toggleStatusMutation.isPending
 
   if (couponsError) {
     return (
@@ -476,7 +250,15 @@ const Coupons = () => {
             </>
           }
           icon={Ticket}
-          actions={headerActions}
+          actions={[
+            {
+              label: 'Novo Cupom',
+              icon: Plus,
+              onClick: () => handlers.handleOpenModal(),
+              variant: 'primary',
+              disabled: isMutating
+            }
+          ]}
         />
 
         <div className="mb-4 sm:mb-6">
@@ -502,89 +284,45 @@ const Coupons = () => {
         ) : (
           <CouponTable 
             coupons={coupons} 
-            onEdit={handleOpenModal} 
-            onManageCustomers={handleOpenCustomersModal} 
-            onToggleStatus={handleToggleStatus} 
-            onDelete={handleDeleteCoupon} 
-            onCopyCode={handleCopyCode}
-            onSendCampaign={handleOpenCampaignModal}
+            onEdit={handlers.handleOpenModal} 
+            onManageCustomers={handlers.handleOpenCustomersModal} 
+            onToggleStatus={handlers.handleToggleStatus} 
+            onDelete={handlers.handleDeleteCoupon} 
+            onCopyCode={handlers.handleCopyCode}
+            onSendCampaign={handlers.handleOpenCampaignModal}
           />
         )}
 
-        <Modal 
-          isOpen={showModal} 
-          onClose={() => !isMutating && setShowModal(false)} 
-          title={editingCoupon ? 'Editar Cupom' : 'Novo Cupom'} 
-          size="lg"
-        >
-          <CouponForm 
-            formData={formData} 
-            setFormData={setFormData} 
-            isEditing={!!editingCoupon} 
-            customers={customers} 
-            selectedCustomers={selectedCustomers} 
-            setSelectedCustomers={setSelectedCustomers} 
-            disabled={isMutating} 
-          />
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 mt-4 border-t dark:border-gray-700">
-            <Button 
-              variant="outline" 
-              onClick={() => setShowModal(false)} 
-              className="flex-1 order-2 sm:order-1" 
-              disabled={isMutating}
-            >
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleSaveCoupon} 
-              loading={createMutation.isPending || updateMutation.isPending} 
-              className="flex-1 order-1 sm:order-2"
-            >
-              {editingCoupon ? 'Atualizar' : 'Criar'} Cupom
-            </Button>
-          </div>
-        </Modal>
-
-        <CouponCustomersModal 
-          isOpen={showCustomersModal} 
-          onClose={() => setShowCustomersModal(false)} 
-          coupon={selectedCoupon} 
-          allowedCustomers={allowedCustomers} 
-          setAllowedCustomers={() => {}} 
-          customers={customers} 
-          onAddCustomer={handleAddCustomer} 
-          onRemoveCustomer={handleRemoveCustomer} 
-          loading={addCustomerMutation.isPending || removeCustomerMutation.isPending} 
-        />
-
-        <CouponCampaignModal
-          isOpen={showCampaignModal}
-          onClose={() => {
-            setShowCampaignModal(false)
-            setSelectedCouponForCampaign(null)
-          }}
-          coupon={selectedCouponForCampaign}
-          onSuccess={(result) => {
-            showFeedback('success', `✅ Campanha enviada para ${result.successCount} cliente(s)!`)
-            queryClient.invalidateQueries({ queryKey: ['coupons'] })
-          }}
-        />
-
-        <ConfirmModal
-          isOpen={showDeleteConfirmModal}
-          onClose={handleCancelDelete}
-          onConfirm={handleConfirmDelete}
-          title="Confirmar Exclusão"
-          message={
-            <div className="space-y-2">
-              <p className="dark:text-gray-300">Tem certeza que deseja excluir o cupom <strong>{couponToDelete?.code}</strong>?</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Esta ação não pode ser desfeita.</p>
-            </div>
-          }
-          confirmText="Excluir"
-          cancelText="Cancelar"
-          variant="danger"
-          loading={deleteMutation.isPending}
+        <CouponsModalsContainer
+          showModal={showModal}
+          closeModal={handlers.closeModal}
+          editingCoupon={editingCoupon}
+          formData={formData}
+          setFormData={setFormData}
+          customers={customers}
+          selectedCustomers={selectedCustomers}
+          setSelectedCustomers={setSelectedCustomers}
+          isMutating={isMutating}
+          onSave={handlers.handleSaveCoupon}
+          createPending={createMutation.isPending}
+          updatePending={updateMutation.isPending}
+          showCustomersModal={showCustomersModal}
+          closeCustomersModal={handlers.closeCustomersModal}
+          selectedCoupon={selectedCoupon}
+          allowedCustomers={allowedCustomers}
+          onAddCustomer={handlers.handleAddCustomer}
+          onRemoveCustomer={handlers.handleRemoveCustomer}
+          addPending={addCustomerMutation.isPending}
+          removePending={removeCustomerMutation.isPending}
+          showCampaignModal={showCampaignModal}
+          closeCampaignModal={handlers.closeCampaignModal}
+          selectedCouponForCampaign={selectedCouponForCampaign}
+          onSendCampaign={handlers.handleSendCampaign}
+          showDeleteConfirmModal={showDeleteConfirmModal}
+          onCancelDelete={handlers.handleCancelDelete}
+          onConfirmDelete={handlers.handleConfirmDelete}
+          couponToDelete={couponToDelete}
+          deletePending={deleteMutation.isPending}
         />
       </div>
     </div>

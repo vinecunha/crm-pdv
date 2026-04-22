@@ -1,135 +1,37 @@
 // src/pages/CashierClosing.jsx
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { 
-  CheckCircle, FileText, Calendar, Users, RefreshCw,
-  TrendingUp, ChevronRight, Eye, Printer, Save, Calculator,
-  AlertCircle, X, DollarSign
-} from '@lib/icons'
-import { supabase } from '@lib/supabase'
+import { FileText, RefreshCw, Calculator, AlertCircle } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
 import FeedbackMessage from '@components/ui/FeedbackMessage'
 import Button from '@components/ui/Button'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
-import DataTable from '@components/ui/DataTable'
-import DataCards from '@components/ui/DataCards'
 import PageHeader from '@components/ui/PageHeader'
-import useMediaQuery from '@hooks/useMediaQuery'
-import { formatCurrency, formatNumber, formatDate, formatDateTime } from '@utils/formatters'
-import { useSystemLogs } from '@hooks/useSystemLogs'
-import useLogger from '@hooks/useLogger'
+import { formatDate } from '@utils/formatters'
 
-const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) => {
-  const variants = {
-    default: 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700',
-    success: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
-    warning: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800',
-    danger: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
-    info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-  }
+// Componentes
+import CashierSummaryCards from '@components/cashier/CashierSummaryCards'
+import CashierTotalBanner from '@components/cashier/CashierTotalBanner'
+import CashierFilters from '@components/cashier/CashierFilters'
+import CashierModalsContainer from '@components/cashier/CashierModalsContainer'
 
-  const iconColors = {
-    default: 'text-gray-600 dark:text-gray-400',
-    success: 'text-green-600 dark:text-green-400',
-    warning: 'text-yellow-600 dark:text-yellow-400',
-    danger: 'text-red-600 dark:text-red-400',
-    info: 'text-blue-600 dark:text-blue-400'
-  }
+// Hooks e Services
+import { useCashierHandlers } from '@/hooks/handlers'
+import { 
+  fetchUsers, 
+  fetchClosingHistory, 
+  fetchCashierSummary, 
+  createCashierClosing 
+} from '@services/cashierService'
 
-  return (
-    <div className={`${variants[variant]} rounded-xl border p-4 sm:p-5 transition-all hover:shadow-md dark:hover:shadow-gray-900/50`}>
-      <div className="flex items-start justify-between">
-        <div className="space-y-1">
-          <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">{label}</p>
-          <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
-          {sublabel && <p className="text-xs text-gray-400 dark:text-gray-500">{sublabel}</p>}
-        </div>
-        <div className="p-2 sm:p-2.5 rounded-lg bg-white/50 dark:bg-black/50">
-          <Icon size={20} className={iconColors[variant]} />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const fetchUsers = async () => {
-  const { data, error } = await supabase.from('profiles').select('id, email, full_name').order('full_name')
-  if (error) throw error
-  return data
-}
-
-const fetchClosingHistory = async () => {
-  const { data, error } = await supabase.from('cashier_closing').select('*').order('closed_at', { ascending: false }).limit(30)
-  if (error) throw error
-  return data
-}
-
-const fetchCashierSummary = async ({ queryKey }) => {
-  const [, { startDate, endDate, userId }] = queryKey
-  const start = new Date(startDate + 'T00:00:00')
-  const end = new Date(endDate + 'T23:59:59.999')
-  
-  const { data, error } = await supabase.rpc('get_cashier_summary', {
-    p_start_date: start.toISOString(),
-    p_end_date: end.toISOString(),
-    p_user_id: userId === 'all' ? null : userId
-  })
-  
-  if (error) throw error
-  return data
-}
-
-const createCashierClosing = async ({ closingData, profile }) => {
-  const startDate = new Date(closingData.dateRange.start + 'T00:00:00')
-  const endDate = new Date(closingData.dateRange.end + 'T23:59:59.999')
-  
-  const totalDeclared = closingData.declaredValues.cash + 
-                       closingData.declaredValues.credit_card + 
-                       closingData.declaredValues.debit_card + 
-                       closingData.declaredValues.pix
-  const expectedTotal = closingData.summary?.resumo?.total_liquido || 0
-  const difference = totalDeclared - expectedTotal
-  
-  const today = new Date()
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-  
-  const { data, error } = await supabase
-    .from('cashier_closing')
-    .insert([{
-      closing_date: todayStr,
-      start_time: startDate.toISOString(),
-      end_time: endDate.toISOString(),
-      total_sales: closingData.summary.resumo?.total_vendas || 0,
-      total_discounts: closingData.summary.resumo?.total_descontos || 0,
-      total_cancellations: closingData.summary.resumo?.total_cancelamentos || 0,
-      total_cash: closingData.declaredValues.cash,
-      total_card: closingData.declaredValues.credit_card + closingData.declaredValues.debit_card,
-      total_pix: closingData.declaredValues.pix,
-      expected_total: expectedTotal,
-      declared_total: totalDeclared,
-      difference: difference,
-      notes: closingData.declaredValues.notes,
-      closed_by: profile?.id,
-      status: Math.abs(difference) < 0.01 ? 'closed' : 'adjusted',
-      details: closingData.summary
-    }])
-    .select()
-    .single()
-  
-  if (error) throw error
-  return { data, expectedTotal, totalDeclared, difference }
-}
+const today = new Date()
+const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
 
 const CashierClosing = () => {
   const { profile } = useAuth()
-  const { logAction } = useSystemLogs()
-  const { logCreate, logComponentAction } = useLogger('CashierClosing')
   const queryClient = useQueryClient()
-  const isMobile = useMediaQuery('(max-width: 768px)')
-  
-  const today = new Date()
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-  
+
+  // Estado
   const [dateRange, setDateRange] = useState({ start: todayStr, end: todayStr })
   const [selectedUser, setSelectedUser] = useState('all')
   const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
@@ -138,13 +40,10 @@ const CashierClosing = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [selectedClosing, setSelectedClosing] = useState(null)
   const [declaredValues, setDeclaredValues] = useState({
-    cash: 0,
-    credit_card: 0,
-    debit_card: 0,
-    pix: 0,
-    notes: ''
+    cash: 0, credit_card: 0, debit_card: 0, pix: 0, notes: ''
   })
 
+  // Queries
   const { data: users = [] } = useQuery({
     queryKey: ['users'],
     queryFn: fetchUsers,
@@ -168,249 +67,55 @@ const CashierClosing = () => {
     queryFn: fetchCashierSummary,
     enabled: !!(dateRange.start && dateRange.end),
     staleTime: 2 * 60 * 1000,
-    onSuccess: (data) => {
-      if (data?.meios_pagamento) {
-        const declared = { cash: 0, credit_card: 0, debit_card: 0, pix: 0, notes: '' }
-        data.meios_pagamento.forEach(m => {
-          if (m.payment_method === 'cash') declared.cash = m.total || 0
-          if (m.payment_method === 'credit_card') declared.credit_card = m.total || 0
-          if (m.payment_method === 'debit_card') declared.debit_card = m.total || 0
-          if (m.payment_method === 'pix') declared.pix = m.total || 0
-        })
-        setDeclaredValues(declared)
-      }
-    },
-    onError: (error) => {
-      console.error('Erro ao gerar resumo:', error)
-      showFeedback('error', 'Erro ao carregar dados do caixa')
-    }
   })
 
   const closingMutation = useMutation({
     mutationFn: createCashierClosing,
-    onSuccess: async (result) => {
-      const { data, expectedTotal, totalDeclared, difference } = result
-      
-      await logCreate('cashier_closing', data.id, {
-        closing_date: data.closing_date,
-        expected_total: expectedTotal,
-        declared_total: totalDeclared,
-        difference: difference
-      })
-      
-      await logAction({
-        action: 'CLOSE_CASHIER',
-        entityType: 'cashier_closing',
-        entityId: data.id,
-        details: { expected_total: expectedTotal, declared_total: totalDeclared, difference }
-      })
-      
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['closing-history'] })
       queryClient.invalidateQueries({ queryKey: ['cashier-summary'] })
       
-      const diffMessage = difference === 0 ? 'Caixa fechou com valor exato!' : 
-                          `Diferença de ${formatCurrency(Math.abs(difference))} ${difference > 0 ? 'a maior' : 'a menor'}`
+      const diff = result.difference
+      const diffMessage = diff === 0 ? 'Caixa fechou com valor exato!' : 
+        `Diferença de ${formatCurrency(Math.abs(diff))} ${diff > 0 ? 'a maior' : 'a menor'}`
       
       showFeedback('success', `Fechamento realizado! ${diffMessage}`)
       setShowClosingModal(false)
     },
     onError: (error) => {
-      console.error('Erro ao fechar caixa:', error)
       showFeedback('error', 'Erro ao realizar fechamento: ' + error.message)
     }
   })
-
-  React.useEffect(() => {
-    logComponentAction('ACCESS_PAGE', null, { page: 'cashier_closing' })
-  }, [])
 
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
   }
 
-  const openClosingModal = () => {
-    if (!summary) {
-      showFeedback('error', 'Nenhum dado para fechar')
-      return
-    }
-    
-    if (summary?.meios_pagamento) {
-      const declared = { ...declaredValues }
-      summary.meios_pagamento.forEach(m => {
-        if (m.payment_method === 'cash') declared.cash = m.total || 0
-        if (m.payment_method === 'credit_card') declared.credit_card = m.total || 0
-        if (m.payment_method === 'debit_card') declared.debit_card = m.total || 0
-        if (m.payment_method === 'pix') declared.pix = m.total || 0
-      })
-      setDeclaredValues(declared)
-    }
-    
-    setShowClosingModal(true)
-  }
+  // Handlers
+  const handlers = useCashierHandlers({
+    profile,
+    dateRange,
+    declaredValues,
+    summary,
+    closingMutation,
+    refetchSummary,
+    refetchHistory,
+    setShowClosingModal,
+    setShowHistoryModal,
+    setShowDetailsModal,
+    setSelectedClosing,
+    showFeedback
+  })
 
-  const handleClosing = () => {
-    closingMutation.mutate({
-      closingData: {
-        dateRange,
-        declaredValues,
-        summary
-      },
-      profile
-    })
-  }
-
-  const handleRefresh = () => {
-    refetchSummary()
-    refetchHistory()
-  }
-
-  const viewClosingDetails = (closing) => {
-    setSelectedClosing(closing)
-    setShowDetailsModal(true)
-  }
-
-  const getDifferenceColor = (difference) => {
-    if (Math.abs(difference) < 0.01) return 'text-green-600 dark:text-green-400'
-    if (Math.abs(difference) < 10) return 'text-yellow-600 dark:text-yellow-400'
-    return 'text-red-600 dark:text-red-400'
-  }
-
-  const paymentMethods = [
-    { key: 'cash', label: 'Dinheiro', icon: '💵', color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-50 dark:bg-green-900/20' },
-    { key: 'credit_card', label: 'Cartão de Crédito', icon: '💳', color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-50 dark:bg-blue-900/20' },
-    { key: 'debit_card', label: 'Cartão de Débito', icon: '🏧', color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-50 dark:bg-purple-900/20' },
-    { key: 'pix', label: 'PIX', icon: '📱', color: 'text-teal-600 dark:text-teal-400', bgColor: 'bg-teal-50 dark:bg-teal-900/20' }
-  ]
-
-  const historyColumns = [
-    {
-      key: 'closing_date',
-      header: 'Data',
-      sortable: true,
-      render: (row) => <span className="dark:text-white text-sm">{formatDate(row.closing_date)}</span>
-    },
-    {
-      key: 'expected_total',
-      header: 'Esperado',
-      sortable: true,
-      render: (row) => <span className="dark:text-white text-sm">{formatCurrency(row.expected_total)}</span>
-    },
-    {
-      key: 'declared_total',
-      header: 'Declarado',
-      sortable: true,
-      render: (row) => <span className="dark:text-white text-sm">{formatCurrency(row.declared_total)}</span>
-    },
-    {
-      key: 'difference',
-      header: 'Diferença',
-      sortable: true,
-      render: (row) => (
-        <span className={`font-medium text-sm ${getDifferenceColor(row.difference)}`}>
-          {formatCurrency(row.difference)}
-        </span>
-      )
-    },
-    {
-      key: 'closed_by',
-      header: 'Operador',
-      render: (row) => <span className="dark:text-gray-300 text-sm">{users.find(u => u.id === row.closed_by)?.full_name || '-'}</span>
-    },
-    {
-      key: 'closed_at',
-      header: 'Horário',
-      render: (row) => <span className="dark:text-gray-300 text-sm">{formatDateTime(row.closed_at)}</span>
-    }
-  ]
-
-  const historyActions = [
-    {
-      label: 'Ver detalhes',
-      icon: <Eye size={16} />,
-      onClick: viewClosingDetails,
-      className: 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30'
-    }
-  ]
-
-  // Card para histórico de fechamentos (mobile)
-  const renderClosingCard = (closing) => (
-    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <p className="text-sm font-medium text-gray-900 dark:text-white">
-            {formatDate(closing.closing_date)}
-          </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            {formatDateTime(closing.closed_at)}
-          </p>
-        </div>
-        <span className={`text-sm font-bold ${getDifferenceColor(closing.difference)}`}>
-          {formatCurrency(closing.difference)}
-        </span>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-3 mb-3">
-        <div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Esperado</p>
-          <p className="text-sm font-medium text-gray-900 dark:text-white">
-            {formatCurrency(closing.expected_total)}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Declarado</p>
-          <p className="text-sm font-medium text-gray-900 dark:text-white">
-            {formatCurrency(closing.declared_total)}
-          </p>
-        </div>
-      </div>
-      
-      <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          Operador: {users.find(u => u.id === closing.closed_by)?.full_name || '-'}
-        </p>
-        <Button
-          size="sm"
-          variant="outline"
-          icon={<Eye size={14} />}
-          onClick={() => viewClosingDetails(closing)}
-        >
-          Detalhes
-        </Button>
-      </div>
-    </div>
-  )
-
-  const resumo = summary?.resumo || {}
-  
-  const totalDeclarado = declaredValues.cash + declaredValues.credit_card + 
-                        declaredValues.debit_card + declaredValues.pix
-  const expectedTotal = resumo.total_liquido || 0
-  const difference = totalDeclarado - expectedTotal
-
+  // Header actions
   const headerActions = [
-    {
-      label: 'Histórico',
-      icon: FileText,
-      onClick: () => setShowHistoryModal(true),
-      variant: 'outline'
-    },
-    {
-      label: 'Atualizar',
-      icon: RefreshCw,
-      onClick: handleRefresh,
-      loading: isFetchingSummary,
-      variant: 'outline'
-    },
-    {
-      label: 'Fechar Caixa',
-      icon: Calculator,
-      onClick: openClosingModal,
-      variant: 'primary',
-      disabled: !summary || closingMutation.isPending
-    }
+    { label: 'Histórico', icon: FileText, onClick: handlers.openHistoryModal, variant: 'outline' },
+    { label: 'Atualizar', icon: RefreshCw, onClick: handlers.handleRefresh, loading: isFetchingSummary, variant: 'outline' },
+    { label: 'Fechar Caixa', icon: Calculator, onClick: handlers.openClosingModal, variant: 'primary', disabled: !summary || closingMutation.isPending }
   ]
 
+  // Error state
   if (summaryError) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center px-4">
@@ -418,9 +123,7 @@ const CashierClosing = () => {
           <AlertCircle size={48} className="text-red-500 dark:text-red-400 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao carregar dados</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">{summaryError.message}</p>
-          <Button onClick={handleRefresh} icon={RefreshCw}>
-            Tentar novamente
-          </Button>
+          <Button onClick={handlers.handleRefresh} icon={RefreshCw}>Tentar novamente</Button>
         </div>
       </div>
     )
@@ -437,332 +140,46 @@ const CashierClosing = () => {
 
         <PageHeader
           title="Fechamento de Caixa"
-          description={
-            <div className="flex items-center gap-2">
-              <Calendar size={14} />
-              <span>{formatDate(dateRange.start)} - {formatDate(dateRange.end)}</span>
-            </div>
-          }
+          description={`${formatDate(dateRange.start)} - ${formatDate(dateRange.end)}`}
           icon={Calculator}
           actions={headerActions}
         />
 
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-3 sm:p-4 mb-4 sm:mb-6">
-          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Calendar size={16} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
-              <div className="flex items-center gap-1 flex-1 sm:flex-initial">
-                <input
-                  type="date"
-                  value={dateRange.start}
-                  onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                  className="w-full sm:w-auto px-2 sm:px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-xs sm:text-sm"
-                />
-                <span className="text-gray-400 dark:text-gray-500">—</span>
-                <input
-                  type="date"
-                  value={dateRange.end}
-                  onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                  className="w-full sm:w-auto px-2 sm:px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-xs sm:text-sm"
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Users size={16} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
-              <select
-                value={selectedUser}
-                onChange={(e) => setSelectedUser(e.target.value)}
-                className="w-full sm:w-auto px-2 sm:px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-xs sm:text-sm"
-              >
-                <option value="all">Todos os operadores</option>
-                {users.map(user => (
-                  <option key={user.id} value={user.id}>{user.full_name || user.email}</option>
-                ))}
-              </select>
-            </div>
-            {isFetchingSummary && (
-              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                <RefreshCw size={14} className="animate-spin" />
-                <span className="hidden sm:inline">Atualizando...</span>
-              </div>
-            )}
-          </div>
-        </div>
+        <CashierFilters
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+          selectedUser={selectedUser}
+          setSelectedUser={setSelectedUser}
+          users={users}
+          isFetching={isFetchingSummary}
+        />
 
         {summary && (
           <>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
-              <StatCard
-                label="Vendas Totais"
-                value={formatCurrency(resumo.total_vendas || 0)}
-                sublabel={`${formatNumber(resumo.total_itens || 0)} itens`}
-                icon={TrendingUp}
-                variant="success"
-              />
-              <StatCard
-                label="Ticket Médio"
-                value={formatCurrency(resumo.ticket_medio || 0)}
-                sublabel={`${formatNumber(resumo.total_clientes || 0)} clientes`}
-                icon={Users}
-                variant="info"
-              />
-              <StatCard
-                label="Descontos"
-                value={formatCurrency(resumo.total_descontos || 0)}
-                sublabel={`${((resumo.total_descontos / resumo.total_vendas) * 100 || 0).toFixed(1)}%`}
-                icon={TrendingUp}
-                variant="warning"
-              />
-              <StatCard
-                label="Valor Líquido"
-                value={formatCurrency(resumo.total_liquido || 0)}
-                sublabel="Valor esperado"
-                icon={CheckCircle}
-                variant="default"
-              />
-            </div>
-
-            <div className="mt-4 sm:mt-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Total do Período</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{formatCurrency(resumo.total_liquido || 0)}</p>
-                </div>
-                <div className="flex items-center gap-2 sm:gap-4 text-sm">
-                  <div className="text-right">
-                    <p className="text-gray-500 dark:text-gray-400 text-xs">Vendas</p>
-                    <p className="font-medium dark:text-white">{formatNumber(resumo.total_vendas || 0)}</p>
-                  </div>
-                  <ChevronRight size={16} className="text-gray-300 dark:text-gray-600" />
-                  <div className="text-right">
-                    <p className="text-gray-500 dark:text-gray-400 text-xs">Descontos</p>
-                    <p className="font-medium text-orange-600 dark:text-orange-400">-{formatCurrency(resumo.total_descontos || 0)}</p>
-                  </div>
-                  <ChevronRight size={16} className="text-gray-300 dark:text-gray-600" />
-                  <div className="text-right">
-                    <p className="text-gray-500 dark:text-gray-400 text-xs">Cancelamentos</p>
-                    <p className="font-medium text-red-500 dark:text-red-400">{formatCurrency(resumo.total_cancelamentos || 0)}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <CashierSummaryCards summary={summary} />
+            <CashierTotalBanner summary={summary} />
           </>
         )}
 
-        {/* Modal de Fechamento */}
-        {showClosingModal && summary && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-            <div className="absolute inset-0 bg-black/30 dark:bg-black/50" onClick={() => !closingMutation.isPending && setShowClosingModal(false)} />
-            <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-              <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-                <div>
-                  <h3 className="text-base sm:text-lg font-semibold dark:text-white">Fechamento de Caixa</h3>
-                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{formatDate(dateRange.start)} - {formatDate(dateRange.end)}</p>
-                </div>
-                <button onClick={() => !closingMutation.isPending && setShowClosingModal(false)} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
-                  <X size={20} />
-                </button>
-              </div>
-              
-              <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh] space-y-4">
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-xl p-4 sm:p-5 text-white shadow-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <DollarSign size={20} />
-                    <p className="text-sm font-medium opacity-90">VALOR ESPERADO PELO SISTEMA</p>
-                  </div>
-                  <p className="text-3xl sm:text-4xl font-bold">{formatCurrency(expectedTotal)}</p>
-                  <p className="text-xs opacity-75 mt-1">
-                    Baseado nas vendas concluídas no período
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">VALORES DECLARADOS</p>
-                  <div className="space-y-2">
-                    {paymentMethods.map(({ key, label, icon, color, bgColor }) => {
-                      const sistemaValue = summary?.meios_pagamento?.find(m => m.payment_method === key)?.total || 0
-                      return (
-                        <div key={key} className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 ${bgColor} rounded-lg border dark:border-gray-700 gap-2`}>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xl">{icon}</span>
-                            <div>
-                              <span className={`font-medium ${color}`}>{label}</span>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">Sistema: {formatCurrency(sistemaValue)}</p>
-                            </div>
-                          </div>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={declaredValues[key]}
-                            onChange={(e) => setDeclaredValues({ ...declaredValues, [key]: parseFloat(e.target.value) || 0 })}
-                            className="w-full sm:w-40 px-3 py-2 text-right border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                            disabled={closingMutation.isPending}
-                          />
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                <div className={`p-4 rounded-xl ${
-                  Math.abs(difference) < 0.01 
-                    ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' 
-                    : Math.abs(difference) < 10 
-                      ? 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800' 
-                      : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
-                }`}>
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium dark:text-white">Total Declarado</span>
-                    <span className="text-xl sm:text-2xl font-bold dark:text-white">{formatCurrency(totalDeclarado)}</span>
-                  </div>
-                  <div className="flex justify-between items-center mt-3 pt-3 border-t dark:border-gray-600">
-                    <span className="font-medium dark:text-white">Diferença</span>
-                    <span className={`text-xl sm:text-2xl font-bold ${getDifferenceColor(difference)}`}>
-                      {formatCurrency(difference)}
-                    </span>
-                  </div>
-                  {Math.abs(difference) > 10 && (
-                    <div className="mt-3 flex items-center gap-2 text-sm text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/30 p-2 rounded">
-                      <AlertCircle size={16} />
-                      Atenção: Diferença significativa. Verifique os valores declarados.
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observações</label>
-                  <textarea
-                    value={declaredValues.notes}
-                    onChange={(e) => setDeclaredValues({ ...declaredValues, notes: e.target.value })}
-                    rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg placeholder-gray-400 dark:placeholder-gray-500 text-sm"
-                    placeholder="Observações sobre este fechamento..."
-                    disabled={closingMutation.isPending}
-                  />
-                </div>
-              </div>
-
-              <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-2 sm:gap-3">
-                <Button variant="outline" onClick={() => setShowClosingModal(false)} disabled={closingMutation.isPending} size="sm" className="sm:size-md">
-                  Cancelar
-                </Button>
-                <Button onClick={handleClosing} loading={closingMutation.isPending} icon={Save} size="sm" className="sm:size-md">
-                  Confirmar Fechamento
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Modal de Histórico */}
-        {showHistoryModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-            <div className="absolute inset-0 bg-black/30 dark:bg-black/50" onClick={() => setShowHistoryModal(false)} />
-            <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-6xl max-h-[85vh] overflow-hidden">
-              <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-                <h3 className="text-base sm:text-lg font-semibold dark:text-white">Histórico de Fechamentos</h3>
-                <button onClick={() => setShowHistoryModal(false)} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
-                  <X size={20} />
-                </button>
-              </div>
-              <div className="p-3 sm:p-4 overflow-y-auto">
-                {isMobile ? (
-                  <DataCards
-                    data={closingHistory}
-                    renderCard={renderClosingCard}
-                    keyExtractor={(item) => item.id}
-                    columns={1}
-                    gap={2}
-                    emptyMessage="Nenhum fechamento realizado"
-                  />
-                ) : (
-                  <DataTable
-                    columns={historyColumns}
-                    data={closingHistory}
-                    actions={historyActions}
-                    emptyMessage="Nenhum fechamento realizado"
-                    striped
-                    hover
-                    pagination
-                    itemsPerPageOptions={[10, 20, 50]}
-                    defaultItemsPerPage={10}
-                    showTotalItems
-                  />
-                )}
-              </div>
-              <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end">
-                <Button variant="outline" onClick={() => setShowHistoryModal(false)}>Fechar</Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Modal de Detalhes */}
-        {showDetailsModal && selectedClosing && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-            <div className="absolute inset-0 bg-black/30 dark:bg-black/50" onClick={() => setShowDetailsModal(false)} />
-            <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden">
-              <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-                <h3 className="text-base sm:text-lg font-semibold dark:text-white">
-                  Detalhes do Fechamento - {formatDate(selectedClosing.closing_date)}
-                </h3>
-                <button onClick={() => setShowDetailsModal(false)} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
-                  <X size={20} />
-                </button>
-              </div>
-              <div className="p-4 sm:p-6 overflow-y-auto">
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Valor Esperado</p>
-                      <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(selectedClosing.expected_total)}</p>
-                    </div>
-                    <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Valor Declarado</p>
-                      <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(selectedClosing.declared_total)}</p>
-                    </div>
-                  </div>
-                  
-                  <div className={`p-3 rounded-lg ${getDifferenceColor(selectedClosing.difference)}`}>
-                    <p className="text-xs">Diferença</p>
-                    <p className="text-xl font-bold">{formatCurrency(selectedClosing.difference)}</p>
-                  </div>
-                  
-                  {selectedClosing.details && (
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                      <p className="text-sm font-medium mb-2 dark:text-white">Detalhes por Forma de Pagamento</p>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span>Dinheiro:</span>
-                          <span className="font-medium">{formatCurrency(selectedClosing.total_cash || 0)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Cartão:</span>
-                          <span className="font-medium">{formatCurrency(selectedClosing.total_card || 0)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>PIX:</span>
-                          <span className="font-medium">{formatCurrency(selectedClosing.total_pix || 0)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {selectedClosing.notes && (
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                      <p className="text-sm font-medium mb-1 dark:text-white">Observações</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{selectedClosing.notes}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end">
-                <Button variant="outline" onClick={() => setShowDetailsModal(false)}>Fechar</Button>
-              </div>
-            </div>
-          </div>
-        )}
+        <CashierModalsContainer
+          showClosingModal={showClosingModal}
+          setShowClosingModal={setShowClosingModal}
+          summary={summary}
+          dateRange={dateRange}
+          declaredValues={declaredValues}
+          setDeclaredValues={setDeclaredValues}
+          onConfirmClosing={handlers.handleClosing}
+          isClosingPending={closingMutation.isPending}
+          showHistoryModal={showHistoryModal}
+          setShowHistoryModal={setShowHistoryModal}
+          history={closingHistory}
+          users={users}
+          onViewDetails={handlers.viewClosingDetails}
+          onPrint={handlers.handlePrint}
+          showDetailsModal={showDetailsModal}
+          setShowDetailsModal={setShowDetailsModal}
+          selectedClosing={selectedClosing}
+        />
       </div>
     </div>
   )

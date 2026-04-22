@@ -1,5 +1,5 @@
 // src/hooks/usePDVRealtime.js
-import { useRealtime } from './useRealtime'
+import { useRealtime } from '../useRealtime'
 
 export const usePDVRealtime = (enabled = true) => {
   // Assinar atualizações de estoque

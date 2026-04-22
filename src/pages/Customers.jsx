@@ -1,64 +1,60 @@
 // src/pages/Customers.jsx
 import React, { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Cake, Crown, UserPlus, RefreshCw, Users as UsersIcon } from '@lib/icons'
-import { useNavigate } from 'react-router-dom'
+import { UserPlus, RefreshCw, Users as UsersIcon } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
 import { useReactQuery } from '@hooks/useReactQuery'
 import { useSystemLogs } from '@hooks/useSystemLogs'
 import useMediaQuery from '@hooks/useMediaQuery'
-import { supabase } from '@lib/supabase'
 
 import Button from '@components/ui/Button'
-import Modal from '@components/ui/Modal'
 import FeedbackMessage from '@components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import DataEmptyState from '@components/ui/DataEmptyState'
-import ConfirmModal from '@components/ui/ConfirmModal'
-import CampaignModal from '@components/customers/CampaignModal'
-import RFVLegend from '@components/customers/RFVLegend'
 import PageHeader from '@components/ui/PageHeader'
-import DataCards from '@components/ui/DataCards' 
+import DataCards from '@components/ui/DataCards'
 import CustomerCard from '@components/customers/CustomerCard'
 
-import CustomerForm from '@components/customers/CustomerForm'
-import CustomerDeleteModal from '@components/customers/CustomerDeleteModal'
+import RFVLegend from '@components/customers/RFVLegend'
 import CustomerTable from '@components/customers/CustomerTable'
 import CustomerFilters from '@components/customers/CustomerFilters'
+import CustomersModalsContainer from '@components/customers/CustomersModalsContainer'
 
+import { useCustomersHandlers } from '@/hooks/handlers'
 import * as customerService from '@services/customerService'
 
 const Customers = () => {
   const { profile, user } = useAuth()
   const { logCreate, logUpdate, logDelete, logError, logAction } = useSystemLogs()
-  const navigate = useNavigate()
   const queryClient = useQueryClient()
-
-  const isMobile = useMediaQuery('(max-width: 768px)')
-  const [viewMode, setViewMode] = useState('auto')
-
   const { invalidateQueries } = useReactQuery()
+  const isMobile = useMediaQuery('(max-width: 768px)')
   
+  const [viewMode] = useState('auto')
   const [searchTerm, setSearchTerm] = useState('')
   const [activeFilters, setActiveFilters] = useState({})
+  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
+  
+  // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [showCampaignModal, setShowCampaignModal] = useState(false)
+  const [showBirthdayConfirmModal, setShowBirthdayConfirmModal] = useState(false)
+  const [campaignLoading, setCampaignLoading] = useState(false)
+  
+  // Selected item
   const [selectedCustomer, setSelectedCustomer] = useState(null)
+  
+  // Form data
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '', document: '', address: '',
     city: '', state: '', zip_code: '', birth_date: '', status: 'active'
   })
   const [formErrors, setFormErrors] = useState({})
-  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
 
-  const [showCampaignModal, setShowCampaignModal] = useState(false)
-  const [showBirthdayConfirmModal, setShowBirthdayConfirmModal] = useState(false)
-  const [campaignLoading, setCampaignLoading] = useState(false)
+  const effectiveViewMode = viewMode === 'auto' ? (isMobile ? 'cards' : 'table') : viewMode
 
-  const effectiveViewMode = viewMode === 'auto' 
-    ? (isMobile ? 'cards' : 'table')
-    : viewMode
-
+  // Queries
   const { 
     data: customers = [], 
     isLoading,
@@ -98,12 +94,12 @@ const Customers = () => {
     return filtered
   }, [customers, searchTerm, activeFilters])
 
+  // Mutations
   const createMutation = useMutation({
     mutationFn: customerService.createCustomer,
     onSuccess: async (data) => {
       await logCreate('customer', data.id, data)
       await invalidateQueries(['customers'])
-      queryClient.invalidateQueries({ queryKey: ['customers'] })
       showFeedback('success', 'Cliente cadastrado com sucesso!')
       setIsModalOpen(false)
     },
@@ -118,7 +114,6 @@ const Customers = () => {
     onSuccess: async (data) => {
       await logUpdate('customer', data.id, selectedCustomer, data)
       await invalidateQueries(['customers'])
-      queryClient.invalidateQueries({ queryKey: ['customers'] })
       showFeedback('success', 'Cliente atualizado com sucesso!')
       setIsModalOpen(false)
     },
@@ -133,7 +128,6 @@ const Customers = () => {
     onSuccess: async (id) => {
       await logDelete('customer', id, selectedCustomer)
       await invalidateQueries(['customers'])
-      queryClient.invalidateQueries({ queryKey: ['customers'] })
       showFeedback('success', 'Cliente excluído!')
       setIsDeleteModalOpen(false)
     },
@@ -143,6 +137,42 @@ const Customers = () => {
     }
   })
 
+  const showFeedback = (type, message) => {
+    setFeedback({ show: true, type, message })
+    setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
+  }
+
+  // Handlers
+  const handlers = useCustomersHandlers({
+    user,
+    selectedCustomer,
+    setSelectedCustomer,
+    formData,
+    setFormData,
+    setFormErrors,
+    setIsModalOpen,
+    setIsDeleteModalOpen,
+    setShowCampaignModal,
+    setShowBirthdayConfirmModal,
+    setCampaignLoading,
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    showFeedback,
+    logAction,
+    logError
+  })
+
+  const renderCustomerCard = (customer) => (
+    <CustomerCard
+      customer={customer}
+      onEdit={handlers.handleOpenModal}
+      onDelete={handlers.handleDeleteClick}
+      onCommunicate={handlers.handleCommunicate}
+      onSendCampaign={handlers.handleSendCampaign}
+    />
+  )
+
   React.useEffect(() => {
     logAction({ 
       action: 'VIEW', 
@@ -151,261 +181,7 @@ const Customers = () => {
     })
   }, [])
 
-  const showFeedback = (type, message) => {
-    setFeedback({ show: true, type, message })
-    setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
-  }
-
-  const renderCustomerCard = (customer) => (
-    <CustomerCard
-      customer={customer}
-      onEdit={handleOpenModal}
-      onDelete={(c) => { setSelectedCustomer(c); setIsDeleteModalOpen(true) }}
-      onCommunicate={(c) => navigate(`/customers/${c.id}/communication`)}
-      onSendCampaign={handleSendCampaign}
-    />
-  )
-
-  const validateForm = () => {
-    const errors = {}
-    
-    if (!formData.name?.trim()) errors.name = 'Nome é obrigatório'
-    else if (formData.name.length < 3) errors.name = 'Nome deve ter pelo menos 3 caracteres'
-    
-    if (!formData.email?.trim()) errors.email = 'E-mail é obrigatório'
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'E-mail inválido'
-    
-    if (!formData.phone?.trim()) errors.phone = 'Telefone é obrigatório'
-    
-    if (formData.document && formData.document.replace(/\D/g, '').length < 11) errors.document = 'Documento inválido'
-    if (formData.zip_code && formData.zip_code.replace(/\D/g, '').length < 8) errors.zip_code = 'CEP inválido'
-    
-    setFormErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
-  const handleOpenModal = (customer = null) => {
-    setSelectedCustomer(customer)
-    setFormData(customer ? 
-      { ...customer, status: customer.status || 'active' } : 
-      { 
-        name: '', email: '', phone: '', document: '', address: '',
-        city: '', state: '', zip_code: '', birth_date: '', status: 'active' 
-      }
-    )
-    setFormErrors({})
-    setIsModalOpen(true)
-  }
-
-  const handleSubmit = () => {
-    if (!validateForm()) return
-    
-    const customerData = {
-      name: formData.name.trim(),
-      email: formData.email.trim().toLowerCase(),
-      phone: formData.phone.replace(/\D/g, ''),
-      document: formData.document?.replace(/\D/g, '') || null,
-      address: formData.address?.trim() || null,
-      city: formData.city?.trim() || null,
-      state: formData.state?.trim() || null,
-      zip_code: formData.zip_code?.replace(/\D/g, '') || null,
-      birth_date: formData.birth_date || null,
-      status: formData.status || 'active'
-    }
-
-    if (selectedCustomer) {
-      updateMutation.mutate({ id: selectedCustomer.id, data: customerData })
-    } else {
-      createMutation.mutate(customerData)
-    }
-  }
-
-  const handleDelete = () => {
-    deleteMutation.mutate(selectedCustomer.id)
-  }
-
-  const handleSendCampaign = (customer) => {
-    setSelectedCustomer(customer)
-    
-    const today = new Date()
-    const birth = customer.birth_date ? new Date(customer.birth_date) : null
-    const isBirthday = birth && 
-      birth.getMonth() === today.getMonth() && 
-      birth.getDate() === today.getDate()
-    
-    if (isBirthday) {
-      setShowBirthdayConfirmModal(true)
-    } else {
-      setShowCampaignModal(true)
-    }
-  }
-
-  const handleSendBirthdayCampaign = async () => {
-    if (!selectedCustomer) return
-    
-    setCampaignLoading(true)
-    try {
-      const { data: birthdayCoupon } = await supabase
-        .from('coupons')
-        .select('*')
-        .eq('code', 'ANIVERSARIO')
-        .single()
-      
-      let couponId = birthdayCoupon?.id
-      
-      if (!birthdayCoupon) {
-        const { data: newCoupon } = await supabase
-          .from('coupons')
-          .insert({
-            code: 'ANIVERSARIO',
-            name: 'Cupom de Aniversário',
-            description: '10% de desconto para aniversariantes',
-            discount_type: 'percent',
-            discount_value: 10,
-            max_discount: 50,
-            min_purchase: 50,
-            is_global: false,
-            is_active: true,
-            usage_limit: 1,
-            valid_from: new Date().toISOString(),
-            valid_to: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            created_by: user?.id
-          })
-          .select()
-          .single()
-        
-        couponId = newCoupon?.id
-      }
-      
-      if (couponId) {
-        await supabase
-          .from('coupon_allowed_customers')
-          .upsert({
-            coupon_id: couponId,
-            customer_id: selectedCustomer.id
-          }, { onConflict: 'coupon_id,customer_id' })
-      }
-      
-      await supabase
-        .from('customer_communications')
-        .insert({
-          customer_id: selectedCustomer.id,
-          channel: 'whatsapp',
-          subject: 'Feliz Aniversário! 🎉',
-          content: `Olá ${selectedCustomer.name}, feliz aniversário! 🎂\n\nComo presente, você ganhou um cupom de 10% OFF para usar em sua próxima compra!\n\nCupom: ANIVERSARIO\nValidade: 30 dias\n\nAproveite!`,
-          status: 'sent',
-          sent_by: user?.id
-        })
-      
-      await supabase.rpc('create_notification', {
-        p_user_id: user?.id,
-        p_title: '🎂 Campanha de Aniversário',
-        p_message: `Cupom ANIVERSARIO enviado para ${selectedCustomer.name}`,
-        p_type: 'success',
-        p_entity_type: 'customer',
-        p_entity_id: selectedCustomer.id.toString()
-      })
-      
-      await logAction({
-        action: 'SEND_BIRTHDAY_CAMPAIGN',
-        entityType: 'customer',
-        entityId: selectedCustomer.id,
-        details: { 
-          customer_name: selectedCustomer.name, 
-          coupon: 'ANIVERSARIO' 
-        }
-      })
-      
-      showFeedback('success', `🎉 Campanha de aniversário enviada para ${selectedCustomer.name}!`)
-      
-    } catch (error) {
-      console.error('Erro ao enviar campanha de aniversário:', error)
-      showFeedback('error', 'Erro ao enviar campanha: ' + error.message)
-      await logError('customer', error, { action: 'send_birthday_campaign' })
-    } finally {
-      setCampaignLoading(false)
-      setShowBirthdayConfirmModal(false)
-      setSelectedCustomer(null)
-    }
-  }
-
-  const handleSendCustomCampaign = async (message, couponCode) => {
-    if (!selectedCustomer) return
-    
-    setCampaignLoading(true)
-    try {
-      if (couponCode) {
-        const { data: coupon } = await supabase
-          .from('coupons')
-          .select('id')
-          .eq('code', couponCode)
-          .single()
-        
-        if (coupon) {
-          await supabase
-            .from('coupon_allowed_customers')
-            .upsert({
-              coupon_id: coupon.id,
-              customer_id: selectedCustomer.id
-            }, { onConflict: 'coupon_id,customer_id' })
-        }
-      }
-      
-      await supabase
-        .from('customer_communications')
-        .insert({
-          customer_id: selectedCustomer.id,
-          channel: 'whatsapp',
-          subject: 'Oferta Especial 💙',
-          content: message,
-          status: 'sent',
-          sent_by: user?.id
-        })
-      
-      await supabase.rpc('create_notification', {
-        p_user_id: user?.id,
-        p_title: '📧 Campanha Enviada',
-        p_message: `Campanha enviada para ${selectedCustomer.name}`,
-        p_type: 'success',
-        p_entity_type: 'customer',
-        p_entity_id: selectedCustomer.id.toString()
-      })
-      
-      await logAction({
-        action: 'SEND_CAMPAIGN',
-        entityType: 'customer',
-        entityId: selectedCustomer.id,
-        details: { 
-          customer_name: selectedCustomer.name, 
-          coupon: couponCode || 'nenhum' 
-        }
-      })
-      
-      showFeedback('success', `✅ Campanha enviada para ${selectedCustomer.name}!`)
-      
-    } catch (error) {
-      console.error('Erro ao enviar campanha:', error)
-      showFeedback('error', 'Erro ao enviar campanha: ' + error.message)
-      await logError('customer', error, { action: 'send_campaign' })
-    } finally {
-      setCampaignLoading(false)
-      setShowCampaignModal(false)
-      setSelectedCustomer(null)
-    }
-  }
-
   const isMutating = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending
-
-  // Configuração das ações do header
-  const headerActions = [
-    {
-      label: 'Novo Cliente',
-      icon: UserPlus,
-      onClick: () => handleOpenModal(),
-      variant: 'primary',
-      disabled: isMutating
-    }
-  ]
 
   if (customersError) {
     return (
@@ -446,7 +222,15 @@ const Customers = () => {
             </>
           }
           icon={UsersIcon}
-          actions={headerActions}
+          actions={[
+            {
+              label: 'Novo Cliente',
+              icon: UserPlus,
+              onClick: () => handlers.handleOpenModal(),
+              variant: 'primary',
+              disabled: isMutating
+            }
+          ]}
           extraContent={<RFVLegend />}
         />
 
@@ -462,7 +246,7 @@ const Customers = () => {
           <DataEmptyState 
             title="Nenhum cliente encontrado" 
             description={searchTerm ? "Tente buscar por outro termo" : "Comece cadastrando seu primeiro cliente"} 
-            action={<Button onClick={() => handleOpenModal()} disabled={isMutating} size="sm">Cadastrar Cliente</Button>} 
+            action={<Button onClick={() => handlers.handleOpenModal()} disabled={isMutating} size="sm">Cadastrar Cliente</Button>} 
           />
         ) : effectiveViewMode === 'cards' ? (
           <DataCards
@@ -476,18 +260,12 @@ const Customers = () => {
         ) : (
           <CustomerTable 
             customers={filteredCustomers} 
-            onEdit={handleOpenModal} 
-            onDelete={(c) => { 
-              setSelectedCustomer(c)
-              setIsDeleteModalOpen(true) 
-            }} 
-            onCommunicate={(c) => navigate(`/customers/${c.id}/communication`)} 
-            onSendCampaign={handleSendCampaign}
-            
-            // Novas funcionalidades
+            onEdit={handlers.handleOpenModal} 
+            onDelete={handlers.handleDeleteClick} 
+            onCommunicate={handlers.handleCommunicate} 
+            onSendCampaign={handlers.handleSendCampaign}
             onRefresh={refetchCustomers}
             loading={isLoading}
-            // enableSearch={true}
             enableExport={true}
             enableRefresh={true}
             enableSelection={true}
@@ -495,65 +273,26 @@ const Customers = () => {
           />
         )}
 
-        <Modal 
-          isOpen={isModalOpen} 
-          onClose={() => !isMutating && setIsModalOpen(false)} 
-          title={selectedCustomer ? 'Editar Cliente' : 'Novo Cliente'} 
-          size="lg"
-        >
-          <CustomerForm 
-            formData={formData} 
-            formErrors={formErrors} 
-            onChange={(e) => { 
-              const { name, value } = e.target
-              setFormData(prev => ({ ...prev, [name]: value })) 
-            }} 
-            onSubmit={handleSubmit} 
-            onCancel={() => setIsModalOpen(false)} 
-            isSubmitting={createMutation.isPending || updateMutation.isPending} 
-            isEditing={!!selectedCustomer} 
-          />
-        </Modal>
-
-        <CustomerDeleteModal 
-          isOpen={isDeleteModalOpen} 
-          onClose={() => setIsDeleteModalOpen(false)} 
-          customer={selectedCustomer} 
-          onConfirm={handleDelete} 
-          isSubmitting={deleteMutation.isPending} 
-        />
-
-        <ConfirmModal
-          isOpen={showBirthdayConfirmModal}
-          onClose={() => {
-            setShowBirthdayConfirmModal(false)
-            setSelectedCustomer(null)
-          }}
-          onConfirm={handleSendBirthdayCampaign}
-          title="🎂 Campanha de Aniversário"
-          message={
-            <div className="space-y-2">
-              <p className="dark:text-gray-300 text-sm">Deseja enviar um cupom de <strong>10% OFF</strong> para <strong>{selectedCustomer?.name}</strong>?</p>
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                O cliente receberá o cupom <strong>ANIVERSARIO</strong> válido por 30 dias.
-              </p>
-            </div>
-          }
-          confirmText="Enviar Cupom"
-          cancelText="Cancelar"
-          variant="success"
-          loading={campaignLoading}
-        />
-
-        <CampaignModal
-          isOpen={showCampaignModal}
-          onClose={() => {
-            setShowCampaignModal(false)
-            setSelectedCustomer(null)
-          }}
-          onSend={handleSendCustomCampaign}
-          customer={selectedCustomer}
-          loading={campaignLoading}
+        <CustomersModalsContainer
+          isModalOpen={isModalOpen}
+          onCloseModal={handlers.handleCloseModal}
+          selectedCustomer={selectedCustomer}
+          formData={formData}
+          formErrors={formErrors}
+          setFormData={setFormData}
+          onSubmit={handlers.handleSubmit}
+          isSubmitting={createMutation.isPending || updateMutation.isPending}
+          isDeleteModalOpen={isDeleteModalOpen}
+          onCloseDeleteModal={handlers.handleCloseDeleteModal}
+          onConfirmDelete={handlers.handleDelete}
+          deletePending={deleteMutation.isPending}
+          showBirthdayConfirmModal={showBirthdayConfirmModal}
+          onCloseBirthdayModal={handlers.handleCloseBirthdayModal}
+          onConfirmBirthday={handlers.handleSendBirthdayCampaign}
+          campaignLoading={campaignLoading}
+          showCampaignModal={showCampaignModal}
+          onCloseCampaignModal={handlers.handleCloseCampaignModal}
+          onSendCampaign={handlers.handleSendCustomCampaign}
         />
       </div>
     </div>

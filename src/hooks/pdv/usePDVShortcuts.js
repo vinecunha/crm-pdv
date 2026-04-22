@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import useKeyboardShortcuts from './useKeyboardShortcuts'
+import useKeyboardShortcuts from '../useKeyboardShortcuts'
 
 const usePDVShortcuts = ({
   // Produtos

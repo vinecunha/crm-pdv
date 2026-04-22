@@ -1,3 +1,4 @@
+// src/pages/Sales.jsx
 import React, { useEffect, useRef, useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -6,26 +7,20 @@ import {
   CreditCard, WifiOff, FileText, Maximize, Minimize, RotateCcw 
 } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
-import { usePDVRealtime } from '@hooks/usePDVRealtime'
+import { usePDVRealtime } from '@hooks/pdv/usePDVRealtime'
 import FeedbackMessage from '@components/ui/FeedbackMessage'
-import Modal from '@components/ui/Modal'
 import Button from '@components/ui/Button'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import PageHeader from '@components/ui/PageHeader'
-import ConfirmModal from '@components/ui/ConfirmModal'
-import QuickCustomerForm from '@components/sales/pdv/QuickCustomerForm'
-import CouponSelector from '@components/sales/pdv/CouponSelector'
-import CheckoutModal from '@components/sales/pdv/CheckoutModal'
-import ShortcutsHelpModal from '@components/ui/ShortcutsHelpModal'
 import ProductGrid from '@components/sales/pdv/ProductGrid'
 import CartSummary from '@components/sales/pdv/CartSummary'
 import CompactCartView from '@components/sales/pdv/CompactCartView'
 import SyncStatus from '@components/sales/pdv/SyncStatus'
 import ShortcutFeedback from '@components/ui/ShortcutFeedback'
-import ReceiptModal from '@/components/sales/common/ReceiptModal'
+import SalesModalsContainer from '@components/sales/pdv/SalesModalsContainer'
 
 import { useSystemLogs } from '@hooks/useSystemLogs'
-import usePDVShortcuts from '@hooks/usePDVShortcuts'
+import usePDVShortcuts from '@hooks/pdv/usePDVShortcuts'
 import useKioskMode from '@hooks/useKioskMode'
 import { useNetworkStatus } from '@hooks/useNetworkStatus'
 import useMediaQuery from '@hooks/useMediaQuery'
@@ -37,6 +32,8 @@ import { usePDVModals } from '@hooks/pdv/usePDVModals'
 import { usePDVFeedback } from '@hooks/pdv/usePDVFeedback'
 import { usePDVSearch } from '@hooks/pdv/usePDVSearch'
 import { usePDVPayment } from '@hooks/pdv/usePDVPayment'
+
+import { useSalesHandlers } from '@hooks/handlers/useSalesHandlers'
 
 import { saveSaleOffline } from '@utils/offlineStorage'
 import { formatCurrency } from '@utils/formatters'
@@ -57,8 +54,6 @@ const Sales = () => {
   const searchInputRef = useRef(null)
   const processingRef = useRef(false)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
-  const [lastSale, setLastSale] = useState(null)
-  const [lastSalePaymentMethod, setLastSalePaymentMethod] = useState(null)
   const [completedSaleData, setCompletedSaleData] = useState(null)
 
   // ============= HOOKS PERSONALIZADOS =============
@@ -70,8 +65,6 @@ const Sales = () => {
     showShortcutFeedback,
     hideShortcutFeedback
   } = usePDVFeedback()
-
-  
 
   const {
     cart,
@@ -186,102 +179,31 @@ const Sales = () => {
       queryClient.invalidateQueries({ queryKey: ['products-active'] })
       showFeedback('success', `Venda #${sale.sale_number} finalizada!`)
       
-      // ✅ Salvar dados da venda ANTES de limpar
       setCompletedSaleData({
         sale: sale,
-        cart: [...cart], // Cópia do carrinho
-        customer: customer ? { ...customer } : null,
-        paymentMethod: paymentMethod,
-        discount: discount
-      })
-      
-      // Limpar carrinho e cliente
-      clearCart()
-      clearCustomer()
-      removeCoupon()
-      closePaymentModal()
-      
-      // Abrir modal de recibo
-      openReceiptModal()
-    },
-    onError: async (error) => {
-      logger.error('Erro ao finalizar venda:', error)
-      
-      if (!isOnline || error.message?.includes('network') || error.message?.includes('fetch')) {
-        await handleOfflineSale()
-      } else {
-        showFeedback('error', 'Erro ao finalizar venda: ' + error.message)
-        await logError('sale', error, { action: 'create_sale' })
-      }
-    }
-  })
-
-  // ============= HANDLERS =============
-  const handleOfflineSale = async () => {
-    try {
-      const subtotal = getSubtotal()
-      const total = getTotal(discount)
-      
-      const offlineSaleData = {
-        customer_id: customer?.id || null,
-        customer_name: customer?.name || 'Cliente offline',
-        customer_phone: customer?.phone || null,
-        total_amount: subtotal,
-        discount_amount: discount,
-        coupon_code: coupon?.code || null,
-        final_amount: total,
-        payment_method: paymentMethod,
-        created_by: profile?.id,
-        items: cart.map(item => ({
-          product_id: item.id,
-          product_name: item.name,
-          product_code: item.code,
-          quantity: item.quantity,
-          unit_price: item.price,
-          total_price: item.total
-        })),
-        offlineCreated: true,
-        offlineCreatedAt: new Date().toISOString(),
-      }
-      
-      await saveSaleOffline(offlineSaleData)
-      updateLocalStock(cart)
-      
-      await logCreate('sale', `offline-${Date.now()}`, { 
-        offline: true, total_amount: subtotal, discount, final_amount: total 
-      })
-      
-      // ✅ Salvar dados para o recibo
-      const offlineSale = {
-        sale_number: `OFF-${Date.now()}`,
-        total_amount: subtotal,
-        discount_amount: discount,
-        final_amount: total
-      }
-      
-      setCompletedSaleData({
-        sale: offlineSale,
         cart: [...cart],
         customer: customer ? { ...customer } : null,
         paymentMethod: paymentMethod,
         discount: discount
       })
       
-      showFeedback('success', `✅ Venda salva OFFLINE!`)
-      
       clearCart()
       clearCustomer()
       removeCoupon()
       closePaymentModal()
-      
-      // Abrir recibo
       openReceiptModal()
+    },
+    onError: async (error) => {
+      logger.error('Erro ao finalizar venda:', error)
       
-    } catch (error) {
-      logger.error('❌ Erro ao salvar offline:', error)
-      showFeedback('error', 'Erro ao salvar venda offline: ' + error.message)
+      if (!isOnline || error.message?.includes('network') || error.message?.includes('fetch')) {
+        await handlers.handleOfflineSale()
+      } else {
+        showFeedback('error', 'Erro ao finalizar venda: ' + error.message)
+        await logError('sale', error, { action: 'create_sale' })
+      }
     }
-  }
+  })
 
   const updateLocalStock = (cartItems) => {
     queryClient.setQueryData(['products-active'], (oldData) => {
@@ -296,145 +218,71 @@ const Sales = () => {
     })
   }
 
-  const handleClearCart = () => {
-    if (cartCount === 0) return
-    openClearCartConfirm()
-  }
-
-  const confirmClearCart = () => {
-    clearCart()
-    closeClearCartConfirm()
-    showFeedback('info', 'Carrinho limpo')
-  }
-
-  const handleSearchCustomer = async () => {
-    const result = await searchCustomer()
-    closeCustomerModal()
-    
-    if (!result?.found) {
-      setShowQuickCustomerModal(true)
-    }
-  }
-
-  const handleApplyCoupon = () => {
-    applyCoupon()
-    closeCouponModal()
-  }
-
-  const createPendingSale = async (callback) => {
-    if (processingRef.current) {
-      logger.warn('⚠️ Já existe um processamento em andamento')
-      return
-    }
-    
-    processingRef.current = true
-    setIsProcessingPayment(true)
-    
-    try {
-      const invalidProducts = cart.filter(item => {
-        const product = products.find(p => p.id === item.id)
-        return !product || !product.is_active || product.deleted_at
-      })
-      
-      if (invalidProducts.length > 0) {
-        const names = invalidProducts.map(p => p.name).join(', ')
-        throw new Error(`Produtos inválidos no carrinho: ${names}`)
-      }
-
-      const subtotal = getSubtotal()
-      const total = getTotal(discount)
-      
-      const itemsJson = cart.map(item => ({
-        product_id: item.id,
-        product_name: item.name,
-        product_code: item.code,
-        quantity: item.quantity,
-        unit_price: item.price,
-        total_price: item.total
-      }))
-      
-      const idempotencyKey = crypto.randomUUID?.() || Date.now().toString()
-      
-      const { data, error } = await supabase.rpc('create_pending_sale', {
-        p_customer_id: customer?.id || null,
-        p_customer_name: customer?.name || 'Cliente não identificado',
-        p_customer_phone: customer?.phone || null,
-        p_total_amount: subtotal,
-        p_discount_amount: discount,
-        p_coupon_code: coupon?.code || null,
-        p_final_amount: total,
-        p_payment_method: 'pix',
-        p_created_by: profile?.id,
-        p_items: itemsJson,
-        p_idempotency_key: idempotencyKey
-      })
-      
-      if (error) throw error
-      if (!data.success) throw new Error(data.error || 'Erro ao processar venda')
-      
-      closePaymentModal()
-      
-      if (callback) callback(data.sale_id)
-      
-    } catch (error) {
-      logger.error('❌ Erro ao criar venda pendente:', error)
-      showFeedback('error', 'Erro: ' + error.message)
-    } finally {
-      setTimeout(() => {
-        processingRef.current = false
-        setIsProcessingPayment(false)
-      }, 2000)
-    }
-  }
-
-  const confirmPayment = (method = null) => {
-    if (processingRef.current || isProcessingPayment) {
-      logger.warn('⚠️ Pagamento já em processamento')
-      return
-    }
-    
-    const finalPaymentMethod = method || paymentMethod
-    
-    if (finalPaymentMethod === 'pix') return
-    
-    if (!isOnline) {
-      handleOfflineSale()
-      return
-    }
-    
-    createSaleMutation.mutate({ 
-      cart, 
-      customer, 
-      coupon, 
-      discount, 
-      paymentMethod: finalPaymentMethod 
-    })
-  }
+  // ============= HANDLERS =============
+  const handlers = useSalesHandlers({
+    profile,
+    cart,
+    cartCount,
+    customer,
+    coupon,
+    discount,
+    paymentMethod,
+    products,
+    getSubtotal,
+    getTotal,
+    clearCart,
+    clearCustomer,
+    removeCoupon,
+    addToCart,
+    updateCartItemQuantity,
+    removeFromCart,
+    searchCustomer,
+    applyCoupon,
+    setCouponError,
+    setCustomerPhone,
+    setQuickCustomerForm,
+    quickRegisterCustomer,
+    setShowQuickCustomerModal,
+    setShowCouponModal,
+    openCustomerModal,
+    closeCustomerModal,
+    openPaymentModal,
+    closePaymentModal,
+    openClearCartConfirm,
+    closeClearCartConfirm,
+    openShortcutsHelp,
+    closeShortcutsHelp,
+    openReceiptModal,
+    closeReceiptModal,
+    showFeedback,
+    refetchProducts,
+    updateCategories,
+    setSelectedCartItemIndex,
+    isOnline,
+    isProcessingPayment,
+    setIsProcessingPayment,
+    processingRef,
+    createSaleMutation,
+    saveSaleOffline,
+    updateLocalStock,
+    logCreate,
+    logError,
+    setCompletedSaleData,
+    queryClient,
+    supabase,
+    logger
+  })
 
   // ============= ATALHOS =============
   const handleFocusSearch = useCallback(() => searchInputRef.current?.focus(), [])
-  const handleRefreshProducts = useCallback(async () => { 
-    await refetchProducts()
-    showFeedback('info', 'Produtos atualizados') 
-  }, [refetchProducts, showFeedback])
   
-  const handleIncreaseQuantity = useCallback((item) => 
-    updateCartItemQuantity(item.id, item.quantity + 1), 
-    [updateCartItemQuantity]
-  )
-  
-  const handleDecreaseQuantity = useCallback((item) => 
-    updateCartItemQuantity(item.id, item.quantity - 1), 
-    [updateCartItemQuantity]
-  )
-
   const { shortcuts } = usePDVShortcuts({
     onFocusSearch: handleFocusSearch,
     onClearSearch: clearSearch,
-    onRefreshProducts: handleRefreshProducts,
-    onClearCart: handleClearCart,
-    onIncreaseQuantity: handleIncreaseQuantity,
-    onDecreaseQuantity: handleDecreaseQuantity,
+    onRefreshProducts: handlers.handleRefreshProducts,
+    onClearCart: handlers.handleClearCart,
+    onIncreaseQuantity: handlers.handleIncreaseQuantity,
+    onDecreaseQuantity: handlers.handleDecreaseQuantity,
     onRemoveItem: removeFromCart,
     onOpenCustomerModal: openCustomerModal,
     onClearCustomer: clearCustomer,
@@ -445,7 +293,7 @@ const Sales = () => {
     onRemoveCoupon: removeCoupon,
     onOpenPaymentModal: () => {
       if (cartCount === 0) showFeedback('warning', 'Adicione itens ao carrinho')
-      else closePaymentModal() // O modal é aberto pelo botão
+      else closePaymentModal()
     },
     onOpenHelp: openShortcutsHelp,
     cartItems: cart,
@@ -565,7 +413,7 @@ const Sales = () => {
                     
                     {cartCount > 0 && (
                       <button
-                        onClick={handleClearCart}
+                        onClick={handlers.handleClearCart}
                         className="p-1.5 text-gray-400 hover:text-red-500 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
                         title="Limpar carrinho"
                       >
@@ -644,7 +492,7 @@ const Sales = () => {
                 products={products} 
                 onUpdateQuantity={updateCartItemQuantity}
                 onRemoveItem={removeFromCart} 
-                onClearCart={handleClearCart} 
+                onClearCart={handlers.handleClearCart} 
                 onCheckout={openPaymentModal}
                 selectedItemIndex={selectedCartItemIndex} 
                 onSelectItem={setSelectedCartItemIndex} 
@@ -695,117 +543,59 @@ const Sales = () => {
             products={products}
             onUpdateQuantity={updateCartItemQuantity}
             onRemoveItem={removeFromCart}
-            onClearCart={handleClearCart}
+            onClearCart={handlers.handleClearCart}
             onCheckout={openPaymentModal}
             disabled={isMutating}
           />
         )}
 
         {/* Modais */}
-        <Modal 
-          isOpen={showCustomerModal} 
-          onClose={closeCustomerModal} 
-          title="Identificar Cliente" 
-          size="sm"
-        >
-          <div className="space-y-4">
-            <div className="text-center">
-              <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Phone size={24} className="text-blue-600 dark:text-blue-400" />
-              </div>
-              <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
-                Digite o telefone do cliente
-              </p>
-            </div>
-            <input 
-              type="tel" 
-              placeholder="(11) 99999-9999" 
-              value={customerPhone} 
-              onChange={(e) => setCustomerPhone(e.target.value)}
-              className="w-full px-4 py-2.5 border rounded-lg text-center dark:bg-gray-800 dark:text-white"
-              onKeyDown={(e) => e.key === 'Enter' && handleSearchCustomer()} 
-              autoFocus 
-              disabled={isSearching} 
-            />
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={closeCustomerModal} className="flex-1">
-                Cancelar
-              </Button>
-              <Button onClick={handleSearchCustomer} loading={isSearching} className="flex-1">
-                Buscar
-              </Button>
-            </div>
-          </div>
-        </Modal>
-
-        <QuickCustomerForm 
-          isOpen={showQuickCustomerModal} 
-          onClose={() => setShowQuickCustomerModal(false)}
-          formData={quickCustomerForm} 
-          setFormData={setQuickCustomerForm} 
-          errors={quickCustomerErrors}
-          onSubmit={quickRegisterCustomer} 
-          isSubmitting={isCreating} 
-        />
-
-        <CouponSelector 
-          isOpen={showCouponModal} 
-          onClose={closeCouponModal} 
-          customer={customer} 
+        <SalesModalsContainer
+          showCustomerModal={showCustomerModal}
+          closeCustomerModal={closeCustomerModal}
+          customerPhone={customerPhone}
+          setCustomerPhone={setCustomerPhone}
+          handleSearchCustomer={handlers.handleSearchCustomer}
+          isSearching={isSearching}
+          showQuickCustomerModal={showQuickCustomerModal}
+          setShowQuickCustomerModal={setShowQuickCustomerModal}
+          quickCustomerForm={quickCustomerForm}
+          setQuickCustomerForm={setQuickCustomerForm}
+          quickCustomerErrors={quickCustomerErrors}
+          quickRegisterCustomer={quickRegisterCustomer}
+          isCreating={isCreating}
+          showCouponModal={showCouponModal}
+          closeCouponModal={closeCouponModal}
+          customer={customer}
           coupon={coupon}
-          availableCoupons={availableCoupons} 
-          couponCode={couponCode} 
-          setCouponCode={setCouponCode} 
+          availableCoupons={availableCoupons}
+          couponCode={couponCode}
+          setCouponCode={setCouponCode}
           couponError={couponError}
-          onApplyCoupon={handleApplyCoupon} 
-          onRemoveCoupon={removeCoupon} 
-          isLoading={isValidating} 
-        />
-
-        <CheckoutModal 
-          isOpen={showPaymentModal} 
-          onClose={closePaymentModal} 
-          cart={cart} 
+          handleApplyCoupon={handlers.handleApplyCoupon}
+          removeCoupon={removeCoupon}
+          isValidating={isValidating}
+          showPaymentModal={showPaymentModal}
+          closePaymentModal={closePaymentModal}
+          cart={cart}
           discount={discount}
-          subtotal={subtotal} 
-          total={total} 
-          customer={customer} 
-          paymentMethod={paymentMethod} 
+          subtotal={subtotal}
+          total={total}
+          paymentMethod={paymentMethod}
           setPaymentMethod={setPaymentMethod}
-          onConfirm={confirmPayment} 
-          isSubmitting={createSaleMutation.isPending} 
-          isOnline={isOnline} 
-          onCreatePendingSale={createPendingSale} 
-        />
-
-        <ConfirmModal 
-          isOpen={showClearCartConfirm} 
-          onClose={closeClearCartConfirm} 
-          onConfirm={confirmClearCart}
-          title="Limpar Carrinho" 
-          message="Tem certeza que deseja remover todos os itens?"
-          confirmText="Limpar" 
-          cancelText="Cancelar" 
-          variant="danger" 
-        />
-
-        <ShortcutsHelpModal 
-          isOpen={showShortcutsHelp} 
-          onClose={closeShortcutsHelp} 
-          shortcuts={shortcuts} 
-        />
-
-        <ReceiptModal
-          isOpen={showReceiptModal}
-          onClose={() => {
-            closeReceiptModal()
-            setCompletedSaleData(null)
-          }}
-          sale={completedSaleData?.sale}
-          customer={completedSaleData?.customer}
-          cart={completedSaleData?.cart || []}
-          paymentMethod={completedSaleData?.paymentMethod}
-          discount={completedSaleData?.discount || 0}
+          confirmPayment={handlers.confirmPayment}
+          isSubmitting={createSaleMutation.isPending}
+          isOnline={isOnline}
+          createPendingSale={handlers.createPendingSale}
+          showClearCartConfirm={showClearCartConfirm}
+          closeClearCartConfirm={closeClearCartConfirm}
+          confirmClearCart={handlers.confirmClearCart}
+          showShortcutsHelp={showShortcutsHelp}
+          closeShortcutsHelp={closeShortcutsHelp}
+          shortcuts={shortcuts}
+          showReceiptModal={showReceiptModal}
+          closeReceiptModal={closeReceiptModal}
+          completedSaleData={completedSaleData}
           profile={profile}
         />
       </div>

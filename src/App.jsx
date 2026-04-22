@@ -56,13 +56,13 @@ const SalesList = lazy(() => import(
 //Módulo Fechamento de Caixa
 const CashierClosing = lazy(() => import(
   /* webpackChunkName: "pdv" */
-  './pages/CashierClosing'
+  './pages/CashierClosing.jsx'
 ))
 
 // Módulo Budget (orçamento)
 const Budgets = lazy(() => import(
   /* webpackChunkName: "pdv" */
-  './pages/budgets'
+  './pages/Budgets'
 ))
 
 // Módulo Produtos (gestão de estoque)
