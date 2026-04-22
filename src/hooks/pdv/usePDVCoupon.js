@@ -26,27 +26,48 @@ export const usePDVCoupon = (customer, cart, showFeedback) => {
       setCouponError('')
       showFeedback('success', `Cupom ${data.coupon.code} aplicado! Desconto: ${formatCurrency(data.discountValue)}`)
     },
-    onError: (error) => setCouponError(error.message)
+    onError: (error) => {
+      setCouponError(error.message)
+      setCoupon(null)
+      setDiscount(0)
+    }
   })
 
-  const applyCoupon = useCallback((couponToValidate = null) => {
+  const applyCoupon = useCallback(async (couponToValidate = null) => {
     const code = couponToValidate?.code || couponCode
+    
+    // Validações síncronas
     if (!code) {
       setCouponError('Digite o código do cupom')
-      return false
+      return { success: false, error: 'Digite o código do cupom' }
     }
     
     if (!customer) {
       setCouponError('Identifique um cliente para usar cupons')
-      return false
+      return { success: false, error: 'Identifique um cliente para usar cupons' }
     }
     
     const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
-    return validateCouponMutation.mutateAsync({ 
-      code, 
-      customerId: customer.id, 
-      cartSubtotal: subtotal 
-    })
+    
+    try {
+      const result = await validateCouponMutation.mutateAsync({ 
+        code, 
+        customerId: customer.id, 
+        cartSubtotal: subtotal 
+      })
+      
+      return { success: true, data: result }
+      
+    } catch (error) {
+      // Erro já foi tratado no onError da mutation
+      // Apenas retornamos um objeto de erro para o consumidor
+      return { 
+        success: false, 
+        error: error.message,
+        coupon: null,
+        discount: 0
+      }
+    }
   }, [couponCode, customer, cart, validateCouponMutation])
 
   const removeCoupon = useCallback(() => {

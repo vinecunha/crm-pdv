@@ -1,9 +1,10 @@
 // src/pages/SalesList.jsx
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { supabase } from '@lib/supabase'
 import { 
   Eye, Ban, Printer, Search, Filter, RefreshCw,
-  FileText, DollarSign, Ticket, Download, XCircle, CheckCircle, Clock, ShoppingCart
+  FileText, DollarSign, Ticket, Download, XCircle, CheckCircle, Clock, ShoppingCart, Receipt
 } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
 import FeedbackMessage from '@components/ui/FeedbackMessage'
@@ -20,6 +21,7 @@ import useLogger from '@hooks/useLogger'
 import useDebounce from '@hooks/useDebounce'
 import useMediaQuery from '@hooks/useMediaQuery'
 import CancelSaleModal from '@components/sales/management/CancelSaleModal'
+import ReceiptModal from '@components/sales/common/ReceiptModal'
 
 import * as salesListService from '@services/salesListService'
 
@@ -64,6 +66,12 @@ const SalesList = () => {
   const { logComponentAction, logComponentError } = useLogger('SalesList')
   const queryClient = useQueryClient()
 
+  // Estados para o modal de recibo
+  const [showReceiptModal, setShowReceiptModal] = useState(false)
+  const [receiptSale, setReceiptSale] = useState(null)
+  const [receiptItems, setReceiptItems] = useState([])  // 👈 Estado local para itens
+  const [isLoadingReceiptItems, setIsLoadingReceiptItems] = useState(false)
+
   const isMobile = useMediaQuery('(max-width: 768px)')
   const [viewMode, setViewMode] = useState('auto')
   
@@ -95,6 +103,51 @@ const SalesList = () => {
   const paymentIcons = { cash: '💵', credit_card: '💳', debit_card: '🏧', pix: '📱' }
   const paymentLabels = { cash: 'Dinheiro', credit_card: 'Crédito', debit_card: 'Débito', pix: 'PIX' }
 
+  // Query para buscar itens dos detalhes da venda
+  const { 
+    data: saleItems = [],
+    isLoading: isLoadingItems
+  } = useQuery({
+    queryKey: ['sale-items', selectedSale?.id],
+    queryFn: () => salesListService.fetchSaleItems(selectedSale?.id),
+    enabled: !!selectedSale?.id && showDetailsModal,
+  })
+
+  // 👇 Função para abrir recibo - busca itens diretamente
+  const openReceipt = async (sale) => {
+    console.log('📌 Abrindo recibo para venda:', sale)
+    setReceiptSale(sale)
+    setShowReceiptModal(true)
+    setReceiptItems([]) // Limpar itens anteriores
+    
+    if (sale?.id) {
+      setIsLoadingReceiptItems(true)
+      try {
+        const numericSaleId = Number(sale.id)
+        console.log('🔍 Buscando itens para saleId:', numericSaleId)
+        
+        const { data, error } = await supabase
+          .from('sale_items')
+          .select('*')
+          .eq('sale_id', numericSaleId)
+        
+        console.log('📦 Resposta do Supabase:', { data, error })
+        
+        if (error) throw error
+        
+        setReceiptItems(data || [])
+        console.log('✅ Itens carregados:', data?.length || 0)
+      } catch (error) {
+        console.error('❌ Erro ao carregar itens:', error)
+        setReceiptItems([])
+      } finally {
+        setIsLoadingReceiptItems(false)
+      }
+    }
+    
+    logComponentAction('VIEW_RECEIPT', sale.id, { sale_number: sale.sale_number })
+  }
+
   const { 
     data: sales = [], 
     isLoading,
@@ -105,15 +158,6 @@ const SalesList = () => {
     queryKey: ['sales', { searchTerm: debouncedSearchTerm, filters }],
     queryFn: () => salesListService.fetchSales(debouncedSearchTerm, filters),
     staleTime: 2 * 60 * 1000,
-  })
-
-  const { 
-    data: saleItems = [],
-    isLoading: isLoadingItems
-  } = useQuery({
-    queryKey: ['sale-items', selectedSale?.id],
-    queryFn: () => salesListService.fetchSaleItems(selectedSale?.id),
-    enabled: !!selectedSale?.id && showDetailsModal,
   })
 
   const cancelMutation = useMutation({
@@ -171,13 +215,14 @@ const SalesList = () => {
     <SalesListCard
       sale={sale}
       onViewDetails={viewSaleDetails}
+      onReceipt={openReceipt} 
       onCancel={(sale) => {
         setSelectedSale(sale)
         setCancelReason('')
         setCancelNotes('')
         setShowCancelModal(true)
       }}
-      onPrint={() => showFeedback('info', 'Impressão em desenvolvimento')}
+      onPrint={openReceipt}
       canCancel={canCancelDirectly}
       canRequestCancellation={canRequestCancellation}
     />
@@ -284,6 +329,12 @@ const SalesList = () => {
       onClick: viewSaleDetails, 
       className: 'text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30' 
     },
+    { 
+      label: 'Recibo', 
+      icon: <Receipt size={16} />, 
+      onClick: openReceipt, 
+      className: 'text-gray-500 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30' 
+    },
     ...(canCancelDirectly || canRequestCancellation ? [{
       label: canCancelDirectly ? 'Cancelar' : 'Solicitar',
       icon: <Ban size={16} />,
@@ -294,12 +345,11 @@ const SalesList = () => {
     { 
       label: 'Imprimir', 
       icon: <Printer size={16} />, 
-      onClick: () => showFeedback('info', 'Impressão em desenvolvimento'), 
+      onClick: openReceipt,
       className: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' 
     }
   ]
 
-  // Configuração das ações do header
   const headerActions = [
     {
       label: 'Atualizar',
@@ -429,6 +479,7 @@ const SalesList = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
             <div className="absolute inset-0 bg-black/30 dark:bg-black/50" onClick={() => setShowDetailsModal(false)} />
             <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden">
+              {/* ... conteúdo do modal de detalhes (mantido igual) ... */}
               <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
                 <div>
                   <h3 className="text-base sm:text-lg font-semibold dark:text-white">Detalhes da Venda #{selectedSale.sale_number}</h3>
@@ -545,6 +596,19 @@ const SalesList = () => {
           onConfirm={handleCancelWithApproval} 
           isSubmitting={cancelMutation.isPending} 
           currentUser={profile} 
+        />
+
+        <ReceiptModal
+          isOpen={showReceiptModal}
+          onClose={() => {
+            setShowReceiptModal(false)
+            setReceiptSale(null)
+            setReceiptItems([])
+          }}
+          sale={receiptSale}
+          items={receiptItems}
+          isLoading={isLoadingReceiptItems}
+          title={`Recibo #${receiptSale?.sale_number || ''}`}
         />
       </div>
     </div>

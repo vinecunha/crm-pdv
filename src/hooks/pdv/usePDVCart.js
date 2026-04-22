@@ -1,4 +1,3 @@
-// src/hooks/pdv/usePDVCart.js
 import { useState, useCallback } from 'react'
 import { useSystemLogs } from '@hooks/useSystemLogs'
 
@@ -8,12 +7,42 @@ export const usePDVCart = (products, showFeedback) => {
   const [selectedCartItemIndex, setSelectedCartItemIndex] = useState(0)
 
   const addToCart = useCallback((product) => {
-    const existing = cart.find(item => item.id === product.id)
-    
-    if (existing) {
-      updateCartItemQuantity(product.id, existing.quantity + 1)
-    } else {
-      setCart(prev => [...prev, {
+    setCart(prevCart => {
+      const existingIndex = prevCart.findIndex(item => item.id === product.id)
+      
+      if (existingIndex >= 0) {
+        const existing = prevCart[existingIndex]
+        const newQuantity = existing.quantity + 1
+        
+        // Validação de estoque
+        if (newQuantity > product.stock_quantity) {
+          showFeedback('error', `Estoque insuficiente! Disponível: ${product.stock_quantity}`)
+          return prevCart
+        }
+        
+        logAction({ 
+          action: 'UPDATE_CART_QUANTITY', 
+          entityType: 'sale', 
+          details: { product_name: product.name, quantity: newQuantity } 
+        })
+        
+        const updatedCart = [...prevCart]
+        updatedCart[existingIndex] = {
+          ...existing,
+          quantity: newQuantity,
+          total: newQuantity * existing.price
+        }
+        return updatedCart
+      }
+      
+      // Adiciona novo item
+      logAction({ 
+        action: 'ADD_TO_CART', 
+        entityType: 'sale', 
+        details: { product_name: product.name } 
+      })
+      
+      return [...prevCart, {
         id: product.id,
         name: product.name,
         code: product.code,
@@ -22,38 +51,37 @@ export const usePDVCart = (products, showFeedback) => {
         total: product.price,
         unit: product.unit,
         stock: product.stock_quantity
-      }])
-      logAction({ 
-        action: 'ADD_TO_CART', 
-        entityType: 'sale', 
-        details: { product_name: product.name } 
-      })
-    }
-  }, [cart, products])
+      }]
+    })
+  }, [showFeedback, logAction])
 
   const updateCartItemQuantity = useCallback((productId, newQuantity) => {
-    const product = products.find(p => p.id === productId)
-    if (!product) return
-    
-    if (newQuantity > product.stock_quantity) {
-      showFeedback('error', `Estoque insuficiente! Disponível: ${product.stock_quantity}`)
-      return
-    }
-    
-    if (newQuantity <= 0) {
-      removeFromCart(productId)
-      return
-    }
-    
-    setCart(prev => prev.map(item =>
-      item.id === productId 
-        ? { ...item, quantity: newQuantity, total: newQuantity * item.price } 
-        : item
-    ))
-  }, [products])
+    setCart(prevCart => {
+      const product = products.find(p => p.id === productId)
+      if (!product) return prevCart
+      
+      // Validação de estoque
+      if (newQuantity > product.stock_quantity) {
+        showFeedback('error', `Estoque insuficiente! Disponível: ${product.stock_quantity}`)
+        return prevCart
+      }
+      
+      // Remove se quantidade <= 0
+      if (newQuantity <= 0) {
+        return prevCart.filter(item => item.id !== productId)
+      }
+      
+      // Atualiza quantidade
+      return prevCart.map(item =>
+        item.id === productId 
+          ? { ...item, quantity: newQuantity, total: newQuantity * item.price } 
+          : item
+      )
+    })
+  }, [products, showFeedback])
 
   const removeFromCart = useCallback((productId) => {
-    setCart(prev => prev.filter(item => item.id !== productId))
+    setCart(prevCart => prevCart.filter(item => item.id !== productId))
   }, [])
 
   const clearCart = useCallback(() => {

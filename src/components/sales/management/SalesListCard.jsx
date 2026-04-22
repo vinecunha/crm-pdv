@@ -9,12 +9,13 @@ import {
   Calendar,
   CreditCard,
   ChevronRight,
-  User
+  User,
+  Receipt
 } from '@lib/icons'
 import Badge from '../../Badge'
 import { formatCurrency, formatDateTime } from '@utils/formatters'
 
-const SalesListCard = ({ sale, onViewDetails, onCancel, onPrint, canCancel, canRequestCancellation }) => {
+const SalesListCard = ({ sale, onViewDetails, onCancel, onPrint, onReceipt, canCancel, canRequestCancellation }) => {
   const paymentIcons = { 
     cash: '💵', 
     credit_card: '💳', 
@@ -131,6 +132,11 @@ const SalesListCard = ({ sale, onViewDetails, onCancel, onPrint, canCancel, canR
           Ver
         </button>
         
+        <button onClick={(e) => { e.stopPropagation(); onReceipt?.(sale) }}
+          className="flex items-center justify-center gap-1 px-2 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+          <Receipt size={14} /> Recibo
+        </button>
+
         <button
           onClick={(e) => {
             e.stopPropagation()

@@ -157,11 +157,17 @@ export function AuthProvider({ children }) {
       if (error) throw error
       
       if (data) {
-        if (data.status && data.status !== 'active') {
-          logger.warn('⚠️ Usuário com status não ativo:', data.status)
+        const profileData = {
+          ...data,
+          id: userId, // Força o ID a ser o UUID do auth
+          profile_id: data.id // Preserva o ID da tabela profiles se necessário
         }
-        secureStorage.set('profile', data)
-        return data
+        if (profileData.status && profileData.status !== 'active') {
+          logger.warn('⚠️ Usuário com status não ativo:', profileData.status)
+        }
+        
+        secureStorage.set('profile', profileData)
+        return profileData
       }
       return null
     } catch (error) {

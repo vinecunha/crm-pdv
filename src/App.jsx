@@ -151,6 +151,8 @@ const NotificationTriggersWrapper = () => {
 }
 
 function App() {
+
+  const isDevelopment = import.meta.env.DEV
   
   return (
     <ErrorBoundaryWithCompany>
@@ -362,9 +364,9 @@ function App() {
             </CompanyProvider>
           </AuthProvider>
         </Router>
-        <CacheDebugger />
-        <NetworkStatus />
-        <PerformanceDebugger />
+        {isDevelopment && <CacheDebugger />}
+        {isDevelopment && <NetworkStatus />}
+        {isDevelopment && <PerformanceDebugger />}
       </QueryClientProvider>
     </ErrorBoundaryWithCompany>
   )

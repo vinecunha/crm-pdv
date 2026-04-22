@@ -1,8 +1,10 @@
+// src/components/tasks/TaskModal.jsx
 import React, { useState, useEffect } from 'react'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
 import FormInput from '../forms/FormInput'
 import TaskAssigneeSelector from './TaskAssigneeSelector'
+import * as notificationService from '@services/notificationService'
 
 const TaskModal = ({ 
   isOpen, 
@@ -24,6 +26,9 @@ const TaskModal = ({
     visibility: 'assigned'
   })
   
+  // Armazenar os atribuídos anteriores para comparação (na edição)
+  const [previousAssignees, setPreviousAssignees] = useState([])
+  
   useEffect(() => {
     if (task) {
       setForm({
@@ -31,18 +36,63 @@ const TaskModal = ({
         assigned_to: task.assigned_to || [],
         assigned_to_names: task.assigned_to_names || []
       })
+      setPreviousAssignees(task.assigned_to || [])
     } else {
       setForm(prev => ({
         ...prev,
-        type: activeTab === 'team' ? 'team' : 'personal'
+        type: activeTab === 'team' ? 'team' : 'personal',
+        assigned_to: [],
+        assigned_to_names: []
       }))
+      setPreviousAssignees([])
     }
   }, [task, activeTab, isOpen])
   
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => { 
     e.preventDefault()
     if (!form.title.trim()) return
-    onSave(form)
+    
+    // Chamar onSave e aguardar o resultado
+    const savedTask = await onSave(form)
+    
+    // Só notificar se a tarefa foi salva com sucesso e tem ID
+    if (savedTask && savedTask.id) {
+      const isEditing = !!task
+      
+      if (isEditing) {
+        // Na edição, notificar apenas os NOVOS atribuídos
+        const newAssignees = form.assigned_to.filter(id => !previousAssignees.includes(id))
+        
+        for (const userId of newAssignees) {
+          await notificationService.createNotification({
+            userId: userId,
+            title: '📋 Tarefa Atribuída a Você',
+            message: `Você foi adicionado à tarefa: ${form.title}`,
+            type: 'info',
+            link: `/tasks/${savedTask.id}`,
+            entityType: 'task',
+            entityId: savedTask.id
+          })
+        }
+      } else {
+        // Na criação, notificar todos os atribuídos
+        if (form.assigned_to && form.assigned_to.length > 0) {
+          for (const userId of form.assigned_to) {
+            await notificationService.createNotification({
+              userId: userId,
+              title: '📋 Nova Tarefa Atribuída',
+              message: `Você recebeu uma nova tarefa: ${form.title}`,
+              type: 'info',
+              link: `/tasks/${savedTask.id}`,
+              entityType: 'task',
+              entityId: savedTask.id
+            })
+          }
+        }
+      }
+    }
+    
+    onClose()
   }
   
   const isEditing = !!task

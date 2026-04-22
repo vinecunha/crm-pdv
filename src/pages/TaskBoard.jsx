@@ -1,3 +1,4 @@
+// src/pages/TaskBoard.jsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useAuth } from '@contexts/AuthContext'
 import { supabase } from '@lib/supabase'
@@ -40,16 +41,14 @@ const TaskBoard = () => {
   const [filterPriority, setFilterPriority] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
 
-  // ✅ Função para mostrar feedback
+  // Função para mostrar feedback
   const showFeedback = (type, message, description = null) => {
     setFeedback({ id: Date.now(), type, message, description })
-    // Auto-hide após 5 segundos para success/info, mantém error/warning
     if (type === 'success' || type === 'info') {
       setTimeout(() => setFeedback(null), 5000)
     }
   }
 
-  // ✅ Função para esconder feedback
   const hideFeedback = () => setFeedback(null)
 
   const { data: allTasks = [], isLoading, refetch } = useTasksQuery({
@@ -58,7 +57,6 @@ const TaskBoard = () => {
     limit: 100
   })
 
-  // ✅ Memoizar o fetchTasks
   const fetchTasks = useCallback(async () => {
     if (!profile?.id) return
     
@@ -107,16 +105,13 @@ const TaskBoard = () => {
     return result
   }, [allTasks, activeTab, filterPriority, searchTerm, profile?.id])
 
-  // ✅ useEffect com dependências corretas
   useEffect(() => {
     fetchTasks()
-    
-    // Polling a cada 30 segundos
     const interval = setInterval(fetchTasks, 30000)
     return () => clearInterval(interval)
   }, [fetchTasks])
 
-  // ✅ Criar tarefa
+  // ============= CRIAÇÃO DE TAREFA =============
   const handleCreateTask = async (formData) => {
     setIsSubmitting(true)
     
@@ -142,15 +137,28 @@ const TaskBoard = () => {
       setShowTaskModal(false)
       setEditingTask(null)
       fetchTasks()
+      
+      // ✅ Retornar a tarefa criada para o TaskModal
+      return {
+        id: data.task_id,
+        title: formData.title,
+        description: formData.description,
+        priority: formData.priority,
+        assigned_to: formData.assigned_to || [],
+        assigned_to_names: formData.assigned_to_names || [],
+        due_date: formData.due_date,
+        category: formData.category || 'geral'
+      }
     } catch (error) {
       console.error('Erro ao criar tarefa:', error)
       showFeedback('error', 'Erro ao criar tarefa', error.message)
+      throw error
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  // ✅ Atualizar tarefa
+  // ============= ATUALIZAÇÃO DE TAREFA =============
   const handleUpdateTask = async (taskId, updates) => {
     try {
       const { data, error } = await supabase.rpc('update_task', {
@@ -179,17 +187,52 @@ const TaskBoard = () => {
     }
   }
 
+  // ============= SALVAR EDIÇÃO =============
+  const handleSaveEdit = async (formData) => {
+    setIsSubmitting(true)
+    
+    try {
+      const success = await handleUpdateTask(editingTask.id, formData)
+      
+      if (!success) {
+        throw new Error('Erro ao atualizar tarefa')
+      }
+      
+      showFeedback('success', '✅ Tarefa atualizada com sucesso!')
+      setShowTaskModal(false)
+      setEditingTask(null)
+      
+      // ✅ Retornar a tarefa atualizada para o TaskModal
+      return {
+        id: editingTask.id,
+        title: formData.title,
+        description: formData.description,
+        priority: formData.priority,
+        assigned_to: formData.assigned_to || [],
+        assigned_to_names: formData.assigned_to_names || [],
+        due_date: formData.due_date
+      }
+    } catch (error) {
+      console.error('Erro ao salvar edição:', error)
+      showFeedback('error', 'Erro ao atualizar tarefa', error.message)
+      throw error
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // ============= AÇÕES DAS TAREFAS =============
   const handleShowHistory = (task) => {
     setHistoryTask(task)
     setShowHistoryModal(true)
   }
 
-  // ✅ Completar/Descompletar tarefa
   const handleCompleteTask = async (task) => {
     const newStatus = task.status === 'completed' ? 'pending' : 'completed'
     const success = await handleUpdateTask(task.id, {
+      ...task,
       status: newStatus,
-      completed_at: newStatus === 'completed' ? new Date() : null,
+      completed_at: newStatus === 'completed' ? new Date().toISOString() : null,
       completed_by: newStatus === 'completed' ? profile?.id : null
     })
     
@@ -201,18 +244,17 @@ const TaskBoard = () => {
     }
   }
 
-  // ✅ Pegar/Assumir tarefa
   const handleClaimTask = async (task) => {
     const currentAssigned = task.assigned_to || []
     const currentNames = task.assigned_to_names || []
     
-    // Verificar se já está atribuída ao usuário
     if (currentAssigned.includes(profile?.id)) {
       showFeedback('info', 'Você já é responsável por esta tarefa')
       return
     }
     
     const success = await handleUpdateTask(task.id, {
+      ...task,
       assigned_to: [...currentAssigned, profile?.id],
       assigned_to_names: [...currentNames, profile?.full_name || profile?.email]
     })
@@ -222,7 +264,6 @@ const TaskBoard = () => {
     }
   }
 
-  // ✅ Abrir modal de confirmação para deletar
   const handleDeleteClick = (task) => {
     setConfirmModal({
       isOpen: true,
@@ -231,7 +272,6 @@ const TaskBoard = () => {
     })
   }
 
-  // ✅ Confirmar exclusão
   const handleConfirmDelete = async () => {
     const { taskId, taskTitle } = confirmModal
     
@@ -256,29 +296,16 @@ const TaskBoard = () => {
     }
   }
 
-  // ✅ Cancelar exclusão
   const handleCancelDelete = () => {
     setConfirmModal({ isOpen: false, taskId: null, taskTitle: '' })
   }
 
-  // ✅ Abrir modal para editar
   const handleEditClick = (task) => {
     setEditingTask(task)
     setShowTaskModal(true)
   }
 
-  // ✅ Salvar edição
-  const handleSaveEdit = async (formData) => {
-    const success = await handleUpdateTask(editingTask.id, formData)
-    
-    if (success) {
-      showFeedback('success', '✅ Tarefa atualizada com sucesso!')
-      setShowTaskModal(false)
-      setEditingTask(null)
-    }
-  }
-
-  // ✅ Configuração de filtros memoizada
+  // ============= FILTROS E TABS =============
   const filterConfig = useMemo(() => [
     {
       key: 'status',
@@ -307,7 +334,6 @@ const TaskBoard = () => {
     }
   ], [])
 
-  // ✅ Handler para mudança de filtros
   const handleFilterChange = useCallback((newFilters) => {
     if (newFilters.status !== undefined) setFilterStatus(newFilters.status)
     if (newFilters.priority !== undefined) setFilterPriority(newFilters.priority)
@@ -340,10 +366,10 @@ const TaskBoard = () => {
     }
   ]
 
+  // ============= RENDER =============
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
-        {/* Feedback Message */}
         {feedback && (
           <div className="mb-4">
             <FeedbackMessage
@@ -399,7 +425,7 @@ const TaskBoard = () => {
         <div className="mt-4 sm:mt-6">
           {loading ? (
             <DataLoadingSkeleton type="cards" rows={3} cardsPerRow={1} />
-          ) : tasks.length === 0 ? (
+          ) : filteredTasks.length === 0 ? (
             <DataEmptyState
               title="Nenhuma tarefa encontrada"
               description={
@@ -427,7 +453,7 @@ const TaskBoard = () => {
             />
           ) : (
             <div className="space-y-2 sm:space-y-3">
-              {tasks.map(task => (
+              {filteredTasks.map(task => (
                 <TaskCard
                   key={task.id}
                   task={task}
@@ -445,7 +471,6 @@ const TaskBoard = () => {
         </div>
       </div>
       
-      {/* Modal de Criação/Edição */}
       <TaskModal
         isOpen={showTaskModal}
         onClose={() => {
@@ -467,7 +492,6 @@ const TaskBoard = () => {
         task={historyTask}
       />
       
-      {/* Modal de Confirmação para Exclusão */}
       <ConfirmModal
         isOpen={confirmModal.isOpen}
         onClose={handleCancelDelete}

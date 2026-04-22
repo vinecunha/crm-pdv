@@ -1,70 +1,41 @@
-import React, { useState, useEffect } from 'react'
+// src/pages/NotFound.jsx
+import React from 'react'
 import { Link } from 'react-router-dom'
-import { Home, ArrowLeft, Search, AlertCircle, Building } from '@lib/icons'
-import { supabase } from '@lib/supabase'
+import { Home, ArrowLeft, Search, AlertCircle } from '@lib/icons'
+
+// Configurações estáticas da empresa (fallback)
+const COMPANY_CONFIG = {
+  company_name: 'Brasalino Pollo',
+  company_logo_url: '/brasalino-pollo.png',
+  primary_color: '#FF131E',
+  secondary_color: '#FFE526',
+  email: 'contato@brasalinopollo.com.br',
+  phone: '(21) 97982-7723',
+  address: 'Rua Geni Saraiva, 171',
+  city: 'Nova Iguaçu',
+  state: 'RJ',
+  zip_code: '26032-661',
+  domain: 'www.brasalinopollo.com.br'
+}
 
 const NotFound = () => {
-  const [companySettings, setCompanySettings] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetchCompanySettings()
-  }, [])
-
-  const fetchCompanySettings = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('company_settings')
-        .select('*')
-        .limit(1)
-        .single()
-
-      if (error) {
-        console.warn('Configurações da empresa não encontradas:', error)
-        setCompanySettings({
-          company_name: 'Sistema de Gestão',
-          primary_color: '#2563eb',
-          secondary_color: '#7c3aed',
-          company_logo_url: null
-        })
-      } else {
-        setCompanySettings(data)
-      }
-    } catch (error) {
-      console.error('Erro ao buscar configurações:', error)
-      setCompanySettings({
-        company_name: 'Sistema de Gestão',
-        primary_color: '#2563eb',
-        secondary_color: '#7c3aed',
-        company_logo_url: null
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const primaryColor = companySettings?.primary_color || '#2563eb'
-  const secondaryColor = companySettings?.secondary_color || '#7c3aed'
-  const companyName = companySettings?.company_name || 'Sistema de Gestão'
-  const logoUrl = companySettings?.company_logo_url
+  const { 
+    company_name, 
+    company_logo_url, 
+    primary_color, 
+    secondary_color,
+    email,
+    phone
+  } = COMPANY_CONFIG
 
   const gradientStyle = {
-    background: `linear-gradient(135deg, ${primaryColor}10, ${secondaryColor}10)`
+    background: `linear-gradient(135deg, ${primary_color}15, ${secondary_color}15)`
   }
 
   const iconColors = {
-    blue: { backgroundColor: `${primaryColor}20`, color: primaryColor },
+    primary: { backgroundColor: `${primary_color}20`, color: primary_color },
     green: { backgroundColor: '#10b98120', color: '#10b981' },
-    purple: { backgroundColor: `${secondaryColor}20`, color: secondaryColor }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2" 
-             style={{ borderColor: primaryColor }} />
-      </div>
-    )
+    secondary: { backgroundColor: `${secondary_color}20`, color: secondary_color }
   }
 
   return (
@@ -72,28 +43,27 @@ const NotFound = () => {
       <div className="max-w-lg w-full">
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl overflow-hidden">
           
+          {/* Header com gradiente da marca */}
           <div 
             className="px-6 py-12 text-center"
             style={gradientStyle}
           >
-            {logoUrl ? (
+            {/* Logo */}
+            {company_logo_url && (
               <img 
-                src={logoUrl} 
-                alt={companyName}
+                src={company_logo_url} 
+                alt={company_name}
                 className="h-16 mx-auto mb-4 object-contain"
-                onError={(e) => {
-                  e.target.style.display = 'none'
-                }}
+                onError={(e) => e.target.style.display = 'none'}
               />
-            ) : (
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-white dark:bg-gray-800 rounded-full shadow-lg mb-4"
-                   style={{ backgroundColor: `${primaryColor}20` }}>
-                <Building size={32} style={{ color: primaryColor }} />
-              </div>
             )}
             
-            <div className="inline-flex items-center justify-center w-24 h-24 bg-white dark:bg-gray-800 rounded-full shadow-lg mb-4">
-              <span className="text-6xl font-bold" style={{ color: primaryColor }}>404</span>
+            {/* 404 */}
+            <div 
+              className="inline-flex items-center justify-center w-24 h-24 bg-white dark:bg-gray-800 rounded-full shadow-lg mb-4"
+              style={{ border: `3px solid ${primary_color}` }}
+            >
+              <span className="text-6xl font-bold" style={{ color: primary_color }}>404</span>
             </div>
             
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -105,6 +75,7 @@ const NotFound = () => {
             </p>
           </div>
 
+          {/* Ações */}
           <div className="p-6">
             <div className="space-y-3 mb-6">
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -117,9 +88,9 @@ const NotFound = () => {
               >
                 <div 
                   className="p-2 rounded-lg transition-colors group-hover:scale-110"
-                  style={iconColors.blue}
+                  style={iconColors.primary}
                 >
-                  <Home size={18} style={{ color: primaryColor }} />
+                  <Home size={18} style={{ color: primary_color }} />
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-gray-900 dark:text-white">Ir para o Dashboard</p>
@@ -149,7 +120,7 @@ const NotFound = () => {
               >
                 <div 
                   className="p-2 rounded-lg transition-colors group-hover:scale-110"
-                  style={iconColors.purple}
+                  style={iconColors.secondary}
                 >
                   <Search size={18} />
                 </div>
@@ -160,22 +131,20 @@ const NotFound = () => {
               </Link>
             </div>
 
-            {companySettings && (companySettings.email || companySettings.phone) && (
+            {/* Contato */}
+            {(email || phone) && (
               <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-4 mb-4">
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Entre em contato:
                 </p>
                 <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                  {companySettings.email && (
-                    <p>📧 {companySettings.email}</p>
-                  )}
-                  {companySettings.phone && (
-                    <p>📞 {companySettings.phone}</p>
-                  )}
+                  {email && <p>📧 {email}</p>}
+                  {phone && <p>📞 {phone}</p>}
                 </div>
               </div>
             )}
 
+            {/* Ajuda */}
             <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <AlertCircle size={18} className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
@@ -192,18 +161,20 @@ const NotFound = () => {
             </div>
           </div>
 
-          <div className="px-6 py-4 bg-gray-50 dark:bg-black/50 border-t border-gray-200 dark:border-gray-700 text-center">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {companyName}
+          {/* Footer */}
+          <div 
+            className="px-6 py-4 text-center border-t"
+            style={{ 
+              backgroundColor: `${primary_color}08`,
+              borderColor: `${primary_color}20`
+            }}
+          >
+            <p className="text-sm font-medium" style={{ color: primary_color }}>
+              {company_name}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               © {new Date().getFullYear()} - Todos os direitos reservados
             </p>
-            {companySettings?.cnpj && (
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                CNPJ: {companySettings.cnpj}
-              </p>
-            )}
           </div>
         </div>
       </div>

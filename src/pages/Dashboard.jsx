@@ -14,7 +14,8 @@ import {
   ClipboardList,
   BarChart3,
   ListChecks,
-  DollarSign
+  DollarSign,
+  Target
 } from '@lib/icons'
 import { useDashboard } from '@hooks/useDashboard'
 import SectionErrorBoundary from '@components/SectionErrorBoundary'
@@ -186,15 +187,27 @@ const Dashboard = () => {
         {/* SEÇÃO 2: DESEMPENHO INDIVIDUAL (APENAS OPERADORES) */}
         {/* ============================================= */}
         {profile?.role === 'operador' && (
-          <section className="mb-6">
-            <SectionErrorBoundary title="Erro no card de desempenho">
+        <section className="mb-6">
+          <SectionErrorBoundary title="Erro nas metas pessoais">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <UserPerformanceCard 
                 sales={rawData?.sales || []} 
                 profile={profile} 
               />
-            </SectionErrorBoundary>
-          </section>
-        )}
+              {/* Widget de metas diárias/semanais */}
+              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Target size={18} className="text-green-500" />
+                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                    Metas do Período
+                  </h3>
+                </div>
+                {/* Conteúdo das metas */}
+              </div>
+            </div>
+          </SectionErrorBoundary>
+        </section>
+      )}
 
         {/* ============================================= */}
         {/* SEÇÃO: GRID PRINCIPAL (GRÁFICO + WIDGETS) */}

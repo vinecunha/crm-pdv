@@ -22,6 +22,7 @@ import CartSummary from '@components/sales/pdv/CartSummary'
 import CompactCartView from '@components/sales/pdv/CompactCartView'
 import SyncStatus from '@components/sales/pdv/SyncStatus'
 import ShortcutFeedback from '@components/ui/ShortcutFeedback'
+import ReceiptModal from '@/components/sales/common/ReceiptModal'
 
 import { useSystemLogs } from '@hooks/useSystemLogs'
 import usePDVShortcuts from '@hooks/usePDVShortcuts'
@@ -56,6 +57,9 @@ const Sales = () => {
   const searchInputRef = useRef(null)
   const processingRef = useRef(false)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+  const [lastSale, setLastSale] = useState(null)
+  const [lastSalePaymentMethod, setLastSalePaymentMethod] = useState(null)
+  const [completedSaleData, setCompletedSaleData] = useState(null)
 
   // ============= HOOKS PERSONALIZADOS =============
   const {
@@ -127,6 +131,7 @@ const Sales = () => {
     setShowQuickCustomerModal,
     setShowCouponModal,   
     openCustomerModal,
+    openCouponModal,
     openPaymentModal,          
     closeCustomerModal,
     closeCouponModal,
@@ -134,7 +139,11 @@ const Sales = () => {
     openShortcutsHelp,
     closeShortcutsHelp,
     openClearCartConfirm,
-    closeClearCartConfirm
+    closeClearCartConfirm,
+    showReceiptModal,
+    setShowReceiptModal,
+    openReceiptModal,
+    closeReceiptModal,
   } = usePDVModals()
 
   // ============= QUERIES =============
@@ -175,12 +184,25 @@ const Sales = () => {
       })
       
       queryClient.invalidateQueries({ queryKey: ['products-active'] })
-      showFeedback('success', `Venda finalizada! Nº: ${sale.sale_number}`)
+      showFeedback('success', `Venda #${sale.sale_number} finalizada!`)
       
+      // ✅ Salvar dados da venda ANTES de limpar
+      setCompletedSaleData({
+        sale: sale,
+        cart: [...cart], // Cópia do carrinho
+        customer: customer ? { ...customer } : null,
+        paymentMethod: paymentMethod,
+        discount: discount
+      })
+      
+      // Limpar carrinho e cliente
       clearCart()
       clearCustomer()
       removeCoupon()
       closePaymentModal()
+      
+      // Abrir modal de recibo
+      openReceiptModal()
     },
     onError: async (error) => {
       logger.error('Erro ao finalizar venda:', error)
@@ -229,12 +251,31 @@ const Sales = () => {
         offline: true, total_amount: subtotal, discount, final_amount: total 
       })
       
+      // ✅ Salvar dados para o recibo
+      const offlineSale = {
+        sale_number: `OFF-${Date.now()}`,
+        total_amount: subtotal,
+        discount_amount: discount,
+        final_amount: total
+      }
+      
+      setCompletedSaleData({
+        sale: offlineSale,
+        cart: [...cart],
+        customer: customer ? { ...customer } : null,
+        paymentMethod: paymentMethod,
+        discount: discount
+      })
+      
       showFeedback('success', `✅ Venda salva OFFLINE!`)
       
       clearCart()
       clearCustomer()
       removeCoupon()
       closePaymentModal()
+      
+      // Abrir recibo
+      openReceiptModal()
       
     } catch (error) {
       logger.error('❌ Erro ao salvar offline:', error)
@@ -632,7 +673,7 @@ const Sales = () => {
                   variant="success" 
                   size="lg" 
                   fullWidth 
-                  onClick={() => setShowCouponModal(true)}
+                  onClick={openPaymentModal}
                   disabled={cartCount === 0 || isMutating} 
                   icon={CreditCard} 
                 >
@@ -752,6 +793,20 @@ const Sales = () => {
           isOpen={showShortcutsHelp} 
           onClose={closeShortcutsHelp} 
           shortcuts={shortcuts} 
+        />
+
+        <ReceiptModal
+          isOpen={showReceiptModal}
+          onClose={() => {
+            closeReceiptModal()
+            setCompletedSaleData(null)
+          }}
+          sale={completedSaleData?.sale}
+          customer={completedSaleData?.customer}
+          cart={completedSaleData?.cart || []}
+          paymentMethod={completedSaleData?.paymentMethod}
+          discount={completedSaleData?.discount || 0}
+          profile={profile}
         />
       </div>
     </div>

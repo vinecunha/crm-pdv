@@ -164,4 +164,5 @@ export {
   Play,
   GitBranch,
   ListChecks,
+  Receipt,
 } from 'lucide-react'

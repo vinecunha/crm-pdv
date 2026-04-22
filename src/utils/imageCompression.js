@@ -77,13 +77,23 @@ export const compressLogo = async (file) => {
  * Verifica se o arquivo é uma imagem
  */
 export const isImageFile = (file) => {
-  return file && file.type.startsWith('image/')
+  // Verifica se é realmente um arquivo
+  if (!file || !(file instanceof File) && !(file instanceof Blob)) {
+    return false
+  }
+  
+  // Verifica se tem type e é imagem
+  return typeof file.type === 'string' && file.type.startsWith('image/')
 }
 
 /**
  * Valida tamanho máximo antes da compressão
  */
 export const validateImageSize = (file, maxSizeMB = 10) => {
+  if (!file || !file.size) {
+    throw new Error('Arquivo inválido')
+  }
+  
   const maxSizeBytes = maxSizeMB * 1024 * 1024
   if (file.size > maxSizeBytes) {
     throw new Error(`Imagem muito grande. Máximo: ${maxSizeMB}MB`)

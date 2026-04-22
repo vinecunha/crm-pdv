@@ -285,7 +285,76 @@ const Profile = () => {
   }
 
   if (isLoading) {
-    return <DataLoadingSkeleton type="cards" rows={3} />
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-black">
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+          <PageHeader
+            title="Meu Perfil"
+            description="Gerencie suas informações pessoais e configurações de conta"
+            icon={User}
+          />
+          
+          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
+            {/* Sidebar Skeleton */}
+            <div className="lg:w-72 flex-shrink-0">
+              <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 animate-pulse">
+                {/* Avatar Skeleton */}
+                <div className="flex flex-col items-center">
+                  <div className="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-full mb-3" />
+                  <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-2" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-3" />
+                  <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-full w-20" />
+                </div>
+                
+                {/* Stats Skeleton */}
+                <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                  <div className="text-center">
+                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-8 mx-auto mb-1" />
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-12 mx-auto" />
+                  </div>
+                  <div className="text-center">
+                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-12 mx-auto mb-1" />
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16 mx-auto" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Tabs Skeleton */}
+              <div className="mt-3 sm:mt-4 bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-2 animate-pulse">
+                <div className="space-y-1">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Main Content Skeleton */}
+            <div className="flex-1">
+              <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 animate-pulse">
+                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-6" />
+                
+                <div className="space-y-4">
+                  {/* Form fields skeleton */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <div key={i}>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20 mb-2" />
+                        <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20 mb-2" />
+                    <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

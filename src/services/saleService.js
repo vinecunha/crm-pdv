@@ -3,13 +3,41 @@ import { sanitizeObject } from '@utils/sanitize'
 import { formatCurrency } from '@utils/formatters'
 import { logger } from '@utils/logger'
 import { notifyNewSale } from './notificationService'
+import * as goalService from '@services/goalService'
 
-// Detectar se está rodando em Node.js (testes)
-const isNode = typeof window === 'undefined'
-const USE_TEST_RPC = isNode || import.meta.env.VITE_USE_TEST_RPC === 'true'
-const RPC_NAME = USE_TEST_RPC ? 'create_sale_test' : 'create_sale'
+// 🔥 CORREÇÃO: Usar APENAS flag explícita - sem detecção automática de ambiente
+const USE_TEST_RPC = import.meta.env.VITE_USE_TEST_RPC === 'true'
 
-console.log('🔥 saleService inicializado:', { isNode, USE_TEST_RPC, RPC_NAME })
+// 🛡️ Validação de segurança para produção
+if (import.meta.env.PROD && USE_TEST_RPC) {
+  console.error('🚨 ERRO FATAL: VITE_USE_TEST_RPC ativado em produção!')
+  console.error('⚠️ Isso pode causar uso incorreto da RPC de teste em ambiente real')
+  // Opcional: throw new Error('Configuração inválida para ambiente de produção')
+}
+
+// 📝 Função segura para obter o nome da RPC (decisão em runtime)
+const getRPCName = () => {
+  // Em produção, SEMPRE usa a RPC de produção
+  if (import.meta.env.PROD) {
+    return 'create_sale'
+  }
+  
+  // Em desenvolvimento, respeita a flag explícita
+  if (import.meta.env.DEV && USE_TEST_RPC) {
+    return 'create_sale_test'
+  }
+  
+  // Padrão: RPC de produção
+  return 'create_sale'
+}
+
+console.log('🔥 saleService inicializado:', { 
+  mode: import.meta.env.MODE,
+  isProd: import.meta.env.PROD,
+  isDev: import.meta.env.DEV,
+  USE_TEST_RPC, 
+  currentRPC: getRPCName()
+})
 
 /**
  * Buscar produtos ativos com estoque
@@ -38,37 +66,72 @@ export const fetchProducts = async () => {
  * Buscar cupons disponíveis para o cliente
  */
 export const fetchAvailableCoupons = async (customerId) => {
-  if (!customerId) return []
-  
-  const today = new Date().toISOString()
-  
-  const [globalResult, allowedResult] = await Promise.all([
-    supabase
-      .from('coupons')
-      .select('*')
-      .eq('is_active', true)
-      .eq('is_global', true)
-      .lte('valid_from', today)
-      .gte('valid_to', today),
-    supabase
-      .from('coupon_allowed_customers')
-      .select('coupon_id')
-      .eq('customer_id', customerId)
-  ])
-  
-  let restricted = []
-  if (allowedResult.data?.length) {
-    const { data } = await supabase
-      .from('coupons')
-      .select('*')
-      .eq('is_active', true)
-      .in('id', allowedResult.data.map(a => a.coupon_id))
-      .lte('valid_from', today)
-      .gte('valid_to', today)
-    restricted = data || []
+  if (!customerId) {
+    console.log('❌ fetchAvailableCoupons: customerId não fornecido')
+    return []
   }
   
-  return [...(globalResult.data || []), ...restricted]
+  const today = new Date().toISOString()
+  console.log('🔍 Buscando cupons disponíveis para:', { customerId, today })
+  
+  try {
+    const [globalResult, allowedResult] = await Promise.all([
+      // Cupons globais válidos
+      supabase
+        .from('coupons')
+        .select('*')
+        .eq('is_active', true)
+        .eq('is_global', true)
+        .lte('valid_from', today)
+        .or(`valid_to.is.null,valid_to.gte.${today}`),
+        
+      // IDs dos cupons específicos do cliente
+      supabase
+        .from('coupon_allowed_customers')
+        .select('coupon_id')
+        .eq('customer_id', customerId)
+    ])
+    
+    if (globalResult.error) {
+      console.error('❌ Erro ao buscar cupons globais:', globalResult.error)
+    }
+    
+    if (allowedResult.error) {
+      console.error('❌ Erro ao buscar permissões de cupons:', allowedResult.error)
+    }
+    
+    let restricted = []
+    if (allowedResult.data?.length) {
+      const couponIds = allowedResult.data.map(a => a.coupon_id)
+      
+      const { data, error } = await supabase
+        .from('coupons')
+        .select('*')
+        .eq('is_active', true)
+        .in('id', couponIds)
+        .lte('valid_from', today)
+        .or(`valid_to.is.null,valid_to.gte.${today}`)
+      
+      if (error) {
+        console.error('❌ Erro ao buscar cupons específicos:', error)
+      } else {
+        restricted = data || []
+      }
+    }
+    
+    const allCoupons = [...(globalResult.data || []), ...restricted]
+    
+    console.log(`✅ ${allCoupons.length} cupons encontrados:`, {
+      globais: globalResult.data?.length || 0,
+      especificos: restricted.length
+    })
+    
+    return allCoupons
+    
+  } catch (error) {
+    console.error('❌ Erro inesperado em fetchAvailableCoupons:', error)
+    return []
+  }
 }
 
 /**
@@ -163,10 +226,14 @@ export const validateCoupon = async (code, customerId, cartSubtotal) => {
  */
 export const createSale = async (cart, customer, coupon, discount, paymentMethod, profile) => {
   try {
+    // 🎯 Decisão da RPC no momento da chamada
+    const rpcName = getRPCName()
+    
     console.log('\n=== SALESERVICE - DADOS RECEBIDOS ===')
     console.log('customer?.id:', customer?.id)
     console.log('profile?.id:', profile?.id)
-    console.log('RPC_NAME:', RPC_NAME)
+    console.log('RPC_NAME:', rpcName)
+    console.log('Ambiente:', import.meta.env.MODE)
     
     const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
     const total = subtotal - discount
@@ -190,7 +257,7 @@ export const createSale = async (cart, customer, coupon, discount, paymentMethod
     console.log('rpcParams:', JSON.stringify(rpcParams, null, 2))
     console.log('=====================================\n')
     
-    const { data, error } = await supabase.rpc(RPC_NAME, rpcParams)
+    const { data, error } = await supabase.rpc(rpcName, rpcParams)
     
     console.log('RPC data:', data)
     console.log('RPC error:', error)
@@ -212,7 +279,11 @@ export const createSale = async (cart, customer, coupon, discount, paymentMethod
     }
     
     logger.log('✅ Venda criada com sucesso:', data)
-    
+  
+    if (data && profile?.id) {
+      await goalService.updateGoalProgress(profile.id, data.final_amount)
+    }
+
     // Extrair dados da venda
     const saleData = data
     

@@ -1,5 +1,6 @@
 // src/services/goalService.js
 import { supabase } from '@lib/supabase'
+import * as notificationService from '@services/notificationService'
 
 /**
  * Buscar metas de um usuário
@@ -246,4 +247,137 @@ export const areGoalsDefault = (goals) => {
 export const getMissingGoalTypes = (goals) => {
   if (!goals || !goals._missingTypes) return []
   return goals._missingTypes
+}
+
+/**
+ * Verificar progresso das metas e notificar se atingiu
+ */
+export const checkAndNotifyGoalAchievement = async (userId) => {
+  try {
+    // Buscar metas do usuário
+    const goals = await fetchUserGoals(userId)
+    
+    // Se são metas padrão, não verificar
+    if (goals._allDefault) return
+    
+    // Buscar vendas para calcular progresso
+    const now = new Date()
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const startOfYear = new Date(now.getFullYear(), 0, 1)
+    
+    // Buscar vendas concluídas
+    const { data: sales, error } = await supabase
+      .from('sales')
+      .select('final_amount, created_at')
+      .eq('created_by', userId)
+      .eq('status', 'completed')
+      .gte('created_at', startOfYear.toISOString())
+    
+    if (error) throw error
+    
+    if (!sales || sales.length === 0) return
+    
+    // Calcular totais por período
+    const totals = {
+      daily: 0,
+      monthly: 0,
+      yearly: 0
+    }
+    
+    sales.forEach(sale => {
+      const saleDate = new Date(sale.created_at)
+      const amount = sale.final_amount || 0
+      
+      // Anual (todas as vendas)
+      totals.yearly += amount
+      
+      // Mensal
+      if (saleDate >= startOfMonth) {
+        totals.monthly += amount
+      }
+      
+      // Diário
+      if (saleDate >= startOfDay) {
+        totals.daily += amount
+      }
+    })
+    
+    // Verificar cada tipo de meta
+    const goalTypes = ['daily', 'monthly', 'yearly']
+    
+    for (const type of goalTypes) {
+      const goal = goals[type]
+      
+      // Pular se é meta padrão ou já foi notificada
+      if (!goal || goal.isDefault || goal.notified) continue
+      
+      const currentAmount = totals[type]
+      const targetAmount = goal.target_amount
+      
+      // Verificar se atingiu a meta
+      if (currentAmount >= targetAmount) {
+        // Notificar usuário
+        await notificationService.notifyGoalAchieved(
+          userId,
+          type,
+          currentAmount,
+          targetAmount
+        )
+        
+        // Marcar como notificado para não repetir
+        await supabase
+          .from('goals')
+          .update({ 
+            notified: true,
+            achieved_at: new Date().toISOString(),
+            achieved_amount: currentAmount
+          })
+          .eq('user_id', userId)
+          .eq('goal_type', type)
+        
+        console.log(`✅ Meta ${type} atingida para usuário ${userId}: ${currentAmount}/${targetAmount}`)
+      }
+    }
+    
+  } catch (error) {
+    console.error('❌ Erro ao verificar metas:', error)
+  }
+}
+
+/**
+ * Resetar flag de notificação para novo período
+ */
+export const resetGoalNotification = async (userId, goalType) => {
+  try {
+    await supabase
+      .from('goals')
+      .update({ 
+        notified: false,
+        achieved_at: null,
+        achieved_amount: null
+      })
+      .eq('user_id', userId)
+      .eq('goal_type', goalType)
+    
+    return true
+  } catch (error) {
+    console.error('❌ Erro ao resetar notificação:', error)
+    return false
+  }
+}
+
+/**
+ * Atualizar progresso da meta (chamado após cada venda)
+ */
+export const updateGoalProgress = async (userId, saleAmount) => {
+  try {
+    // Verificar se atingiu alguma meta com esta venda
+    await checkAndNotifyGoalAchievement(userId)
+    
+    return true
+  } catch (error) {
+    console.error('❌ Erro ao atualizar progresso da meta:', error)
+    return false
+  }
 }

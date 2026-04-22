@@ -8,6 +8,7 @@ export const usePDVModals = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false)
   const [showClearCartConfirm, setShowClearCartConfirm] = useState(false)
+  const [showReceiptModal, setShowReceiptModal] = useState(false)
 
   const openCustomerModal = useCallback(() => setShowCustomerModal(true), [])
   const closeCustomerModal = useCallback(() => setShowCustomerModal(false), [])
@@ -27,6 +28,9 @@ export const usePDVModals = () => {
   const openClearCartConfirm = useCallback(() => setShowClearCartConfirm(true), [])
   const closeClearCartConfirm = useCallback(() => setShowClearCartConfirm(false), [])
 
+  const openReceiptModal = useCallback(() => setShowReceiptModal(true), [])
+  const closeReceiptModal = useCallback(() => setShowReceiptModal(false), [])
+
   const closeAllModals = useCallback(() => {
     setShowCustomerModal(false)
     setShowQuickCustomerModal(false)
@@ -34,6 +38,7 @@ export const usePDVModals = () => {
     setShowPaymentModal(false)
     setShowShortcutsHelp(false)
     setShowClearCartConfirm(false)
+    setShowReceiptModal(false) 
   }, [])
 
   const isAnyModalOpen = 
@@ -53,25 +58,33 @@ export const usePDVModals = () => {
     showShortcutsHelp,
     showClearCartConfirm,
     isAnyModalOpen,
+    showReceiptModal,
+    setShowReceiptModal,
     
-    // Setters (para casos especiais)
+    // Setters (ADICIONADOS)
+    setShowCustomerModal,
     setShowQuickCustomerModal,
+    setShowCouponModal,        
     setShowPaymentModal,
-
-    openCustomerModal: () => setShowCustomerModal(true),
-    closeCustomerModal: () => setShowCustomerModal(false),
-    closeCouponModal: () => setShowCouponModal(false),
-    closePaymentModal: () => setShowPaymentModal(false),
-    openShortcutsHelp: () => setShowShortcutsHelp(true),
-    closeShortcutsHelp: () => setShowShortcutsHelp(false),
-    openClearCartConfirm: () => setShowClearCartConfirm(true),
-    closeClearCartConfirm: () => setShowClearCartConfirm(false),
+    setShowShortcutsHelp,
+    setShowClearCartConfirm,
+    setShowReceiptModal,
     
     // Ações
+    openCustomerModal,
+    closeCustomerModal,
     openQuickCustomerModal,
     closeQuickCustomerModal,
     openCouponModal,
+    closeCouponModal,
     openPaymentModal,
-    closeAllModals
+    closePaymentModal,
+    openShortcutsHelp,
+    closeShortcutsHelp,
+    openClearCartConfirm,
+    closeClearCartConfirm,
+    closeAllModals,
+    openReceiptModal,
+    closeReceiptModal,
   }
 }

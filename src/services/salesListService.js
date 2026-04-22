@@ -66,13 +66,29 @@ export const fetchSales = async (searchTerm = '', filters = {}) => {
  * Buscar itens de uma venda
  */
 export const fetchSaleItems = async (saleId) => {
+  if (!saleId) {
+    console.warn('⚠️ fetchSaleItems: saleId não fornecido')
+    return []
+  }
+  
+  console.log('🔍 fetchSaleItems - buscando itens para saleId:', saleId, 'tipo:', typeof saleId)
+  
+  // 👇 IMPORTANTE: saleId pode estar vindo como string, mas o banco espera número
+  const numericSaleId = Number(saleId)
+  
   const { data, error } = await supabase
     .from('sale_items')
     .select('*')
-    .eq('sale_id', saleId)
-    .order('created_at', { ascending: true })
+    .eq('sale_id', numericSaleId)  // 👈 Garantir que é número
   
-  if (error) throw error
+  console.log('📦 fetchSaleItems - resposta:', { data, error })
+  
+  if (error) {
+    console.error('❌ Erro fetchSaleItems:', error)
+    throw error
+  }
+  
+  console.log('✅ fetchSaleItems - encontrados', data?.length || 0, 'itens')
   return data || []
 }
 

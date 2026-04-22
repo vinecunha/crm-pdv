@@ -76,8 +76,17 @@ export const toISO = (date) => {
 
 // Validação simples de data
 export const isValidDate = (date) => {
+  // Rejeita explicitamente null, undefined e string vazia
+  if (date == null || date === '') return false
+  
+  // Se for número ou string numérica, também rejeita 0 (epoch) quando vier de null?
+  // Depende do caso de uso, mas pode considerar:
   const d = new Date(date)
-  return d instanceof Date && !isNaN(d)
+  
+  // Verifica se é uma data válida
+  if (!(d instanceof Date) || isNaN(d.getTime())) return false
+  
+  return true
 }
 
 // Formata data sem timezone (útil para inputs type="date")
