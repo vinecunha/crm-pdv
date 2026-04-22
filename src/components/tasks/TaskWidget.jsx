@@ -9,8 +9,8 @@ import {
   CheckCircle,
   Calendar,
   ChevronRight
-} from '../../lib/icons'
-import { formatDate, formatRelativeTime } from '../../utils/formatters'
+} from '@lib/icons'
+import { formatDate, formatRelativeTime } from '@utils/formatters'
 
 const TaskWidget = ({ 
   myTasks = [], 

@@ -12,9 +12,9 @@ import {
   DollarSign,
   MapPin,
   Layers
-} from '../../lib/icons'
+} from '@lib/icons'
 import Badge from '../Badge'
-import { formatCurrency } from '../../utils/formatters'
+import { formatCurrency } from '@utils/formatters'
 
 const ProductCard = ({ 
   product, 

@@ -2,7 +2,7 @@ import React from 'react'
 import DataTable from '../ui/DataTable'
 import DataCards from '../ui/DataCards'
 import BudgetCard from './BudgetCard'
-import useMediaQuery from '../../hooks/useMediaQuery'
+import useMediaQuery from '@hooks/useMediaQuery'
 
 const BudgetContent = ({ 
   budgets, 

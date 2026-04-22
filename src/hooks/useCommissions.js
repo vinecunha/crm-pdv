@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchSellerCommissions } from '../services/commissionService'
+import { fetchSellerCommissions } from '@services/commissionService'
 
 export const useCommissions = (userId, period = null) => {
   return useQuery({

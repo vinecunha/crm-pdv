@@ -1,105 +1,143 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useEffect, useRef, useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { 
-  Phone, 
-  Keyboard, 
-  ShoppingCart, 
-  User, 
-  Ticket, 
-  CreditCard, 
-  WifiOff, 
-  FileText,
-  Maximize,
-  Minimize,
-  RotateCcw
-} from '../lib/icons'
-import { useAuth } from '../contexts/AuthContext'
-import FeedbackMessage from '../components/ui/FeedbackMessage'
-import Modal from '../components/ui/Modal'
-import Button from '../components/ui/Button'
-import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
-import PageHeader from '../components/ui/PageHeader'
-import ConfirmModal from '../components/ui/ConfirmModal'
-import QuickCustomerForm from '../components/sales/pdv/QuickCustomerForm'
-import CouponSelector from '../components/sales/pdv/CouponSelector'
-import CheckoutModal from '../components/sales/pdv/CheckoutModal'
-import ShortcutsHelpModal from '../components/ui/ShortcutsHelpModal'
-import ProductGrid from '../components/sales/pdv/ProductGrid'
-import CartSummary from '../components/sales/pdv/CartSummary'
-import { logger } from '../utils/logger'
+  Phone, Keyboard, ShoppingCart, User, Ticket, 
+  CreditCard, WifiOff, FileText, Maximize, Minimize, RotateCcw 
+} from '@lib/icons'
+import { useAuth } from '@contexts/AuthContext'
+import { usePDVRealtime } from '@hooks/usePDVRealtime'
+import FeedbackMessage from '@components/ui/FeedbackMessage'
+import Modal from '@components/ui/Modal'
+import Button from '@components/ui/Button'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
+import PageHeader from '@components/ui/PageHeader'
+import ConfirmModal from '@components/ui/ConfirmModal'
+import QuickCustomerForm from '@components/sales/pdv/QuickCustomerForm'
+import CouponSelector from '@components/sales/pdv/CouponSelector'
+import CheckoutModal from '@components/sales/pdv/CheckoutModal'
+import ShortcutsHelpModal from '@components/ui/ShortcutsHelpModal'
+import ProductGrid from '@components/sales/pdv/ProductGrid'
+import CartSummary from '@components/sales/pdv/CartSummary'
+import CompactCartView from '@components/sales/pdv/CompactCartView'
+import SyncStatus from '@components/sales/pdv/SyncStatus'
+import ShortcutFeedback from '@components/ui/ShortcutFeedback'
 
-// Componentes extras
-import CompactCartView from '../components/sales/pdv/CompactCartView'
-import SyncStatus from '../components/sales/pdv/SyncStatus'
-import ShortcutFeedback from '../components/ui/ShortcutFeedback'
+import { useSystemLogs } from '@hooks/useSystemLogs'
+import usePDVShortcuts from '@hooks/usePDVShortcuts'
+import useKioskMode from '@hooks/useKioskMode'
+import { useNetworkStatus } from '@hooks/useNetworkStatus'
+import useMediaQuery from '@hooks/useMediaQuery'
 
-import useSystemLogs from '../hooks/useSystemLogs'
-import usePDVShortcuts from '../hooks/usePDVShortcuts'
-import useKioskMode from '../hooks/useKioskMode'
-import { useNetworkStatus } from '../hooks/useNetworkStatus'
-import useMediaQuery from '../hooks/useMediaQuery'
+import { usePDVCart } from '@hooks/pdv/usePDVCart'
+import { usePDVCustomer } from '@hooks/pdv/usePDVCustomer'
+import { usePDVCoupon } from '@hooks/pdv/usePDVCoupon'
+import { usePDVModals } from '@hooks/pdv/usePDVModals'
+import { usePDVFeedback } from '@hooks/pdv/usePDVFeedback'
+import { usePDVSearch } from '@hooks/pdv/usePDVSearch'
+import { usePDVPayment } from '@hooks/pdv/usePDVPayment'
 
-import { saveSaleOffline } from '../utils/offlineStorage'
-import { formatCurrency } from '../utils/formatters'
-import { supabase } from '../lib/supabase'
-import * as saleService from '../services/saleService'
+import { saveSaleOffline } from '@utils/offlineStorage'
+import { formatCurrency } from '@utils/formatters'
+import { supabase } from '@lib/supabase'
+import { logger } from '@utils/logger'
+import * as saleService from '@services/saleService'
 
-// ============= Componente Principal =============
 const Sales = () => {
   const { profile } = useAuth()
-  const { logCreate, logAction, logError } = useSystemLogs()
+  const { logCreate, logError } = useSystemLogs()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const isMobile = useMediaQuery('(max-width: 1024px)')
-  
-  // Hook de modo quiosque
   const { isKioskMode, toggleKioskMode } = useKioskMode()
-  
-  // Estados locais
-  const [cart, setCart] = useState([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [categories, setCategories] = useState([])
   const { isOnline } = useNetworkStatus()
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const processingRef = useRef(false);
+  usePDVRealtime(true)
 
-  // Cliente
-  const [customerPhone, setCustomerPhone] = useState('')
-  const [customer, setCustomer] = useState(null)
-  
-  // Cupom
-  const [couponCode, setCouponCode] = useState('')
-  const [coupon, setCoupon] = useState(null)
-  const [couponError, setCouponError] = useState('')
-  const [discount, setDiscount] = useState(0)
-  
-  // Pagamento
-  const [paymentMethod, setPaymentMethod] = useState('cash')
-  
-  // Modais
-  const [showCustomerModal, setShowCustomerModal] = useState(false)
-  const [showQuickCustomerModal, setShowQuickCustomerModal] = useState(false)
-  const [showCouponModal, setShowCouponModal] = useState(false)
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false)
-  const [showClearCartConfirm, setShowClearCartConfirm] = useState(false)
-  
-  // Estados para atalhos
-  const [selectedCartItemIndex, setSelectedCartItemIndex] = useState(0)
-  const [shortcutFeedback, setShortcutFeedback] = useState(null)
-  
-  // Formulário rápido
-  const [quickCustomerForm, setQuickCustomerForm] = useState({ name: '', phone: '', email: '' })
-  const [quickCustomerErrors, setQuickCustomerErrors] = useState({})
-  
-  // Feedback
-  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
-  
   const searchInputRef = useRef(null)
+  const processingRef = useRef(false)
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
 
-  // ============= Queries =============
+  // ============= HOOKS PERSONALIZADOS =============
+  const {
+    feedback,
+    shortcutFeedback,
+    showFeedback,
+    hideFeedback,
+    showShortcutFeedback,
+    hideShortcutFeedback
+  } = usePDVFeedback()
+
+  
+
+  const {
+    cart,
+    addToCart,
+    updateCartItemQuantity,
+    removeFromCart,
+    clearCart,
+    getSubtotal,
+    getTotal,
+    selectedCartItemIndex,
+    setSelectedCartItemIndex,
+    cartCount
+  } = usePDVCart([], showFeedback)
+
+  const {
+    customer,
+    customerPhone,
+    quickCustomerForm,
+    quickCustomerErrors,
+    setCustomerPhone,
+    setQuickCustomerForm,
+    setQuickCustomerErrors,
+    searchCustomer,
+    quickRegisterCustomer,
+    clearCustomer,
+    isSearching,
+    isCreating
+  } = usePDVCustomer(showFeedback)
+
+  const {
+    coupon,
+    couponCode,
+    couponError,
+    discount,
+    availableCoupons,
+    setCouponCode,
+    setCouponError,
+    applyCoupon,
+    removeCoupon,
+    isValidating
+  } = usePDVCoupon(customer, cart, showFeedback)
+
+  const {
+    paymentMethod,
+    setPaymentMethod,
+    isPix
+  } = usePDVPayment()
+
+  const {
+    showCustomerModal,
+    showQuickCustomerModal,
+    showCouponModal,
+    showPaymentModal,
+    showShortcutsHelp,
+    showClearCartConfirm,
+    isAnyModalOpen,
+    setShowQuickCustomerModal,
+    setShowCouponModal,   
+    openCustomerModal,
+    openPaymentModal,          
+    closeCustomerModal,
+    closeCouponModal,
+    closePaymentModal,
+    openShortcutsHelp,
+    closeShortcutsHelp,
+    openClearCartConfirm,
+    closeClearCartConfirm
+  } = usePDVModals()
+
+  // ============= QUERIES =============
   const { 
     data: products = [], 
     isLoading,
@@ -107,57 +145,23 @@ const Sales = () => {
   } = useQuery({
     queryKey: ['products-active'],
     queryFn: saleService.fetchProducts,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0, 
+    gcTime: 0,
+    refetchOnMount: true,
   })
 
-  const { data: availableCoupons = [] } = useQuery({
-    queryKey: ['available-coupons', customer?.id],
-    queryFn: () => saleService.fetchAvailableCoupons(customer?.id),
-    enabled: !!customer,
-  })
+  const {
+    searchTerm,
+    selectedCategory,
+    categories,
+    filteredProducts,
+    setSearchTerm,
+    setSelectedCategory,
+    updateCategories,
+    clearSearch
+  } = usePDVSearch(products)
 
-  // ============= Mutations =============
-  const searchCustomerMutation = useMutation({
-    mutationFn: saleService.searchCustomerByPhone,
-    onSuccess: (data) => {
-      if (data) {
-        setCustomer(data)
-        showFeedback('success', `Cliente encontrado: ${data.name}`)
-        setShowCustomerModal(false)
-      } else {
-        setQuickCustomerForm({ name: '', phone: customerPhone, email: '' })
-        setShowCustomerModal(false)
-        setShowQuickCustomerModal(true)
-      }
-    },
-    onError: (error) => showFeedback('error', 'Erro ao buscar cliente: ' + error.message)
-  })
-
-  const createCustomerMutation = useMutation({
-    mutationFn: saleService.createCustomer,
-    onSuccess: async (data) => {
-      setCustomer(data)
-      await logCreate('customer', data.id, { name: data.name, phone: data.phone })
-      showFeedback('success', `Cliente ${data.name} cadastrado!`)
-      setShowQuickCustomerModal(false)
-    },
-    onError: (error) => showFeedback('error', 'Erro ao cadastrar cliente: ' + error.message)
-  })
-
-  const validateCouponMutation = useMutation({
-    mutationFn: ({ code, customerId, cartSubtotal }) => 
-      saleService.validateCoupon(code, customerId, cartSubtotal),
-    onSuccess: (data) => {
-      setCoupon(data.coupon)
-      setCouponCode(data.coupon.code)
-      setDiscount(data.discountValue)
-      setCouponError('')
-      setShowCouponModal(false)
-      showFeedback('success', `Cupom ${data.coupon.code} aplicado! Desconto: ${formatCurrency(data.discountValue)}`)
-    },
-    onError: (error) => setCouponError(error.message)
-  })
-
+  // ============= MUTATIONS =============
   const createSaleMutation = useMutation({
     mutationFn: ({ cart, customer, coupon, discount, paymentMethod }) => 
       saleService.createSale(cart, customer, coupon, discount, paymentMethod, profile),
@@ -173,15 +177,10 @@ const Sales = () => {
       queryClient.invalidateQueries({ queryKey: ['products-active'] })
       showFeedback('success', `Venda finalizada! Nº: ${sale.sale_number}`)
       
-      // Limpar estados
-      setCart([])
-      setCustomer(null)
-      setCustomerPhone('')
-      setCoupon(null)
-      setCouponCode('')
-      setDiscount(0)
-      setShowPaymentModal(false)
-      setSelectedCartItemIndex(0)
+      clearCart()
+      clearCustomer()
+      removeCoupon()
+      closePaymentModal()
     },
     onError: async (error) => {
       logger.error('Erro ao finalizar venda:', error)
@@ -195,11 +194,11 @@ const Sales = () => {
     }
   })
 
-  // ============= Handler para venda OFFLINE =============
+  // ============= HANDLERS =============
   const handleOfflineSale = async () => {
     try {
-      const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
-      const total = subtotal - discount
+      const subtotal = getSubtotal()
+      const total = getTotal(discount)
       
       const offlineSaleData = {
         customer_id: customer?.id || null,
@@ -224,7 +223,6 @@ const Sales = () => {
       }
       
       await saveSaleOffline(offlineSaleData)
-      
       updateLocalStock(cart)
       
       await logCreate('sale', `offline-${Date.now()}`, { 
@@ -233,14 +231,10 @@ const Sales = () => {
       
       showFeedback('success', `✅ Venda salva OFFLINE!`)
       
-      setCart([])
-      setCustomer(null)
-      setCustomerPhone('')
-      setCoupon(null)
-      setCouponCode('')
-      setDiscount(0)
-      setShowPaymentModal(false)
-      setSelectedCartItemIndex(0)
+      clearCart()
+      clearCustomer()
+      removeCoupon()
+      closePaymentModal()
       
     } catch (error) {
       logger.error('❌ Erro ao salvar offline:', error)
@@ -261,163 +255,54 @@ const Sales = () => {
     })
   }
 
-  // ============= Efeitos =============
-  useEffect(() => {
-    if (products.length > 0) {
-      setCategories([...new Set(products.map(p => p.category).filter(Boolean))])
-    }
-  }, [products])
-
-  useEffect(() => {
-    if (cart.length === 0) {
-      setSelectedCartItemIndex(0)
-    } else if (selectedCartItemIndex >= cart.length) {
-      setSelectedCartItemIndex(cart.length - 1)
-    }
-  }, [cart, selectedCartItemIndex])
-
-  // ============= Produtos Filtrados =============
-  const filteredProducts = React.useMemo(() => {
-    let filtered = [...products]
-    
-    if (searchTerm.trim()) {
-      const search = searchTerm.toLowerCase()
-      filtered = filtered.filter(p => 
-        p.name?.toLowerCase().includes(search) || 
-        p.code?.toLowerCase().includes(search) ||
-        p.barcode?.toLowerCase().includes(search)
-      )
-    }
-    
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(p => p.category === selectedCategory)
-    }
-    
-    return filtered
-  }, [products, searchTerm, selectedCategory])
-
-  // ============= Handlers =============
-  const showFeedback = (type, message) => {
-    setFeedback({ show: true, type, message })
-    setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
-  }
-
-  const addToCart = (product) => {
-    const existing = cart.find(item => item.id === product.id)
-    
-    if (existing) {
-      updateCartItemQuantity(product.id, existing.quantity + 1)
-    } else {
-      setCart([...cart, {
-        id: product.id, name: product.name, code: product.code,
-        price: product.price, quantity: 1, total: product.price,
-        unit: product.unit, stock: product.stock_quantity
-      }])
-      logAction({ action: 'ADD_TO_CART', entityType: 'sale', details: { product_name: product.name } })
-    }
-  }
-
-  const updateCartItemQuantity = (productId, newQuantity) => {
-    const product = products.find(p => p.id === productId)
-    if (!product) return
-    if (newQuantity > product.stock_quantity) {
-      showFeedback('error', `Estoque insuficiente! Disponível: ${product.stock_quantity}`)
-      return
-    }
-    if (newQuantity <= 0) {
-      removeFromCart(productId)
-      return
-    }
-    setCart(prev => prev.map(item =>
-      item.id === productId ? { ...item, quantity: newQuantity, total: newQuantity * item.price } : item
-    ))
-  }
-
-  const removeFromCart = (productId) => {
-    setCart(prev => prev.filter(item => item.id !== productId))
-  }
-
   const handleClearCart = () => {
-    if (cart.length === 0) return
-    setShowClearCartConfirm(true)
+    if (cartCount === 0) return
+    openClearCartConfirm()
   }
 
   const confirmClearCart = () => {
-    setCart([])
-    setShowClearCartConfirm(false)
+    clearCart()
+    closeClearCartConfirm()
     showFeedback('info', 'Carrinho limpo')
   }
 
-  const searchCustomer = () => {
-    if (!customerPhone || customerPhone.length < 10) {
-      showFeedback('error', 'Digite um telefone válido')
-      return
-    }
-    searchCustomerMutation.mutate(customerPhone)
-  }
-
-  const quickRegisterCustomer = () => {
-    const errors = {}
-    if (!quickCustomerForm.name?.trim()) errors.name = 'Nome é obrigatório'
-    if (!quickCustomerForm.phone?.trim() || quickCustomerForm.phone.length < 10) errors.phone = 'Telefone inválido'
-    if (quickCustomerForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(quickCustomerForm.email)) errors.email = 'E-mail inválido'
+  const handleSearchCustomer = async () => {
+    const result = await searchCustomer()
+    closeCustomerModal()
     
-    if (Object.keys(errors).length > 0) {
-      setQuickCustomerErrors(errors)
-      return
+    if (!result?.found) {
+      setShowQuickCustomerModal(true)
     }
-    createCustomerMutation.mutate(quickCustomerForm)
   }
 
-  const clearCustomer = () => {
-    setCustomer(null)
-    setCustomerPhone('')
-    if (coupon) removeCoupon()
-    showFeedback('info', 'Cliente removido')
-  }
-
-  const applyCoupon = (couponToValidate = null) => {
-    const code = couponToValidate?.code || couponCode
-    if (!code) { setCouponError('Digite o código do cupom'); return }
-    if (!customer) { setCouponError('Identifique um cliente para usar cupons'); return }
-    
-    const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
-    validateCouponMutation.mutate({ code, customerId: customer.id, cartSubtotal: subtotal })
-  }
-
-  const removeCoupon = () => {
-    setCoupon(null)
-    setCouponCode('')
-    setDiscount(0)
-    showFeedback('info', 'Cupom removido')
+  const handleApplyCoupon = () => {
+    applyCoupon()
+    closeCouponModal()
   }
 
   const createPendingSale = async (callback) => {
-    // 🛡️ Proteção contra duplo clique
     if (processingRef.current) {
-      logger.warn('⚠️ Já existe um processamento em andamento');
-      return;
+      logger.warn('⚠️ Já existe um processamento em andamento')
+      return
     }
     
-    processingRef.current = true;
-    setIsProcessingPayment(true);
+    processingRef.current = true
+    setIsProcessingPayment(true)
     
     try {
-      // Validar produtos
       const invalidProducts = cart.filter(item => {
-        const product = products.find(p => p.id === item.id);
-        return !product || !product.is_active || product.deleted_at;
-      });
+        const product = products.find(p => p.id === item.id)
+        return !product || !product.is_active || product.deleted_at
+      })
       
       if (invalidProducts.length > 0) {
-        const names = invalidProducts.map(p => p.name).join(', ');
-        throw new Error(`Produtos inválidos no carrinho: ${names}`);
+        const names = invalidProducts.map(p => p.name).join(', ')
+        throw new Error(`Produtos inválidos no carrinho: ${names}`)
       }
 
-      const subtotal = cart.reduce((sum, item) => sum + item.total, 0);
-      const total = subtotal - discount;
+      const subtotal = getSubtotal()
+      const total = getTotal(discount)
       
-      // Preparar itens
       const itemsJson = cart.map(item => ({
         product_id: item.id,
         product_name: item.name,
@@ -425,78 +310,55 @@ const Sales = () => {
         quantity: item.quantity,
         unit_price: item.price,
         total_price: item.total
-      }));
+      }))
       
-      // Gerar chave de idempotência única
-      const idempotencyKey = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString();
+      const idempotencyKey = crypto.randomUUID?.() || Date.now().toString()
       
-      // 🔥 Chamar RPC (UMA ÚNICA VEZ)
-      const { data, error } = await supabase
-        .rpc('create_pending_sale', {
-          p_customer_id: customer?.id || null,
-          p_customer_name: customer?.name || 'Cliente não identificado',
-          p_customer_phone: customer?.phone || null,
-          p_total_amount: subtotal,
-          p_discount_amount: discount,
-          p_coupon_code: coupon?.code || null,
-          p_final_amount: total,
-          p_payment_method: 'pix',
-          p_created_by: profile?.id,
-          p_items: itemsJson,
-          p_idempotency_key: idempotencyKey
-        });
-        
-      if (error) throw error;
+      const { data, error } = await supabase.rpc('create_pending_sale', {
+        p_customer_id: customer?.id || null,
+        p_customer_name: customer?.name || 'Cliente não identificado',
+        p_customer_phone: customer?.phone || null,
+        p_total_amount: subtotal,
+        p_discount_amount: discount,
+        p_coupon_code: coupon?.code || null,
+        p_final_amount: total,
+        p_payment_method: 'pix',
+        p_created_by: profile?.id,
+        p_items: itemsJson,
+        p_idempotency_key: idempotencyKey
+      })
       
-      if (!data.success) {
-        throw new Error(data.error || 'Erro ao processar venda');
-      }
+      if (error) throw error
+      if (!data.success) throw new Error(data.error || 'Erro ao processar venda')
       
-      // Se foi duplicata prevenida, avisar no logger
-      if (data.duplicate_prevented) {
-        logger.log('ℹ️ Duplicata prevenida, usando venda existente:', data.sale_id);
-      }
+      closePaymentModal()
       
-      // Fechar modal de pagamento IMEDIATAMENTE
-      setShowPaymentModal(false);
-      
-      // Callback para gerar PIX (se necessário)
-      if (callback) {
-        callback(data.sale_id);
-      }
+      if (callback) callback(data.sale_id)
       
     } catch (error) {
-      logger.error('❌ Erro ao criar venda pendente:', error);
-      showFeedback('error', 'Erro: ' + error.message);
+      logger.error('❌ Erro ao criar venda pendente:', error)
+      showFeedback('error', 'Erro: ' + error.message)
     } finally {
-      // 🛡️ Liberar o lock após um delay (evita cliques acidentais)
       setTimeout(() => {
-        processingRef.current = false;
-        setIsProcessingPayment(false);
-      }, 2000);
+        processingRef.current = false
+        setIsProcessingPayment(false)
+      }, 2000)
     }
-  };
+  }
 
   const confirmPayment = (method = null) => {
-    // 🛡️ Prevenir múltiplas chamadas
     if (processingRef.current || isProcessingPayment) {
-      logger.warn('⚠️ Pagamento já em processamento');
-      return;
+      logger.warn('⚠️ Pagamento já em processamento')
+      return
     }
     
-    const finalPaymentMethod = method || paymentMethod;
+    const finalPaymentMethod = method || paymentMethod
     
-    // Para PIX, usar o fluxo de venda pendente
-    if (finalPaymentMethod === 'pix') {
-      // Não chamar createSaleMutation para PIX!
-      // O fluxo PIX é gerenciado pelo modal CheckoutModal via onCreatePendingSale
-      return;
-    }
+    if (finalPaymentMethod === 'pix') return
     
-    // Para outros métodos (dinheiro, cartão), usar o fluxo normal
     if (!isOnline) {
-      handleOfflineSale();
-      return;
+      handleOfflineSale()
+      return
     }
     
     createSaleMutation.mutate({ 
@@ -505,54 +367,70 @@ const Sales = () => {
       coupon, 
       discount, 
       paymentMethod: finalPaymentMethod 
-    });
-  };
+    })
+  }
 
-  // ============= Handlers para Atalhos =============
+  // ============= ATALHOS =============
   const handleFocusSearch = useCallback(() => searchInputRef.current?.focus(), [])
-  const handleClearSearch = useCallback(() => { setSearchTerm(''); setSelectedCategory('all') }, [])
-  const handleRefreshProducts = useCallback(async () => { await refetchProducts(); showFeedback('info', 'Produtos atualizados') }, [refetchProducts])
-  const handleIncreaseQuantity = useCallback((item) => updateCartItemQuantity(item.id, item.quantity + 1), [cart, products])
-  const handleDecreaseQuantity = useCallback((item) => updateCartItemQuantity(item.id, item.quantity - 1), [cart])
-  const handleRemoveItem = useCallback((productId) => removeFromCart(productId), [])
-  const handleOpenCustomerModal = useCallback(() => setShowCustomerModal(true), [])
-  const handleClearCustomer = useCallback(() => clearCustomer(), [customer, coupon])
-  const handleOpenCouponModal = useCallback(() => {
-    if (customer) setShowCouponModal(true)
-    else showFeedback('warning', 'Identifique um cliente primeiro')
-  }, [customer])
-  const handleRemoveCoupon = useCallback(() => removeCoupon(), [])
-  const handleOpenPaymentModal = useCallback(() => {
-    if (cart.length === 0) showFeedback('warning', 'Adicione itens ao carrinho')
-    else setShowPaymentModal(true)
-  }, [cart])
-  const handleShortcutFeedback = useCallback((shortcut) => setShortcutFeedback(shortcut), [])
+  const handleRefreshProducts = useCallback(async () => { 
+    await refetchProducts()
+    showFeedback('info', 'Produtos atualizados') 
+  }, [refetchProducts, showFeedback])
+  
+  const handleIncreaseQuantity = useCallback((item) => 
+    updateCartItemQuantity(item.id, item.quantity + 1), 
+    [updateCartItemQuantity]
+  )
+  
+  const handleDecreaseQuantity = useCallback((item) => 
+    updateCartItemQuantity(item.id, item.quantity - 1), 
+    [updateCartItemQuantity]
+  )
 
   const { shortcuts } = usePDVShortcuts({
     onFocusSearch: handleFocusSearch,
-    onClearSearch: handleClearSearch,
+    onClearSearch: clearSearch,
     onRefreshProducts: handleRefreshProducts,
     onClearCart: handleClearCart,
     onIncreaseQuantity: handleIncreaseQuantity,
     onDecreaseQuantity: handleDecreaseQuantity,
-    onRemoveItem: handleRemoveItem,
-    onOpenCustomerModal: handleOpenCustomerModal,
-    onClearCustomer: handleClearCustomer,
-    onOpenCouponModal: handleOpenCouponModal,
-    onRemoveCoupon: handleRemoveCoupon,
-    onOpenPaymentModal: handleOpenPaymentModal,
-    onOpenHelp: () => setShowShortcutsHelp(true),
+    onRemoveItem: removeFromCart,
+    onOpenCustomerModal: openCustomerModal,
+    onClearCustomer: clearCustomer,
+    onOpenCouponModal: () => {
+      if (customer) setCouponError('')
+      else showFeedback('warning', 'Identifique um cliente primeiro')
+    },
+    onRemoveCoupon: removeCoupon,
+    onOpenPaymentModal: () => {
+      if (cartCount === 0) showFeedback('warning', 'Adicione itens ao carrinho')
+      else closePaymentModal() // O modal é aberto pelo botão
+    },
+    onOpenHelp: openShortcutsHelp,
     cartItems: cart,
     selectedCartItemIndex,
     setSelectedCartItemIndex,
-    onShortcutFeedback: handleShortcutFeedback,
-    enabled: !showCustomerModal && !showQuickCustomerModal && !showCouponModal && !showPaymentModal && !showShortcutsHelp && !showClearCartConfirm
+    onShortcutFeedback: showShortcutFeedback,
+    enabled: !isAnyModalOpen
   })
 
-  const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
-  const total = subtotal - discount
-  const isMutating = searchCustomerMutation.isPending || createCustomerMutation.isPending || 
-                     validateCouponMutation.isPending || createSaleMutation.isPending
+  // ============= EFEITOS =============
+  useEffect(() => {
+    updateCategories(products)
+  }, [products, updateCategories])
+
+  useEffect(() => {
+    if (cartCount === 0) {
+      setSelectedCartItemIndex(0)
+    } else if (selectedCartItemIndex >= cartCount) {
+      setSelectedCartItemIndex(cartCount - 1)
+    }
+  }, [cartCount, selectedCartItemIndex, setSelectedCartItemIndex])
+
+  // ============= RENDER =============
+  const subtotal = getSubtotal()
+  const total = getTotal(discount)
+  const isMutating = isSearching || isCreating || isValidating || createSaleMutation.isPending
 
   const headerActions = [
     {
@@ -564,7 +442,7 @@ const Sales = () => {
     {
       label: 'Atalhos',
       icon: Keyboard,
-      onClick: () => setShowShortcutsHelp(true),
+      onClick: openShortcutsHelp,
       variant: 'outline'
     }
   ]
@@ -583,8 +461,20 @@ const Sales = () => {
       )}
       
       <div className={`max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 ${!isOnline ? 'pt-10' : ''}`}>
-        {feedback.show && <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />}
-        {shortcutFeedback && <ShortcutFeedback shortcut={shortcutFeedback} onHide={() => setShortcutFeedback(null)} />}
+        {feedback.show && (
+          <FeedbackMessage 
+            type={feedback.type} 
+            message={feedback.message} 
+            onClose={hideFeedback} 
+          />
+        )}
+        
+        {shortcutFeedback && (
+          <ShortcutFeedback 
+            shortcut={shortcutFeedback} 
+            onHide={hideShortcutFeedback} 
+          />
+        )}
 
         <PageHeader
           title="Ponto de Venda (PDV)"
@@ -614,15 +504,14 @@ const Sales = () => {
                   <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                     <ShoppingCart size={18} className="text-gray-600 dark:text-gray-400" />
                     <span>Carrinho</span>
-                    {cart.length > 0 && (
+                    {cartCount > 0 && (
                       <span className="text-sm text-gray-500 dark:text-gray-400">
-                        {cart.length} {cart.length === 1 ? 'item' : 'itens'}
+                        {cartCount} {cartCount === 1 ? 'item' : 'itens'}
                       </span>
                     )}
                   </h2>
                   
                   <div className="flex items-center gap-1">
-                    {/* Botão de Modo Quiosque */}
                     {!isMobile && (
                       <button
                         onClick={toggleKioskMode}
@@ -633,7 +522,7 @@ const Sales = () => {
                       </button>
                     )}
                     
-                    {cart.length > 0 && (
+                    {cartCount > 0 && (
                       <button
                         onClick={handleClearCart}
                         className="p-1.5 text-gray-400 hover:text-red-500 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -669,7 +558,7 @@ const Sales = () => {
                     <Button 
                       size="sm" 
                       variant="outline" 
-                      onClick={() => setShowCustomerModal(true)} 
+                      onClick={openCustomerModal} 
                       disabled={isMutating}
                     >
                       Identificar
@@ -684,7 +573,9 @@ const Sales = () => {
                   </div>
                   {coupon ? (
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-green-600 dark:text-green-400 font-medium">{coupon.code}</span>
+                      <span className="text-sm text-green-600 dark:text-green-400 font-medium">
+                        {coupon.code}
+                      </span>
                       <button 
                         onClick={removeCoupon} 
                         className="text-xs text-red-500 hover:text-red-700"
@@ -713,7 +604,7 @@ const Sales = () => {
                 onUpdateQuantity={updateCartItemQuantity}
                 onRemoveItem={removeFromCart} 
                 onClearCart={handleClearCart} 
-                onCheckout={() => setShowPaymentModal(true)}
+                onCheckout={openPaymentModal}
                 selectedItemIndex={selectedCartItemIndex} 
                 onSelectItem={setSelectedCartItemIndex} 
                 disabled={isMutating} 
@@ -741,8 +632,8 @@ const Sales = () => {
                   variant="success" 
                   size="lg" 
                   fullWidth 
-                  onClick={() => setShowPaymentModal(true)}
-                  disabled={cart.length === 0 || isMutating} 
+                  onClick={() => setShowCouponModal(true)}
+                  disabled={cartCount === 0 || isMutating} 
                   icon={CreditCard} 
                 >
                   {!isOnline ? 'Salvar Venda Offline' : 'Finalizar Venda'}
@@ -752,10 +643,8 @@ const Sales = () => {
           </div>
         </div>
 
-        {/* Componentes flutuantes */}
         <SyncStatus />
         
-        {/* Carrinho compacto para mobile */}
         {isMobile && (
           <CompactCartView
             cart={cart}
@@ -766,19 +655,26 @@ const Sales = () => {
             onUpdateQuantity={updateCartItemQuantity}
             onRemoveItem={removeFromCart}
             onClearCart={handleClearCart}
-            onCheckout={() => setShowPaymentModal(true)}
+            onCheckout={openPaymentModal}
             disabled={isMutating}
           />
         )}
 
         {/* Modais */}
-        <Modal isOpen={showCustomerModal} onClose={() => setShowCustomerModal(false)} title="Identificar Cliente" size="sm">
+        <Modal 
+          isOpen={showCustomerModal} 
+          onClose={closeCustomerModal} 
+          title="Identificar Cliente" 
+          size="sm"
+        >
           <div className="space-y-4">
             <div className="text-center">
               <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
                 <Phone size={24} className="text-blue-600 dark:text-blue-400" />
               </div>
-              <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">Digite o telefone do cliente</p>
+              <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
+                Digite o telefone do cliente
+              </p>
             </div>
             <input 
               type="tel" 
@@ -786,13 +682,17 @@ const Sales = () => {
               value={customerPhone} 
               onChange={(e) => setCustomerPhone(e.target.value)}
               className="w-full px-4 py-2.5 border rounded-lg text-center dark:bg-gray-800 dark:text-white"
-              onKeyPress={(e) => e.key === 'Enter' && searchCustomer()} 
+              onKeyDown={(e) => e.key === 'Enter' && handleSearchCustomer()} 
               autoFocus 
-              disabled={searchCustomerMutation.isPending} 
+              disabled={isSearching} 
             />
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setShowCustomerModal(false)} className="flex-1">Cancelar</Button>
-              <Button onClick={searchCustomer} loading={searchCustomerMutation.isPending} className="flex-1">Buscar</Button>
+              <Button variant="outline" onClick={closeCustomerModal} className="flex-1">
+                Cancelar
+              </Button>
+              <Button onClick={handleSearchCustomer} loading={isSearching} className="flex-1">
+                Buscar
+              </Button>
             </div>
           </div>
         </Modal>
@@ -804,26 +704,26 @@ const Sales = () => {
           setFormData={setQuickCustomerForm} 
           errors={quickCustomerErrors}
           onSubmit={quickRegisterCustomer} 
-          isSubmitting={createCustomerMutation.isPending} 
+          isSubmitting={isCreating} 
         />
 
         <CouponSelector 
           isOpen={showCouponModal} 
-          onClose={() => setShowCouponModal(false)} 
+          onClose={closeCouponModal} 
           customer={customer} 
           coupon={coupon}
           availableCoupons={availableCoupons} 
           couponCode={couponCode} 
           setCouponCode={setCouponCode} 
           couponError={couponError}
-          onApplyCoupon={applyCoupon} 
+          onApplyCoupon={handleApplyCoupon} 
           onRemoveCoupon={removeCoupon} 
-          isLoading={validateCouponMutation.isPending} 
+          isLoading={isValidating} 
         />
 
         <CheckoutModal 
           isOpen={showPaymentModal} 
-          onClose={() => setShowPaymentModal(false)} 
+          onClose={closePaymentModal} 
           cart={cart} 
           discount={discount}
           subtotal={subtotal} 
@@ -839,7 +739,7 @@ const Sales = () => {
 
         <ConfirmModal 
           isOpen={showClearCartConfirm} 
-          onClose={() => setShowClearCartConfirm(false)} 
+          onClose={closeClearCartConfirm} 
           onConfirm={confirmClearCart}
           title="Limpar Carrinho" 
           message="Tem certeza que deseja remover todos os itens?"
@@ -850,7 +750,7 @@ const Sales = () => {
 
         <ShortcutsHelpModal 
           isOpen={showShortcutsHelp} 
-          onClose={() => setShowShortcutsHelp(false)} 
+          onClose={closeShortcutsHelp} 
           shortcuts={shortcuts} 
         />
       </div>

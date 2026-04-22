@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from '../../lib/icons'
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from '@lib/icons'
 
 const VirtualTable = ({
   columns,

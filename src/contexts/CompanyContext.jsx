@@ -1,5 +1,5 @@
 import React, { createContext, useContext } from 'react'
-import { useCompany } from '../hooks/useCompany'
+import { useCompany } from '@hooks/useCompany'
 
 const CompanyContext = createContext(null)
 

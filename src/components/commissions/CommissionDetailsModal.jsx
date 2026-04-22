@@ -2,8 +2,8 @@
 import React from 'react'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
-import { formatCurrency } from '../../utils/formatters'
-import { CheckCircle, DollarSign, Calendar, Hash } from '../../lib/icons'
+import { formatCurrency } from '@utils/formatters'
+import { CheckCircle, DollarSign, Calendar, Hash } from '@lib/icons'
 
 const CommissionDetailsModal = ({ 
   isOpen, 

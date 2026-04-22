@@ -20,10 +20,10 @@ import {
   Cake,
   Crown,
   AlertCircle
-} from '../../lib/icons'
-import { useTableStrategy } from '../../hooks/useTableStrategy'
+} from '@lib/icons'
+import { useTableStrategy } from '@hooks/useTableStrategy'
 import Badge from '../Badge'
-import { formatCurrency, formatDate } from '../../utils/formatters'
+import { formatCurrency, formatDate } from '@utils/formatters'
 
 // ✅ MAPEAMENTO DE LABELS (mantido)
 const DEFAULT_ACTION_LABELS = {

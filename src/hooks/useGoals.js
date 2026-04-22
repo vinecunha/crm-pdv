@@ -1,5 +1,6 @@
+// src/hooks/useGoals.js
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchUserGoals, saveAllGoals } from '../services/goalService'
+import { fetchUserGoals, saveAllGoals, areGoalsDefault } from '@services/goalService'
 
 export const useGoals = (userId) => {
   const queryClient = useQueryClient()
@@ -17,10 +18,22 @@ export const useGoals = (userId) => {
     }
   })
   
+  // Valores padrão para fallback
+  const defaultGoals = {
+    daily: { target_amount: 1000, isDefault: true },
+    monthly: { target_amount: 20000, isDefault: true },
+    yearly: { target_amount: 240000, isDefault: true }
+  }
+  
+  const currentGoals = goals || defaultGoals
+  const isUsingDefaults = areGoalsDefault(currentGoals)
+  
   return {
-    goals: goals || { daily: 1000, monthly: 20000, yearly: 240000 },
+    goals: currentGoals,
     isLoading,
     saveGoals: saveGoalsMutation.mutateAsync,
-    isSaving: saveGoalsMutation.isPending
+    isSaving: saveGoalsMutation.isPending,
+    isUsingDefaults,
+    hasError: goals?._error || false
   }
 }

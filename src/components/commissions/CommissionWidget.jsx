@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { DollarSign, TrendingUp, Award, ChevronRight, User } from '../../lib/icons'
-import { formatCurrency } from '../../utils/formatters'
+import { DollarSign, TrendingUp, Award, ChevronRight, User } from '@lib/icons'
+import { formatCurrency } from '@utils/formatters'
 
 const CommissionWidget = ({ summary, loading, userRole }) => {
   if (loading) {

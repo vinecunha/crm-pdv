@@ -1,6 +1,6 @@
 import React from 'react'
-import { Target, DollarSign, CreditCard, Users, TrendingUp, ShoppingBag } from '../../lib/icons'
-import { formatCurrency } from '../../utils/formatters'
+import { Target, DollarSign, CreditCard, Users, TrendingUp, ShoppingBag } from '@lib/icons'
+import { formatCurrency } from '@utils/formatters'
 
 const MetricCard = ({ title, value, icon: Icon, color, trend, trendValue }) => {
   const colors = {

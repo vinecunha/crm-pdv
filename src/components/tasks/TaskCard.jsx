@@ -13,8 +13,8 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronUp
-} from '../../lib/icons'
-import { formatDate, formatRelativeTime } from '../../utils/formatters'
+} from '@lib/icons'
+import { formatDate, formatRelativeTime } from '@utils/formatters'
 
 const priorityConfig = {
   low: { 

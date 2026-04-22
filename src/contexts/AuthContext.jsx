@@ -1,9 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
-import { supabase } from '../lib/supabase'
-import { secureStorage } from '../utils/secureStorage'
-import { sanitizeInput } from '../utils/sanitize' 
-import { logger } from '../utils/logger' 
+import { supabase } from '@lib/supabase'
+import { secureStorage } from '@utils/secureStorage'
+import { sanitizeInput } from '@utils/sanitize' 
+import { logger } from '@utils/logger' 
 
 const AuthContext = createContext(null)
 

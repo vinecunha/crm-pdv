@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import DataTable from '../components/ui/DataTable'
-import VirtualTable from '../components/ui/VirtualTable'
+import DataTable from '@components/ui/DataTable'
+import VirtualTable from '@components/ui/VirtualTable'
 
 /**
  * Hook que decide automaticamente se usa DataTable ou VirtualTable

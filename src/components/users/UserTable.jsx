@@ -16,12 +16,12 @@ import {
   Download,
   Key,
   Unlock
-} from '../../lib/icons'
-import { useTableStrategy } from '../../hooks/useTableStrategy'
+} from '@lib/icons'
+import { useTableStrategy } from '@hooks/useTableStrategy'
 import UserRoleBadge from './UserRoleBadge'
 import Badge from '../Badge'
-import { formatDate } from '../../utils/formatters'
-import { createAction } from '../../utils/actions'
+import { formatDate } from '@utils/formatters'
+import { createAction } from '@utils/actions'
 
 const UserTable = ({ 
   users, 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '../../lib/supabase'
-import { useAuth } from '../../contexts/AuthContext'
+import { supabase } from '@lib/supabase'
+import { useAuth } from '@contexts/AuthContext'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
 import Badge from '../Badge'
@@ -14,8 +14,8 @@ import {
   XCircle,
   User,
   Award
-} from '../../lib/icons'
-import { formatCurrency } from '../../utils/formatters'
+} from '@lib/icons'
+import { formatCurrency } from '@utils/formatters'
 
 const UserCommissionRules = ({ isOpen, onClose, userId, userName }) => {
   const { profile } = useAuth()  // ✅ Usar o contexto

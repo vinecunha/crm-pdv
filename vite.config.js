@@ -1,3 +1,4 @@
+// vite.config.js
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -6,20 +7,40 @@ const isProduction = process.env.NODE_ENV === 'production'
 export default defineConfig({
   plugins: [
     react({
-      // Fast Refresh otimizado
       fastRefresh: true,
-      // Excluir arquivos desnecessários do processamento
       exclude: /node_modules/,
     })
   ],
   
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './src/test/setup.js',
+    
+    // ✅ Configuração específica para integração
+    isolate: true,
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true  // ✅ Rodar um teste por vez
+      }
+    },
+    
+    // ✅ Limitar concorrência
+    maxConcurrency: 1,
+    
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: ['node_modules/**', 'src/test/**']
+    }
+  },
   // ============= HEADERS DE SEGURANÇA =============
   server: {
     host: true,
     port: 5173,
     strictPort: false,
     
-    // Headers apenas para desenvolvimento
     headers: isProduction ? {} : {
       'Content-Security-Policy': [
         "default-src 'self'",
@@ -39,7 +60,6 @@ export default defineConfig({
       'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
     },
     
-    // Configuração do HMR
     hmr: {
       protocol: 'ws',
       host: 'localhost',
@@ -47,7 +67,6 @@ export default defineConfig({
       overlay: true
     },
     
-    // Watch com menos arquivos
     watch: {
       ignored: ['**/node_modules/**', '**/.git/**', '**/dist/**']
     }
@@ -55,7 +74,6 @@ export default defineConfig({
   
   // ============= BUILD OTIMIZADO =============
   build: {
-    // Source maps apenas em dev
     sourcemap: !isProduction,
     
     rollupOptions: {
@@ -67,37 +85,37 @@ export default defineConfig({
       },
       
       output: {
+        // ✅ CORRIGIDO: Apenas agrupar vendors, NÃO agrupar código da aplicação
         manualChunks(id) {
-          // Chunk automático baseado no caminho
+          // Apenas node_modules
           if (id.includes('node_modules')) {
+            // React e ecossistema
             if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
               return 'vendor-react'
             }
+            // Supabase
             if (id.includes('@supabase')) {
               return 'vendor-supabase'
             }
+            // React Query
             if (id.includes('@tanstack/react-query')) {
               return 'vendor-query'
             }
-            if (id.includes('chart.js') || id.includes('react-chartjs')) {
+            // Chart.js
+            if (id.includes('chart.js') || id.includes('react-chartjs-2')) {
               return 'vendor-charts'
             }
-            if (id.includes('dompurify') || id.includes('browser-image-compression')) {
+            // Outras libs
+            if (id.includes('dompurify') || id.includes('browser-image-compression') || id.includes('lodash')) {
               return 'vendor-utils'
             }
+            // Restante das dependências
             return 'vendor'
           }
           
-          // Chunks da aplicação
-          if (id.includes('/src/components/')) {
-            return 'components'
-          }
-          if (id.includes('/src/pages/')) {
-            return 'pages'
-          }
-          if (id.includes('/src/hooks/')) {
-            return 'hooks'
-          }
+          // ❌ NÃO AGRUPAR código da aplicação!
+          // O Vite + lazy imports já faz code splitting automático por página
+          // Agrupar manualmente ANULA o lazy loading
         },
         
         chunkFileNames: 'assets/[name]-[hash].js',
@@ -126,9 +144,7 @@ export default defineConfig({
         unused: true,
       },
       mangle: {
-        properties: isProduction ? {
-          regex: /^_/,
-        } : false
+        properties: isProduction ? { regex: /^_/ } : false
       },
       format: {
         comments: false,
@@ -139,9 +155,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 500,
     cssCodeSplit: true,
     target: 'es2020',
-    
-    // Compressão de assets
-    assetsInlineLimit: 4096, // 4kb
+    assetsInlineLimit: 4096,
   },
   
   // ============= OTIMIZAÇÃO DE DEPENDÊNCIAS =============
@@ -157,14 +171,11 @@ export default defineConfig({
       'dompurify',
       'browser-image-compression'
     ],
-    exclude: [],
-    rolldownOptions: {
-      target: 'es2020',
-    },
-    // Forçar otimização mesmo com erros
-    force: false
+    // ✅ CORRIGIDO: Remover rolldownOptions (causa warning)
+    esbuildOptions: {
+      target: 'es2020'
+    }
   },
-
   
   // ============= RESOLVE =============
   resolve: {
@@ -175,6 +186,8 @@ export default defineConfig({
       '@hooks': '/src/hooks',
       '@utils': '/src/utils',
       '@lib': '/src/lib',
+      '@contexts': '/src/contexts',
+      '@services': '/src/services',
     }
   },
   

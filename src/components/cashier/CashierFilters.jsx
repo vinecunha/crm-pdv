@@ -1,5 +1,5 @@
 import React from 'react'
-import { RefreshCw } from '../../lib/icons'
+import { RefreshCw } from '@lib/icons'
 import Button from '../ui/Button'
 
 const CashierFilters = ({ 

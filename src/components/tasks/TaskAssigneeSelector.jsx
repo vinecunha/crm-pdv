@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { supabase } from '../../lib/supabase'
-import { Users, X, ChevronDown, Search } from '../../lib/icons'
+import { supabase } from '@lib/supabase'
+import { Users, X, ChevronDown, Search } from '@lib/icons'
 
 const TaskAssigneeSelector = ({ value = [], names = [], onChange, disabled = false }) => {
   const [teamMembers, setTeamMembers] = useState([])

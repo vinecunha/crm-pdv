@@ -1,6 +1,6 @@
 import React from 'react'
-import { ShoppingCart } from '../../lib/icons'
-import { formatCurrency, formatDateTime } from '../../utils/formatters'
+import { ShoppingCart } from '@lib/icons'
+import { formatCurrency, formatDateTime } from '@utils/formatters'
 
 const RecentPurchases = ({ purchases }) => {
   if (!purchases || purchases.length === 0) return null

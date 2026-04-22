@@ -1,6 +1,6 @@
-import { supabase } from '../lib/supabase'
-import { sanitizeObject } from '../utils/sanitize'
-import logger from '../utils/logger'
+import { supabase } from '@lib/supabase'
+import { sanitizeObject } from '@utils/sanitize'
+import logger from '@utils/logger'
 
 /**
  * Buscar todos os cupons - COM FORÇA DE REFRESH

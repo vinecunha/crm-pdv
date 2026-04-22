@@ -1,5 +1,5 @@
 import imageCompression from 'browser-image-compression'
-import { logger } from '../utils/logger'
+import { logger } from '@utils/logger'
 
 /**
  * Comprime uma imagem antes do upload

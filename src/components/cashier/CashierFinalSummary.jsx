@@ -1,5 +1,5 @@
 import React from 'react'
-import { formatCurrency } from '../../utils/formatters'
+import { formatCurrency } from '@utils/formatters'
 
 const CashierFinalSummary = ({ summary }) => {
   if (!summary) return null

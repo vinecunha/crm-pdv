@@ -6,8 +6,8 @@ import {
   Clock, 
   Check, 
   AlertTriangle 
-} from '../lib/icons'
-import Badge from '../components/Badge'
+} from '@lib/icons'
+import Badge from '@components/Badge'
 
 export const BUDGET_STATUS = {
   PENDING: 'pending',

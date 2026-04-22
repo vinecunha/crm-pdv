@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { Copy, CheckCircle, Clock, X, RefreshCw, AlertCircle, ShieldCheck } from '../../../lib/icons'
+import { Copy, CheckCircle, Clock, X, RefreshCw, AlertCircle, ShieldCheck } from '@lib/icons'
 import Button from '../../ui/Button'
 import Modal from '../../ui/Modal'
-import { formatCurrency } from '../../../utils/formatters'
-import { supabase } from '../../../lib/supabase'
+import { formatCurrency } from '@utils/formatters'
+import { supabase } from '@lib/supabase'
 
 const generatePixLocally = (amount, description, saleId) => {
   const PIX_KEY      = "65182624000112"

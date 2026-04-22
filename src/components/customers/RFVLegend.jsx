@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { HelpCircle, X } from '../../lib/icons'
+import { HelpCircle, X } from '@lib/icons'
 
 const legendItems = [
   // ✅ Scores A (Recência Alta - comprou recentemente)

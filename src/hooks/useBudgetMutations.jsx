@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useAuth } from '../contexts/AuthContext'
-import useSystemLogs from './useSystemLogs'
-import * as budgetService from '../services/budgetService'
+import { useAuth } from '@contexts/AuthContext'
+import { useSystemLogs } from './useSystemLogs'
+import * as budgetService from '@services/budgetService'
 
 const useBudgetMutations = () => {
   const { profile } = useAuth()

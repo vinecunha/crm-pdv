@@ -3,13 +3,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Shield, Save, RotateCcw, CheckCircle, XCircle,
   Lock, Unlock, Eye, AlertTriangle, Info
-} from '../lib/icons'
-import { supabase } from '../lib/supabase'
-import { useAuth } from '../contexts/AuthContext'
-import Button from '../components/ui/Button'
-import FeedbackMessage from '../components/ui/FeedbackMessage'
-import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
-import Modal from '../components/ui/Modal'
+} from '@lib/icons'
+import { supabase } from '@lib/supabase'
+import { useAuth } from '@contexts/AuthContext'
+import Button from '@components/ui/Button'
+import FeedbackMessage from '@components/ui/FeedbackMessage'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
+import Modal from '@components/ui/Modal'
 
 const fetchPermissions = async () => {
   const [permsResult, rolePermsResult] = await Promise.all([

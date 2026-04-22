@@ -1,5 +1,5 @@
 import React from 'react'
-import { User, Shield, BadgeCheck } from '../../lib/icons'
+import { User, Shield, BadgeCheck } from '@lib/icons'
 import AvatarUploader from './AvatarUploader'
 
 const ProfileSidebar = ({ 

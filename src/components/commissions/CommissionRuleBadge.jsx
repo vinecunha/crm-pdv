@@ -1,7 +1,7 @@
 // src/components/commissions/CommissionRuleBadge.jsx
 import React from 'react'
-import { Award, AlertCircle, Clock, TrendingUp } from '../../lib/icons'
-import { formatDate } from '../../utils/formatters'
+import { Award, AlertCircle, Clock, TrendingUp } from '@lib/icons'
+import { formatDate } from '@utils/formatters'
 
 const CommissionRuleBadge = ({ rules, isLoading }) => {
   if (isLoading) {

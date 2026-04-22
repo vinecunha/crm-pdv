@@ -1,6 +1,6 @@
 // src/components/settings/SettingsSidebar.jsx
 import React from 'react'
-import { Building2, Palette, Shield, Lock } from '../../lib/icons'
+import { Building2, Palette, Shield, Lock } from '@lib/icons'
 
 const SettingsSidebar = ({ activeTab, setActiveTab }) => {
   const tabs = [

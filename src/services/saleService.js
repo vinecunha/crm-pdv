@@ -1,13 +1,22 @@
-import { supabase } from '../lib/supabase'
-import { sanitizeObject } from '../utils/sanitize'
-import { formatCurrency } from '../utils/formatters'
-import { logger } from '../utils/logger'
+import { supabase } from '@lib/supabase'
+import { sanitizeObject } from '@utils/sanitize'
+import { formatCurrency } from '@utils/formatters'
+import { logger } from '@utils/logger'
 import { notifyNewSale } from './notificationService'
+
+// Detectar se está rodando em Node.js (testes)
+const isNode = typeof window === 'undefined'
+const USE_TEST_RPC = isNode || import.meta.env.VITE_USE_TEST_RPC === 'true'
+const RPC_NAME = USE_TEST_RPC ? 'create_sale_test' : 'create_sale'
+
+console.log('🔥 saleService inicializado:', { isNode, USE_TEST_RPC, RPC_NAME })
 
 /**
  * Buscar produtos ativos com estoque
  */
 export const fetchProducts = async () => {
+  console.log('🔥 fetchProducts chamado')
+  
   const { data, error } = await supabase
     .from('products')
     .select('*')
@@ -15,7 +24,13 @@ export const fetchProducts = async () => {
     .gt('stock_quantity', 0)
     .order('name')
   
-  if (error) throw error
+  console.log('📦 fetchProducts resultado:', { data, error })
+  
+  if (error) {
+    console.error('❌ Erro fetchProducts:', error)
+    throw error
+  }
+  
   return data || []
 }
 
@@ -144,79 +159,77 @@ export const validateCoupon = async (code, customerId, cartSubtotal) => {
 }
 
 /**
- * Criar venda (USANDO RPC - VERSÃO CORRIGIDA)
+ * Criar venda
  */
 export const createSale = async (cart, customer, coupon, discount, paymentMethod, profile) => {
   try {
+    console.log('\n=== SALESERVICE - DADOS RECEBIDOS ===')
+    console.log('customer?.id:', customer?.id)
+    console.log('profile?.id:', profile?.id)
+    console.log('RPC_NAME:', RPC_NAME)
+    
     const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
     const total = subtotal - discount
     
-    // Determinar status baseado no método de pagamento
-    const isPix = paymentMethod === 'pix'
-    const paymentStatus = isPix ? 'pending' : 'paid'
-    const saleStatus = isPix ? 'pending' : 'completed'
-    
-    // Preparar itens para JSONB
     const itemsJson = cart.map(item => ({
       product_id: item.id,
-      product_name: item.name,
-      product_code: item.code,
       quantity: item.quantity,
-      unit_price: item.price,
-      total_price: item.total
+      unit_price: item.price
     }))
     
-    logger.log('🔥 Chamando RPC create_sale_complete', {
-      paymentMethod,
-      itemsCount: itemsJson.length,
-      total
-    })
+    const rpcParams = {
+      p_customer_id: customer?.id || null,
+      p_created_by: profile?.id,
+      p_items: itemsJson,
+      p_payment_method: paymentMethod,
+      p_discount_amount: discount,
+      p_coupon_code: coupon?.code || null,
+      p_notes: null
+    }
     
-    // 🔥 CHAMAR A RPC (UMA ÚNICA CHAMADA)
-    const { data, error } = await supabase
-      .rpc('create_sale_complete', {
-        p_customer_id: customer?.id || null,
-        p_customer_name: customer?.name || 'Cliente não identificado',
-        p_customer_phone: customer?.phone || null,
-        p_total_amount: subtotal,
-        p_discount_amount: discount,
-        p_discount_percent: coupon?.discount_type === 'percent' ? coupon.discount_value : 0,
-        p_coupon_code: coupon?.code || null,
-        p_final_amount: total,
-        p_payment_method: paymentMethod,
-        p_payment_status: paymentStatus,
-        p_status: saleStatus,
-        p_created_by: profile?.id,
-        p_items: itemsJson
-      })
+    console.log('rpcParams:', JSON.stringify(rpcParams, null, 2))
+    console.log('=====================================\n')
+    
+    const { data, error } = await supabase.rpc(RPC_NAME, rpcParams)
+    
+    console.log('RPC data:', data)
+    console.log('RPC error:', error)
       
     if (error) {
       logger.error('❌ Erro na RPC:', error)
       throw error
     }
     
-    if (!data.success) {
-      logger.error('❌ RPC falhou:', data)
-      throw new Error(data.error || 'Erro ao criar venda')
+    if (!data) {
+      logger.error('❌ RPC retornou null/undefined')
+      throw new Error('Erro ao criar venda: resposta vazia')
+    }
+    
+    // Verificar se houve erro na RPC
+    if (data.error) {
+      logger.error('❌ RPC retornou erro:', data)
+      throw new Error(data.error)
     }
     
     logger.log('✅ Venda criada com sucesso:', data)
     
+    // Extrair dados da venda
+    const saleData = data
+    
     const sale = {
-      id: data.sale_id,
-      sale_number: data.sale_number,
-      total_amount: subtotal,
-      discount_amount: discount,
-      final_amount: total
+      id: saleData.id,
+      sale_number: saleData.sale_number,
+      total_amount: saleData.total_amount || subtotal,
+      discount_amount: saleData.discount_amount || discount,
+      final_amount: saleData.final_amount || total
     }
     
-    // ✅ Notificar venda grande (movido para ANTES do return)
+    // Notificar vendas grandes
     if (sale.final_amount >= 500) {
       try {
         await notifyNewSale(sale, profile?.full_name || 'Vendedor')
       } catch (notifError) {
         logger.warn('⚠️ Erro ao notificar venda:', notifError)
-        // Não falhar a venda se a notificação falhar
       }
     }
     

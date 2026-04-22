@@ -3,7 +3,7 @@ import {
   Eye, Edit2, Plus, Trash2, CheckCircle, Shield, Lock,
   MessageCircle, Printer, Download, RefreshCw, Ban,
   Truck, Users, RotateCcw, Copy, Unlock, TrendingUp
-} from '../lib/icons'
+} from '@lib/icons'
 
 export const actionColors = {
   view: 'text-blue-600 hover:bg-blue-50',

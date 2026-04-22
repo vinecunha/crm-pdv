@@ -1,5 +1,5 @@
 import React from 'react'
-import { formatCurrency } from '../../../utils/formatters'
+import { formatCurrency } from '@utils/formatters'
 
 const BudgetItemsList = ({ items = [] }) => {
   if (items.length === 0) {

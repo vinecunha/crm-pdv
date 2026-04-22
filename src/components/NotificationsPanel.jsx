@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Bell, CheckCheck, X, Info, AlertCircle, CheckCircle, AlertTriangle } from '../lib/icons'
-import { useNotifications } from '../hooks/useNotifications'
-import { useAuth } from '../contexts/AuthContext'
+import { Bell, CheckCheck, X, Info, AlertCircle, CheckCircle, AlertTriangle } from '@lib/icons'
+import { useNotifications } from '@hooks/useNotifications'
+import { useAuth } from '@contexts/AuthContext'
 
 const NotificationsPanel = () => {
   const { profile } = useAuth()

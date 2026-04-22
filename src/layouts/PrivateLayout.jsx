@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { useAuth } from '../contexts/AuthContext'
-import Sidebar from '../components/Sidebar'
-import Header from '../components/Header'
-import ThemeInitializer from '../components/ThemeInitializer'
+import { useAuth } from '@contexts/AuthContext'
+import Sidebar from '@components/Sidebar'
+import Header from '@components/Header'
+import ThemeInitializer from '@components/ThemeInitializer'
 
 const PrivateLayout = ({ children }) => {
   const { profile } = useAuth()

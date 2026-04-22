@@ -1,6 +1,6 @@
 import React from 'react'
-import { ShoppingCart, DollarSign, TrendingUp, Calendar } from '../../lib/icons'
-import { formatCurrency, formatDate } from '../../utils/formatters'
+import { ShoppingCart, DollarSign, TrendingUp, Calendar } from '@lib/icons'
+import { formatCurrency, formatDate } from '@utils/formatters'
 
 const CustomerStats = ({ stats }) => {
   const StatCard = ({ icon: Icon, label, value, color }) => {

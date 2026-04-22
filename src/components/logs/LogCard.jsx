@@ -1,5 +1,5 @@
 import React from 'react'
-import { Eye, ChevronRight } from '../../lib/icons'
+import { Eye, ChevronRight } from '@lib/icons'
 
 const LogCard = ({ log, onViewDetails, getActionColor, getActionLabel, formatDateCard }) => {
   return (

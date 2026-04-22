@@ -1,13 +1,13 @@
 import React, { useState, useMemo } from 'react'
 import { useLocation, useNavigate, Link } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import { useCompany } from '../hooks/useCompany'
+import { useAuth } from '@contexts/AuthContext'
+import { useCompany } from '@hooks/useCompany'
 import PrefetchLink from './PrefetchLink'
 import {
   LogOut, X, ShoppingBag, Package, Users, Settings, FileText,
   BarChart3, UserCircle, LayoutDashboard, ChevronLeft, ChevronRight,
   ClipboardList, Ticket, Calculator, User, Tags, Archive
-} from '../lib/icons'
+} from '@lib/icons'
 
 const Sidebar = ({ collapsed, setCollapsed }) => {
   const { 

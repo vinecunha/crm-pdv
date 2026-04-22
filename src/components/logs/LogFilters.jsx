@@ -1,5 +1,5 @@
 import React from 'react'
-import { Download } from '../../lib/icons'
+import { Download } from '@lib/icons'
 import Button from '../ui/Button'
 import DataFilters from '../ui/DataFilters'
 

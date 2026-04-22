@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { Moon, Sun, Monitor, Clock, ChevronDown } from '../../lib/icons'
-import { useAuth } from '../../contexts/AuthContext'
-import { supabase } from '../../lib/supabase'
+import { Moon, Sun, Monitor, Clock, ChevronDown } from '@lib/icons'
+import { useAuth } from '@contexts/AuthContext'
+import { supabase } from '@lib/supabase'
 
 const ThemeSelector = () => {
   const { profile } = useAuth()

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Save } from '../../lib/icons'
+import { Save } from '@lib/icons'
 import Button from '../ui/Button'
 
 const AppearanceSettingsTab = ({ settings, setSettings, onSave, saving }) => {

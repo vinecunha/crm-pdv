@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '@contexts/AuthContext'
 
 // Coordenadas padrão (São Paulo)
 const DEFAULT_COORDS = { latitude: -23.5505, longitude: -46.6333 }

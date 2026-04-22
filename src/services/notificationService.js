@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase'
+import { supabase } from '@lib/supabase'
 
 /**
  * Criar notificação para um usuário

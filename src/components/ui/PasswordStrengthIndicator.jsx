@@ -1,6 +1,6 @@
 import React from 'react'
-import { CheckCircle, XCircle, AlertCircle } from '../../lib/icons'
-import { usePasswordStrength } from '../../contexts/AuthContext'
+import { CheckCircle, XCircle, AlertCircle } from '@lib/icons'
+import { usePasswordStrength } from '@contexts/AuthContext'
 
 const PasswordStrengthIndicator = ({ password }) => {
   const strength = usePasswordStrength(password)

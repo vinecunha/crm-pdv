@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { supabase } from '../lib/supabase'
+import { supabase } from '@lib/supabase'
 
 // ============= Funções de Prefetch =============
 const prefetchFunctions = {

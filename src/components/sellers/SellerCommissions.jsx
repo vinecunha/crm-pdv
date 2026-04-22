@@ -1,7 +1,7 @@
 // src/components/sellers/SellerCommissions.jsx
 import React, { useState } from 'react'
-import { DollarSign, TrendingUp, Calendar, CheckCircle, Clock, ChevronRight } from '../../lib/icons'
-import { formatCurrency } from '../../utils/formatters'
+import { DollarSign, TrendingUp, Calendar, CheckCircle, Clock, ChevronRight } from '@lib/icons'
+import { formatCurrency } from '@utils/formatters'
 
 const SellerCommissions = ({ commissions, isLoading }) => {
   const [showHistory, setShowHistory] = useState(false)

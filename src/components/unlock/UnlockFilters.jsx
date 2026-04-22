@@ -1,5 +1,5 @@
 import React from 'react'
-import { Search } from '../../lib/icons'
+import { Search } from '@lib/icons'
 
 const UnlockFilters = ({ searchTerm, setSearchTerm }) => {
   return (

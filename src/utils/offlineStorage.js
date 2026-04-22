@@ -1,4 +1,4 @@
-import { logger } from '../utils/logger'
+import { logger } from '@utils/logger'
 
 const DB_NAME = 'pdv-offline-db'
 const DB_VERSION = 2 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { ShoppingCart, ChevronUp, ChevronDown } from '../../../lib/icons'
-import { formatCurrency } from '../../../utils/formatters'
+import { ShoppingCart, ChevronUp, ChevronDown } from '@lib/icons'
+import { formatCurrency } from '@utils/formatters'
 import Button from '../../ui/Button'
 import CartSummary from './CartSummary'
 

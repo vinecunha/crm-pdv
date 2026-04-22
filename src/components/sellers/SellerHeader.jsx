@@ -1,24 +1,20 @@
+// src/components/sellers/SellerHeader.jsx
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import CommissionRuleBadge from '../commissions/CommissionRuleBadge'
-import { useUserCommissionRules } from '../../hooks/useUserCommissionRules'
 import Button from '../ui/Button'
 import PageHeader from '../ui/PageHeader'
-import { ArrowLeft, Settings, Download, User, Award } from '../../lib/icons'
-import { formatDate } from '../../utils/formatters'
+import { ArrowLeft, Settings, Download, User, Award } from '@lib/icons'
+import { formatDate } from '@utils/formatters'
 
 const SellerHeader = ({ 
   seller, 
   canEditGoals, 
   onConfigureGoals, 
-  onExportReport, 
-  onConfigureCommissionRules, 
+  onExportReport,
+  onConfigureCommissionRules,
   showCommissionRulesButton 
 }) => {
   const navigate = useNavigate()
-  
-  // ✅ CORRIGIDO: Usar seller.id em vez de sellerId
-  const sellerId = seller?.id
   
   const headerActions = [
     ...(canEditGoals ? [{
@@ -40,11 +36,6 @@ const SellerHeader = ({
       variant: 'outline'
     }
   ]
-
-  // ✅ CORRIGIDO: Passar sellerId correto
-  const { data: userRules, isLoading: rulesLoading } = useUserCommissionRules(sellerId)
-  
-  const hasCustomRules = userRules && userRules.length > 0
   
   return (
     <>
@@ -59,7 +50,7 @@ const SellerHeader = ({
         actions={headerActions}
       />
 
-      {/* SellerInfo */}
+      {/* Informações do Vendedor */}
       <div className="my-4 bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
         <div className="flex items-center gap-4">
           <div className="relative">
@@ -94,16 +85,6 @@ const SellerHeader = ({
           </div>
         </div>
       </div>
-
-      {/* ✅ Badge de Regras de Comissão */}
-      {(hasCustomRules || canEditGoals) && (
-        <div className="mb-6">
-          <CommissionRuleBadge 
-            rules={userRules} 
-            isLoading={rulesLoading}
-          />
-        </div>
-      )}
     </>
   )
 }

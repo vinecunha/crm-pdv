@@ -1,6 +1,6 @@
 import React from 'react'
 import Button from '../ui/Button'
-import { Check } from '../../lib/icons'
+import { Check } from '@lib/icons'
 
 const StockCountProgressBar = ({ stats, onFinish, disabled }) => {
   return (

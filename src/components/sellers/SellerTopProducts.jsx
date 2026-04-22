@@ -1,6 +1,6 @@
 import React from 'react'
-import { Package, TrendingUp, TrendingDown } from '../../lib/icons'
-import { formatCurrency } from '../../utils/formatters'
+import { Package, TrendingUp, TrendingDown } from '@lib/icons'
+import { formatCurrency } from '@utils/formatters'
 
 const SellerTopProducts = ({ products }) => {
   const maxRevenue = Math.max(...products.map(p => p.revenue), 1)

@@ -9,9 +9,9 @@ import {
   AlertTriangle, 
   Check,
   ChevronRight
-} from '../../lib/icons'
+} from '@lib/icons'
 import Badge from '../Badge'
-import { formatCurrency, formatDate } from '../../utils/formatters'
+import { formatCurrency, formatDate } from '@utils/formatters'
 
 const BudgetCard = ({ budget, onClick, onApprove, onReject }) => {
   const getStatusBadge = (status) => {

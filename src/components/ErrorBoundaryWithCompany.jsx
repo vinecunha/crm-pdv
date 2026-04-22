@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase } from '@lib/supabase'
 import ErrorBoundary from './ErrorBoundary'
 
 const ErrorBoundaryWithCompany = ({ children }) => {

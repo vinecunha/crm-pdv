@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { supabase } from '../lib/supabase'
-import { useAuth } from '../contexts/AuthContext'
-import { logger } from '../utils/logger' 
+import { supabase } from '@lib/supabase'
+import { useAuth } from '@contexts/AuthContext'
+import { logger } from '@utils/logger' 
 
 export const useNotifications = () => {
   const { profile } = useAuth()

@@ -1,5 +1,5 @@
 import React from 'react'
-import { formatCurrency } from '../../../utils/formatters'
+import { formatCurrency } from '@utils/formatters'
 
 const TotalRow = ({ label, value, highlight = false, className = "" }) => (
   <div className={`flex justify-between ${className}`}>

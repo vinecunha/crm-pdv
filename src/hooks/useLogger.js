@@ -1,4 +1,4 @@
-import useSystemLogs from './useSystemLogs'
+import { useSystemLogs } from './useSystemLogs'
 
 const useLogger = (componentName) => {
   const { logAction, logCreate, logUpdate, logDelete, logError } = useSystemLogs()

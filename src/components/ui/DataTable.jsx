@@ -27,7 +27,7 @@ import {
   EyeOff,
   Eye,
   Cake
-} from '../../lib/icons'
+} from '@lib/icons'
 
 // ===== CONSTANTES (mantidas iguais) =====
 const DEFAULT_ACTION_LABELS = {

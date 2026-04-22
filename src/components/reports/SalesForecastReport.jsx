@@ -1,9 +1,9 @@
 // src/components/reports/SalesForecastReport.jsx
 import React, { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { supabase } from '../../lib/supabase'
-import { Target, TrendingUp, TrendingDown, Calendar, DollarSign } from '../../lib/icons'
-import { formatCurrency, formatNumber } from '../../utils/formatters'
+import { supabase } from '@lib/supabase'
+import { Target, TrendingUp, TrendingDown, Calendar, DollarSign } from '@lib/icons'
+import { formatCurrency, formatNumber } from '@utils/formatters'
 import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
 import DataTable from '../ui/DataTable'
 import StatCard from '../ui/StatCard'

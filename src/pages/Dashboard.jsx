@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '@contexts/AuthContext'
 import { 
   ShoppingCart, 
   UserPlus, 
@@ -15,29 +15,41 @@ import {
   BarChart3,
   ListChecks,
   DollarSign
-} from '../lib/icons'
-import { useDashboardData } from '../hooks/useDashboardData'
-import { useDashboardStats } from '../hooks/useDashboardStats'
-import SectionErrorBoundary from '../components/SectionErrorBoundary'
-import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
-import TaskWidget from '../components/tasks/TaskWidget'
-import { useTasksQuery } from '../hooks/useTasksQuery'
-import Button from '../components/ui/Button'
-import PageHeader from '../components/ui/PageHeader'
-import DashboardStats from '../components/dashboard/DashboardStats'
-import SalesChart from '../components/dashboard/SalesChart'
-import RecentSalesList from '../components/dashboard/RecentSalesList'
-import TopProductsList from '../components/dashboard/TopProductsList'
-import TeamOverview from '../components/dashboard/TeamOverview'
-import UserPerformanceCard from '../components/dashboard/UserPerformanceCard'
-import CommissionWidget from '../components/commissions/CommissionWidget'
-import { useCommissionSummary } from '../hooks/useCommissionSummary'
+} from '@lib/icons'
+import { useDashboard } from '@hooks/useDashboard'
+import SectionErrorBoundary from '@components/SectionErrorBoundary'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
+import TaskWidget from '@components/tasks/TaskWidget'
+import { useTasksQuery } from '@hooks/useTasksQuery'
+import Button from '@components/ui/Button'
+import PageHeader from '@components/ui/PageHeader'
+import DashboardStats from '@components/dashboard/DashboardStats'
+import SalesChart from '@components/dashboard/SalesChart'
+import RecentSalesList from '@components/dashboard/RecentSalesList'
+import TopProductsList from '@components/dashboard/TopProductsList'
+import TeamOverview from '@components/dashboard/TeamOverview'
+import UserPerformanceCard from '@components/dashboard/UserPerformanceCard'
+import CommissionWidget from '@components/commissions/CommissionWidget'
+import { useCommissionSummary } from '@hooks/useCommissionSummary'
+import { useDashboardRealtime } from '@hooks/useDashboardRealtime'
 
 const Dashboard = () => {
   const { profile, permissions } = useAuth()
   const navigate = useNavigate()
-  const { data: rawData, isLoading, error, refetch } = useDashboardData()
-  const dashboardStats = useDashboardStats(rawData)
+  const { 
+    rawData,
+    primaryStats,
+    secondaryStats,
+    recentSales,
+    topProducts,
+    chartData,
+    isLoading,
+    error,
+    refetch,
+    hasData
+  } = useDashboard()
+
+  useDashboardRealtime(!isLoading && !error)
 
   const { data: commissionSummary, isLoading: commissionLoading } = useCommissionSummary(
     profile?.id, 
@@ -127,11 +139,17 @@ const Dashboard = () => {
     )
   }
 
-  if (!dashboardStats) return null
-
-  const { recentSales, topProducts, chartData } = dashboardStats
-  const { teamData } = rawData || {}
+  const teamData = rawData?.teamData
   const showTeamSection = profile?.role !== 'operador' && teamData
+
+  const dashboardStats = {
+    primaryStats,
+    secondaryStats,
+    recentSales,
+    topProducts,
+    chartData,
+    hasData
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">

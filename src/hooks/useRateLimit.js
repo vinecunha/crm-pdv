@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { secureStorage } from '../utils/secureStorage'
+import { secureStorage } from '@utils/secureStorage'
 
 const LOGIN_ATTEMPTS_KEY = 'login_attempts'
 

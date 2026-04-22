@@ -1,7 +1,7 @@
 import React from 'react'
-import { supabase } from '../lib/supabase'
-import { AlertCircle, RefreshCw, Home, Bug, ChevronLeft, ChevronRight } from '../lib/icons'
-import { logger } from '../utils/logger' 
+import { supabase } from '@lib/supabase'
+import { AlertCircle, RefreshCw, Home, Bug, ChevronLeft, ChevronRight } from '@lib/icons'
+import { logger } from '@utils/logger' 
 
 class ErrorBoundary extends React.Component {
   constructor(props) {

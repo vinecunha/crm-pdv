@@ -1,6 +1,6 @@
 import React from 'react'
 import Modal from '../ui/Modal'
-import { formatDateTime } from '../../utils/formatters'
+import { formatDateTime } from '@utils/formatters'
 
 const LogDetailsModal = ({ isOpen, onClose, log, getActionLabel }) => {
   if (!log) return null

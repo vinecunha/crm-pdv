@@ -1,8 +1,8 @@
 import React from 'react'
-import { Printer } from '../../lib/icons'
+import { Printer } from '@lib/icons'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
-import { formatCurrency, formatDate, formatDateTime } from '../../utils/formatters'
+import { formatCurrency, formatDate, formatDateTime } from '@utils/formatters'
 
 const CashierDetailsModal = ({ isOpen, onClose, closing, users }) => {
   if (!closing) return null

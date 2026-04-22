@@ -13,9 +13,9 @@ import {
   ChevronRight,
   CheckCircle,
   XCircle
-} from '../../lib/icons'
+} from '@lib/icons'
 import Badge from '../Badge'
-import { formatCurrency, formatDate } from '../../utils/formatters'
+import { formatCurrency, formatDate } from '@utils/formatters'
 
 const CouponCard = ({ 
   coupon, 

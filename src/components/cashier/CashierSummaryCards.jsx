@@ -1,6 +1,6 @@
 import React from 'react'
-import { DollarSign, TrendingDown, XCircle, TrendingUp } from '../../lib/icons'
-import { formatCurrency, formatNumber } from '../../utils/formatters'
+import { DollarSign, TrendingDown, XCircle, TrendingUp } from '@lib/icons'
+import { formatCurrency, formatNumber } from '@utils/formatters'
 
 const CashierSummaryCards = ({ summary }) => {
   if (!summary) return null

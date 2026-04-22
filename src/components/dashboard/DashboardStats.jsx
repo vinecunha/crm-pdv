@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import StatCard, { StatCardGroup } from '../../components/ui/StatCard'
+import StatCard, { StatCardGroup } from '@components/ui/StatCard'
 import SectionErrorBoundary from '../SectionErrorBoundary'
 import { 
   ShoppingCart, 
@@ -12,8 +12,8 @@ import {
   Package, 
   AlertCircle, 
   DollarSign 
-} from '../../lib/icons'
-import { formatCurrency, formatNumber } from '../../utils/formatters'
+} from '@lib/icons'
+import { formatCurrency, formatNumber } from '@utils/formatters'
 
 const iconMap = {
   ShoppingCart,

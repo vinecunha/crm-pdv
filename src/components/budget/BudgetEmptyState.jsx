@@ -1,6 +1,6 @@
 import React from 'react'
 import DataEmptyState from '../ui/DataEmptyState'
-import { Plus } from '../../lib/icons'
+import { Plus } from '@lib/icons'
 
 const BudgetEmptyState = ({ onCreateNew }) => {
   return (

@@ -1,6 +1,6 @@
 import React from 'react'
-import { History, MessageSquare } from '../../lib/icons'
-import { formatDateTime } from '../../utils/formatters'
+import { History, MessageSquare } from '@lib/icons'
+import { formatDateTime } from '@utils/formatters'
 
 const CommunicationHistory = ({ history, channels }) => {
   return (

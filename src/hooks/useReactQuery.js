@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { clearPersistedCache } from '../lib/react-query'
+import { clearPersistedCache } from '@lib/react-query'
 
 export const useReactQuery = () => {
   const queryClient = useQueryClient()

@@ -1,24 +1,24 @@
+// src/pages/SellerDetail.jsx
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useParams } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import { useSellerData } from '../hooks/useSellerData'
-import { useGoals } from '../hooks/useGoals'
-import { useCommissions } from '../hooks/useCommissions'
-import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
-import SectionErrorBoundary from '../components/SectionErrorBoundary'
-import Button from '../components/ui/Button'
-import SellerHeader from '../components/sellers/SellerHeader'
-import SellerMetricsCards from '../components/sellers/SellerMetricsCards'
-import SellerGoalsSection from '../components/sellers/SellerGoalsSection'
-import SellerAchievements from '../components/sellers/SellerAchievements'
-import SellerTopProducts from '../components/sellers/SellerTopProducts'
-import SellerEvolutionChart from '../components/sellers/SellerEvolutionChart'
-import SellerCommissions from '../components/sellers/SellerCommissions'
-import UserCommissionRules from '../components/commissions/UserCommissionRules'
-import GoalSettings from '../components/goals/GoalSettings'
-import { exportSellerReport } from '../utils/exportReport'
-import { Award } from '../lib/icons'
+import { useAuth } from '@contexts/AuthContext'
+import { useSellerData } from '@hooks/useSellerData'
+import { useGoals } from '@hooks/useGoals'
+import { useCommissions } from '@hooks/useCommissions'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
+import SectionErrorBoundary from '@components/SectionErrorBoundary'
+import Button from '@components/ui/Button'
+import SellerHeader from '@components/sellers/SellerHeader'
+import SellerMetricsCards from '@components/sellers/SellerMetricsCards'
+import SellerGoalsSection from '@components/sellers/SellerGoalsSection'
+import SellerAchievements from '@components/sellers/SellerAchievements'
+import SellerTopProducts from '@components/sellers/SellerTopProducts'
+import SellerEvolutionChart from '@components/sellers/SellerEvolutionChart'
+import SellerCommissions from '@components/sellers/SellerCommissions'
+import UserCommissionRules from '@components/commissions/UserCommissionRules'
+import GoalSettings from '@components/goals/GoalSettings'
+import { exportSellerReport } from '@utils/exportReport'
 
 const SellerDetail = () => {
   const { sellerId } = useParams()
@@ -27,12 +27,10 @@ const SellerDetail = () => {
   const [showGoalSettings, setShowGoalSettings] = useState(false)
   const [showCommissionRules, setShowCommissionRules] = useState(false)
   
+  // ✅ TODOS OS HOOKS AQUI NO TOPO
   const { data, isLoading, error } = useSellerData(sellerId, profile?.role, profile?.id)
   const { goals, saveGoals, isSaving } = useGoals(sellerId)
   const { data: commissionsData, isLoading: commissionsLoading } = useCommissions(sellerId)
-  
-  // Verificar se é o próprio perfil
-  const isOwnProfile = profile?.id === sellerId
   
   // Verificar permissão para editar metas
   const canEditGoals = profile?.role === 'admin' || profile?.role === 'gerente'
@@ -73,24 +71,14 @@ const SellerDetail = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* ✅ SellerHeader sem extraActions duplicado */}
         <SellerHeader
           seller={seller}
           canEditGoals={canEditGoals}
           onConfigureGoals={() => setShowGoalSettings(true)}
           onExportReport={handleExportReport}
-          onConfigureCommissionRules={() => setShowCommissionRules(true)}  // ✅ Nova prop
+          onConfigureCommissionRules={() => setShowCommissionRules(true)}
           showCommissionRulesButton={canEditGoals}
-          extraActions={
-            canEditGoals && (
-              <Button
-                variant="outline"
-                icon={Award}
-                onClick={() => setShowCommissionRules(true)}
-              >
-                Regras de Comissão
-              </Button>
-            )
-          }
         />
         
         <SectionErrorBoundary title="Erro nas métricas">

@@ -13,9 +13,9 @@ import {
   Star,
   User,
   FileText
-} from '../../lib/icons'
+} from '@lib/icons'
 import Badge from '../Badge'
-import { formatDate } from '../../utils/formatters'
+import { formatDate } from '@utils/formatters'
 
 const CustomerCard = ({ 
   customer, 

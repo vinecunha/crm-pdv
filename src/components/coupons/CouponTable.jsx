@@ -19,10 +19,10 @@ import {
   Minimize2,
   EyeOff,
   Eye
-} from '../../lib/icons'
-import DataTable from '../../components/ui/DataTable'
-import Badge from '../../components/Badge'
-import { formatCurrency, formatDate } from '../../utils/formatters'
+} from '@lib/icons'
+import DataTable from '@components/ui/DataTable'
+import Badge from '@components/Badge'
+import { formatCurrency, formatDate } from '@utils/formatters'
 
 const CouponTable = ({ 
   coupons = [],

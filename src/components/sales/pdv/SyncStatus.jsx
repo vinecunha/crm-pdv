@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
-import { WifiOff, RefreshCw, CheckCircle, XCircle, ChevronUp, ChevronDown } from '../../../lib/icons'
-import useOfflineSync from '../../../hooks/useOfflineSync'
-import { formatCurrency } from '../../../utils/formatters'
-import { getOfflineSales } from '../../../utils/offlineStorage'
+import { WifiOff, RefreshCw, CheckCircle, XCircle, ChevronUp, ChevronDown } from '@lib/icons'
+import useOfflineSync from '@hooks/useOfflineSync'
+import { formatCurrency } from '@utils/formatters'
+import { getOfflineSales } from '@utils/offlineStorage'
 
 const SyncStatus = () => {
   const { pendingCount, isSyncing, lastSync, syncNow } = useOfflineSync()

@@ -1,6 +1,6 @@
 // src/components/profile/UserPreferencesTab.jsx
 import React from 'react'
-import { Save, Moon, Sun, LayoutGrid, AlignJustify, Clock, Monitor } from '../../lib/icons'
+import { Save, Moon, Sun, LayoutGrid, AlignJustify, Clock, Monitor } from '@lib/icons'
 import Button from '../ui/Button'
 
 const UserPreferencesTab = ({ preferences, setPreferences, onSave, saving }) => {

@@ -1,7 +1,7 @@
 import React from 'react'
-import { Package, Search } from '../../../lib/icons'
+import { Package, Search } from '@lib/icons'
 import LazyImage from '../../ui/LazyImage'
-import { formatCurrency } from '../../../utils/formatters'
+import { formatCurrency } from '@utils/formatters'
 
 const ProductGrid = ({ 
   products, 

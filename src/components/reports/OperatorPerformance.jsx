@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react'
+// src/components/reports/OperatorPerformance.jsx
+import React, { useState, useEffect } from 'react'
 import { 
   UserCheck, TrendingUp, Award, ShoppingBag, 
   DollarSign, Target, Medal, Star, User
-} from '../../lib/icons'
-import { supabase } from '../../lib/supabase'
-import { formatCurrency, formatNumber } from '../../utils/formatters'
-import SummaryCard from './SummaryCard'
+} from '@lib/icons'
+import { supabase } from '@lib/supabase'
+import { formatCurrency, formatNumber } from '@utils/formatters'
+import StatCard from '../ui/StatCard'
 import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
 import DataTable from '../ui/DataTable'
-import '../../lib/chartConfig' 
 
 const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }) => {
   const [loading, setLoading] = useState(true)
@@ -19,9 +19,6 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
     totalSales: 0,
     totalRevenue: 0
   })
-
-  const lineChartId = useRef(`line-chart-${Date.now()}-${Math.random().toString(36)}`)
-  const doughnutChartId = useRef(`doughnut-chart-${Date.now()}-${Math.random().toString(36)}`)
 
   useEffect(() => {
     loadOperatorPerformance()
@@ -34,7 +31,7 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
     switch (dateRange) {
       case 'today':
         startDate = new Date(now.setHours(0, 0, 0, 0))
-        endDate = new Date(now.setHours(23, 59, 59, 999))
+        endDate = new Date()
         break
       case 'week':
         startDate = new Date(now.setDate(now.getDate() - 7))
@@ -107,10 +104,7 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
 
       const { data: saleItems, error: itemsError } = await supabase
         .from('sale_items')
-        .select(`
-          quantity,
-          sale_id
-        `)
+        .select(`quantity, sale_id`)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString())
 
@@ -200,24 +194,16 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
     return <span className="text-sm font-medium text-gray-500 dark:text-gray-400">#{rank}</span>
   }
 
-  // Colunas para o DataTable
   const columns = [
     {
       key: 'rank',
       header: '#',
-      width: '60px',
-      render: (row) => (
-        <div className="flex items-center gap-2">
-          {getRankIcon(row.rank)}
-        </div>
-      )
+      render: (row) => <div className="flex items-center gap-2">{getRankIcon(row.rank)}</div>
     },
     {
       key: 'name',
       header: 'Operador',
       sortable: true,
-      width: '25%',
-      minWidth: '200px',
       render: (row) => (
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
@@ -233,78 +219,73 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
     {
       key: 'role',
       header: 'Função',
-      width: '100px',
       render: (row) => getRoleBadge(row.role)
     },
     {
       key: 'salesCount',
       header: 'Vendas',
       sortable: true,
-      width: '90px',
       render: (row) => <span className="text-gray-900 dark:text-white">{row.salesCount}</span>
     },
     {
       key: 'itemsSold',
       header: 'Itens',
       sortable: true,
-      width: '90px',
       render: (row) => <span className="text-gray-900 dark:text-white">{formatNumber(row.itemsSold)}</span>
     },
     {
       key: 'averageTicket',
       header: 'Ticket Médio',
       sortable: true,
-      width: '130px',
       render: (row) => <span className="text-gray-900 dark:text-white">{formatCurrency(row.averageTicket)}</span>
     },
     {
       key: 'totalDiscount',
       header: 'Descontos',
       sortable: true,
-      width: '120px',
       render: (row) => <span className="text-orange-600 dark:text-orange-400">{formatCurrency(row.totalDiscount)}</span>
     },
     {
       key: 'totalRevenue',
       header: 'Faturamento',
       sortable: true,
-      width: '140px',
       render: (row) => <span className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(row.totalRevenue)}</span>
     }
   ]
 
-  if (loading) {
-    return <DataLoadingSkeleton type="cards" rows={4} />
-  }
+  if (loading) return <DataLoadingSkeleton type="cards" rows={4} />
 
   return (
     <div className="space-y-6">
       {/* Cards de Resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <SummaryCard
-          title="Total de Operadores"
-          value={formatNumber(stats.totalOperators)}
+        <StatCard
+          label="Total de Operadores"
+          value={stats.totalOperators}
           icon={UserCheck}
-          color="blue"
+          variant="info"
+          formatValue={formatNumber}
         />
-        <SummaryCard
-          title="Operadores Ativos"
-          value={formatNumber(stats.activeOperators)}
+        <StatCard
+          label="Operadores Ativos"
+          value={stats.activeOperators}
           icon={Target}
-          color="green"
-          subtitle="Com vendas no período"
+          variant="success"
+          formatValue={formatNumber}
         />
-        <SummaryCard
-          title="Total de Vendas"
-          value={formatNumber(stats.totalSales)}
+        <StatCard
+          label="Total de Vendas"
+          value={stats.totalSales}
           icon={ShoppingBag}
-          color="purple"
+          variant="purple"
+          formatValue={formatNumber}
         />
-        <SummaryCard
-          title="Faturamento Total"
-          value={formatCurrency(stats.totalRevenue)}
+        <StatCard
+          label="Faturamento Total"
+          value={stats.totalRevenue}
           icon={DollarSign}
-          color="indigo"
+          variant="success"
+          formatValue={formatCurrency}
         />
       </div>
 
@@ -339,9 +320,7 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
                       'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800'
                     }`}
                   >
-                    <div className="flex justify-center mb-2">
-                      {getRankIcon(operator.rank)}
-                    </div>
+                    <div className="flex justify-center mb-2">{getRankIcon(operator.rank)}</div>
                     <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
                       {operator.name.charAt(0).toUpperCase()}
                     </div>
@@ -358,7 +337,7 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
               </div>
             </div>
 
-            {/* Tabela com DataTable */}
+            {/* Tabela */}
             <div className="p-6">
               <DataTable
                 columns={columns}

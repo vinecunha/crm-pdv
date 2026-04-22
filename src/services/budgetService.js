@@ -1,6 +1,6 @@
-import { supabase } from '../lib/supabase'
-import { sanitizeObject } from '../utils/sanitize'
-import { formatCurrency } from '../utils/formatters'
+import { supabase } from '@lib/supabase'
+import { sanitizeObject } from '@utils/sanitize'
+import { formatCurrency } from '@utils/formatters'
 
 /**
  * Buscar todos os orçamentos

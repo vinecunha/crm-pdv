@@ -1,15 +1,15 @@
 // Login.jsx refatorado
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import { useRateLimit } from '../hooks/useRateLimit'
-import { supabase } from '../lib/supabase'
+import { useAuth } from '@contexts/AuthContext'
+import { useRateLimit } from '@hooks/useRateLimit'
+import { supabase } from '@lib/supabase'
 
-import LoginHeader from '../components/auth/LoginHeader'
-import LoginFooter from '../components/auth/LoginFooter'
-import LoginForm from '../components/auth/LoginForm' // ✅ Importar
-import { BlockedAlert, AttemptsIndicator } from '../components/auth/RateLimitIndicator'
-import ErrorAlert from '../components/auth/ErrorAlert'
+import LoginHeader from '@components/auth/LoginHeader'
+import LoginFooter from '@components/auth/LoginFooter'
+import LoginForm from '@components/auth/LoginForm' // ✅ Importar
+import { BlockedAlert, AttemptsIndicator } from '@components/auth/RateLimitIndicator'
+import ErrorAlert from '@components/auth/ErrorAlert'
 
 const Login = () => {
   const [email, setEmail] = useState('')

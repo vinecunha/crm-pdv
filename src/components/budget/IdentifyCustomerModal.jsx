@@ -1,7 +1,7 @@
 import React from 'react'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
-import { Phone } from '../../lib/icons'
+import { Phone } from '@lib/icons'
 
 const IdentifyCustomerModal = ({ 
   isOpen, 

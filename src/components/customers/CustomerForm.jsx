@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Calendar, Search } from '../../lib/icons'
+import { Calendar, Search } from '@lib/icons'
 import FormInput from '../forms/FormInput'
 import Button from '../ui/Button'
 

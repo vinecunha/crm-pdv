@@ -1,6 +1,6 @@
 import React from 'react'
-import { Award, Trophy, Calendar, TrendingUp, Zap, Star } from '../../lib/icons'
-import { formatCurrency } from '../../utils/formatters'
+import { Award, Trophy, Calendar, TrendingUp, Zap, Star } from '@lib/icons'
+import { formatCurrency } from '@utils/formatters'
 
 const AchievementItem = ({ icon: Icon, title, value, subtitle, color = 'blue' }) => {
   const colors = {

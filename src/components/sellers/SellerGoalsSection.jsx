@@ -1,6 +1,6 @@
 import React from 'react'
-import { Trophy, TrendingUp, Target, Award } from '../../lib/icons'
-import { formatCurrency } from '../../utils/formatters'
+import { Trophy, TrendingUp, Target, Award, AlertCircle } from '@lib/icons'
+import { formatCurrency } from '@utils/formatters'
 
 const GoalProgress = ({ label, current, goal, color, icon: Icon }) => {
   const progress = Math.min((current / goal) * 100, 100)
@@ -79,6 +79,10 @@ const SellerGoalsSection = ({ metrics, goals, canEditGoals, onEditGoals }) => {
   const monthlyGoal = goals?.monthly?.target_amount || 20000
   const yearlyGoal = goals?.yearly?.target_amount || 240000
   
+  const isUsingDefaults = goals?._allDefault || goals?.daily?.isDefault
+  const hasMissingTypes = goals?._hasMissingTypes
+  const missingTypes = goals?._missingTypes || []
+  
   // Calcular médias e projeções
   const dailyAverage = metrics.revenueLast30Days / 30
   const monthlyProjection = dailyAverage * 30
@@ -118,6 +122,44 @@ const SellerGoalsSection = ({ metrics, goals, canEditGoals, onEditGoals }) => {
           </button>
         )}
       </div>
+
+       {/* ✅ AVISO: Usando metas padrão */}
+      {isUsingDefaults && canEditGoals && (
+        <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+          <div className="flex items-start gap-2">
+            <AlertCircle size={16} className="text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                ⚠️ Metas padrão do sistema
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+                {hasMissingTypes 
+                  ? `As metas de ${missingTypes.map(t => 
+                      t === 'daily' ? 'diária' : t === 'monthly' ? 'mensal' : 'anual'
+                    ).join(', ')} ainda não foram configuradas.`
+                  : 'Nenhuma meta personalizada foi definida para este vendedor.'
+                }
+              </p>
+              <button
+                onClick={onEditGoals}
+                className="mt-2 text-xs font-medium text-amber-700 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-200 underline"
+              >
+                Configurar metas reais →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* ✅ AVISO: Apenas visualização (não pode editar) */}
+      {isUsingDefaults && !canEditGoals && (
+        <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+            <AlertCircle size={12} />
+            Metas padrão do sistema. Contate um gerente para configurar metas personalizadas.
+          </p>
+        </div>
+      )}
       
       <div className="space-y-4">
         <GoalProgress 

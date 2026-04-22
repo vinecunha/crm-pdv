@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef } from 'react'
 import {
   ShoppingCart, DollarSign, TrendingUp, Percent,
   CreditCard
-} from '../../lib/icons'
-import { supabase } from '../../lib/supabase'
-import { formatCurrency, formatNumber, formatDateTime } from '../../utils/formatters'
-import SummaryCard from './SummaryCard'
+} from '@lib/icons'
+import { supabase } from '@lib/supabase'
+import { formatCurrency, formatNumber, formatDateTime } from '@utils/formatters'
+import StatCard from '../ui/StatCard'
 import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
 import DataTable from '../ui/DataTable'
 import Badge from '../Badge'
@@ -31,7 +31,7 @@ const SalesReport = ({ dateRange, customDateRange, paymentMethodFilter }) => {
     switch (dateRange) {
       case 'today':
         startDate = new Date(now.setHours(0, 0, 0, 0))
-        endDate = new Date(now.setHours(23, 59, 59, 999))
+        endDate = new Date()
         break
       case 'week':
         startDate = new Date(now.setDate(now.getDate() - 7))
@@ -116,46 +116,40 @@ const SalesReport = ({ dateRange, customDateRange, paymentMethodFilter }) => {
     }
   }
 
-  // Colunas para o DataTable de últimas vendas
   const recentSalesColumns = [
     {
       key: 'sale_number',
       header: 'Nº Venda',
-      width: '150px',
       render: (row) => <span className="text-sm font-mono text-gray-900 dark:text-white">{row.sale_number}</span>
     },
     {
       key: 'customer_name',
       header: 'Cliente',
-      width: '25%',
       render: (row) => <span className="text-sm text-gray-900 dark:text-white">{row.customer_name || 'Cliente não identificado'}</span>
     },
     {
       key: 'created_at',
       header: 'Data',
-      width: '180px',
       render: (row) => <span className="text-sm text-gray-600 dark:text-gray-400">{formatDateTime(row.created_at)}</span>
     },
     {
       key: 'payment_method',
       header: 'Pagamento',
-      width: '120px',
       render: (row) => (
         <Badge variant={
           row.payment_method === 'cash' ? 'success' :
-          row.payment_method === 'credit' ? 'info' :
-          row.payment_method === 'debit' ? 'warning' : 'default'
+          row.payment_method === 'credit_card' ? 'info' :
+          row.payment_method === 'debit_card' ? 'warning' : 'default'
         }>
           {row.payment_method === 'cash' ? 'Dinheiro' :
-           row.payment_method === 'credit' ? 'Crédito' :
-           row.payment_method === 'debit' ? 'Débito' : 'PIX'}
+           row.payment_method === 'credit_card' ? 'Crédito' :
+           row.payment_method === 'debit_card' ? 'Débito' : 'PIX'}
         </Badge>
       )
     },
     {
       key: 'final_amount',
       header: 'Total',
-      width: '120px',
       render: (row) => <span className="text-sm font-medium text-green-600 dark:text-green-400">{formatCurrency(row.final_amount)}</span>
     }
   ]
@@ -184,8 +178,8 @@ const SalesReport = ({ dateRange, customDateRange, paymentMethodFilter }) => {
     labels: salesData?.salesByPayment?.map(d => {
       const methods = {
         cash: 'Dinheiro',
-        credit: 'Crédito',
-        debit: 'Débito',
+        credit_card: 'Crédito',
+        debit_card: 'Débito',
         pix: 'PIX'
       }
       return methods[d.method] || d.method
@@ -211,9 +205,6 @@ const SalesReport = ({ dateRange, customDateRange, paymentMethodFilter }) => {
     plugins: {
       legend: { display: false },
       tooltip: {
-        bodyColor: '#e5e5e7',
-        titleColor: '#e5e5e7',
-        backgroundColor: '#1f2937',
         callbacks: {
           label: (context) => `R$ ${context.raw.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
         }
@@ -222,14 +213,8 @@ const SalesReport = ({ dateRange, customDateRange, paymentMethodFilter }) => {
     scales: {
       y: {
         ticks: {
-          color: '#9ca3af',
           callback: (value) => `R$ ${value}`
-        },
-        grid: { color: 'rgba(75, 85, 99, 0.3)' }
-      },
-      x: {
-        ticks: { color: '#9ca3af' },
-        grid: { display: false }
+        }
       }
     }
   }
@@ -243,14 +228,10 @@ const SalesReport = ({ dateRange, customDateRange, paymentMethodFilter }) => {
         position: 'bottom',
         labels: {
           boxWidth: 12,
-          padding: 15,
-          color: '#9ca3af'
+          padding: 15
         }
       },
       tooltip: {
-        bodyColor: '#e5e5e7',
-        titleColor: '#e5e5e7',
-        backgroundColor: '#1f2937',
         callbacks: {
           label: (context) => {
             const value = context.raw
@@ -271,31 +252,33 @@ const SalesReport = ({ dateRange, customDateRange, paymentMethodFilter }) => {
     <div className="space-y-6">
       {/* Cards de Resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <SummaryCard
-          title="Total de Vendas"
-          value={formatNumber(salesData?.totalSales || 0)}
+        <StatCard
+          label="Total de Vendas"
+          value={salesData?.totalSales || 0}
           icon={ShoppingCart}
-          color="blue"
-          subtitle="Período selecionado"
+          variant="info"
+          formatValue={formatNumber}
         />
-        <SummaryCard
-          title="Faturamento Total"
-          value={formatCurrency(salesData?.totalRevenue || 0)}
+        <StatCard
+          label="Faturamento Total"
+          value={salesData?.totalRevenue || 0}
           icon={DollarSign}
-          color="green"
-          trend={salesData?.totalRevenue > 1000 ? 'up' : 'stable'}
+          variant="success"
+          formatValue={formatCurrency}
         />
-        <SummaryCard
-          title="Ticket Médio"
-          value={formatCurrency(salesData?.averageTicket || 0)}
+        <StatCard
+          label="Ticket Médio"
+          value={salesData?.averageTicket || 0}
           icon={TrendingUp}
-          color="purple"
+          variant="purple"
+          formatValue={formatCurrency}
         />
-        <SummaryCard
-          title="Total de Descontos"
-          value={formatCurrency(salesData?.totalDiscount || 0)}
+        <StatCard
+          label="Total de Descontos"
+          value={salesData?.totalDiscount || 0}
           icon={Percent}
-          color="orange"
+          variant="warning"
+          formatValue={formatCurrency}
         />
       </div>
 
@@ -304,7 +287,7 @@ const SalesReport = ({ dateRange, customDateRange, paymentMethodFilter }) => {
         <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Faturamento no Período</h3>
           <div className="h-64" key={lineChartId.current}>
-            <Line data={salesChartData} options={chartOptions} redraw={false} />
+            <Line data={salesChartData} options={chartOptions} />
           </div>
         </div>
         
@@ -312,7 +295,7 @@ const SalesReport = ({ dateRange, customDateRange, paymentMethodFilter }) => {
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Vendas por Forma de Pagamento</h3>
           <div className="h-64" key={doughnutChartId.current}>
             {salesData?.salesByPayment?.length > 0 ? (
-              <Doughnut data={paymentMethodsChartData} options={doughnutOptions} redraw={false} />
+              <Doughnut data={paymentMethodsChartData} options={doughnutOptions} />
             ) : (
               <div className="flex items-center justify-center h-full">
                 <p className="text-gray-500 dark:text-gray-400">Nenhum dado disponível</p>

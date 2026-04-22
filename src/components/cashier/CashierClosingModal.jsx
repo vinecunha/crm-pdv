@@ -1,8 +1,8 @@
 import React from 'react'
-import { Banknote, CreditCard, QrCode, ChevronRight, AlertCircle } from '../../lib/icons'
+import { Banknote, CreditCard, QrCode, ChevronRight, AlertCircle } from '@lib/icons'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
-import { formatCurrency, formatDate } from '../../utils/formatters'
+import { formatCurrency, formatDate } from '@utils/formatters'
 
 const CashierClosingModal = ({ 
   isOpen, 

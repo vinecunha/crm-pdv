@@ -1,7 +1,7 @@
-import { supabase } from '../lib/supabase'
-import { useAuth } from '../contexts/AuthContext.jsx'
+import { supabase } from '@lib/supabase'
+import { useAuth } from '@contexts/AuthContext.jsx'
 
-const useSystemLogs = () => {
+export const useSystemLogs = () => {
   const { profile } = useAuth()
 
   const logAction = async ({
@@ -147,5 +147,3 @@ const useSystemLogs = () => {
     logError
   }
 }
-
-export default useSystemLogs

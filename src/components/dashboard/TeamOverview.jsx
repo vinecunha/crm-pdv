@@ -1,12 +1,31 @@
+// src/components/dashboard/TeamOverview.jsx
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, TrendingUp, Award, ChevronRight } from '../../lib/icons'
-import { formatCurrency } from '../../utils/formatters'
+import { Users, TrendingUp, Award, ChevronRight } from '@lib/icons'
+import { formatCurrency } from '@utils/formatters'
 
 const TeamOverview = ({ teamData, userRole }) => {
   const navigate = useNavigate()
   
-  if (!teamData || teamData.length === 0) {
+  // Garantir que teamData é um array
+  const members = Array.isArray(teamData) ? teamData : []
+  
+  // ✅ CORRIGIR: Mapear os dados para o formato esperado
+  const formattedMembers = members.map(member => ({
+    id: member.id,
+    full_name: member.name || member.full_name,
+    email: member.email,
+    role: member.role,
+    stats: {
+      totalSales: member.totalSales || member.total_sales || member.totalRevenue || member.total_revenue || 0,
+      salesCount: member.totalSales || member.total_sales || 0,
+      averageTicket: member.totalSales > 0 
+        ? (member.totalRevenue || member.total_revenue || 0) / member.totalSales 
+        : 0
+    }
+  }))
+  
+  if (formattedMembers.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
         <div className="flex items-center gap-2 mb-4">
@@ -22,8 +41,16 @@ const TeamOverview = ({ teamData, userRole }) => {
     )
   }
   
-  const totalTeamSales = teamData.reduce((sum, m) => sum + m.stats.totalSales, 0)
-  const topPerformer = teamData[0]
+  // Ordenar por total de vendas (maior primeiro)
+  const sortedMembers = [...formattedMembers].sort((a, b) => 
+    b.stats.totalSales - a.stats.totalSales
+  )
+  
+  const totalTeamSales = sortedMembers.reduce((sum, member) => 
+    sum + member.stats.totalSales, 0
+  ) || 0
+  
+  const topPerformer = sortedMembers[0]
   
   const handleMemberClick = (memberId) => {
     navigate(`/sellers/${memberId}`)
@@ -40,13 +67,13 @@ const TeamOverview = ({ teamData, userRole }) => {
             </h2>
           </div>
           <span className="text-sm text-gray-500 dark:text-gray-400">
-            {teamData.length} membros
+            {sortedMembers.length} membros
           </span>
         </div>
       </div>
       
-      {/* Destaque do top performer - TAMBÉM CLICÁVEL */}
-      {topPerformer && (
+      {/* Destaque do top performer */}
+      {topPerformer && topPerformer.stats.totalSales > 0 && (
         <div 
           className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-b border-gray-100 dark:border-gray-700 cursor-pointer hover:opacity-80 transition-opacity"
           onClick={() => handleMemberClick(topPerformer.id)}
@@ -59,7 +86,7 @@ const TeamOverview = ({ teamData, userRole }) => {
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Top Performer</p>
                 <p className="font-semibold text-gray-900 dark:text-white">
-                  {topPerformer.full_name || topPerformer.email}
+                  {topPerformer.full_name || topPerformer.email?.split('@')[0]}
                 </p>
                 <p className="text-sm text-green-600 dark:text-green-400">
                   {formatCurrency(topPerformer.stats.totalSales)} em vendas
@@ -73,7 +100,7 @@ const TeamOverview = ({ teamData, userRole }) => {
       
       {/* Lista da equipe */}
       <div className="divide-y divide-gray-100 dark:divide-gray-700 max-h-80 overflow-y-auto">
-        {teamData.map((member) => (
+        {sortedMembers.map((member) => (
           <div 
             key={member.id} 
             className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
@@ -82,11 +109,13 @@ const TeamOverview = ({ teamData, userRole }) => {
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-gray-900 dark:text-white truncate">
-                  {member.full_name || member.email?.split('@')[0]}
+                  {member.full_name || member.email?.split('@')[0] || 'Usuário'}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                  {member.email}
-                </p>
+                {member.email && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                    {member.email}
+                  </p>
+                )}
                 <div className="flex items-center gap-3 mt-1">
                   <span className="text-xs text-gray-500 dark:text-gray-400">
                     {member.stats.salesCount} vendas
@@ -107,20 +136,22 @@ const TeamOverview = ({ teamData, userRole }) => {
                       ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                 }`}>
-                  {member.role}
+                  {member.role || 'operador'}
                 </span>
               </div>
             </div>
             
             {/* Barra de progresso relativa */}
-            <div className="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-              <div 
-                className="bg-blue-500 h-1.5 rounded-full transition-all"
-                style={{ 
-                  width: `${(member.stats.totalSales / totalTeamSales) * 100}%` 
-                }}
-              />
-            </div>
+            {totalTeamSales > 0 && (
+              <div className="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                <div 
+                  className="bg-blue-500 h-1.5 rounded-full transition-all"
+                  style={{ 
+                    width: `${(member.stats.totalSales / totalTeamSales) * 100}%` 
+                  }}
+                />
+              </div>
+            )}
           </div>
         ))}
       </div>

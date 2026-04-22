@@ -5,18 +5,18 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { CompanyProvider } from './contexts/CompanyContext'
-import ErrorBoundaryWithCompany from './components/ErrorBoundaryWithCompany'
-import SectionErrorBoundary from './components/SectionErrorBoundary'
-import ProtectedRoute from './components/ProtectedRoute'
-import SplashScreen from './components/ui/SplashScreen'
-import DynamicHead from './components/DynamicHead'
-import PrefetchRoute from './components/PrefetchRoute' 
-import { queryClient } from './lib/react-query'
-import CacheDebugger from './components/ui/CacheDebugger'
-import NetworkStatus from './components/ui/NetworkStatus'
-import PendingSalesIndicator from './components/sales/pdv/PendingSalesIndicator'
-import PerformanceDebugger from './components/ui/PerformanceDebugger'
-import { useNotificationTriggers } from './hooks/useNotificationTriggers'
+import ErrorBoundaryWithCompany from '@components/ErrorBoundaryWithCompany'
+import SectionErrorBoundary from '@components/SectionErrorBoundary'
+import ProtectedRoute from '@components/ProtectedRoute'
+import SplashScreen from '@components/ui/SplashScreen'
+import DynamicHead from '@components/DynamicHead'
+import PrefetchRoute from '@components/PrefetchRoute' 
+import { queryClient } from '@lib/react-query'
+import CacheDebugger from '@components/ui/CacheDebugger'
+import NetworkStatus from '@components/ui/NetworkStatus'
+import PendingSalesIndicator from '@components/sales/pdv/PendingSalesIndicator'
+import PerformanceDebugger from '@components/ui/PerformanceDebugger'
+import { useNotificationTriggers } from '@hooks/useNotificationTriggers'
 
 // ============= Code Splitting Avançado =============
 // Agrupando por módulos para melhor caching
@@ -135,7 +135,7 @@ const NotFound = lazy(() => import(
 
 const CommissionsAdmin = lazy(() => import(
   /* webpackChunkName: "commissions" */
-  './components/CommissionsAdmin.jsx'
+  './components/commissions/CommissionsAdmin'
 ))
 
 // Componente de loading com delay mínimo para evitar flicker
@@ -357,13 +357,13 @@ function App() {
                   </Routes>
                 </PrefetchRoute>
               </Suspense>
+               <PendingSalesIndicator />
               </ThemeProvider>
             </CompanyProvider>
           </AuthProvider>
         </Router>
         <CacheDebugger />
         <NetworkStatus />
-        <PendingSalesIndicator />
         <PerformanceDebugger />
       </QueryClientProvider>
     </ErrorBoundaryWithCompany>

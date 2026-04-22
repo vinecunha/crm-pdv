@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Eye, EyeOff, X, CheckCircle } from '../../lib/icons'
-import useKeyboardShortcuts from '../../hooks/useKeyboardShortcuts'
+import { Eye, EyeOff, X, CheckCircle } from '@lib/icons'
+import useKeyboardShortcuts from '@hooks/useKeyboardShortcuts'
 
 // Funções de máscara
 const applyMask = (value, mask) => {

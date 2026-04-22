@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase'
+import { supabase } from '@lib/supabase'
 
 /**
  * Buscar todas as vendas com filtros e informações dos usuários

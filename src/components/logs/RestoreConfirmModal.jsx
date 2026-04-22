@@ -1,5 +1,5 @@
 import React from 'react'
-import { AlertTriangle, RotateCcw } from '../../lib/icons'
+import { AlertTriangle, RotateCcw } from '@lib/icons'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
 

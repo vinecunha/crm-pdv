@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { Activity, Trash2, RefreshCw } from '../../lib/icons'
-import { perfMonitor } from '../../lib/performance'
+import { Activity, Trash2, RefreshCw } from '@lib/icons'
+import { perfMonitor } from '@lib/performance'
 import Button from './Button'
 
 const PerformanceDebugger = () => {

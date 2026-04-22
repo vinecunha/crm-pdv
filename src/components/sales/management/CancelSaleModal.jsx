@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { AlertCircle, Shield, Eye, EyeOff, Search } from '../../../lib/icons'
+import { AlertCircle, Shield, Eye, EyeOff, Search } from '@lib/icons'
 import Modal from '../../ui/Modal'
 import Button from '../../ui/Button'
-import { formatCurrency } from '../../../utils/formatters'
-import { supabase } from '../../../lib/supabase'
+import { formatCurrency } from '@utils/formatters'
+import { supabase } from '@lib/supabase'
 
 const CancelSaleModal = ({ 
   isOpen, 

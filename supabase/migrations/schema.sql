@@ -673,6 +673,7 @@ create table public.sales (
   cancellation_reason text null,
   cancellation_notes text null,
   approved_by uuid null,
+  created_by_name text null,
   constraint sales_pkey primary key (id),
   constraint sales_sale_number_key unique (sale_number),
   constraint sales_approved_by_fkey foreign KEY (approved_by) references auth.users (id),
@@ -704,6 +705,9 @@ create trigger trg_validate_sale_amounts BEFORE INSERT
 or
 update on sales for EACH row
 execute FUNCTION validate_sale_amounts ();
+
+create trigger trigger_set_sale_created_by_name BEFORE INSERT on sales for EACH row
+execute FUNCTION set_sale_created_by_name ();
 
 create trigger update_customer_last_purchase_trigger
 after INSERT

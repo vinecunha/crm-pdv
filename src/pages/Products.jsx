@@ -1,28 +1,28 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, ClipboardList, Package } from '../lib/icons'
+import { Plus, ClipboardList, Package } from '@lib/icons'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import useSystemLogs from '../hooks/useSystemLogs'
-import useMediaQuery from '../hooks/useMediaQuery'
+import { useAuth } from '@contexts/AuthContext'
+import { useSystemLogs } from '@hooks/useSystemLogs'
+import useMediaQuery from '@hooks/useMediaQuery'
 
-import * as productService from '../services/productService'
+import * as productService from '@services/productService'
 
-import Button from '../components/ui/Button'
-import Modal from '../components/ui/Modal'
-import FeedbackMessage from '../components/ui/FeedbackMessage'
-import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
-import DataEmptyState from '../components/ui/DataEmptyState'
-import DataFilters from '../components/ui/DataFilters'
-import PageHeader from '../components/ui/PageHeader'
-import DataCards from '../components/ui/DataCards'
-import ProductCard from '../components/products/ProductCard' 
+import Button from '@components/ui/Button'
+import Modal from '@components/ui/Modal'
+import FeedbackMessage from '@components/ui/FeedbackMessage'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
+import DataEmptyState from '@components/ui/DataEmptyState'
+import DataFilters from '@components/ui/DataFilters'
+import PageHeader from '@components/ui/PageHeader'
+import DataCards from '@components/ui/DataCards'
+import ProductCard from '@components/products/ProductCard' 
 
-import ProductForm from '../components/products/ProductForm'
-import ProductEntryForm from '../components/products/ProductEntryForm'
-import ProductDetailsModal from '../components/products/ProductDetailsModal'
-import ProductDeleteModal from '../components/products/ProductDeleteModal'
-import ProductTable from '../components/products/ProductTable'
+import ProductForm from '@components/products/ProductForm'
+import ProductEntryForm from '@components/products/ProductEntryForm'
+import ProductDetailsModal from '@components/products/ProductDetailsModal'
+import ProductDeleteModal from '@components/products/ProductDeleteModal'
+import ProductTable from '@components/products/ProductTable'
 
 const Products = () => {
   const { profile } = useAuth()
@@ -301,10 +301,13 @@ const Products = () => {
     const unitCost = parseFloat(entryForm.unit_cost)
     const totalCost = quantity * unitCost
     
+    // ✅ CORRIGIDO: usar snake_case para corresponder ao banco
     const entryData = {
       product_id: selectedProduct.id,
       invoice_number: entryForm.invoice_number,
-      quantity, unitCost, totalCost,
+      quantity: quantity,
+      unit_cost: unitCost,        // ✅ snake_case
+      total_cost: totalCost,      // ✅ snake_case
       invoice_series: entryForm.invoice_series || null,
       supplier_name: entryForm.supplier_name || null,
       supplier_cnpj: entryForm.supplier_cnpj?.replace(/\D/g, '') || null,
@@ -313,8 +316,10 @@ const Products = () => {
       expiration_date: entryForm.expiration_date || null,
       entry_date: new Date().toISOString().split('T')[0],
       notes: entryForm.notes || null,
+      created_by: profile?.id    // ✅ Adicionar created_by
     }
 
+    console.log('📦 Enviando entrada:', entryData)
     entryMutation.mutate(entryData)
   }
 

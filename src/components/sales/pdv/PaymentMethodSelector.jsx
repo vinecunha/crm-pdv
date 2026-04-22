@@ -1,5 +1,5 @@
 import React from 'react'
-import { Banknote, CreditCard, QrCode, CheckCircle } from '../../../lib/icons'
+import { Banknote, CreditCard, QrCode, CheckCircle } from '@lib/icons'
 
 const VisaIcon = () => (
   <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">

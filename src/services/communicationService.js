@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase'
+import { supabase } from '@lib/supabase'
 
 // ============= Constantes =============
 export const COMMUNICATION_CHANNELS = {

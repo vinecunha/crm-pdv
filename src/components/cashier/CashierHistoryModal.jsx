@@ -1,8 +1,8 @@
 import React from 'react'
-import { Eye, Printer } from '../../lib/icons'
+import { Eye, Printer } from '@lib/icons'
 import Modal from '../ui/Modal'
 import DataTable from '../ui/DataTable'
-import { formatCurrency, formatDate, formatDateTime } from '../../utils/formatters'
+import { formatCurrency, formatDate, formatDateTime } from '@utils/formatters'
 
 const CashierHistoryModal = ({ isOpen, onClose, history, users, onViewDetails, onPrint }) => {
   const getDifferenceColor = (diff) => {

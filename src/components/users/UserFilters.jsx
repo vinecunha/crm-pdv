@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Search, Filter, X } from '../../lib/icons'
+import { Search, Filter, X } from '@lib/icons'
 import Button from '../ui/Button'
 
 const UserFilters = ({ searchTerm, setSearchTerm, filters, setFilters }) => {

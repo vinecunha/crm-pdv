@@ -1,4 +1,4 @@
-import { logger } from '../utils/logger' 
+import { logger } from '@utils/logger' 
 import { useState } from 'react'
 const SIGNATURE_KEY = 'app_signature'
 const STORAGE_VERSION = '1.0'

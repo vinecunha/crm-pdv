@@ -1,20 +1,23 @@
+// src/pages/CashierClosing.jsx
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { 
   CheckCircle, FileText, Calendar, Users, RefreshCw,
   TrendingUp, ChevronRight, Eye, Printer, Save, Calculator,
   AlertCircle, X, DollarSign
-} from '../lib/icons'
-import { supabase } from '../lib/supabase'
-import { useAuth } from '../contexts/AuthContext'
-import FeedbackMessage from '../components/ui/FeedbackMessage'
-import Button from '../components/ui/Button'
-import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
-import DataTable from '../components/ui/DataTable'
-import PageHeader from '../components/ui/PageHeader'
-import { formatCurrency, formatNumber, formatDate, formatDateTime } from '../utils/formatters'
-import useSystemLogs from '../hooks/useSystemLogs'
-import useLogger from '../hooks/useLogger'
+} from '@lib/icons'
+import { supabase } from '@lib/supabase'
+import { useAuth } from '@contexts/AuthContext'
+import FeedbackMessage from '@components/ui/FeedbackMessage'
+import Button from '@components/ui/Button'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
+import DataTable from '@components/ui/DataTable'
+import DataCards from '@components/ui/DataCards'
+import PageHeader from '@components/ui/PageHeader'
+import useMediaQuery from '@hooks/useMediaQuery'
+import { formatCurrency, formatNumber, formatDate, formatDateTime } from '@utils/formatters'
+import { useSystemLogs } from '@hooks/useSystemLogs'
+import useLogger from '@hooks/useLogger'
 
 const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) => {
   const variants = {
@@ -122,6 +125,7 @@ const CashierClosing = () => {
   const { logAction } = useSystemLogs()
   const { logCreate, logComponentAction } = useLogger('CashierClosing')
   const queryClient = useQueryClient()
+  const isMobile = useMediaQuery('(max-width: 768px)')
   
   const today = new Date()
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
@@ -329,6 +333,54 @@ const CashierClosing = () => {
     }
   ]
 
+  // Card para histórico de fechamentos (mobile)
+  const renderClosingCard = (closing) => (
+    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between mb-3">
+        <div>
+          <p className="text-sm font-medium text-gray-900 dark:text-white">
+            {formatDate(closing.closing_date)}
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {formatDateTime(closing.closed_at)}
+          </p>
+        </div>
+        <span className={`text-sm font-bold ${getDifferenceColor(closing.difference)}`}>
+          {formatCurrency(closing.difference)}
+        </span>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Esperado</p>
+          <p className="text-sm font-medium text-gray-900 dark:text-white">
+            {formatCurrency(closing.expected_total)}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Declarado</p>
+          <p className="text-sm font-medium text-gray-900 dark:text-white">
+            {formatCurrency(closing.declared_total)}
+          </p>
+        </div>
+      </div>
+      
+      <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Operador: {users.find(u => u.id === closing.closed_by)?.full_name || '-'}
+        </p>
+        <Button
+          size="sm"
+          variant="outline"
+          icon={<Eye size={14} />}
+          onClick={() => viewClosingDetails(closing)}
+        >
+          Detalhes
+        </Button>
+      </div>
+    </div>
+  )
+
   const resumo = summary?.resumo || {}
   
   const totalDeclarado = declaredValues.cash + declaredValues.credit_card + 
@@ -336,7 +388,6 @@ const CashierClosing = () => {
   const expectedTotal = resumo.total_liquido || 0
   const difference = totalDeclarado - expectedTotal
 
-  // Configuração das ações do header
   const headerActions = [
     {
       label: 'Histórico',
@@ -498,6 +549,7 @@ const CashierClosing = () => {
           </>
         )}
 
+        {/* Modal de Fechamento */}
         {showClosingModal && summary && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
             <div className="absolute inset-0 bg-black/30 dark:bg-black/50" onClick={() => !closingMutation.isPending && setShowClosingModal(false)} />
@@ -603,38 +655,112 @@ const CashierClosing = () => {
           </div>
         )}
 
+        {/* Modal de Histórico */}
         {showHistoryModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
             <div className="absolute inset-0 bg-black/30 dark:bg-black/50" onClick={() => setShowHistoryModal(false)} />
             <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-6xl max-h-[85vh] overflow-hidden">
               <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
                 <h3 className="text-base sm:text-lg font-semibold dark:text-white">Histórico de Fechamentos</h3>
-                <button onClick={() => setShowHistoryModal(false)} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">✕</button>
+                <button onClick={() => setShowHistoryModal(false)} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
+                  <X size={20} />
+                </button>
               </div>
               <div className="p-3 sm:p-4 overflow-y-auto">
-                <DataTable
-                  columns={historyColumns}
-                  data={closingHistory}
-                  actions={historyActions}
-                  emptyMessage="Nenhum fechamento realizado"
-                  striped
-                  hover
-                  pagination
-                  itemsPerPageOptions={[10, 20, 50]}
-                  defaultItemsPerPage={10}
-                  showTotalItems
-                />
+                {isMobile ? (
+                  <DataCards
+                    data={closingHistory}
+                    renderCard={renderClosingCard}
+                    keyExtractor={(item) => item.id}
+                    columns={1}
+                    gap={2}
+                    emptyMessage="Nenhum fechamento realizado"
+                  />
+                ) : (
+                  <DataTable
+                    columns={historyColumns}
+                    data={closingHistory}
+                    actions={historyActions}
+                    emptyMessage="Nenhum fechamento realizado"
+                    striped
+                    hover
+                    pagination
+                    itemsPerPageOptions={[10, 20, 50]}
+                    defaultItemsPerPage={10}
+                    showTotalItems
+                  />
+                )}
               </div>
               <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end">
-                <Button variant="outline" onClick={() => setShowHistoryModal(false)} size="sm" className="sm:size-md">Fechar</Button>
+                <Button variant="outline" onClick={() => setShowHistoryModal(false)}>Fechar</Button>
               </div>
             </div>
           </div>
         )}
 
+        {/* Modal de Detalhes */}
         {showDetailsModal && selectedClosing && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Modal de detalhes */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+            <div className="absolute inset-0 bg-black/30 dark:bg-black/50" onClick={() => setShowDetailsModal(false)} />
+            <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden">
+              <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                <h3 className="text-base sm:text-lg font-semibold dark:text-white">
+                  Detalhes do Fechamento - {formatDate(selectedClosing.closing_date)}
+                </h3>
+                <button onClick={() => setShowDetailsModal(false)} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="p-4 sm:p-6 overflow-y-auto">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Valor Esperado</p>
+                      <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(selectedClosing.expected_total)}</p>
+                    </div>
+                    <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Valor Declarado</p>
+                      <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(selectedClosing.declared_total)}</p>
+                    </div>
+                  </div>
+                  
+                  <div className={`p-3 rounded-lg ${getDifferenceColor(selectedClosing.difference)}`}>
+                    <p className="text-xs">Diferença</p>
+                    <p className="text-xl font-bold">{formatCurrency(selectedClosing.difference)}</p>
+                  </div>
+                  
+                  {selectedClosing.details && (
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                      <p className="text-sm font-medium mb-2 dark:text-white">Detalhes por Forma de Pagamento</p>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span>Dinheiro:</span>
+                          <span className="font-medium">{formatCurrency(selectedClosing.total_cash || 0)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Cartão:</span>
+                          <span className="font-medium">{formatCurrency(selectedClosing.total_card || 0)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>PIX:</span>
+                          <span className="font-medium">{formatCurrency(selectedClosing.total_pix || 0)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {selectedClosing.notes && (
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                      <p className="text-sm font-medium mb-1 dark:text-white">Observações</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{selectedClosing.notes}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end">
+                <Button variant="outline" onClick={() => setShowDetailsModal(false)}>Fechar</Button>
+              </div>
+            </div>
           </div>
         )}
       </div>

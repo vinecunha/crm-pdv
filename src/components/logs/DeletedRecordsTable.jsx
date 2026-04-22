@@ -1,8 +1,8 @@
 // src/components/logs/DeletedRecordsTable.jsx
 import React from 'react'
-import { RotateCcw, Eye } from '../../lib/icons'
-import { useTableStrategy } from '../../hooks/useTableStrategy'
-import { formatDateTime } from '../../utils/formatters'
+import { RotateCcw, Eye } from '@lib/icons'
+import { useTableStrategy } from '@hooks/useTableStrategy'
+import { formatDateTime } from '@utils/formatters'
 
 // ✅ MAPEAMENTO DE LABELS
 const DEFAULT_ACTION_LABELS = {

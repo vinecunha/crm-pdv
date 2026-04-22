@@ -1,6 +1,6 @@
 import React from 'react'
-import { Package } from '../../lib/icons'
-import { formatNumber } from '../../utils/formatters'
+import { Package } from '@lib/icons'
+import { formatNumber } from '@utils/formatters'
 
 const TopProductsList = ({ products }) => {
   if (products.length === 0) {

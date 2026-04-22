@@ -1,5 +1,5 @@
 import React from 'react'
-import { AlertCircle, RefreshCw, ChevronDown, ChevronUp, Copy, Check, Bug } from '../lib/icons'
+import { AlertCircle, RefreshCw, ChevronDown, ChevronUp, Copy, Check, Bug } from '@lib/icons'
 
 class SectionErrorBoundary extends React.Component {
   constructor(props) {

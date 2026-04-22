@@ -2,8 +2,8 @@
 import React from 'react'
 import Badge from '../Badge'
 import Button from '../ui/Button'
-import { Edit3, TrendingUp } from '../../lib/icons'
-import { formatCurrency } from '../../utils/formatters'
+import { Edit3, TrendingUp } from '@lib/icons'
+import { formatCurrency } from '@utils/formatters'
 
 const RuleCard = ({ rule, onEdit, onToggle, canEdit }) => {
   const getPriorityLabel = (priority) => {

@@ -1,5 +1,5 @@
-import { supabase } from '../lib/supabase'
-import { sanitizeObject } from '../utils/sanitize'
+import { supabase } from '@lib/supabase'
+import { sanitizeObject } from '@utils/sanitize'
 
 // ============= Constantes =============
 export const units = [

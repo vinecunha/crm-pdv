@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react'
 import { 
   Ticket, Percent, Target, Gift, Zap, TrendingUp,
   Users, Award, AlertCircle, ChevronRight, ShoppingBag, Eye
-} from '../../lib/icons'
-import { supabase } from '../../lib/supabase'
-import { formatCurrency, formatNumber } from '../../utils/formatters'
+} from '@lib/icons'
+import { supabase } from '@lib/supabase'
+import { formatCurrency, formatNumber } from '@utils/formatters'
 import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
 import DataTable from '../ui/DataTable'
 import Badge from '../Badge'
 import Button from '../ui/Button'
 import { useNavigate } from 'react-router-dom'
-import { logger } from '../../utils/logger' 
+import { logger } from '@utils/logger' 
 
 const CouponAnalytics = ({ dateRange, customDateRange }) => {
   const [loading, setLoading] = useState(true)

@@ -11,42 +11,42 @@ import {
   AlertTriangle,
   RefreshCw,
   Plus
-} from '../lib/icons'
-import { useAuth } from '../contexts/AuthContext'
-import FeedbackMessage from '../components/ui/FeedbackMessage'
-import Modal from '../components/ui/Modal'
-import Button from '../components/ui/Button'
-import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
-import PageHeader from '../components/ui/PageHeader'
-import ConfirmModal from '../components/ui/ConfirmModal'
-import QuickCustomerForm from '../components/sales/pdv/QuickCustomerForm'
-import CouponSelector from '../components/sales/pdv/CouponSelector'
+} from '@lib/icons'
+import { useAuth } from '@contexts/AuthContext'
+import FeedbackMessage from '@components/ui/FeedbackMessage'
+import Modal from '@components/ui/Modal'
+import Button from '@components/ui/Button'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
+import PageHeader from '@components/ui/PageHeader'
+import ConfirmModal from '@components/ui/ConfirmModal'
+import QuickCustomerForm from '@components/sales/pdv/QuickCustomerForm'
+import CouponSelector from '@components/sales/pdv/CouponSelector'
 
 // Componentes refatorados
-import BudgetListView from '../components/budget/BudgetListView'
-import BudgetCreator from '../components/budget/BudgetCreator'
-import BudgetDetailsModal from '../components/budget/BudgetDetailsModal'
-import IdentifyCustomerModal from '../components/budget/IdentifyCustomerModal'
+import BudgetListView from '@components/budget/BudgetListView'
+import BudgetCreator from '@components/budget/BudgetCreator'
+import BudgetDetailsModal from '@components/budget/BudgetDetailsModal'
+import IdentifyCustomerModal from '@components/budget/IdentifyCustomerModal'
 
 // Hooks customizados
-import useBudgetMutations from '../hooks/useBudgetMutations'
-import useBudgetCart from '../hooks/useBudgetCart'
-import useBudgetCustomer from '../hooks/useBudgetCustomer'
-import useBudgetCoupon from '../hooks/useBudgetCoupon'
-import useBudgetModals from '../hooks/useBudgetModals'
-import useFeedback from '../hooks/useFeedback'
-import useMediaQuery from '../hooks/useMediaQuery'
+import useBudgetMutations from '@hooks/useBudgetMutations'
+import useBudgetCart from '@hooks/useBudgetCart'
+import useBudgetCustomer from '@hooks/useBudgetCustomer'
+import useBudgetCoupon from '@hooks/useBudgetCoupon'
+import useBudgetModals from '@hooks/useBudgetModals'
+import useFeedback from '@hooks/useFeedback'
+import useMediaQuery from '@hooks/useMediaQuery'
 
 // Services, utils e constants
-import * as budgetService from '../services/budgetService'
-import { formatCurrency } from '../utils/formatters'
+import * as budgetService from '@services/budgetService'
+import { formatCurrency } from '@utils/formatters'
 import { 
   BUDGET_STATUS, 
   getBudgetStatusConfig, 
   calculateSubtotal, 
   calculateTotal 
-} from '../utils/budgetConstants.jsx'
-import { BUDGET_COLUMNS, BUDGET_ACTIONS } from '../utils/budgetConstants'
+} from '@utils/budgetConstants.jsx'
+import { BUDGET_COLUMNS, BUDGET_ACTIONS } from '@utils/budgetConstants'
 
 // ============= Componente Principal =============
 const Budgets = () => {

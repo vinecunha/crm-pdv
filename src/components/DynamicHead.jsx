@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useCompany } from '../hooks/useCompany'
+import { useCompany } from '@hooks/useCompany'
 
 const DynamicHead = () => {
   const { company, loading } = useCompany()

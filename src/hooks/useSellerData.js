@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchSellerDetails } from '../services/sellerService'
+import { fetchSellerDetails } from '@services/sellerService'
 
 export const useSellerData = (sellerId, viewerRole, viewerId) => {
   return useQuery({

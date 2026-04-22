@@ -1,5 +1,5 @@
 import React from 'react'
-import { Package, Users, FileText, ShoppingCart, AlertCircle, Unlock, Trash2  } from '../../lib/icons'
+import { Package, Users, FileText, ShoppingCart, AlertCircle, Unlock, Trash2, ClipboardList, DollarSign, Award } from '@lib/icons'
 
 const iconMap = {
   users: Users,
@@ -8,7 +8,11 @@ const iconMap = {
   logs: FileText,
   unlock: Unlock, 
   trash: Trash2,
-  default: AlertCircle
+  default: AlertCircle,
+  tasks: ClipboardList,      
+  commissions: DollarSign,   
+  rules: Award,              
+  stock: Package, 
 }
 
 const DataEmptyState = ({

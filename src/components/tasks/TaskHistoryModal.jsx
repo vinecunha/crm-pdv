@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '@lib/supabase'
 import Modal from '../ui/Modal'
 import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
 import TaskHistoryTimeline from './TaskHistoryTimeline'
-import { History, Users, GitBranch } from '../../lib/icons'
+import { History, Users, GitBranch } from '@lib/icons'
 
 const TaskHistoryModal = ({ isOpen, onClose, task }) => {
   const [history, setHistory] = useState(null)
@@ -161,7 +161,7 @@ const getStatusLabel = (status) => {
 }
 
 // Import dos ícones necessários
-import { CheckCircle, Circle, Clock, Play } from '../../lib/icons'
-import { formatDateTime } from '../../utils/formatters'
+import { CheckCircle, Circle, Clock, Play } from '@lib/icons'
+import { formatDateTime } from '@utils/formatters'
 
 export default TaskHistoryModal

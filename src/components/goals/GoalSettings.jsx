@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Settings, Save, X } from '../../lib/icons'
+import { Settings, Save, X, AlertCircle } from '@lib/icons'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
 import FormInput from '../forms/FormInput'
@@ -17,6 +17,8 @@ const GoalSettings = ({
     monthly: currentGoals?.monthly?.target_amount || 20000,
     yearly: currentGoals?.yearly?.target_amount || 240000
   })
+
+  const isUsingDefaults = currentGoals?._allDefault || currentGoals?.daily?.isDefault
   
   const handleSave = async () => {
     await onSave(goals)
@@ -38,6 +40,23 @@ const GoalSettings = ({
       size="md"
     >
       <div className="space-y-6">
+        {/* ✅ AVISO: Metas padrão */}
+        {isUsingDefaults && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+            <div className="flex items-start gap-2">
+              <AlertCircle size={16} className="text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                  Metas padrão do sistema
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-400">
+                  Os valores atuais são sugestões. Configure metas realistas para este vendedor.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <p className="text-sm text-gray-600 dark:text-gray-400">
           Defina as metas de vendas para este vendedor. 
           O progresso será calculado automaticamente.

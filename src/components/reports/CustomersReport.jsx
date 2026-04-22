@@ -1,11 +1,12 @@
+// src/components/reports/CustomersReport.jsx
 import React, { useState, useEffect } from 'react'
 import { 
   Users, UserPlus, Award, TrendingUp, Phone, Mail, ShoppingBag,
   Ticket
-} from '../../lib/icons'
-import { supabase } from '../../lib/supabase'
-import { formatCurrency, formatNumber, formatDate } from '../../utils/formatters'
-import SummaryCard from './SummaryCard'
+} from '@lib/icons'
+import { supabase } from '@lib/supabase'
+import { formatCurrency, formatNumber, formatDate } from '@utils/formatters'
+import StatCard from '../ui/StatCard'
 import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
 import DataTable from '../ui/DataTable'
 import Badge from '../Badge'
@@ -77,11 +78,7 @@ const CustomersReport = ({ dateRange, customDateRange }) => {
       const customerPurchases = {}
       sales?.forEach(sale => {
         if (!customerPurchases[sale.customer_id]) {
-          customerPurchases[sale.customer_id] = {
-            count: 0,
-            total: 0,
-            lastPurchase: sale.created_at
-          }
+          customerPurchases[sale.customer_id] = { count: 0, total: 0, lastPurchase: sale.created_at }
         }
         customerPurchases[sale.customer_id].count += 1
         customerPurchases[sale.customer_id].total += sale.final_amount || 0
@@ -97,10 +94,7 @@ const CustomersReport = ({ dateRange, customDateRange }) => {
         period_last_purchase: customerPurchases[customer.id]?.lastPurchase || null
       })).sort((a, b) => b.period_total - a.period_total)
       
-      const topPeriodCustomers = enrichedCustomers
-        ?.filter(c => c.period_purchases > 0)
-        .slice(0, 10) || []
-      
+      const topPeriodCustomers = enrichedCustomers?.filter(c => c.period_purchases > 0).slice(0, 10) || []
       setTopCustomers(topPeriodCustomers)
       
       const activeCustomers = customers?.filter(c => c.status === 'active').length || 0
@@ -130,12 +124,10 @@ const CustomersReport = ({ dateRange, customDateRange }) => {
     }
   }
 
-  // Colunas para o DataTable
   const topCustomersColumns = [
     {
       key: 'rank',
       header: '#',
-      width: '60px',
       render: (_, index) => (
         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
           index === 0 ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' :
@@ -151,30 +143,23 @@ const CustomersReport = ({ dateRange, customDateRange }) => {
       key: 'name',
       header: 'Cliente',
       sortable: true,
-      width: '25%',
-      minWidth: '200px',
       render: (row) => (
         <div>
           <p className="font-medium text-gray-900 dark:text-white">{row.name}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Cliente desde {formatDate(row.created_at)}
-          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Cliente desde {formatDate(row.created_at)}</p>
         </div>
       )
     },
     {
       key: 'contact',
       header: 'Contato',
-      width: '180px',
       render: (row) => (
         <div className="space-y-1">
           <p className="text-sm flex items-center gap-1 text-gray-700 dark:text-gray-300">
-            <Phone size={12} className="text-gray-400 dark:text-gray-500" />
-            {row.phone || '-'}
+            <Phone size={12} className="text-gray-400 dark:text-gray-500" />{row.phone || '-'}
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-            <Mail size={12} className="text-gray-400 dark:text-gray-500" />
-            {row.email || '-'}
+            <Mail size={12} className="text-gray-400 dark:text-gray-500" />{row.email || '-'}
           </p>
         </div>
       )
@@ -182,7 +167,6 @@ const CustomersReport = ({ dateRange, customDateRange }) => {
     {
       key: 'status',
       header: 'Status',
-      width: '100px',
       render: (row) => (
         <Badge variant={row.status === 'active' ? 'success' : 'danger'}>
           {row.status === 'active' ? 'Ativo' : 'Inativo'}
@@ -193,125 +177,108 @@ const CustomersReport = ({ dateRange, customDateRange }) => {
       key: 'period_purchases',
       header: 'Compras',
       sortable: true,
-      width: '100px',
       render: (row) => <span className="text-gray-900 dark:text-white">{row.period_purchases}</span>
     },
     {
       key: 'period_total',
       header: 'Total (Período)',
       sortable: true,
-      width: '150px',
       render: (row) => <span className="font-medium text-green-600 dark:text-green-400">{formatCurrency(row.period_total)}</span>
     },
     {
       key: 'total_purchases',
       header: 'Total Histórico',
       sortable: true,
-      width: '150px',
       render: (row) => <span className="text-gray-600 dark:text-gray-400">{formatCurrency(row.total_purchases)}</span>
     }
   ]
 
-  if (loading) {
-    return <DataLoadingSkeleton type="cards" rows={4} />
-  }
+  if (loading) return <DataLoadingSkeleton type="cards" rows={4} />
 
   return (
     <div className="space-y-6">
-      {/* Cards de Resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <SummaryCard
-          title="Total de Clientes"
-          value={formatNumber(customersData?.totalCustomers || 0)}
+        <StatCard
+          label="Total de Clientes"
+          value={customersData?.totalCustomers || 0}
           icon={Users}
-          color="blue"
+          variant="info"
+          formatValue={formatNumber}
         />
-        <SummaryCard
-          title="Clientes Ativos"
-          value={formatNumber(customersData?.activeCustomers || 0)}
+        <StatCard
+          label="Clientes Ativos"
+          value={customersData?.activeCustomers || 0}
           icon={Award}
-          color="green"
+          variant="success"
+          formatValue={formatNumber}
         />
-        <SummaryCard
-          title="Novos Clientes"
-          value={formatNumber(customersData?.newCustomers || 0)}
+        <StatCard
+          label="Novos Clientes"
+          value={customersData?.newCustomers || 0}
           icon={UserPlus}
-          color="purple"
-          subtitle="No período"
+          variant="purple"
+          formatValue={formatNumber}
         />
-        <SummaryCard
-          title="Clientes com Compras"
-          value={formatNumber(customersData?.customersWithPurchases || 0)}
+        <StatCard
+          label="Clientes com Compras"
+          value={customersData?.customersWithPurchases || 0}
           icon={ShoppingBag}
-          color="orange"
-          subtitle="No período"
+          variant="warning"
+          formatValue={formatNumber}
         />
       </div>
 
-      {/* Segunda linha de cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <SummaryCard
-          title="Faturamento Total"
-          value={formatCurrency(customersData?.totalRevenue || 0)}
+        <StatCard
+          label="Faturamento Total"
+          value={customersData?.totalRevenue || 0}
           icon={TrendingUp}
-          color="indigo"
-          subtitle="Histórico"
+          variant="success"
+          formatValue={formatCurrency}
         />
-        <SummaryCard
-          title="Faturamento no Período"
-          value={formatCurrency(customersData?.periodRevenue || 0)}
+        <StatCard
+          label="Faturamento no Período"
+          value={customersData?.periodRevenue || 0}
           icon={TrendingUp}
-          color="cyan"
-          subtitle="Período selecionado"
+          variant="info"
+          formatValue={formatCurrency}
         />
-        <SummaryCard
-          title="Ticket Médio"
-          value={formatCurrency(customersData?.averagePeriodPerCustomer || 0)}
+        <StatCard
+          label="Ticket Médio"
+          value={customersData?.averagePeriodPerCustomer || 0}
           icon={Award}
-          color="green"
-          subtitle="Por cliente no período"
+          variant="purple"
+          formatValue={formatCurrency}
         />
       </div>
 
-      {/* Tabs */}
       <div className="border-b border-gray-200 dark:border-gray-700">
         <nav className="flex gap-4">
           <button
             onClick={() => setActiveTab('overview')}
             className={`pb-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'overview'
-                ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400'
-                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              activeTab === 'overview' ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
-            <Users size={16} className="inline mr-1" />
-            Visão Geral
+            <Users size={16} className="inline mr-1" />Visão Geral
           </button>
           <button
             onClick={() => setActiveTab('coupons')}
             className={`pb-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'coupons'
-                ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400'
-                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              activeTab === 'coupons' ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
-            <Ticket size={16} className="inline mr-1" />
-            Análise de Cupons
+            <Ticket size={16} className="inline mr-1" />Análise de Cupons
           </button>
         </nav>
       </div>
 
-      {/* Conteúdo das Tabs */}
       {activeTab === 'overview' && (
         <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-white">
-              <Award className="text-yellow-500 dark:text-yellow-400" size={20} />
-              Top Clientes do Período
+              <Award className="text-yellow-500 dark:text-yellow-400" size={20} />Top Clientes do Período
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Clientes que mais compraram no período selecionado
-            </p>
           </div>
 
           {topCustomers.length === 0 ? (
@@ -333,9 +300,7 @@ const CustomersReport = ({ dateRange, customDateRange }) => {
         </div>
       )}
 
-      {activeTab === 'coupons' && (
-        <CouponAnalytics dateRange={dateRange} customDateRange={customDateRange} />
-      )}
+      {activeTab === 'coupons' && <CouponAnalytics dateRange={dateRange} customDateRange={customDateRange} />}
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import React, { forwardRef, useCallback, useEffect, useRef } from 'react'
-import { Loader } from '../../lib/icons'
+import { Loader } from '@lib/icons'
 
 // Hook para detectar atalhos de teclado
 const useKeyboardShortcut = (shortcut, callback, enabled = true) => {

@@ -1,6 +1,6 @@
 import React from 'react'
-import { FileText, User, Ticket } from '../../lib/icons'
-import { formatCurrency } from '../../utils/formatters'
+import { FileText, User, Ticket } from '@lib/icons'
+import { formatCurrency } from '@utils/formatters'
 import Button from '../ui/Button'
 import ProductGrid from '../sales/pdv/ProductGrid'
 import CartSummary from '../sales/pdv/CartSummary'

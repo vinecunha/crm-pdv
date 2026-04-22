@@ -1,11 +1,11 @@
 // src/components/commissions/CommissionHistory.jsx
 import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '@lib/supabase'
 import Badge from '../Badge'
 import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
-import { Calendar, DollarSign, CheckCircle, Clock, Filter } from '../../lib/icons'
-import { formatCurrency } from '../../utils/formatters'
+import { Calendar, DollarSign, CheckCircle, Clock, Filter } from '@lib/icons'
+import { formatCurrency } from '@utils/formatters'
 
 const CommissionHistory = ({ userId }) => {
   const [period, setPeriod] = useState('all')

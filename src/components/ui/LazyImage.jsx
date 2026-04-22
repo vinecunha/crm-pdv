@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Image as ImageIcon } from '../../lib/icons'
+import { Image as ImageIcon } from '@lib/icons'
 
 const LazyImage = ({ 
   src, 

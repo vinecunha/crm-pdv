@@ -1,12 +1,13 @@
+// src/components/reports/ProductsReport.jsx
 import React, { useState, useEffect } from 'react'
-import { Package, DollarSign, AlertCircle, Tag, TrendingUp } from '../../lib/icons'
-import { supabase } from '../../lib/supabase'
-import { formatCurrency, formatNumber } from '../../utils/formatters'
-import SummaryCard from './SummaryCard'
+import { Package, DollarSign, AlertCircle, Tag, TrendingUp } from '@lib/icons'
+import { supabase } from '@lib/supabase'
+import { formatCurrency, formatNumber } from '@utils/formatters'
+import StatCard from '../ui/StatCard'
 import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
 import { Bar, Doughnut } from 'react-chartjs-2'
 import '../../lib/chartConfig'
-import { logger } from '../../utils/logger' 
+import { logger } from '@utils/logger'
 
 const ProductsReport = ({ dateRange, customDateRange }) => {
   const [loading, setLoading] = useState(true)
@@ -24,38 +25,28 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
     
     switch (dateRange) {
       case 'today':
-        startDate = new Date()
-        startDate.setHours(0, 0, 0, 0)
+        startDate = new Date(now.setHours(0, 0, 0, 0))
         endDate = new Date()
         break
       case 'week':
-        startDate = new Date()
-        startDate.setDate(startDate.getDate() - 7)
-        startDate.setHours(0, 0, 0, 0)
+        startDate = new Date(now.setDate(now.getDate() - 7))
         endDate = new Date()
         break
       case 'month':
-        startDate = new Date()
-        startDate.setDate(startDate.getDate() - 30)
-        startDate.setHours(0, 0, 0, 0)
+        startDate = new Date(now.setDate(now.getDate() - 30))
         endDate = new Date()
         break
       case 'year':
-        startDate = new Date()
-        startDate.setFullYear(startDate.getFullYear() - 1)
-        startDate.setHours(0, 0, 0, 0)
+        startDate = new Date(now.setFullYear(now.getFullYear() - 1))
         endDate = new Date()
         break
       case 'custom':
         startDate = new Date(customDateRange.start)
-        startDate.setHours(0, 0, 0, 0)
         endDate = new Date(customDateRange.end)
         endDate.setHours(23, 59, 59, 999)
         break
       default:
-        startDate = new Date()
-        startDate.setDate(startDate.getDate() - 30)
-        startDate.setHours(0, 0, 0, 0)
+        startDate = new Date(now.setDate(now.getDate() - 30))
         endDate = new Date()
     }
     
@@ -69,31 +60,14 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
     try {
       const { startDate, endDate } = getDateRange()
       
-      logger.log('📊 Buscando itens...', {
-        start: startDate.toISOString(),
-        end: endDate.toISOString()
-      })
-
       const { data: saleItems, error: itemsError } = await supabase
         .from('sale_items')
-        .select(`
-          id,
-          quantity,
-          unit_price,
-          total_price,
-          product_id,
-          created_at
-        `)
+        .select(`id, quantity, unit_price, total_price, product_id, created_at`)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString())
         .order('created_at', { ascending: false })
 
-      if (itemsError) {
-        console.error('❌ Erro ao buscar itens:', itemsError)
-        throw itemsError
-      }
-
-      logger.log(`✅ ${saleItems?.length || 0} itens encontrados`)
+      if (itemsError) throw itemsError
 
       const productIds = [...new Set(saleItems?.map(item => item.product_id).filter(Boolean)) || []]
       
@@ -105,29 +79,21 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
           .in('id', productIds)
 
         if (!productsError && products) {
-          productsMap = products.reduce((acc, p) => {
-            acc[p.id] = p
-            return acc
-          }, {})
+          productsMap = products.reduce((acc, p) => { acc[p.id] = p; return acc }, {})
         }
       }
 
       if (saleItems && saleItems.length > 0) {
         processSaleItems(saleItems, productsMap)
       } else {
-        setProductsData(prev => ({
-          ...prev,
-          totalItemsSold: 0,
-          totalRevenue: 0,
-          categoryStats: []
-        }))
+        setProductsData(prev => ({ ...prev, totalItemsSold: 0, totalRevenue: 0, categoryStats: [] }))
         setTopProducts([])
       }
 
       await fetchActiveProducts()
 
     } catch (error) {
-      console.error('❌ Erro ao carregar relatório:', error)
+      console.error('Erro ao carregar relatório:', error)
       setError(error.message)
     } finally {
       setLoading(false)
@@ -150,11 +116,7 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
       totalRevenue += itemTotal
       
       if (!productStats[productId]) {
-        productStats[productId] = {
-          product: productsMap[productId] || null,
-          quantity: 0,
-          revenue: 0
-        }
+        productStats[productId] = { product: productsMap[productId] || null, quantity: 0, revenue: 0 }
       }
       
       productStats[productId].quantity += quantity
@@ -164,8 +126,6 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
     const sortedProducts = Object.values(productStats)
       .filter(p => p.product)
       .sort((a, b) => b.quantity - a.quantity)
-
-    logger.log(`📊 ${sortedProducts.length} produtos processados, ${totalItemsSold} itens, R$ ${totalRevenue}`)
 
     setTopProducts(sortedProducts.slice(0, 10))
 
@@ -192,16 +152,11 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
         .select('id, name, stock_quantity, min_stock, unit, category')
         .eq('is_active', true)
 
-      if (productsError) {
-        console.error('Erro ao buscar produtos:', productsError)
-        return
-      }
+      if (productsError) return
 
       const lowStockProducts = activeProducts?.filter(p => 
         (p.stock_quantity || 0) <= (p.min_stock || 5)
       ) || []
-
-      logger.log(`📦 ${activeProducts?.length || 0} produtos ativos, ${lowStockProducts.length} estoque baixo`)
 
       setProductsData(prev => ({
         ...prev,
@@ -249,26 +204,11 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { 
-      legend: { display: false },
-      tooltip: {
-        bodyColor: '#e5e5e7',
-        titleColor: '#e5e5e7',
-        backgroundColor: '#1f2937'
-      }
-    },
+    plugins: { legend: { display: false } },
     scales: { 
       y: { 
         beginAtZero: true, 
-        ticks: { 
-          callback: (v) => Math.floor(v),
-          color: '#9ca3af'
-        },
-        grid: { color: 'rgba(75, 85, 99, 0.3)' }
-      },
-      x: {
-        ticks: { color: '#9ca3af' },
-        grid: { display: false }
+        ticks: { callback: (v) => Math.floor(v) }
       }
     }
   }
@@ -277,20 +217,8 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { 
-        display: true, 
-        position: 'bottom', 
-        labels: { 
-          boxWidth: 12, 
-          padding: 15, 
-          font: { size: 11 },
-          color: '#9ca3af'
-        }
-      },
+      legend: { display: true, position: 'bottom', labels: { boxWidth: 12, padding: 15, font: { size: 11 } } },
       tooltip: {
-        bodyColor: '#e5e5e7',
-        titleColor: '#e5e5e7',
-        backgroundColor: '#1f2937',
         callbacks: {
           label: (ctx) => {
             const val = ctx.raw
@@ -320,10 +248,35 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <SummaryCard title="Itens Vendidos" value={formatNumber(productsData?.totalItemsSold || 0)} icon={Package} color="blue" subtitle={hasData ? 'Período selecionado' : 'Sem vendas'} />
-        <SummaryCard title="Receita" value={formatCurrency(productsData?.totalRevenue || 0)} icon={DollarSign} color="green" />
-        <SummaryCard title="Estoque Baixo" value={formatNumber(productsData?.lowStockCount || 0)} icon={AlertCircle} color="orange" alert={productsData?.lowStockCount > 0} />
-        <SummaryCard title="Produtos Ativos" value={formatNumber(productsData?.totalActiveProducts || 0)} icon={Tag} color="purple" />
+        <StatCard
+          label="Itens Vendidos"
+          value={productsData?.totalItemsSold || 0}
+          icon={Package}
+          variant="info"
+          formatValue={formatNumber}
+        />
+        <StatCard
+          label="Receita"
+          value={productsData?.totalRevenue || 0}
+          icon={DollarSign}
+          variant="success"
+          formatValue={formatCurrency}
+        />
+        <StatCard
+          label="Estoque Baixo"
+          value={productsData?.lowStockCount || 0}
+          icon={AlertCircle}
+          variant="warning"
+          formatValue={formatNumber}
+          alert={productsData?.lowStockCount > 0}
+        />
+        <StatCard
+          label="Produtos Ativos"
+          value={productsData?.totalActiveProducts || 0}
+          icon={Tag}
+          variant="purple"
+          formatValue={formatNumber}
+        />
       </div>
 
       {!hasData ? (

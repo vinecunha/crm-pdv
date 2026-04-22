@@ -10,7 +10,7 @@ import {
   EyeOff,
   Maximize2,
   Download
-} from '../../lib/icons'
+} from '@lib/icons'
 
 // Hook para animação de contagem
 const useCountAnimation = (value, duration = 1000, shouldAnimate = true) => {

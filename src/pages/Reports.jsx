@@ -1,64 +1,31 @@
+// src/pages/Reports.jsx
 import React, { useState, useEffect, lazy, Suspense } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   BarChart3, ShoppingCart, Package, Users, Store,
   FileSpreadsheet, RefreshCw, Printer, UserCheck,
   TrendingUp, Award, Clock, Calendar, Target, Activity
-} from '../lib/icons'
-import { useAuth } from '../contexts/AuthContext'
-import Button from '../components/ui/Button'
-import FeedbackMessage from '../components/ui/FeedbackMessage'
-import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
-import useSystemLogs from '../hooks/useSystemLogs'
-import PageHeader from '../components/ui/PageHeader'
-import TabButton from '../components/reports/TabButton'
-import DateRangeFilter from '../components/reports/DateRangeFilter'
+} from '@lib/icons'
+import { useAuth } from '@contexts/AuthContext'
+import Button from '@components/ui/Button'
+import FeedbackMessage from '@components/ui/FeedbackMessage'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
+import { useSystemLogs } from '@hooks/useSystemLogs'
+import PageHeader from '@components/ui/PageHeader'
+import TabButton from '@components/reports/TabButton'
+import DateRangeFilter from '@components/reports/DateRangeFilter'
 
-const SalesReport = lazy(() => import(
-  /* webpackChunkName: "reports" */
-  '../components/reports/SalesReport'
-))
-const OperatorPerformance = lazy(() => import(
-  /* webpackChunkName: "reports" */
-  '../components/reports/OperatorPerformance'
-))
-const ProductsReport = lazy(() => import(
-  /* webpackChunkName: "reports" */
-  '../components/reports/ProductsReport'
-))
-const CustomersReport = lazy(() => import(
-  /* webpackChunkName: "reports" */
-  '../components/reports/CustomersReport'
-))
-const StockReport = lazy(() => import(
-  /* webpackChunkName: "reports" */
-  '../components/reports/StockReport'
-))
-
-const ABCCurveReport = lazy(() => import(
-  /* webpackChunkName: "reports-advanced" */
-  '../components/reports/ABCCurveReport'
-))
-const InventoryTurnoverReport = lazy(() => import(
-  /* webpackChunkName: "reports-advanced" */
-  '../components/reports/InventoryTurnoverReport'
-))
-const ProfitabilityReport = lazy(() => import(
-  /* webpackChunkName: "reports-advanced" */
-  '../components/reports/ProfitabilityReport'
-))
-const PeriodComparisonReport = lazy(() => import(
-  /* webpackChunkName: "reports-advanced" */
-  '../components/reports/PeriodComparisonReport'
-))
-const SalesForecastReport = lazy(() => import(
-  /* webpackChunkName: "reports-advanced" */
-  '../components/reports/SalesForecastReport'
-))
-const SeasonalityReport = lazy(() => import(
-  /* webpackChunkName: "reports-advanced" */
-  '../components/reports/SeasonalityReport'
-))
+const SalesReport = lazy(() => import('../components/reports/SalesReport'))
+const OperatorPerformance = lazy(() => import('../components/reports/OperatorPerformance'))
+const ProductsReport = lazy(() => import('../components/reports/ProductsReport'))
+const CustomersReport = lazy(() => import('../components/reports/CustomersReport'))
+const StockReport = lazy(() => import('../components/reports/StockReport'))
+const ABCCurveReport = lazy(() => import('../components/reports/ABCCurveReport'))
+const InventoryTurnoverReport = lazy(() => import('../components/reports/InventoryTurnoverReport'))
+const ProfitabilityReport = lazy(() => import('../components/reports/ProfitabilityReport'))
+const PeriodComparisonReport = lazy(() => import('../components/reports/PeriodComparisonReport'))
+const SalesForecastReport = lazy(() => import('../components/reports/SalesForecastReport'))
+const SeasonalityReport = lazy(() => import('../components/reports/SeasonalityReport'))
 
 const basicTabs = [
   { id: 'sales', label: 'Vendas', icon: ShoppingCart, category: 'basic' },
@@ -170,7 +137,6 @@ const Reports = () => {
 
   const visibleTabs = showAdvanced ? allTabs : basicTabs
 
-  // Configuração das ações do header
   const headerActions = [
     ...(canViewAdvanced ? [{
       label: showAdvanced ? 'Modo Avançado' : 'Relatórios Avançados',

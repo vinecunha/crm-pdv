@@ -1,9 +1,10 @@
+// src/components/stock-count/StockCountSessionsView.jsx
 import React from 'react'
 import DataCards from '../ui/DataCards'
 import DataFilters from '../ui/DataFilters'
 import DataEmptyState from '../ui/DataEmptyState'
 import StockCountSessionCard from './StockCountSessionCard'
-import { Plus } from '../../lib/icons'
+import { Plus } from '@lib/icons'
 
 const StockCountSessionsView = ({
   sessions,
@@ -37,7 +38,7 @@ const StockCountSessionsView = ({
       <DataEmptyState
         title="Nenhum balanço realizado"
         description="Inicie seu primeiro balanço de estoque para conferir e ajustar as quantidades."
-        icon="clipboard"
+        icon="products"  // ✅ Alterado de "clipboard" para "products"
         action={{
           label: "Iniciar Balanço",
           icon: <Plus size={18} />,
@@ -77,19 +78,34 @@ const StockCountSessionsView = ({
         />
       </div>
 
-      <DataCards
-        data={filteredSessions}
-        renderCard={(session) => (
-          <StockCountSessionCard
-            session={session}
-            onContinue={onStartCounting}
-            onViewDetails={onViewDetails}
-          />
-        )}
-        keyExtractor={(item) => item.id}
-        columns={3}
-        gap={4}
-      />
+      {filteredSessions.length === 0 ? (
+        <DataEmptyState
+          title="Nenhum balanço encontrado"
+          description="Nenhum balanço corresponde aos filtros aplicados."
+          icon="products"
+          action={{
+            label: "Limpar filtros",
+            onClick: () => {
+              setSearchTerm('')
+              setActiveFilters({})
+            }
+          }}
+        />
+      ) : (
+        <DataCards
+          data={filteredSessions}
+          renderCard={(session) => (
+            <StockCountSessionCard
+              session={session}
+              onContinue={onStartCounting}
+              onViewDetails={onViewDetails}
+            />
+          )}
+          keyExtractor={(item) => item.id}
+          columns={3}
+          gap={4}
+        />
+      )}
     </>
   )
 }

@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
-import { Camera, Upload, AlertCircle } from '../../lib/icons'
-import { compressAvatar, isImageFile, validateImageSize } from '../../utils/imageCompression'
+import { Camera, Upload, AlertCircle } from '@lib/icons'
+import { compressAvatar, isImageFile, validateImageSize } from '@utils/imageCompression'
 import Button from '../ui/Button'
 import Modal from '../ui/Modal'
 import LazyImage from '../ui/LazyImage'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '@lib/supabase'
 
 const AvatarUploader = ({ user, avatarUrl, fullName, displayName, onAvatarUpdate }) => {
   const [showModal, setShowModal] = useState(false)

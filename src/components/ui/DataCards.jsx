@@ -1,6 +1,32 @@
-import React, { useMemo, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React, { useMemo, useCallback, useState, useEffect } from 'react'
 import { ChevronRight, RefreshCw } from 'lucide-react'
+
+// Componente de transição CSS simples (substituto do AnimatePresence)
+const CSSTransition = ({ children, enableAnimations }) => {
+  const [mounted, setMounted] = useState(false)
+  
+  useEffect(() => {
+    if (enableAnimations) {
+      // Pequeno delay para garantir que o DOM foi montado
+      requestAnimationFrame(() => setMounted(true))
+    } else {
+      setMounted(true)
+    }
+  }, [enableAnimations])
+  
+  if (!enableAnimations) return children
+  
+  return (
+    <div
+      className={`
+        transition-all duration-300 ease-out
+        ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}
+      `}
+    >
+      {children}
+    </div>
+  )
+}
 
 const DataCards = ({
   data,
@@ -34,7 +60,7 @@ const DataCards = ({
     10: 'gap-10'
   }
 
-  // Configuração de colunas responsivas melhorada
+  // Configuração de colunas responsivas
   const getGridCols = useMemo(() => {
     const cols = typeof columns === 'number' 
       ? { default: columns } 
@@ -49,14 +75,6 @@ const DataCards = ({
       ${cols['2xl'] ? `2xl:grid-cols-${cols['2xl']}` : ''}
     `
   }, [columns])
-
-  // Animação para cards
-  const cardAnimation = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 },
-    transition: { duration: 0.3, ease: "easeOut" }
-  }
 
   // Scroll infinito com Intersection Observer
   const observerRef = React.useRef()
@@ -73,7 +91,7 @@ const DataCards = ({
     if (node) observerRef.current.observe(node)
   }, [loading, hasMore, onLoadMore])
 
-  // Estado vazio melhorado
+  // Estado vazio
   if (!loading && data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[300px] p-8 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
@@ -108,7 +126,7 @@ const DataCards = ({
         </div>
       )}
 
-      {/* Grid de cards com animações */}
+      {/* Grid de cards */}
       <div 
         className={`
           grid 
@@ -120,16 +138,13 @@ const DataCards = ({
         role="grid"
         aria-label="Grid de cards de dados"
       >
-        <AnimatePresence mode="popLayout">
-          {data.map((item, index) => {
-            const isLast = index === data.length - 1
-            const key = keyExtractor?.(item, index) || index
-            
-            const card = (
-              <motion.div
-                key={key}
-                {...(enableAnimations ? cardAnimation : {})}
-                layout={enableAnimations}
+        {data.map((item, index) => {
+          const isLast = index === data.length - 1
+          const key = keyExtractor?.(item, index) || index
+          
+          const card = (
+            <CSSTransition key={key} enableAnimations={enableAnimations}>
+              <div
                 onClick={() => onCardClick?.(item, index)}
                 className={`
                   relative group
@@ -137,7 +152,7 @@ const DataCards = ({
                 `}
                 role="gridcell"
                 tabIndex={onCardClick ? 0 : undefined}
-                onKeyPress={(e) => {
+                onKeyDown={(e) => {
                   if (e.key === 'Enter' && onCardClick) {
                     onCardClick(item, index)
                   }
@@ -155,17 +170,19 @@ const DataCards = ({
                 )}
                 
                 {renderCard(item, index)}
-              </motion.div>
-            )
-
-            // Adiciona ref para scroll infinito no último card
-            return isLast ? (
-              <div key={key} ref={lastCardRef}>
-                {card}
               </div>
-            ) : card
-          })}
-        </AnimatePresence>
+            </CSSTransition>
+          )
+
+          // Adiciona ref para scroll infinito no último card
+          return isLast ? (
+            <div key={key} ref={lastCardRef}>
+              {card}
+            </div>
+          ) : (
+            <React.Fragment key={key}>{card}</React.Fragment>
+          )
+        })}
       </div>
 
       {/* Loading states */}
@@ -203,9 +220,6 @@ const DataCards = ({
 export const withVirtualization = (Component) => {
   return ({ virtualize, itemHeight = 300, ...props }) => {
     if (!virtualize) return <Component {...props} />
-    
-    // Implementação de virtualização para grandes listas
-    // Você pode usar react-window ou react-virtual aqui
     return <Component {...props} />
   }
 }

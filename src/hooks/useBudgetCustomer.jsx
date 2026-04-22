@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import * as budgetService from '../services/budgetService'  // ← Faltou este import!
+import * as budgetService from '@services/budgetService'  // ← Faltou este import!
 
 const useBudgetCustomer = () => {
   const [customer, setCustomer] = useState(null)

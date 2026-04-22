@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import { useReactQuery } from '../../hooks/useReactQuery'
-import { getCacheStats, clearPersistedCache } from '../../lib/react-query'
+import { useReactQuery } from '@hooks/useReactQuery'
+import { getCacheStats, clearPersistedCache } from '@lib/react-query'
 import Button from './Button'
 import Modal from './Modal'
-import { Database, Trash2, RefreshCw } from '../../lib/icons'
+import { Database, Trash2, RefreshCw } from '@lib/icons'
 
 const CacheDebugger = () => {
   const { getCacheSize, clearCache } = useReactQuery()

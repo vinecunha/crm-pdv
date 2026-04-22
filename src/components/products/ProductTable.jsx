@@ -11,11 +11,11 @@ import {
   Tag,
   RefreshCw,
   Download
-} from '../../lib/icons'
-import { useTableStrategy } from '../../hooks/useTableStrategy'
+} from '@lib/icons'
+import { useTableStrategy } from '@hooks/useTableStrategy'
 import Badge from '../Badge'
-import { formatCurrency, formatNumber } from '../../utils/formatters'
-import { createAction } from '../../utils/actions'
+import { formatCurrency, formatNumber } from '@utils/formatters'
+import { createAction } from '@utils/actions'
 
 const ProductTable = ({ 
   products, 

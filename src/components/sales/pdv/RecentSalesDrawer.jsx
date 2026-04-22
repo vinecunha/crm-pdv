@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { History, X, Printer, Eye } from '../../../lib/icons'
-import { formatCurrency, formatDate } from '../../../utils/formatters'
+import { History, X, Printer, Eye } from '@lib/icons'
+import { formatCurrency, formatDate } from '@utils/formatters'
 import Badge from '../../Badge'
 import Button from '../../ui/Button'
-import * as saleService from '../../../services/saleService'
+import * as saleService from '@services/saleService'
 
 const RecentSalesDrawer = () => {
   const [isOpen, setIsOpen] = useState(false)

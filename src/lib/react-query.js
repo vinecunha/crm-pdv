@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query'
 import { persistQueryClient } from '@tanstack/react-query-persist-client'
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
-import { logger } from '../utils/logger' 
+import { logger } from '@utils/logger' 
 
 // Lista de queries que NÃO devem ser persistidas (dados sensíveis)
 const SENSITIVE_QUERY_KEYS = [

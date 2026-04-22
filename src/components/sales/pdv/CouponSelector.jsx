@@ -1,7 +1,7 @@
 // components/sales/pdv/CouponSelector.jsx
 import React from 'react'
-import { Ticket, X, Percent, DollarSign } from '../../../lib/icons'
-import { formatCurrency } from '../../../utils/formatters'
+import { Ticket, X, Percent, DollarSign } from '@lib/icons'
+import { formatCurrency } from '@utils/formatters'
 import Modal from '../../ui/Modal'
 import Button from '../../ui/Button'
 

@@ -1,10 +1,10 @@
 import React, { useState, useRef } from 'react'
-import { CreditCard, Banknote, QrCode, Smartphone } from '../../../lib/icons'
-import { formatCurrency } from '../../../utils/formatters'
+import { CreditCard, Banknote, QrCode, Smartphone } from '@lib/icons'
+import { formatCurrency } from '@utils/formatters'
 import Modal from '../../ui/Modal'
 import Button from '../../ui/Button'
 import PixPaymentModal from './PixPaymentModal'
-import { logger } from '../../../utils/logger'
+import { logger } from '@utils/logger'
 
 
 const paymentMethods = [

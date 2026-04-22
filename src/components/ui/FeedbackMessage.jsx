@@ -10,7 +10,7 @@ import {
   ExternalLink,
   Copy,
   RotateCcw
-} from '../../lib/icons'
+} from '@lib/icons'
 
 // Hook para animação de progresso
 const useProgressTimer = (duration, onComplete, isPaused = false) => {

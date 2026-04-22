@@ -1,6 +1,6 @@
 // hooks/useCompany.js
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase } from '@lib/supabase'
 
 export const useCompany = () => {
   const [company, setCompany] = useState(null)

@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import { useAuth } from '../contexts/AuthContext'
-import { supabase } from '../lib/supabase'
-import { Plus, RefreshCw, Users, CheckCircle, User, ClipboardList } from '../lib/icons'
-import PageHeader from '../components/ui/PageHeader'
-import DataFilters from '../components/ui/DataFilters'
-import DataEmptyState from '../components/ui/DataEmptyState'
-import DataLoadingSkeleton from '../components/ui/DataLoadingSkeleton'
-import TaskCard from '../components/tasks/TaskCard'
-import TaskModal from '../components/tasks/TaskModal'
-import ConfirmModal from '../components/ui/ConfirmModal'
-import FeedbackMessage from '../components/ui/FeedbackMessage'
-import TaskHistoryModal from '../components/tasks/TaskHistoryModal'
-import { useTasksQuery } from '../hooks/useTasksQuery'
+import { useAuth } from '@contexts/AuthContext'
+import { supabase } from '@lib/supabase'
+import { Plus, RefreshCw, Users, CheckCircle, User, ClipboardList } from '@lib/icons'
+import PageHeader from '@components/ui/PageHeader'
+import DataFilters from '@components/ui/DataFilters'
+import DataEmptyState from '@components/ui/DataEmptyState'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
+import TaskCard from '@components/tasks/TaskCard'
+import TaskModal from '@components/tasks/TaskModal'
+import ConfirmModal from '@components/ui/ConfirmModal'
+import FeedbackMessage from '@components/ui/FeedbackMessage'
+import TaskHistoryModal from '@components/tasks/TaskHistoryModal'
+import { useTasksQuery } from '@hooks/useTasksQuery'
+import { useTasksRealtime } from '@hooks/useTasksRealtime'
 
 const TaskBoard = () => {
   const { profile } = useAuth()
@@ -23,6 +24,8 @@ const TaskBoard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [historyTask, setHistoryTask] = useState(null)
   const [showHistoryModal, setShowHistoryModal] = useState(false)
+
+  useTasksRealtime(!loading)
   
   // Estados para ConfirmModal e Feedback
   const [confirmModal, setConfirmModal] = useState({
@@ -404,7 +407,7 @@ const TaskBoard = () => {
                   ? "Nenhuma tarefa corresponde aos filtros aplicados"
                   : "Clique em 'Nova Tarefa' para começar a organizar seu trabalho"
               }
-              icon="default"
+              icon="tasks"
               action={
                 (searchTerm || filterStatus !== 'all' || filterPriority !== 'all') ? {
                   label: 'Limpar filtros',

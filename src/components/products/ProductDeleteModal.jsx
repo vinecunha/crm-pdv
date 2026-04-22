@@ -1,8 +1,8 @@
 import React from 'react'
-import { AlertTriangle } from '../../lib/icons'
+import { AlertTriangle } from '@lib/icons'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
-import { formatNumber } from '../../utils/formatters'
+import { formatNumber } from '@utils/formatters'
 
 const ProductDeleteModal = ({ 
   isOpen, 

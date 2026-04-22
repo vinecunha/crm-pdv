@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
 import FormInput from '../forms/FormInput'
-import { Save } from '../../lib/icons'
+import { Save } from '@lib/icons'
 
 const RuleModal = ({ isOpen, onClose, rule, onSave, isSaving }) => {
   const [form, setForm] = useState({

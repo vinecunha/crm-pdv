@@ -1,8 +1,8 @@
 // src/components/dashboard/UserPerformanceCard.jsx
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { TrendingUp, Target, Award, ChevronRight } from '../../lib/icons'
-import { formatCurrency } from '../../utils/formatters'
+import { TrendingUp, Target, Award, ChevronRight } from '@lib/icons'
+import { formatCurrency } from '@utils/formatters'
 
 const UserPerformanceCard = ({ sales, profile }) => {
   const navigate = useNavigate()

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Building } from '../../lib/icons'
+import { Building } from '@lib/icons'
 
 const LoginHeader = ({ companyName, logoUrl, primaryColor }) => {
   return (

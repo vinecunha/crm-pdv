@@ -9,8 +9,8 @@ import {
   Play,
   Pause,
   RotateCcw
-} from '../../lib/icons'
-import { formatDateTime } from '../../utils/formatters'
+} from '@lib/icons'
+import { formatDateTime } from '@utils/formatters'
 
 const getStatusIcon = (status) => {
   switch (status) {

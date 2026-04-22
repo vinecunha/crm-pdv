@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Search, Package } from '../../lib/icons'
+import { Search, Package } from '@lib/icons'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
 

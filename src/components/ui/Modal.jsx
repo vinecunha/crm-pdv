@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { X, AlertCircle } from '../../lib/icons'
+import { X, AlertCircle } from '@lib/icons'
 
 const useScrollLock = (isLocked) => {
   useEffect(() => {

@@ -10,9 +10,9 @@ import {
   CreditCard,
   ChevronRight,
   User
-} from '../../../lib/icons'
+} from '@lib/icons'
 import Badge from '../../Badge'
-import { formatCurrency, formatDateTime } from '../../../utils/formatters'
+import { formatCurrency, formatDateTime } from '@utils/formatters'
 
 const SalesListCard = ({ sale, onViewDetails, onCancel, onPrint, canCancel, canRequestCancellation }) => {
   const paymentIcons = { 

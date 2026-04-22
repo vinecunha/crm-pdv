@@ -1,8 +1,8 @@
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { User, RefreshCw } from '../../lib/icons'
+import { User, RefreshCw } from '@lib/icons'
 import DataTable from '../ui/DataTable'
-import { formatCurrency, formatNumber } from '../../utils/formatters'
+import { formatCurrency, formatNumber } from '@utils/formatters'
 
 // Função para buscar os dados da API
 const fetchUserSales = async (filters) => {

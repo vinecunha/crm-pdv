@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Mail, Lock, LogIn, Clock, Eye, EyeOff } from '../../lib/icons'
+import { Mail, Lock, LogIn, Clock, Eye, EyeOff } from '@lib/icons'
 
 const LoginForm = ({ 
   email, 

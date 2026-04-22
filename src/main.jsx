@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'  
-import { perfMonitor } from './lib/performance'
+import { perfMonitor } from '@lib/performance'
 import { logger } from '../src/utils/logger' 
 
 perfMonitor.measurePageLoad()

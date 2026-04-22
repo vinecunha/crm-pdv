@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import { sendCommunication, sendBulkCommunication, getChannelConfig } from '../services/communicationService'
-import { useAuth } from '../contexts/AuthContext'
-import useSystemLogs from './useSystemLogs'
+import { sendCommunication, sendBulkCommunication, getChannelConfig } from '@services/communicationService'
+import { useAuth } from '@contexts/AuthContext'
+import { useSystemLogs } from './useSystemLogs'
 
 export const useCommunication = () => {
   const { user } = useAuth()

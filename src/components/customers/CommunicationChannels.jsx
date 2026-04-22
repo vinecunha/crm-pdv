@@ -1,5 +1,5 @@
 import React from 'react'
-import { MessageSquare, ChevronRight } from '../../lib/icons'
+import { MessageSquare, ChevronRight } from '@lib/icons'
 
 const CommunicationChannels = ({ channels, customer, onSelectChannel }) => {
   return (

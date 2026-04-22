@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { supabase } from '../lib/supabase'
+import { supabase } from '@lib/supabase'
 
 export const useTasksQuery = ({ type, status, assignedTo, limit = 100 }) => {
   return useQuery({
