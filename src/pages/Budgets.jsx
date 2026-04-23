@@ -1,30 +1,28 @@
-// src/pages/Budgets.jsx - Versão simplificada
+// src/pages/Budgets.jsx
 import React, { useState, useEffect, useRef } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { FileText, RefreshCw, Plus } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
 import FeedbackMessage from '@components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import PageHeader from '@components/ui/PageHeader'
-import Badge from '@components/Badge'
 
 // Componentes
 import BudgetListView from '@components/budget/BudgetListView'
 import BudgetCreator from '@components/budget/BudgetCreator'
 import BudgetModalsContainer from '@components/budget/BudgetModalsContainer'
 
-// Hooks
-import { useBudgetMutations } from '@hooks/useBudgetMutations'
-import { useBudgetCart } from '@hooks/useBudgetCart'
-import { useBudgetCustomer } from '@hooks/useBudgetCustomer'
-import { useBudgetCoupon } from '@hooks/useBudgetCoupon'
-import { useBudgetModals } from '@hooks/useBudgetModals'
-import { useBudgetHandlers } from '@/hooks/handlers'
-import useFeedback from '@hooks/useFeedback'
-import useMediaQuery from '@hooks/useMediaQuery'
+// ✅ Hooks centralizados
+import { useBudgetMutations } from '@hooks/mutations/useBudgetMutations'
+import { useBudgetCart } from '@hooks/budget/useBudgetCart'
+import { useBudgetCustomer } from '@hooks/budget/useBudgetCustomer'
+import { useBudgetCoupon } from '@hooks/budget/useBudgetCoupon'
+import { useBudgetModals } from '@hooks/budget/useBudgetModals'
+import { useBudgetHandlers } from '@hooks/handlers'
+import { useBudgetsQueries } from '@hooks/queries/useBudgetsQueries'
+import useFeedback from '@hooks/ui/useFeedback'
+import useMediaQuery from '@/hooks/utils/useMediaQuery'
 
-// Services e utils
-import * as budgetService from '@services/budgetService'
+// Utils
 import { calculateTotal } from '@utils/budgetConstants.jsx'
 import { BUDGET_COLUMNS, BUDGET_ACTIONS } from '@utils/budgetConstants'
 
@@ -44,15 +42,49 @@ const Budgets = () => {
   const [validUntil, setValidUntil] = useState('')
   const [couponCode, setCouponCode] = useState('')
   
-  // Hooks
+  // Hooks de estado
   const feedback = useFeedback()
   const modals = useBudgetModals()
   
   const { cart, addToCart, updateQuantity, removeItem, clearCart, subtotal } = useBudgetCart()
   const { customer, setCustomerPhone, searchCustomer, createCustomer, clearCustomer } = useBudgetCustomer()
   const { coupon, discount, validateCoupon, removeCoupon } = useBudgetCoupon(customer, subtotal)
-  const { createBudget, updateStatus, convertToSale, isMutating } = useBudgetMutations()
   
+  // ✅ Queries centralizadas
+  const {
+    budgets,
+    loadingBudgets,
+    refetchBudgets,
+    products,
+    loadingProducts,
+    availableCoupons
+  } = useBudgetsQueries({ searchTerm, statusFilter, mode, customer })
+
+  // ✅ Mutations com callbacks
+  const { createBudget, updateStatus, convertToSale, isMutating } = useBudgetMutations({
+    onBudgetCreated: () => {
+      feedback.showSuccess('Orçamento criado com sucesso!')
+      clearCart()
+      clearCustomer()
+      removeCoupon()
+      setNotes('')
+      setValidUntil('')
+      setMode('list')
+    },
+    onBudgetUpdated: () => {
+      feedback.showSuccess('Status atualizado!')
+      modals.closeAll()
+    },
+    onBudgetConverted: () => {
+      feedback.showSuccess('Orçamento convertido em venda!')
+      modals.closeAll()
+    },
+    onError: (error) => {
+      feedback.showError(error.message)
+    }
+  })
+  
+  // Handlers
   const handlers = useBudgetHandlers({
     cart, customer, coupon, discount, notes, validUntil, subtotal, couponCode,
     createBudget, updateStatus, convertToSale, validateCoupon,
@@ -60,26 +92,6 @@ const Budgets = () => {
     setMode, modals, feedback
   })
   
-  // Queries
-  const { data: budgets = [], isLoading: loadingBudgets, refetch: refetchBudgets } = useQuery({
-    queryKey: ['budgets', { searchTerm, status: statusFilter }],
-    queryFn: () => budgetService.fetchBudgets(searchTerm, statusFilter),
-    enabled: mode === 'list',
-  })
-
-  const { data: products = [], isLoading: loadingProducts } = useQuery({
-    queryKey: ['products-active-budget'],
-    queryFn: budgetService.fetchProducts,
-    staleTime: 2 * 60 * 1000,
-    enabled: mode === 'create',
-  })
-
-  const { data: availableCoupons = [] } = useQuery({
-    queryKey: ['available-coupons-budget', customer?.id],
-    queryFn: () => budgetService.fetchAvailableCoupons(customer?.id),
-    enabled: mode === 'create' && !!customer,
-  })
-
   // Efeitos
   useEffect(() => { 
     if (mode === 'create' && products.length > 0) {

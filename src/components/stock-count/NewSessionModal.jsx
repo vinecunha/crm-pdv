@@ -1,8 +1,8 @@
 import React from 'react'
 import { ClipboardList, User } from '@lib/icons'
-import Modal from '../ui/Modal'
+import Modal from '@components/ui/Modal'
 import FormInput from '../forms/FormInput'
-import Button from '../ui/Button'
+import Button from '@components/ui/Button'
 
 const NewSessionModal = ({
   isOpen,

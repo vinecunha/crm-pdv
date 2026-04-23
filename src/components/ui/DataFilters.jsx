@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { Search, Filter, X, ChevronDown } from '@lib/icons'
-import useDebounce from '@hooks/useDebounce'
+import useDebounce from '@/hooks/utils/useDebounce'
 
 const DataFilters = ({
   searchPlaceholder = "Buscar...",

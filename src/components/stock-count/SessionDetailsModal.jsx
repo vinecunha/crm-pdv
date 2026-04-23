@@ -1,12 +1,12 @@
 // src/components/stock-count/SessionDetailsModal.jsx
 import React from 'react'
 import { X, CheckCircle, AlertTriangle, Clock, Package, DollarSign, Calendar, User, MapPin, FileText, PackageSearch, Eye } from '@lib/icons'
-import Button from '../ui/Button'
+import Button from '@components/ui/Button'
 import Badge from '../Badge'
-import StatCard from '../ui/StatCard'
-import DataTable from '../ui/DataTable'
+import StatCard from '@components/ui/StatCard'
+import DataTable from '@components/ui/DataTable'
 import { formatCurrency, formatDateTime, formatNumber } from '@utils/formatters'
-import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import { createAction } from '@utils/actions'
 
 const SessionDetailsModal = ({ isOpen, onClose, session, items, isLoading, onViewItem }) => {

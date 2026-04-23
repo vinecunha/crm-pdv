@@ -1,6 +1,6 @@
 import React from 'react'
 import { ClipboardList, Clock, CheckCircle, XCircle, Eye, FileText, ArrowRight } from '@lib/icons'
-import Button from '../ui/Button'
+import Button from '@components/ui/Button'
 import Badge from '../Badge'
 
 const statusConfig = {

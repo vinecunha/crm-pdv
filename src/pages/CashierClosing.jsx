@@ -1,6 +1,5 @@
 // src/pages/CashierClosing.jsx
 import React, { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { FileText, RefreshCw, Calculator, AlertCircle } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
 import FeedbackMessage from '@components/ui/FeedbackMessage'
@@ -15,21 +14,16 @@ import CashierTotalBanner from '@components/cashier/CashierTotalBanner'
 import CashierFilters from '@components/cashier/CashierFilters'
 import CashierModalsContainer from '@components/cashier/CashierModalsContainer'
 
-// Hooks e Services
-import { useCashierHandlers } from '@/hooks/handlers'
-import { 
-  fetchUsers, 
-  fetchClosingHistory, 
-  fetchCashierSummary, 
-  createCashierClosing 
-} from '@services/cashierService'
+// ✅ Hooks centralizados
+import { useCashierHandlers } from '@hooks/handlers'
+import { useCashierMutations } from '@hooks/mutations'
+import { useCashierQueries } from '@hooks/queries/useCashierQueries'
 
 const today = new Date()
 const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
 
 const CashierClosing = () => {
   const { profile } = useAuth()
-  const queryClient = useQueryClient()
 
   // Estado
   const [dateRange, setDateRange] = useState({ start: todayStr, end: todayStr })
@@ -43,56 +37,28 @@ const CashierClosing = () => {
     cash: 0, credit_card: 0, debit_card: 0, pix: 0, notes: ''
   })
 
-  // Queries
-  const { data: users = [] } = useQuery({
-    queryKey: ['users'],
-    queryFn: fetchUsers,
-    staleTime: 30 * 60 * 1000,
-  })
+  // ✅ Queries centralizadas
+  const {
+    users,
+    closingHistory,
+    refetchHistory,
+    summary,
+    isLoadingSummary,
+    summaryError,
+    refetchSummary,
+    isFetchingSummary
+  } = useCashierQueries({ dateRange, selectedUser })
 
-  const { data: closingHistory = [], refetch: refetchHistory } = useQuery({
-    queryKey: ['closing-history'],
-    queryFn: fetchClosingHistory,
-    staleTime: 5 * 60 * 1000,
-  })
+  // ✅ Mutations
+  const { closingMutation } = useCashierMutations()
 
-  const { 
-    data: summary,
-    isLoading: isLoadingSummary,
-    error: summaryError,
-    refetch: refetchSummary,
-    isFetching: isFetchingSummary
-  } = useQuery({
-    queryKey: ['cashier-summary', { startDate: dateRange.start, endDate: dateRange.end, userId: selectedUser }],
-    queryFn: fetchCashierSummary,
-    enabled: !!(dateRange.start && dateRange.end),
-    staleTime: 2 * 60 * 1000,
-  })
-
-  const closingMutation = useMutation({
-    mutationFn: createCashierClosing,
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ['closing-history'] })
-      queryClient.invalidateQueries({ queryKey: ['cashier-summary'] })
-      
-      const diff = result.difference
-      const diffMessage = diff === 0 ? 'Caixa fechou com valor exato!' : 
-        `Diferença de ${formatCurrency(Math.abs(diff))} ${diff > 0 ? 'a maior' : 'a menor'}`
-      
-      showFeedback('success', `Fechamento realizado! ${diffMessage}`)
-      setShowClosingModal(false)
-    },
-    onError: (error) => {
-      showFeedback('error', 'Erro ao realizar fechamento: ' + error.message)
-    }
-  })
-
+  // Feedback
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
   }
 
-  // Handlers
+  // ✅ Handlers
   const handlers = useCashierHandlers({
     profile,
     dateRange,

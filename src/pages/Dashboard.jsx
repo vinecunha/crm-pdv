@@ -17,11 +17,11 @@ import {
   DollarSign,
   Target
 } from '@lib/icons'
-import { useDashboard } from '@hooks/useDashboard'
+import { useDashboard } from '@hooks/dashboard/useDashboard'
 import SectionErrorBoundary from '@components/SectionErrorBoundary'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import TaskWidget from '@components/tasks/TaskWidget'
-import { useTasksQuery } from '@hooks/useTasksQuery'
+import { useTasksQuery } from '@hooks/tasks/useTasksQuery'
 import Button from '@components/ui/Button'
 import PageHeader from '@components/ui/PageHeader'
 import DashboardStats from '@components/dashboard/DashboardStats'
@@ -31,8 +31,8 @@ import TopProductsList from '@components/dashboard/TopProductsList'
 import TeamOverview from '@components/dashboard/TeamOverview'
 import UserPerformanceCard from '@components/dashboard/UserPerformanceCard'
 import CommissionWidget from '@components/commissions/CommissionWidget'
-import { useCommissionSummary } from '@hooks/useCommissionSummary'
-import { useDashboardRealtime } from '@hooks/useDashboardRealtime'
+import { useCommissionSummary } from '@hooks/commissions/useCommissionSummary'
+import { useDashboardRealtime } from '@hooks/dashboard/useDashboardRealtime'
 
 const Dashboard = () => {
   const { profile, permissions } = useAuth()

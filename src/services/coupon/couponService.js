@@ -1,0 +1,212 @@
+import { supabase } from '@lib/supabase'
+import { sanitizeObject } from '@utils/sanitize'
+import logger from '@utils/logger'
+
+/**
+ * Buscar todos os cupons - COM FORÇA DE REFRESH
+ */
+export const fetchCoupons = async (searchTerm = '', filters = {}, forceRefresh = false) => {
+  logger.log('🔄 [couponService] Buscando cupons', { searchTerm, filters, forceRefresh })
+  
+  let query = supabase
+    .from('coupons')
+    .select('*')
+    .order('created_at', { ascending: false })
+  
+  // ✅ Se forceRefresh = true, adiciona um parâmetro único para quebrar cache
+  if (forceRefresh) {
+    query = query.limit(1000).order('created_at', { ascending: false })
+  }
+  
+  if (searchTerm?.trim()) {
+    query = query.or(`code.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%`)
+  }
+  if (filters?.status && filters.status !== 'all') {
+    query = query.eq('is_active', filters.status === 'active')
+  }
+  if (filters?.discount_type && filters.discount_type !== 'all') {
+    query = query.eq('discount_type', filters.discount_type)
+  }
+  if (filters?.is_global && filters.is_global !== 'all') {
+    query = query.eq('is_global', filters.is_global === 'global')
+  }
+  
+  const { data, error } = await query
+  
+  if (error) {
+    logger.error('❌ [couponService] Erro ao buscar cupons', { error: error.message })
+    throw error
+  }
+  
+  logger.log('✅ [couponService] Cupons encontrados:', data?.length || 0)
+  return data || []
+}
+
+/**
+ * Buscar cupons ativos (para o CampaignModal)
+ */
+export const fetchActiveCoupons = async () => {
+  logger.log('🔄 [couponService] Buscando cupons ativos')
+  
+  const { data, error } = await supabase
+    .from('coupons')
+    .select('*')
+    .eq('is_active', true)
+    .gte('valid_to', new Date().toISOString())
+    .order('code')
+  
+  if (error) {
+    logger.error('❌ [couponService] Erro ao buscar cupons ativos', { error: error.message })
+    throw error
+  }
+  
+  logger.log('✅ [couponService] Cupons ativos encontrados:', data?.length || 0)
+  return data || []
+}
+
+/**
+ * Buscar clientes ativos
+ */
+export const fetchCustomers = async () => {
+  const { data, error } = await supabase
+    .from('customers')
+    .select('id, name, phone, email')
+    .eq('status', 'active')
+    .order('name')
+  
+  if (error) throw error
+  return data || []
+}
+
+/**
+ * Buscar clientes permitidos para um cupom
+ */
+export const fetchAllowedCustomers = async (couponId) => {
+  if (!couponId) return []
+  
+  const { data, error } = await supabase
+    .from('coupon_allowed_customers')
+    .select('customer_id, customers(id, name, phone, email)')
+    .eq('coupon_id', couponId)
+  
+  if (error) throw error
+  return data || []
+}
+
+/**
+ * Criar cupom
+ */
+export const createCoupon = async (couponData, allowedCustomers, profile) => {
+  const safeData = sanitizeObject(couponData)
+  
+  const { data: coupon, error: couponError } = await supabase
+    .from('coupons')
+    .insert([{ ...safeData, created_by: profile?.id }])
+    .select()
+    .single()
+  
+  if (couponError) throw couponError
+  
+  if (!safeData.is_global && allowedCustomers?.length > 0) {
+    const { error: customersError } = await supabase
+      .from('coupon_allowed_customers')
+      .insert(allowedCustomers.map(customerId => ({ coupon_id: coupon.id, customer_id: customerId })))
+    
+    if (customersError) throw customersError
+  }
+  
+  return coupon
+}
+
+/**
+ * Atualizar cupom
+ */
+export const updateCoupon = async (id, couponData, allowedCustomers, profile) => {
+  const safeData = sanitizeObject(couponData)
+  
+  const { data: coupon, error: couponError } = await supabase
+    .from('coupons')
+    .update({ ...safeData, updated_by: profile?.id })
+    .eq('id', id)
+    .select()
+    .single()
+  
+  if (couponError) throw couponError
+  
+  if (!safeData.is_global) {
+    await supabase.from('coupon_allowed_customers').delete().eq('coupon_id', id)
+    
+    if (allowedCustomers?.length > 0) {
+      const { error: customersError } = await supabase
+        .from('coupon_allowed_customers')
+        .insert(allowedCustomers.map(customerId => ({ coupon_id: id, customer_id: customerId })))
+      
+      if (customersError) throw customersError
+    }
+  }
+  
+  return coupon
+}
+
+/**
+ * Excluir cupom
+ */
+  export const deleteCoupon = async (id) => {
+    logger.log('🗑️ deleteCoupon chamado com ID:', id)
+    
+    const { data, error } = await supabase
+      .from('coupons')
+      .delete()
+      .eq('id', id)
+      .select()
+    
+    if (error) {
+      logger.error('❌ Erro no deleteCoupon:', error)
+      throw error
+    }
+    
+    logger.log('✅ deleteCoupon sucesso:', data)
+    return data
+  }
+
+/**
+ * Alternar status do cupom
+ */
+export const toggleCouponStatus = async (id, currentStatus, profile) => {
+  const newStatus = !currentStatus
+  const { data, error } = await supabase
+    .from('coupons')
+    .update({ is_active: newStatus, updated_by: profile?.id })
+    .eq('id', id)
+    .select()
+    .single()
+  
+  if (error) throw error
+  return data
+}
+
+/**
+ * Adicionar cliente permitido
+ */
+export const addAllowedCustomer = async (couponId, customer) => {
+  const { error } = await supabase
+    .from('coupon_allowed_customers')
+    .insert([{ coupon_id: couponId, customer_id: customer.id }])
+  
+  if (error) throw error
+  return { customer_id: customer.id, customers: customer }
+}
+
+/**
+ * Remover cliente permitido
+ */
+export const removeAllowedCustomer = async (couponId, customerId) => {
+  const { error } = await supabase
+    .from('coupon_allowed_customers')
+    .delete()
+    .eq('coupon_id', couponId)
+    .eq('customer_id', customerId)
+  
+  if (error) throw error
+  return customerId
+}

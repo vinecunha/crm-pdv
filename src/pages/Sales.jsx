@@ -1,9 +1,8 @@
 // src/pages/Sales.jsx
 import React, { useEffect, useRef, useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { 
-  Phone, Keyboard, ShoppingCart, User, Ticket, 
+  Keyboard, ShoppingCart, User, Ticket, 
   CreditCard, WifiOff, FileText, Maximize, Minimize, RotateCcw 
 } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
@@ -19,11 +18,11 @@ import SyncStatus from '@components/sales/pdv/SyncStatus'
 import ShortcutFeedback from '@components/ui/ShortcutFeedback'
 import SalesModalsContainer from '@components/sales/pdv/SalesModalsContainer'
 
-import { useSystemLogs } from '@hooks/useSystemLogs'
-import usePDVShortcuts from '@hooks/pdv/usePDVShortcuts'
-import useKioskMode from '@hooks/useKioskMode'
-import { useNetworkStatus } from '@hooks/useNetworkStatus'
-import useMediaQuery from '@hooks/useMediaQuery'
+import { useSystemLogs } from '@hooks/system/useSystemLogs'
+import { usePDVShortcuts } from '@hooks/pdv/usePDVShortcuts'
+import useKioskMode from '@hooks/utils/useKioskMode'
+import { useNetworkStatus } from '@/hooks/utils/useNetworkStatus'
+import useMediaQuery from '@/hooks/utils/useMediaQuery'
 
 import { usePDVCart } from '@hooks/pdv/usePDVCart'
 import { usePDVCustomer } from '@hooks/pdv/usePDVCustomer'
@@ -33,18 +32,19 @@ import { usePDVFeedback } from '@hooks/pdv/usePDVFeedback'
 import { usePDVSearch } from '@hooks/pdv/usePDVSearch'
 import { usePDVPayment } from '@hooks/pdv/usePDVPayment'
 
-import { useSalesHandlers } from '@hooks/handlers/useSalesHandlers'
+// ✅ Hooks centralizados
+import { useSalesHandlers } from '@hooks/handlers'
+import { useSaleMutations } from '@hooks/mutations'
+import { useSalesQueries } from '@hooks/queries/useSalesQueries'
 
 import { saveSaleOffline } from '@utils/offlineStorage'
 import { formatCurrency } from '@utils/formatters'
 import { supabase } from '@lib/supabase'
 import { logger } from '@utils/logger'
-import * as saleService from '@services/saleService'
 
 const Sales = () => {
   const { profile } = useAuth()
   const { logCreate, logError } = useSystemLogs()
-  const queryClient = useQueryClient()
   const navigate = useNavigate()
   const isMobile = useMediaQuery('(max-width: 1024px)')
   const { isKioskMode, toggleKioskMode } = useKioskMode()
@@ -139,18 +139,12 @@ const Sales = () => {
     closeReceiptModal,
   } = usePDVModals()
 
-  // ============= QUERIES =============
+  // ✅ Queries centralizadas
   const { 
-    data: products = [], 
-    isLoading,
-    refetch: refetchProducts 
-  } = useQuery({
-    queryKey: ['products-active'],
-    queryFn: saleService.fetchProducts,
-    staleTime: 0, 
-    gcTime: 0,
-    refetchOnMount: true,
-  })
+    products, 
+    isLoading, 
+    refetchProducts 
+  } = useSalesQueries()
 
   const {
     searchTerm,
@@ -163,20 +157,13 @@ const Sales = () => {
     clearSearch
   } = usePDVSearch(products)
 
-  // ============= MUTATIONS =============
-  const createSaleMutation = useMutation({
-    mutationFn: ({ cart, customer, coupon, discount, paymentMethod }) => 
-      saleService.createSale(cart, customer, coupon, discount, paymentMethod, profile),
-    onSuccess: async (sale) => {
-      await logCreate('sale', sale.id, { 
-        sale_number: sale.sale_number, 
-        total_amount: sale.total_amount, 
-        discount: sale.discount_amount, 
-        final_amount: sale.final_amount,
-        mode: 'online'
-      })
-      
-      queryClient.invalidateQueries({ queryKey: ['products-active'] })
+  const updateLocalStock = (cartItems) => {
+    // Função específica do Sales (manipula cache local)
+  }
+
+  // ✅ Mutations com callbacks
+  const { createSaleMutation } = useSaleMutations(profile, {
+    onSaleCreated: (sale) => {
       showFeedback('success', `Venda #${sale.sale_number} finalizada!`)
       
       setCompletedSaleData({
@@ -193,30 +180,14 @@ const Sales = () => {
       closePaymentModal()
       openReceiptModal()
     },
-    onError: async (error) => {
-      logger.error('Erro ao finalizar venda:', error)
-      
+    onSaleError: (error) => {
       if (!isOnline || error.message?.includes('network') || error.message?.includes('fetch')) {
-        await handlers.handleOfflineSale()
+        handlers.handleOfflineSale()
       } else {
         showFeedback('error', 'Erro ao finalizar venda: ' + error.message)
-        await logError('sale', error, { action: 'create_sale' })
       }
     }
   })
-
-  const updateLocalStock = (cartItems) => {
-    queryClient.setQueryData(['products-active'], (oldData) => {
-      if (!oldData) return oldData
-      return oldData.map(product => {
-        const cartItem = cartItems.find(item => item.id === product.id)
-        if (cartItem) {
-          return { ...product, stock_quantity: product.stock_quantity - cartItem.quantity }
-        }
-        return product
-      })
-    })
-  }
 
   // ============= HANDLERS =============
   const handlers = useSalesHandlers({
@@ -246,6 +217,8 @@ const Sales = () => {
     setShowCouponModal,
     openCustomerModal,
     closeCustomerModal,
+    openCouponModal,
+    closeCouponModal,
     openPaymentModal,
     closePaymentModal,
     openClearCartConfirm,
@@ -268,7 +241,7 @@ const Sales = () => {
     logCreate,
     logError,
     setCompletedSaleData,
-    queryClient,
+    queryClient: null,
     supabase,
     logger
   })

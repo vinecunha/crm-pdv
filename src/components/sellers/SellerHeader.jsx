@@ -1,8 +1,8 @@
 // src/components/sellers/SellerHeader.jsx
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import Button from '../ui/Button'
-import PageHeader from '../ui/PageHeader'
+import Button from '@components/ui/Button'
+import PageHeader from '@components/ui/PageHeader'
 import { ArrowLeft, Settings, Download, User, Award } from '@lib/icons'
 import { formatDate } from '@utils/formatters'
 

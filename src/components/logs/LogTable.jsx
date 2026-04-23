@@ -1,7 +1,7 @@
 // src/components/logs/LogTable.jsx
 import React from 'react'
 import { Eye } from '@lib/icons'
-import { useTableStrategy } from '@hooks/useTableStrategy'
+import { useTableStrategy } from '@hooks/utils/useTableStrategy'
 import { formatDateTime } from '@utils/formatters'
 
 // ✅ MAPEAMENTO DE LABELS (idêntico ao DataTable)

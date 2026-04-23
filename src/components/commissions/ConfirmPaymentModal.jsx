@@ -1,6 +1,6 @@
 // src/components/commissions/ConfirmPaymentModal.jsx
 import React from 'react'
-import ConfirmModal from '../ui/ConfirmModal'
+import ConfirmModal from '@components/ui/ConfirmModal'
 import { formatCurrency } from '@utils/formatters'
 
 const ConfirmPaymentModal = ({ isOpen, onClose, commission, onConfirm, isSubmitting }) => {

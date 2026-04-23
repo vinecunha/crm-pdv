@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, User, Mail, Phone, MapPin, AtSign, Hash, Copy, Check, MessageCircle, Send, Smartphone, AlertCircle } from '@lib/icons'
 import { supabase } from '@lib/supabase'
 import { useAuth } from '@contexts/AuthContext'
-import { useSystemLogs } from '@hooks/useSystemLogs'
+import { useSystemLogs } from '@hooks/system/useSystemLogs'
 
 import Button from '@components/ui/Button'
 import FeedbackMessage from '@components/ui/FeedbackMessage'

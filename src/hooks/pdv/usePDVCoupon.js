@@ -1,7 +1,7 @@
-// src/hooks/pdv/usePDVCoupon.js
+﻿// src/hooks/pdv/usePDVCoupon.js
 import { useState, useCallback } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import * as saleService from '@services/saleService'
+import * as saleService from '@services/sale/saleService'
 import { formatCurrency } from '@utils/formatters'
 
 export const usePDVCoupon = (customer, cart, showFeedback) => {

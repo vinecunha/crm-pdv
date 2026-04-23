@@ -1,0 +1,11 @@
+// src/hooks/mutations/index.js
+export { useBudgetMutations } from './useBudgetMutations'
+export { useCashierMutations } from './useCashierMutations'
+export { useCouponMutations } from './useCouponMutations'
+export { useCustomerMutations } from './useCustomerMutations'
+export { useProductMutations } from './useProductMutations'
+export { useSaleMutations } from './useSaleMutations'
+export { useTaskMutations } from './useTaskMutations'
+export { useUserMutations } from './useUserMutations'
+export { useSettingsMutations } from './useSettingsMutations'
+export { useLogsMutations } from './useLogsMutations'

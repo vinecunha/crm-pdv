@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react'
+﻿import React, { useState, useEffect } from 'react'
 import { Shield } from '@lib/icons'
 import FormInput from '../forms/FormInput'
-import Button from '../ui/Button'
-import * as userService from '@services/userService'
+import Button from '@components/ui/Button'
+import * as userService from '@services/user/userService'
 
 const UserForm = ({ 
   editingUser, 

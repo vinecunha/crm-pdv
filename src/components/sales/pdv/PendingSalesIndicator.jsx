@@ -1,8 +1,8 @@
 // src/components/sales/pdv/PendingSalesIndicator.jsx
 import React, { useState } from 'react'
 import { CloudOff, RefreshCw, CheckCircle, AlertCircle, X } from '@lib/icons'
-import { useNetworkStatus } from '@hooks/useNetworkStatus'
-import useOfflineSync from '@hooks/useOfflineSync'
+import { useNetworkStatus } from '@/hooks/utils/useNetworkStatus'
+import useOfflineSync from '@hooks/utils/useOfflineSync'
 
 const PendingSalesIndicator = () => {
   const { isOnline } = useNetworkStatus()

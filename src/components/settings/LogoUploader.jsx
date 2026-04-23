@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Upload, X, Image as ImageIcon } from '@lib/icons'
 import { compressLogo, isImageFile, validateImageSize } from '@utils/imageCompression'
-import LazyImage from '../ui/LazyImage'
+import LazyImage from '@components/ui/LazyImage'
 
 const LogoUploader = ({ currentLogo, onLogoChange, disabled }) => {
   const [uploading, setUploading] = useState(false)

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Wifi, WifiOff, RefreshCw, X } from '@lib/icons'
-import { useNetworkStatus } from '@hooks/useNetworkStatus'
+import { useNetworkStatus } from '@/hooks/utils/useNetworkStatus'
 import { getPendingSalesCount } from '@utils/offlineStorage'
 
 const Button = ({ variant = 'primary', onClick, children }) => {

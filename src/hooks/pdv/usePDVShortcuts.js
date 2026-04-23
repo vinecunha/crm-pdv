@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
-import useKeyboardShortcuts from '../useKeyboardShortcuts'
+import { useKeyboardShortcuts } from '@/hooks/utils/useKeyboardShortcuts'
 
-const usePDVShortcuts = ({
+export const usePDVShortcuts = ({
   // Produtos
   onFocusSearch,
   onAddProduct,
@@ -262,5 +262,3 @@ const usePDVShortcuts = ({
     }
   }
 }
-
-export default usePDVShortcuts

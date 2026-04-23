@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { Eye, EyeOff } from '@lib/icons'
-import Modal from '../ui/Modal'
-import Button from '../ui/Button'
-import PasswordStrengthIndicator from '../ui/PasswordStrengthIndicator'
+import Modal from '@components/ui/Modal'
+import Button from '@components/ui/Button'
+import PasswordStrengthIndicator from '@components/ui/PasswordStrengthIndicator'
 import { usePasswordStrength } from '@contexts/AuthContext.jsx'
 
 const ChangePasswordModal = ({ isOpen, onClose, onChangePassword }) => {

@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback, useState } from 'react'
 import { AlertTriangle, Info, HelpCircle, CheckCircle } from '@lib/icons'
-import Modal from './Modal'
-import Button from './Button'
+import Modal from '@components/ui/Modal'
+import Button from '@components/ui/Button'
 
 const ConfirmModal = ({
   isOpen,

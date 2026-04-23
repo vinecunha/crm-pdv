@@ -3,9 +3,9 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@lib/supabase'
 import { Award, TrendingUp, Package } from '@lib/icons'
 import { formatCurrency, formatNumber } from '@utils/formatters'
-import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
-import StatCard from '../ui/StatCard'
-import DataTable from '../ui/DataTable'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
+import StatCard from '@components/ui/StatCard'
+import DataTable from '@components/ui/DataTable'
 
 const fetchABCData = async (startDate, endDate) => {
   const { data, error } = await supabase

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Key, Shield, AlertCircle } from '@lib/icons'
-import Button from '../ui/Button'
+import Button from '@components/ui/Button'
 import ChangePasswordModal from './ChangePasswordModal'
 
 const SecuritySection = ({ user, onChangePassword, onLogout }) => {

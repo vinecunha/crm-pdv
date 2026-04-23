@@ -1,7 +1,7 @@
 import React from 'react'
 import { Download } from '@lib/icons'
-import Button from '../ui/Button'
-import DataFilters from '../ui/DataFilters'
+import Button from '@components/ui/Button'
+import DataFilters from '@components/ui/DataFilters'
 
 const LogFilters = ({ 
   searchTerm, 

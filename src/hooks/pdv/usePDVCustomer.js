@@ -1,8 +1,8 @@
-// src/hooks/pdv/usePDVCustomer.js
+﻿// src/hooks/pdv/usePDVCustomer.js
 import { useState, useCallback } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { useSystemLogs } from '@hooks/useSystemLogs'
-import * as saleService from '@services/saleService'
+import { useSystemLogs } from '@hooks/system/useSystemLogs'
+import * as saleService from '@services/sale/saleService'
 
 export const usePDVCustomer = (showFeedback) => {
   const { logCreate } = useSystemLogs()
@@ -15,23 +15,23 @@ export const usePDVCustomer = (showFeedback) => {
   })
   const [quickCustomerErrors, setQuickCustomerErrors] = useState({})
 
+  // ✅ Mutation de busca - retorna o cliente ou null
   const searchCustomerMutation = useMutation({
-    mutationFn: saleService.searchCustomerByPhone,
+    mutationFn: (phone) => saleService.searchCustomerByPhone(phone),
     onSuccess: (data) => {
       if (data) {
         setCustomer(data)
         showFeedback('success', `Cliente encontrado: ${data.name}`)
-        return { found: true, customer: data }
       } else {
         setQuickCustomerForm({ name: '', phone: customerPhone, email: '' })
-        return { found: false }
       }
     },
     onError: (error) => showFeedback('error', 'Erro ao buscar cliente: ' + error.message)
   })
 
+  // ✅ Mutation de criação - retorna o cliente criado
   const createCustomerMutation = useMutation({
-    mutationFn: saleService.createCustomer,
+    mutationFn: (formData) => saleService.createCustomer(formData),
     onSuccess: async (data) => {
       setCustomer(data)
       await logCreate('customer', data.id, { name: data.name, phone: data.phone })
@@ -40,15 +40,23 @@ export const usePDVCustomer = (showFeedback) => {
     onError: (error) => showFeedback('error', 'Erro ao cadastrar cliente: ' + error.message)
   })
 
-  const searchCustomer = useCallback(() => {
+  // ✅ Buscar cliente - retorna { found, customer }
+  const searchCustomer = useCallback(async () => {
     if (!customerPhone || customerPhone.length < 10) {
       showFeedback('error', 'Digite um telefone válido')
-      return
+      return { found: false, error: 'Telefone inválido' }
     }
-    return searchCustomerMutation.mutateAsync(customerPhone)
-  }, [customerPhone, searchCustomerMutation])
+    
+    try {
+      const data = await searchCustomerMutation.mutateAsync(customerPhone)
+      return { found: !!data, customer: data }
+    } catch (error) {
+      return { found: false, error: error.message }
+    }
+  }, [customerPhone, searchCustomerMutation, showFeedback])
 
-  const quickRegisterCustomer = useCallback(() => {
+  // ✅ Cadastro rápido - valida e cria
+  const quickRegisterCustomer = useCallback(async () => {
     const errors = {}
     if (!quickCustomerForm.name?.trim()) errors.name = 'Nome é obrigatório'
     if (!quickCustomerForm.phone?.trim() || quickCustomerForm.phone.length < 10) {
@@ -63,7 +71,12 @@ export const usePDVCustomer = (showFeedback) => {
       return false
     }
     
-    return createCustomerMutation.mutateAsync(quickCustomerForm)
+    try {
+      const data = await createCustomerMutation.mutateAsync(quickCustomerForm)
+      return { success: true, customer: data }
+    } catch (error) {
+      return { success: false, error: error.message }
+    }
   }, [quickCustomerForm, createCustomerMutation])
 
   const clearCustomer = useCallback(() => {

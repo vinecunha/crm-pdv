@@ -1,7 +1,7 @@
-// src/components/sales/pdv/ReceiptPrint.jsx
+﻿// src/components/sales/pdv/ReceiptPrint.jsx
 import React, { useEffect, useState } from 'react'
 import { formatCurrency, formatDateTime } from '@utils/formatters'
-import { fetchCompanySettings } from '@services/companyService'
+import { fetchCompanySettings } from '@services/system/companyService'
 
 const ReceiptPrint = ({ sale, customer, cart, paymentMethod, discount, profile }) => {
   const [company, setCompany] = useState(null)

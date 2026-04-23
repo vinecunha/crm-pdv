@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach } from 'vitest'
+﻿import { describe, it, expect, beforeAll, afterEach } from 'vitest'
 import { 
   supabase, 
   supabaseAdmin,
@@ -8,7 +8,7 @@ import {
   createTestProduct,
   createTestCustomer
 } from './setup.integration'
-import { createSale } from '@services/saleService'
+import { createSale } from '@services/sale/saleService'
 
 describe('Integração - Vendas', () => {
   let testSaleIds = []

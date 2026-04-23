@@ -3,8 +3,8 @@ import React from 'react'
 import Modal from '@components/ui/Modal'
 import Button from '@components/ui/Button'
 import { AlertTriangle } from '@lib/icons'
-import UserForm from './UserForm'
-import UserDeleteModal from './UserDeleteModal'
+import UserForm from '@components/users/UserForm'
+import UserDeleteModal from '@components/users/UserDeleteModal'
 
 const UsersModalsContainer = ({
   showModal,

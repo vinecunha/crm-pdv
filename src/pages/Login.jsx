@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@contexts/AuthContext'
-import { useRateLimit } from '@hooks/useRateLimit'
+import { useRateLimit } from '@/hooks/utils/useRateLimit'
 import { supabase } from '@lib/supabase'
 
 import LoginHeader from '@components/auth/LoginHeader'

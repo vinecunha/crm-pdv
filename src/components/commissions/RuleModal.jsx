@@ -1,7 +1,7 @@
 // src/components/commissions/RuleModal.jsx
 import React, { useState, useEffect } from 'react'
-import Modal from '../ui/Modal'
-import Button from '../ui/Button'
+import Modal from '@components/ui/Modal'
+import Button from '@components/ui/Button'
 import FormInput from '../forms/FormInput'
 import { Save } from '@lib/icons'
 

@@ -1,7 +1,7 @@
 import React from 'react'
 import { Package, DollarSign, Hash } from '@lib/icons'
 import FormInput from '../forms/FormInput'
-import Button from '../ui/Button'
+import Button from '@components/ui/Button'
 
 const ProductForm = ({ 
   formData, 

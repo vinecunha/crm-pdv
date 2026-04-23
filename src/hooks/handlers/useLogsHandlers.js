@@ -1,5 +1,93 @@
-// src/hooks/useLogsHandlers.js
 import { useCallback, useMemo } from 'react'
+
+// Baseado em: public.system_logs
+interface SystemLog {
+  id: string
+  user_id: string | null
+  user_email: string | null
+  user_role: string | null
+  action: string
+  entity_type: string | null
+  entity_id: string | null
+  old_data: Record<string, unknown> | null
+  new_data: Record<string, unknown> | null
+  ip_address: string | null
+  user_agent: string | null
+  details: Record<string, unknown> | null
+  created_at: string | null
+}
+
+interface DeletedRecord {
+  id: number
+  _type: string
+  _typeLabel: string
+  name?: string
+  [key: string]: unknown
+}
+
+interface Filters {
+  [key: string]: string
+}
+
+interface FeedbackState {
+  message: string | null
+  type: 'success' | 'error' | 'info' | 'warning'
+}
+
+interface ActionColorClass {
+  [key: string]: string
+}
+
+interface ActionLabel {
+  [key: string]: string
+}
+
+interface MutationResult<T> {
+  mutate: (data: T, options?: { onSuccess?: () => void; onError?: (error: Error) => void }) => void
+}
+
+interface UseLogsHandlersProps {
+  logs: SystemLog[]
+  deletedRecords: DeletedRecord[]
+  activeTab: string
+  setActiveTab: (tab: string) => void
+  searchTerm: string
+  setSearchTerm: (term: string) => void
+  filters: Filters
+  setFilters: (filters: Filters) => void
+  selectedLog: SystemLog | null
+  setSelectedLog: (log: SystemLog | null) => void
+  selectedRecord: DeletedRecord | null
+  setSelectedRecord: (record: DeletedRecord | null) => void
+  showRestoreModal: boolean
+  setShowRestoreModal: (show: boolean) => void
+  exporting: boolean
+  setExporting: (exporting: boolean) => void
+  restoreMutation: MutationResult<{
+    tableName: string
+    recordId: number
+    recordType: string
+  }>
+  refetchLogs: () => void
+  refetchDeleted: () => void
+  showFeedback: (type: 'success' | 'error' | 'info' | 'warning', message: string) => void
+}
+
+interface UseLogsHandlersReturn {
+  getActionColor: (action: string) => string
+  getActionLabel: (action: string) => string
+  formatDateCard: (date: string | null) => string
+  handleRefresh: () => void
+  handleExportLogs: () => Promise<void>
+  handleTabChange: (tab: string) => void
+  openLogDetails: (log: SystemLog) => void
+  closeLogDetails: () => void
+  openRestoreModal: (record: DeletedRecord) => void
+  closeRestoreModal: () => void
+  handleRestore: () => void
+  setSearchTerm: (term: string) => void
+  setFilters: (filters: Filters) => void
+}
 
 export const useLogsHandlers = ({
   logs,
@@ -22,10 +110,10 @@ export const useLogsHandlers = ({
   refetchLogs,
   refetchDeleted,
   showFeedback
-}) => {
+}: UseLogsHandlersProps): UseLogsHandlersReturn => {
 
-  const getActionColor = useCallback((action) => {
-    const colors = {
+  const getActionColor = useCallback((action: string): string => {
+    const colors: ActionColorClass = {
       CREATE: 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30',
       UPDATE: 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30',
       DELETE: 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/30',
@@ -38,8 +126,8 @@ export const useLogsHandlers = ({
     return colors[action] || colors.VIEW
   }, [])
 
-  const getActionLabel = useCallback((action) => {
-    const labels = {
+  const getActionLabel = useCallback((action: string): string => {
+    const labels: ActionLabel = {
       CREATE: 'Criação', UPDATE: 'Atualização', DELETE: 'Exclusão',
       LOGIN_SUCCESS: 'Login', LOGIN_FAILED: 'Login Falhou', LOGOUT: 'Logout',
       VIEW: 'Visualização', ERROR: 'Erro'
@@ -47,12 +135,12 @@ export const useLogsHandlers = ({
     return labels[action] || action
   }, [])
 
-  const formatDateCard = useCallback((date) => {
+  const formatDateCard = useCallback((date: string | null): string => {
     if (!date) return '-'
     const now = new Date()
     const logDate = new Date(date)
-    const diffHours = (now - logDate) / (1000 * 60 * 60)
-    if (diffHours < 1) return `Há ${Math.floor((now - logDate) / (1000 * 60))} minutos`
+    const diffHours = (now.getTime() - logDate.getTime()) / (1000 * 60 * 60)
+    if (diffHours < 1) return `Há ${Math.floor((now.getTime() - logDate.getTime()) / (1000 * 60))} minutos`
     if (diffHours < 24) return `Há ${Math.floor(diffHours)} horas`
     return logDate.toLocaleDateString('pt-BR')
   }, [])
@@ -65,13 +153,13 @@ export const useLogsHandlers = ({
     }
   }, [activeTab, refetchLogs, refetchDeleted])
 
-  const handleExportLogs = useCallback(async () => {
+  const handleExportLogs = useCallback(async (): Promise<void> => {
     if (!logs.length) return
     
     setExporting(true)
     try {
       const csvData = logs.map(log => ({
-        Data: new Date(log.created_at).toLocaleString('pt-BR'),
+        Data: new Date(log.created_at as string).toLocaleString('pt-BR'),
         Usuário: log.user_email || 'Sistema',
         Papel: log.user_role || '-',
         Ação: getActionLabel(log.action),
@@ -93,7 +181,7 @@ export const useLogsHandlers = ({
     }
   }, [logs, getActionLabel, setExporting, showFeedback])
 
-  const openLogDetails = useCallback((log) => {
+  const openLogDetails = useCallback((log: SystemLog) => {
     setSelectedLog(log)
   }, [setSelectedLog])
 
@@ -101,7 +189,7 @@ export const useLogsHandlers = ({
     setSelectedLog(null)
   }, [setSelectedLog])
 
-  const openRestoreModal = useCallback((record) => {
+  const openRestoreModal = useCallback((record: DeletedRecord) => {
     setSelectedRecord(record)
     setShowRestoreModal(true)
   }, [setSelectedRecord, setShowRestoreModal])
@@ -121,27 +209,22 @@ export const useLogsHandlers = ({
     })
   }, [selectedRecord, restoreMutation])
 
-  const handleTabChange = useCallback((tab) => {
+  const handleTabChange = useCallback((tab: string) => {
     setActiveTab(tab)
   }, [setActiveTab])
 
   return {
-    // Actions
     getActionColor,
     getActionLabel,
     formatDateCard,
     handleRefresh,
     handleExportLogs,
     handleTabChange,
-    
-    // Modal handlers
     openLogDetails,
     closeLogDetails,
     openRestoreModal,
     closeRestoreModal,
     handleRestore,
-    
-    // Setters
     setSearchTerm,
     setFilters
   }

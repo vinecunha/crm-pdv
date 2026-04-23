@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Settings, Save, X, AlertCircle } from '@lib/icons'
-import Modal from '../ui/Modal'
-import Button from '../ui/Button'
+import Modal from '@components/ui/Modal'
+import Button from '@components/ui/Button'
 import FormInput from '../forms/FormInput'
 
 const GoalSettings = ({ 

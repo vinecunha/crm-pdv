@@ -6,9 +6,9 @@ import {
 } from '@lib/icons'
 import { supabase } from '@lib/supabase'
 import { formatCurrency, formatNumber, formatDate } from '@utils/formatters'
-import StatCard from '../ui/StatCard'
-import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
-import DataTable from '../ui/DataTable'
+import StatCard from '@components/ui/StatCard'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
+import DataTable from '@components/ui/DataTable'
 import Badge from '../Badge'
 import CouponAnalytics from './CouponAnalytics'
 

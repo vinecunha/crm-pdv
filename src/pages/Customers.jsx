@@ -1,11 +1,9 @@
 // src/pages/Customers.jsx
 import React, { useState, useMemo } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { UserPlus, RefreshCw, Users as UsersIcon } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
-import { useReactQuery } from '@hooks/useReactQuery'
-import { useSystemLogs } from '@hooks/useSystemLogs'
-import useMediaQuery from '@hooks/useMediaQuery'
+import { useSystemLogs } from '@hooks/system/useSystemLogs'
+import useMediaQuery from '@/hooks/utils/useMediaQuery'
 
 import Button from '@components/ui/Button'
 import FeedbackMessage from '@components/ui/FeedbackMessage'
@@ -20,54 +18,57 @@ import CustomerTable from '@components/customers/CustomerTable'
 import CustomerFilters from '@components/customers/CustomerFilters'
 import CustomersModalsContainer from '@components/customers/CustomersModalsContainer'
 
-import { useCustomersHandlers } from '@/hooks/handlers'
-import * as customerService from '@services/customerService'
+// ✅ Hooks centralizados
+import { useCustomersHandlers } from '@hooks/handlers'
+import { useCustomerMutations } from '@hooks/mutations'
+import { useCustomersQueries } from '@hooks/queries/useCustomersQueries'
+import { useCustomerForm } from '@hooks/forms/useCustomerForm'
 
 const Customers = () => {
   const { profile, user } = useAuth()
-  const { logCreate, logUpdate, logDelete, logError, logAction } = useSystemLogs()
-  const queryClient = useQueryClient()
-  const { invalidateQueries } = useReactQuery()
+  const { logAction, logError } = useSystemLogs()
   const isMobile = useMediaQuery('(max-width: 768px)')
   
+  // Estados de UI
   const [viewMode] = useState('auto')
   const [searchTerm, setSearchTerm] = useState('')
   const [activeFilters, setActiveFilters] = useState({})
   const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
   
-  // Modal states
+  // Estados de modais
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [showCampaignModal, setShowCampaignModal] = useState(false)
   const [showBirthdayConfirmModal, setShowBirthdayConfirmModal] = useState(false)
   const [campaignLoading, setCampaignLoading] = useState(false)
   
-  // Selected item
+  // Estado de seleção
   const [selectedCustomer, setSelectedCustomer] = useState(null)
-  
-  // Form data
-  const [formData, setFormData] = useState({
-    name: '', email: '', phone: '', document: '', address: '',
-    city: '', state: '', zip_code: '', birth_date: '', status: 'active'
-  })
-  const [formErrors, setFormErrors] = useState({})
 
   const effectiveViewMode = viewMode === 'auto' ? (isMobile ? 'cards' : 'table') : viewMode
 
-  // Queries
-  const { 
-    data: customers = [], 
+  // ✅ Queries centralizadas
+  const {
+    customers,
     isLoading,
-    error: customersError,
-    refetch: refetchCustomers,
+    customersError,
+    refetchCustomers,
     isFetching
-  } = useQuery({
-    queryKey: ['customers'],
-    queryFn: customerService.fetchCustomers,
-    staleTime: 0,
-    refetchOnMount: true,
-  })
+  } = useCustomersQueries()
 
+  // ✅ Form centralizado
+  const {
+    formData,
+    setFormData,
+    formErrors,
+    setFormErrors,
+    setFormForEditing,
+    handleChange,
+    validate,
+    getCustomerPayload
+  } = useCustomerForm()
+
+  // Clientes filtrados
   const filteredCustomers = useMemo(() => {
     const customersArray = Array.isArray(customers) ? customers : []
     let filtered = [...customersArray]
@@ -94,55 +95,37 @@ const Customers = () => {
     return filtered
   }, [customers, searchTerm, activeFilters])
 
-  // Mutations
-  const createMutation = useMutation({
-    mutationFn: customerService.createCustomer,
-    onSuccess: async (data) => {
-      await logCreate('customer', data.id, data)
-      await invalidateQueries(['customers'])
-      showFeedback('success', 'Cliente cadastrado com sucesso!')
-      setIsModalOpen(false)
-    },
-    onError: async (error) => {
-      showFeedback('error', error.message)
-      await logError('customer', error, { action: 'create' })
-    }
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => customerService.updateCustomer(id, data),
-    onSuccess: async (data) => {
-      await logUpdate('customer', data.id, selectedCustomer, data)
-      await invalidateQueries(['customers'])
-      showFeedback('success', 'Cliente atualizado com sucesso!')
-      setIsModalOpen(false)
-    },
-    onError: async (error) => {
-      showFeedback('error', error.message)
-      await logError('customer', error, { action: 'update' })
-    }
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: customerService.deleteCustomer,
-    onSuccess: async (id) => {
-      await logDelete('customer', id, selectedCustomer)
-      await invalidateQueries(['customers'])
-      showFeedback('success', 'Cliente excluído!')
-      setIsDeleteModalOpen(false)
-    },
-    onError: async (error) => {
-      showFeedback('error', error.message)
-      await logError('customer', error, { action: 'delete' })
-    }
-  })
-
+  // Feedback
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
   }
 
-  // Handlers
+  // ✅ Mutations com callbacks
+  const {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    isMutating
+  } = useCustomerMutations({
+    onCustomerCreated: () => {
+      showFeedback('success', 'Cliente cadastrado com sucesso!')
+      setIsModalOpen(false)
+    },
+    onCustomerUpdated: () => {
+      showFeedback('success', 'Cliente atualizado com sucesso!')
+      setIsModalOpen(false)
+    },
+    onCustomerDeleted: () => {
+      showFeedback('success', 'Cliente excluído!')
+      setIsDeleteModalOpen(false)
+    },
+    onError: (error) => {
+      showFeedback('error', error.message)
+    }
+  })
+
+  // ✅ Handlers
   const handlers = useCustomersHandlers({
     user,
     selectedCustomer,
@@ -160,9 +143,13 @@ const Customers = () => {
     deleteMutation,
     showFeedback,
     logAction,
-    logError
+    logError,
+    setFormForEditing,
+    validate,
+    getCustomerPayload
   })
 
+  // Renderização de cards
   const renderCustomerCard = (customer) => (
     <CustomerCard
       customer={customer}
@@ -173,6 +160,7 @@ const Customers = () => {
     />
   )
 
+  // Log de acesso
   React.useEffect(() => {
     logAction({ 
       action: 'VIEW', 
@@ -181,8 +169,7 @@ const Customers = () => {
     })
   }, [])
 
-  const isMutating = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending
-
+  // Estados de erro/carregamento
   if (customersError) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center px-4">
@@ -197,6 +184,7 @@ const Customers = () => {
 
   if (isLoading) return <DataLoadingSkeleton />
 
+  // Render principal
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">

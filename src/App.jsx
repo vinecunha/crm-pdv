@@ -16,7 +16,7 @@ import CacheDebugger from '@components/ui/CacheDebugger'
 import NetworkStatus from '@components/ui/NetworkStatus'
 import PendingSalesIndicator from '@components/sales/pdv/PendingSalesIndicator'
 import PerformanceDebugger from '@components/ui/PerformanceDebugger'
-import { useNotificationTriggers } from '@hooks/useNotificationTriggers'
+import { useNotificationTriggers } from '@hooks/system/useNotificationTriggers'
 
 // ============= Code Splitting Avançado =============
 // Agrupando por módulos para melhor caching

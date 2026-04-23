@@ -3,9 +3,9 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@lib/supabase'
 import { TrendingUp, TrendingDown, DollarSign, Percent } from '@lib/icons'
 import { formatCurrency, formatNumber } from '@utils/formatters'
-import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
-import DataTable from '../ui/DataTable'
-import StatCard from '../ui/StatCard'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
+import DataTable from '@components/ui/DataTable'
+import StatCard from '@components/ui/StatCard'
 
 const fetchProfitabilityData = async (startDate, endDate, categoryFilter) => {
   let query = supabase.from('sale_items').select(`

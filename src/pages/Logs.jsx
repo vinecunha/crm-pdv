@@ -1,9 +1,7 @@
 // src/pages/Logs.jsx
 import React, { useState, useMemo } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { RefreshCw, X, RotateCcw, Database, FileText } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
-import { supabase } from '@lib/supabase'
 
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import DataEmptyState from '@components/ui/DataEmptyState'
@@ -20,56 +18,13 @@ import DeletedRecordsTable from '@components/logs/DeletedRecordsTable'
 import DeletedRecordCard from '@components/logs/DeletedRecordCard'
 import LogsModalsContainer from '@components/logs/LogsModalsContainer'
 
-import { useLogsHandlers } from '@/hooks/handlers'
-
-const fetchLogs = async ({ queryKey }) => {
-  const [, { filters, searchTerm }] = queryKey
-  
-  let query = supabase.from('system_logs').select('*').order('created_at', { ascending: false }).limit(1000)
-  
-  if (filters.action) query = query.eq('action', filters.action)
-  if (filters.entity_type) query = query.eq('entity_type', filters.entity_type)
-  if (filters.user_role) query = query.eq('user_role', filters.user_role)
-  if (filters.date_from) query = query.gte('created_at', filters.date_from)
-  if (filters.date_to) query = query.lte('created_at', `${filters.date_to} 23:59:59`)
-
-  const { data, error } = await query
-  if (error) throw error
-
-  let filteredData = data || []
-  if (searchTerm) {
-    const searchLower = searchTerm.toLowerCase()
-    filteredData = filteredData.filter(log =>
-      log.user_email?.toLowerCase().includes(searchLower) ||
-      log.action?.toLowerCase().includes(searchLower) ||
-      log.entity_type?.toLowerCase().includes(searchLower)
-    )
-  }
-  
-  return filteredData
-}
-
-const fetchDeletedRecords = async () => {
-  const [productsRes, customersRes] = await Promise.all([
-    supabase.from('products').select('*, deleter:deleted_by(email, full_name)').not('deleted_at', 'is', null).order('deleted_at', { ascending: false }),
-    supabase.from('customers').select('*, deleter:deleted_by(email, full_name)').not('deleted_at', 'is', null).order('deleted_at', { ascending: false })
-  ])
-
-  const products = (productsRes.data || []).map(p => ({ ...p, _type: 'product', _typeLabel: 'Produto' }))
-  const customers = (customersRes.data || []).map(c => ({ ...c, _type: 'customer', _typeLabel: 'Cliente' }))
-
-  return [...products, ...customers].sort((a, b) => new Date(b.deleted_at) - new Date(a.deleted_at))
-}
-
-const restoreRecord = async ({ tableName, recordId }) => {
-  const { data, error } = await supabase.rpc('restore_record', { p_table_name: tableName, p_record_id: recordId })
-  if (error) throw error
-  return data
-}
+// ✅ Hooks centralizados
+import { useLogsHandlers } from '@hooks/handlers'
+import { useLogsQueries } from '@hooks/queries/useLogsQueries'
+import { useLogsMutations } from '@hooks/mutations/useLogsMutations'
 
 const Logs = () => {
   const { profile } = useAuth()
-  const queryClient = useQueryClient()
   
   const [activeTab, setActiveTab] = useState('logs')
   const [searchTerm, setSearchTerm] = useState('')
@@ -85,36 +40,22 @@ const Logs = () => {
   const canView = isAdmin || isGerente
   const canRestore = isAdmin
 
-  const { 
-    data: logs = [], 
-    isLoading: loadingLogs,
-    error: logsError,
-    refetch: refetchLogs,
-    isFetching: isFetchingLogs
-  } = useQuery({
-    queryKey: ['logs', { filters, searchTerm }],
-    queryFn: fetchLogs,
-    enabled: canView && activeTab === 'logs',
-  })
+  // ✅ Queries centralizadas
+  const {
+    logs,
+    loadingLogs,
+    refetchLogs,
+    isFetchingLogs,
+    deletedRecords,
+    loadingDeleted,
+    refetchDeleted,
+    isFetchingDeleted
+  } = useLogsQueries({ filters, searchTerm, activeTab, canView })
 
-  const { 
-    data: deletedRecords = [], 
-    isLoading: loadingDeleted,
-    error: deletedError,
-    refetch: refetchDeleted,
-    isFetching: isFetchingDeleted
-  } = useQuery({
-    queryKey: ['deleted-records'],
-    queryFn: fetchDeletedRecords,
-    enabled: canView && activeTab === 'deleted',
-  })
-
-  const restoreMutation = useMutation({
-    mutationFn: restoreRecord,
-    onSuccess: () => {
+  // ✅ Mutations com callbacks
+  const { restoreMutation } = useLogsMutations({
+    onRecordRestored: () => {
       showFeedback('success', 'Registro restaurado com sucesso!')
-      queryClient.invalidateQueries({ queryKey: ['deleted-records'] })
-      queryClient.invalidateQueries({ queryKey: ['logs'] })
       setShowRestoreModal(false)
       setSelectedRecord(null)
     },
@@ -128,6 +69,7 @@ const Logs = () => {
     setTimeout(() => setFeedback({ show: false }), 3000)
   }
 
+  // ✅ Handlers
   const handlers = useLogsHandlers({
     logs,
     deletedRecords,
@@ -225,7 +167,7 @@ const Logs = () => {
             </button>
           </nav>
         </div>
-
+        
         {activeTab === 'logs' && (
           <>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">

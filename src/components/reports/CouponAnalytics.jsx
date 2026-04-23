@@ -5,10 +5,10 @@ import {
 } from '@lib/icons'
 import { supabase } from '@lib/supabase'
 import { formatCurrency, formatNumber } from '@utils/formatters'
-import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
-import DataTable from '../ui/DataTable'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
+import DataTable from '@components/ui/DataTable'
 import Badge from '../Badge'
-import Button from '../ui/Button'
+import Button from '@components/ui/Button'
 import { useNavigate } from 'react-router-dom'
 import { logger } from '@utils/logger' 
 

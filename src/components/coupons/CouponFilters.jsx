@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Search, Filter, X } from '@lib/icons'
-import Button from '../ui/Button'
+import Button from '@components/ui/Button'
 
 const CouponFilters = ({ searchTerm, setSearchTerm, filters, setFilters }) => {
   const [showFilters, setShowFilters] = useState(false)

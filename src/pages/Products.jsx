@@ -1,13 +1,12 @@
-// src/pages/Products.jsx
+﻿// src/pages/Products.jsx
 import React, { useState, useMemo } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, ClipboardList, Package } from '@lib/icons'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@contexts/AuthContext'
-import { useSystemLogs } from '@hooks/useSystemLogs'
-import useMediaQuery from '@hooks/useMediaQuery'
+import { useSystemLogs } from '@hooks/system/useSystemLogs'
+import useMediaQuery from '@/hooks/utils/useMediaQuery'
 
-import * as productService from '@services/productService'
+import * as productService from '@services/product/productService'
 
 import Button from '@components/ui/Button'
 import FeedbackMessage from '@components/ui/FeedbackMessage'
@@ -20,49 +19,36 @@ import ProductCard from '@components/products/ProductCard'
 import ProductTable from '@components/products/ProductTable'
 import ProductsModalsContainer from '@components/products/ProductsModalsContainer'
 
-import { useProductsHandlers } from '@/hooks/handlers'
+// ✅ Hooks centralizados
+import { useProductsHandlers } from '@hooks/handlers'
+import { useProductMutations } from '@hooks/mutations'
+import { useProductsQueries } from '@hooks/queries/useProductsQueries'
+import { useProductForms } from '@hooks/forms/useProductForms'
 
 const Products = () => {
   const { profile } = useAuth()
-  const { logCreate, logUpdate, logDelete, logError, logAction } = useSystemLogs()
+  const { logAction } = useSystemLogs()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
-
   const isMobile = useMediaQuery('(max-width: 768px)')
-  const [viewMode] = useState('auto')
   
+  // Estados de UI
+  const [viewMode] = useState('auto')
   const [searchTerm, setSearchTerm] = useState('')
   const [activeFilters, setActiveFilters] = useState({})
   const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
   
-  // Modal states
+  // Estados de modais
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [isEntryModalOpen, setIsEntryModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [entryModalError, setEntryModalError] = useState(null)
   
-  // Selected item
+  // Estados de seleção
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [viewingProductId, setViewingProductId] = useState(null)
-  
-  // Form data
-  const [productForm, setProductForm] = useState({
-    code: '', name: '', description: '', category: '', unit: 'UN',
-    price: '', min_stock: '', max_stock: '', location: '', brand: '', weight: '',
-    is_active: true
-  })
-  
-  const [entryForm, setEntryForm] = useState({
-    invoice_number: '', invoice_series: '', supplier_name: '', supplier_cnpj: '',
-    batch_number: '', manufacture_date: '', expiration_date: '',
-    quantity: '', unit_cost: '', notes: ''
-  })
-  
-  const [formErrors, setFormErrors] = useState({})
 
-  const effectiveViewMode = viewMode === 'auto' ? (isMobile ? 'cards' : 'table') : viewMode
-
+  // Permissões
   const isAdmin = profile?.role === 'admin'
   const isManager = profile?.role === 'gerente'
   const isOperator = profile?.role === 'operador'
@@ -71,6 +57,37 @@ const Products = () => {
   const canViewAll = isAdmin || isManager
   const canViewOnlyActive = isOperator
 
+  const effectiveViewMode = viewMode === 'auto' ? (isMobile ? 'cards' : 'table') : viewMode
+
+  // ✅ Queries centralizadas
+  const { 
+    products, 
+    isLoading, 
+    productsError, 
+    refetchProducts, 
+    isFetching,
+    productDetails,
+    isLoadingDetails 
+  } = useProductsQueries({ 
+    canViewOnlyActive, 
+    viewingProductId 
+  })
+
+  // ✅ Forms centralizados
+  const {
+    productForm,
+    setProductForm,
+    entryForm,
+    setEntryForm,
+    formErrors,
+    setFormErrors,
+    handleProductChange,
+    handleEntryChange,
+    validateProductForm,
+    validateEntryForm
+  } = useProductForms()
+
+  // Filtros
   const filters = [
     { key: 'category', label: 'Categoria', type: 'select', options: productService.categories.map(cat => ({ value: cat, label: cat })) },
     { key: 'unit', label: 'Unidade', type: 'select', options: productService.units },
@@ -78,28 +95,7 @@ const Products = () => {
     ...(canManageStock ? [{ key: 'low_stock', label: 'Estoque Baixo', type: 'select', options: [{ value: 'true', label: 'Apenas produtos com estoque baixo' }] }] : [])
   ]
 
-  // Queries
-  const { 
-    data: products = [], 
-    isLoading,
-    error: productsError,
-    refetch: refetchProducts,
-    isFetching
-  } = useQuery({
-    queryKey: ['products', { canViewOnlyActive }],
-    queryFn: () => productService.fetchProducts(canViewOnlyActive),
-    staleTime: 2 * 60 * 1000,
-  })
-
-  const { 
-    data: productDetails,
-    isLoading: isLoadingDetails
-  } = useQuery({
-    queryKey: ['product-details', viewingProductId],
-    queryFn: () => productService.fetchProductDetails(viewingProductId),
-    enabled: !!viewingProductId,
-  })
-
+  // Produtos filtrados
   const filteredProducts = useMemo(() => {
     const productsArray = Array.isArray(products) ? products : []
     let filtered = [...productsArray]
@@ -124,73 +120,47 @@ const Products = () => {
     return filtered
   }, [products, searchTerm, activeFilters])
 
-  // Mutations
-  const createMutation = useMutation({
-    mutationFn: (data) => productService.createProduct(data, profile),
-    onSuccess: async (data) => {
-      await logCreate('product', null, data)
-      queryClient.invalidateQueries({ queryKey: ['products'] })
-      showFeedback('success', 'Produto cadastrado com sucesso!')
-      setIsProductModalOpen(false)
-    },
-    onError: async (error) => {
-      showFeedback('error', error.message)
-      await logError('product', error, { action: 'create' })
-    }
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => productService.updateProduct(id, data, profile),
-    onSuccess: async (data) => {
-      await logUpdate('product', data.id, selectedProduct, data)
-      queryClient.invalidateQueries({ queryKey: ['products'] })
-      showFeedback('success', 'Produto atualizado com sucesso!')
-      setIsProductModalOpen(false)
-    },
-    onError: async (error) => {
-      showFeedback('error', error.message)
-      await logError('product', error, { action: 'update' })
-    }
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: productService.deleteProduct,
-    onSuccess: async (id) => {
-      await logDelete('product', id, selectedProduct)
-      queryClient.invalidateQueries({ queryKey: ['products'] })
-      showFeedback('success', 'Produto excluído com sucesso!')
-      setIsDeleteModalOpen(false)
-      setSelectedProduct(null)
-    },
-    onError: async (error) => {
-      showFeedback('error', error.message)
-      await logError('product', error, { action: 'delete' })
-    }
-  })
-
-  const entryMutation = useMutation({
-    mutationFn: (data) => productService.createProductEntry(data, profile),
-    onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] })
-      if (viewingProductId) {
-        queryClient.invalidateQueries({ queryKey: ['product-details', viewingProductId] })
-      }
-      showFeedback('success', 'Entrada de estoque registrada com sucesso!')
-      setIsEntryModalOpen(false)
-      setEntryModalError(null)
-    },
-    onError: async (error) => {
-      setEntryModalError(error.message)
-      await logError('product_entry', error, { action: 'create_entry' })
-    }
-  })
-
+  // Feedback
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
   }
 
-  // Handlers
+  // ✅ Mutations com callbacks
+  const {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    entryMutation,
+    isMutating
+  } = useProductMutations(profile, {
+    onProductCreated: () => {
+      showFeedback('success', 'Produto cadastrado com sucesso!')
+      setIsProductModalOpen(false)
+    },
+    onProductUpdated: () => {
+      showFeedback('success', 'Produto atualizado com sucesso!')
+      setIsProductModalOpen(false)
+    },
+    onProductDeleted: () => {
+      showFeedback('success', 'Produto excluído com sucesso!')
+      setIsDeleteModalOpen(false)
+      setSelectedProduct(null)
+    },
+    onEntryCreated: () => {
+      showFeedback('success', 'Entrada de estoque registrada com sucesso!')
+      setIsEntryModalOpen(false)
+      setEntryModalError(null)
+    },
+    onEntryError: (error) => {
+      setEntryModalError(error.message)
+    },
+    onAnyError: (error) => {
+      showFeedback('error', error.message)
+    }
+  })
+
+  // ✅ Handlers
   const handlers = useProductsHandlers({
     profile,
     selectedProduct,
@@ -215,9 +185,14 @@ const Products = () => {
     entryMutation,
     showFeedback,
     canEdit,
-    canManageStock
+    canManageStock,
+    validateProductForm,
+    validateEntryForm,
+    handleProductChange,
+    handleEntryChange
   })
 
+  // Renderização de cards
   const renderProductCard = (product) => (
     <ProductCard
       product={product}
@@ -231,13 +206,12 @@ const Products = () => {
     />
   )
 
+  // Log de acesso
   React.useEffect(() => {
     logAction({ action: 'VIEW', entityType: 'product', details: { user_role: profile?.role } })
   }, [])
 
-  const isMutating = createMutation.isPending || updateMutation.isPending || 
-                     deleteMutation.isPending || entryMutation.isPending
-
+  // Ações do header
   const headerActions = [
     ...(canManageStock ? [{
       label: 'Balanço',
@@ -255,6 +229,7 @@ const Products = () => {
     }] : [])
   ]
 
+  // Estados de erro/carregamento
   if (productsError) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center px-4">
@@ -269,6 +244,7 @@ const Products = () => {
 
   if (isLoading) return <DataLoadingSkeleton />
 
+  // Render principal
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -345,7 +321,7 @@ const Products = () => {
           selectedProduct={selectedProduct}
           productForm={productForm}
           formErrors={formErrors}
-          onProductChange={handlers.handleProductChange}
+          onProductChange={handleProductChange}
           onSubmitProduct={handlers.handleSubmitProduct}
           isSubmittingProduct={createMutation.isPending || updateMutation.isPending}
           units={productService.units}
@@ -354,7 +330,7 @@ const Products = () => {
           onCloseEntryModal={handlers.handleCloseEntryModal}
           entryForm={entryForm}
           entryFormErrors={formErrors}
-          onEntryChange={handlers.handleEntryChange}
+          onEntryChange={handleEntryChange}
           onSubmitEntry={handlers.handleSubmitEntry}
           isSubmittingEntry={entryMutation.isPending}
           entryModalError={entryModalError}

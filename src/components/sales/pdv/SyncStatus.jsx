@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { WifiOff, RefreshCw, CheckCircle, XCircle, ChevronUp, ChevronDown } from '@lib/icons'
-import useOfflineSync from '@hooks/useOfflineSync'
+import useOfflineSync from '@hooks/utils/useOfflineSync'
 import { formatCurrency } from '@utils/formatters'
 import { getOfflineSales } from '@utils/offlineStorage'
 

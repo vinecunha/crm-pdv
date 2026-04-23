@@ -3,9 +3,9 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@lib/supabase'
 import { RefreshCw, Package } from '@lib/icons'
 import { formatCurrency, formatNumber } from '@utils/formatters'
-import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
-import DataTable from '../ui/DataTable'
-import StatCard from '../ui/StatCard'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
+import DataTable from '@components/ui/DataTable'
+import StatCard from '@components/ui/StatCard'
 
 const fetchInventoryData = async (startDate, endDate) => {
   // Buscar produtos e vendas do período

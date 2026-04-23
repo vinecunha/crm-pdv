@@ -1,7 +1,7 @@
 // src/components/commissions/CommissionDetailsModal.jsx
 import React from 'react'
-import Modal from '../ui/Modal'
-import Button from '../ui/Button'
+import Modal from '@components/ui/Modal'
+import Button from '@components/ui/Button'
 import { formatCurrency } from '@utils/formatters'
 import { CheckCircle, DollarSign, Calendar, Hash } from '@lib/icons'
 

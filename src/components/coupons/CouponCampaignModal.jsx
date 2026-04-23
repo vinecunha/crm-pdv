@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@lib/supabase'
-import Modal from '../ui/Modal'
-import Button from '../ui/Button'
-import ConfirmModal from '../ui/ConfirmModal'
-import FeedbackMessage from '../ui/FeedbackMessage'
+import Modal from '@components/ui/Modal'
+import Button from '@components/ui/Button'
+import ConfirmModal from '@components/ui/ConfirmModal'
+import FeedbackMessage from '@components/ui/FeedbackMessage'
 import { Gift, Search, CheckSquare, Square, Send, ChevronRight, Smartphone, Mail, MessageCircle, Copy } from '@lib/icons'
 import logger from '@utils/logger'
 

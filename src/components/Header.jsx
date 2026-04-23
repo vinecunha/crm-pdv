@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@contexts/AuthContext'
-import ThemeSelector from './ui/ThemeSelector'
-import ConfirmModal from './ui/ConfirmModal'
-import { useClock } from '@hooks/useClock'
-import { useNotifications } from '@hooks/useNotifications'
-import { useNetworkStatus } from '@hooks/useNetworkStatus'
+import ThemeSelector from '@components/ui/ThemeSelector'
+import ConfirmModal from '@components/ui/ConfirmModal'
+import { useClock } from '@hooks/utils/useClock'
+import { useNotifications } from '@hooks/system/useNotifications'
+import { useNetworkStatus } from '@/hooks/utils/useNetworkStatus'
 import { 
   RefreshCw, 
   Calendar, 
@@ -16,7 +16,7 @@ import {
   Settings,
   LogOut
 } from '@lib/icons'
-import NotificationsPanel from './NotificationsPanel'
+import NotificationsPanel from '@components/NotificationsPanel'
 
 const Header = ({ collapsed }) => {
   const { user, profile, logout } = useAuth()

@@ -12,8 +12,9 @@ import TaskModal from '@components/tasks/TaskModal'
 import ConfirmModal from '@components/ui/ConfirmModal'
 import FeedbackMessage from '@components/ui/FeedbackMessage'
 import TaskHistoryModal from '@components/tasks/TaskHistoryModal'
-import { useTasksQuery } from '@hooks/useTasksQuery'
-import { useTasksRealtime } from '@hooks/useTasksRealtime'
+import { useTasksQuery } from '@hooks/tasks/useTasksQuery'
+import { useTasksRealtime } from '@hooks/tasks/useTasksRealtime'
+import { useTaskMutations } from '@hooks/mutations'
 
 const TaskBoard = () => {
   const { profile } = useAuth()
@@ -25,10 +26,10 @@ const TaskBoard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [historyTask, setHistoryTask] = useState(null)
   const [showHistoryModal, setShowHistoryModal] = useState(false)
+  const [completedTask, setCompletedTask] = useState(null) // Para retornar ao TaskModal
 
   useTasksRealtime(!loading)
   
-  // Estados para ConfirmModal e Feedback
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     taskId: null,
@@ -36,12 +37,10 @@ const TaskBoard = () => {
   })
   const [feedback, setFeedback] = useState(null)
   
-  // Estados de filtros
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterPriority, setFilterPriority] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
 
-  // Função para mostrar feedback
   const showFeedback = (type, message, description = null) => {
     setFeedback({ id: Date.now(), type, message, description })
     if (type === 'success' || type === 'info') {
@@ -59,9 +58,7 @@ const TaskBoard = () => {
 
   const fetchTasks = useCallback(async () => {
     if (!profile?.id) return
-    
     setLoading(true)
-    
     try {
       const { data, error } = await supabase.rpc('fetch_tasks', {
         p_type: activeTab === 'team' ? 'team' : (activeTab === 'personal' ? 'personal' : null),
@@ -69,9 +66,7 @@ const TaskBoard = () => {
         p_priority: filterPriority !== 'all' ? filterPriority : null,
         p_search: searchTerm || null
       })
-      
       if (error) throw error
-      
       setTasks(data || [])
     } catch (error) {
       console.error('Erro ao buscar tarefas:', error)
@@ -83,7 +78,6 @@ const TaskBoard = () => {
 
   const filteredTasks = useMemo(() => {
     let result = allTasks
-    
     if (activeTab === 'personal') {
       result = result.filter(t => t.created_by === profile?.id)
     } else if (activeTab === 'my') {
@@ -91,17 +85,14 @@ const TaskBoard = () => {
         t.assigned_to?.includes(profile?.id) || t.created_by === profile?.id
       )
     }
-    
     if (filterPriority !== 'all') {
       result = result.filter(t => t.priority === filterPriority)
     }
-    
     if (searchTerm) {
       result = result.filter(t => 
         t.title?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
-    
     return result
   }, [allTasks, activeTab, filterPriority, searchTerm, profile?.id])
 
@@ -111,120 +102,71 @@ const TaskBoard = () => {
     return () => clearInterval(interval)
   }, [fetchTasks])
 
-  // ============= CRIAÇÃO DE TAREFA =============
-  const handleCreateTask = async (formData) => {
-    setIsSubmitting(true)
-    
-    try {
-      const { data, error } = await supabase.rpc('create_task_final', {
-        p_title: formData.title,
-        p_description: formData.description || null,
-        p_type: activeTab === 'team' ? 'team' : 'personal',
-        p_priority: formData.priority,
-        p_assigned_to: formData.assigned_to || null,
-        p_assigned_to_names: formData.assigned_to_names || null,
-        p_due_date: formData.due_date || null,
-        p_category: formData.category || 'geral'
-      })
-      
-      if (error) throw error
-      
-      if (!data.success) {
-        throw new Error(data.error || 'Erro ao criar tarefa')
-      }
-      
+  // ✅ Mutations com callbacks
+  const { createTask, updateTask, deleteTask, isMutating: isMutationPending } = useTaskMutations({
+    onTaskCreated: (task) => {
       showFeedback('success', '✅ Tarefa criada com sucesso!')
+      setCompletedTask(task)
       setShowTaskModal(false)
       setEditingTask(null)
       fetchTasks()
-      
-      // ✅ Retornar a tarefa criada para o TaskModal
-      return {
-        id: data.task_id,
-        title: formData.title,
-        description: formData.description,
-        priority: formData.priority,
-        assigned_to: formData.assigned_to || [],
-        assigned_to_names: formData.assigned_to_names || [],
-        due_date: formData.due_date,
-        category: formData.category || 'geral'
-      }
+    },
+    onTaskUpdated: (task) => {
+      showFeedback('success', '✅ Tarefa atualizada com sucesso!')
+      setCompletedTask(task)
+      setShowTaskModal(false)
+      setEditingTask(null)
+      fetchTasks()
+    },
+    onTaskDeleted: () => {
+      showFeedback('success', `✅ Tarefa "${confirmModal.taskTitle}" excluída!`)
+      setConfirmModal({ isOpen: false, taskId: null, taskTitle: '' })
+      fetchTasks()
+    },
+    onError: (error) => {
+      showFeedback('error', error.message)
+    }
+  })
+
+  // ============= HANDLERS =============
+  const handleCreateTask = async (formData) => {
+    setIsSubmitting(true)
+    try {
+      const result = await createTask.mutateAsync({
+        ...formData,
+        type: activeTab === 'team' ? 'team' : 'personal'
+      })
+      return result
     } catch (error) {
-      console.error('Erro ao criar tarefa:', error)
-      showFeedback('error', 'Erro ao criar tarefa', error.message)
       throw error
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  // ============= ATUALIZAÇÃO DE TAREFA =============
   const handleUpdateTask = async (taskId, updates) => {
     try {
-      const { data, error } = await supabase.rpc('update_task', {
-        p_task_id: taskId,
-        p_title: updates.title,
-        p_description: updates.description,
-        p_priority: updates.priority,
-        p_status: updates.status,
-        p_assigned_to: updates.assigned_to,
-        p_assigned_to_names: updates.assigned_to_names,
-        p_due_date: updates.due_date
-      })
-      
-      if (error) throw error
-      
-      if (!data?.success) {
-        throw new Error(data?.error || 'Erro ao atualizar tarefa')
-      }
-      
-      fetchTasks()
+      await updateTask.mutateAsync({ taskId, updates })
       return true
     } catch (error) {
-      console.error('Erro ao atualizar tarefa:', error)
       showFeedback('error', 'Erro ao atualizar tarefa', error.message)
       return false
     }
   }
 
-  // ============= SALVAR EDIÇÃO =============
   const handleSaveEdit = async (formData) => {
     setIsSubmitting(true)
-    
     try {
-      const success = await handleUpdateTask(editingTask.id, formData)
-      
-      if (!success) {
-        throw new Error('Erro ao atualizar tarefa')
-      }
-      
-      showFeedback('success', '✅ Tarefa atualizada com sucesso!')
-      setShowTaskModal(false)
-      setEditingTask(null)
-      
-      // ✅ Retornar a tarefa atualizada para o TaskModal
-      return {
-        id: editingTask.id,
-        title: formData.title,
-        description: formData.description,
-        priority: formData.priority,
-        assigned_to: formData.assigned_to || [],
-        assigned_to_names: formData.assigned_to_names || [],
-        due_date: formData.due_date
-      }
+      const result = await updateTask.mutateAsync({
+        taskId: editingTask.id,
+        updates: formData
+      })
+      return result
     } catch (error) {
-      console.error('Erro ao salvar edição:', error)
-      showFeedback('error', 'Erro ao atualizar tarefa', error.message)
       throw error
     } finally {
       setIsSubmitting(false)
     }
-  }
-
-  // ============= AÇÕES DAS TAREFAS =============
-  const handleShowHistory = (task) => {
-    setHistoryTask(task)
-    setShowHistoryModal(true)
   }
 
   const handleCompleteTask = async (task) => {
@@ -241,6 +183,7 @@ const TaskBoard = () => {
         'success', 
         newStatus === 'completed' ? '✅ Tarefa concluída!' : '↩️ Tarefa reaberta!'
       )
+      fetchTasks()
     }
   }
 
@@ -261,6 +204,7 @@ const TaskBoard = () => {
     
     if (success) {
       showFeedback('success', '✅ Você assumiu esta tarefa!')
+      fetchTasks()
     }
   }
 
@@ -272,28 +216,8 @@ const TaskBoard = () => {
     })
   }
 
-  const handleConfirmDelete = async () => {
-    const { taskId, taskTitle } = confirmModal
-    
-    try {
-      const { data, error } = await supabase.rpc('delete_task', {
-        p_task_id: taskId
-      })
-      
-      if (error) throw error
-      
-      if (!data?.success) {
-        throw new Error(data?.error || 'Erro ao excluir tarefa')
-      }
-      
-      showFeedback('success', `✅ Tarefa "${taskTitle}" excluída!`)
-      setConfirmModal({ isOpen: false, taskId: null, taskTitle: '' })
-      fetchTasks()
-    } catch (error) {
-      console.error('Erro ao deletar tarefa:', error)
-      showFeedback('error', 'Erro ao excluir tarefa', error.message)
-      setConfirmModal({ isOpen: false, taskId: null, taskTitle: '' })
-    }
+  const handleConfirmDelete = () => {
+    deleteTask.mutate(confirmModal.taskId)
   }
 
   const handleCancelDelete = () => {
@@ -303,6 +227,11 @@ const TaskBoard = () => {
   const handleEditClick = (task) => {
     setEditingTask(task)
     setShowTaskModal(true)
+  }
+
+  const handleShowHistory = (task) => {
+    setHistoryTask(task)
+    setShowHistoryModal(true)
   }
 
   // ============= FILTROS E TABS =============
@@ -346,6 +275,8 @@ const TaskBoard = () => {
   ]
 
   const currentTab = tabs.find(t => t.id === activeTab)
+
+  const isMutating = isSubmitting || isMutationPending
 
   const headerActions = [
     {
@@ -480,7 +411,7 @@ const TaskBoard = () => {
         task={editingTask}
         onSave={editingTask ? handleSaveEdit : handleCreateTask}
         activeTab={activeTab}
-        isSubmitting={isSubmitting}
+        isSubmitting={isMutating}
       />
 
       <TaskHistoryModal

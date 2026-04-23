@@ -1,9 +1,9 @@
 import React from 'react'
-import DataCards from '../ui/DataCards'
-import DataEmptyState from '../ui/DataEmptyState'
+import DataCards from '@components/ui/DataCards'
+import DataEmptyState from '@components/ui/DataEmptyState'
 import StockCountProgressBar from './StockCountProgressBar'
 import StockCountItemCard from './StockCountItemCard'
-import Button from '../ui/Button'
+import Button from '@components/ui/Button'
 import { Plus } from '@lib/icons'
 
 const StockCountCountingView = ({

@@ -3,8 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@lib/supabase'
 import { Activity, Calendar, TrendingUp, Sun, Snowflake } from '@lib/icons'
 import { formatCurrency, formatNumber } from '@utils/formatters'
-import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
-import StatCard from '../ui/StatCard'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
+import StatCard from '@components/ui/StatCard'
 
 const fetchYearlyData = async () => {
   const startDate = new Date()

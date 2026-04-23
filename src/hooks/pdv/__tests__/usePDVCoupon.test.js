@@ -1,4 +1,4 @@
-// src/hooks/pdv/__tests__/usePDVCoupon.test.js
+﻿// src/hooks/pdv/__tests__/usePDVCoupon.test.js
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { usePDVCoupon } from '@hooks/pdv/usePDVCoupon'
@@ -7,12 +7,13 @@ import { TestWrapper } from '../../../test/setup'
 const mockShowFeedback = vi.fn()
 
 // Mock do saleService
-vi.mock('@services/saleService', () => ({
-  fetchAvailableCoupons: vi.fn(() => Promise.resolve([])),
+vi.mock('@services/sale/saleService', () => ({
+  fetchAvailableCoupons: vi.fn(),
   validateCoupon: vi.fn()
 }))
 
-import * as saleService from '@services/saleService'
+// ✅ Import após o mock
+import * as saleService from '@services/sale/saleService'
 
 const mockCustomer = { id: 1, name: 'João' }
 const mockCart = [

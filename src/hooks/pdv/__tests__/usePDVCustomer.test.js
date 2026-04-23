@@ -1,4 +1,4 @@
-// src/hooks/pdv/__tests__/usePDVCustomer.test.js
+﻿// src/hooks/pdv/__tests__/usePDVCustomer.test.js
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { usePDVCustomer } from '@hooks/pdv/usePDVCustomer'
@@ -6,13 +6,13 @@ import { TestWrapper } from '../../../test/setup'
 
 const mockShowFeedback = vi.fn()
 
-// Mock do saleService
-vi.mock('@services/saleService', () => ({
+vi.mock('@services/sale/saleService', () => ({
   searchCustomerByPhone: vi.fn(),
   createCustomer: vi.fn()
 }))
 
-import * as saleService from '@services/saleService'
+// ✅ Import após o mock
+import * as saleService from '@services/sale/saleService'
 
 describe('usePDVCustomer', () => {
   beforeEach(() => {
@@ -58,7 +58,8 @@ describe('usePDVCustomer', () => {
         response = await result.current.searchCustomer()
       })
       
-      expect(response).toBeUndefined()
+      // ✅ CORRIGIDO: searchCustomer agora retorna { found: false, error: '...' }
+      expect(response).toEqual({ found: false, error: 'Telefone inválido' })
       expect(mockShowFeedback).toHaveBeenCalledWith('error', 'Digite um telefone válido')
       expect(result.current.customer).toBeNull()
     })
@@ -99,10 +100,32 @@ describe('usePDVCustomer', () => {
       
       await act(async () => {
         const response = await result.current.searchCustomer()
-        expect(response).toBeNull()
+        // ✅ CORRIGIDO: searchCustomer agora retorna { found: false, customer: null }
+        expect(response).toEqual({ found: false, customer: null })
       })
       
+      // O formulário é preenchido pelo onSuccess da mutation
       expect(result.current.quickCustomerForm.phone).toBe('11999998888')
+    })
+    
+    it('retorna erro quando a busca falha', async () => {
+      saleService.searchCustomerByPhone.mockRejectedValue(new Error('Erro de rede'))
+      
+      const { result } = renderHook(() => usePDVCustomer(mockShowFeedback), {
+        wrapper: TestWrapper
+      })
+      
+      act(() => {
+        result.current.setCustomerPhone('11999998888')
+      })
+      
+      let response
+      await act(async () => {
+        response = await result.current.searchCustomer()
+      })
+      
+      // ✅ NOVO TESTE: verifica retorno de erro
+      expect(response).toEqual({ found: false, error: 'Erro de rede' })
     })
   })
 
@@ -178,6 +201,30 @@ describe('usePDVCustomer', () => {
       
       expect(mockShowFeedback).toHaveBeenCalledWith('success', 'Cliente Maria cadastrado!')
       expect(result.current.quickCustomerErrors).toEqual({})
+    })
+    
+    it('retorna erro quando criação falha', async () => {
+      saleService.createCustomer.mockRejectedValue(new Error('Email já cadastrado'))
+      
+      const { result } = renderHook(() => usePDVCustomer(mockShowFeedback), {
+        wrapper: TestWrapper
+      })
+      
+      act(() => {
+        result.current.setQuickCustomerForm({
+          name: 'Maria',
+          phone: '11988887777',
+          email: 'maria@email.com'
+        })
+      })
+      
+      let response
+      await act(async () => {
+        response = await result.current.quickRegisterCustomer()
+      })
+      
+      // ✅ NOVO TESTE: verifica retorno de erro
+      expect(response).toEqual({ success: false, error: 'Email já cadastrado' })
     })
   })
 

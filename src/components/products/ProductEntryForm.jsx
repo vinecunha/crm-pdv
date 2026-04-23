@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { FileText, Building, Calendar, Box, DollarSign, Search } from '@lib/icons'
 import FormInput from '../forms/FormInput'
-import Button from '../ui/Button'
+import Button from '@components/ui/Button'
 
 const ProductEntryForm = ({ 
   formData, 

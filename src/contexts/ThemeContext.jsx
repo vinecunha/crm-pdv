@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { useAuth } from './AuthContext'
-import { useThemeDetection } from '@hooks/useThemeDetection'
+import { useAuth } from '@contexts/AuthContext'
+import { useThemeDetection } from '@/hooks/utils/useThemeDetection'
 
 const ThemeContext = createContext()
 

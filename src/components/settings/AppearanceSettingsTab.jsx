@@ -1,6 +1,6 @@
 import React from 'react'
 import { Save } from '@lib/icons'
-import Button from '../ui/Button'
+import Button from '@components/ui/Button'
 
 const AppearanceSettingsTab = ({ settings, setSettings, onSave, saving }) => {
   const primaryColor = settings?.primary_color || '#2563eb'

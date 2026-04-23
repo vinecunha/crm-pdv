@@ -17,7 +17,7 @@ import {
   EyeOff,
   Eye
 } from '@lib/icons'
-import { useTableStrategy } from '@hooks/useTableStrategy'
+import { useTableStrategy } from '@hooks/utils/useTableStrategy'
 import Badge from '../Badge'
 import { formatCurrency, formatDateTime } from '@utils/formatters'
 import { createAction } from '@utils/actions'

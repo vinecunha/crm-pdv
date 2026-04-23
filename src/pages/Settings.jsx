@@ -1,6 +1,5 @@
 // src/pages/Settings.jsx
 import React, { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Shield, Settings as SettingsIcon } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
 import FeedbackMessage from '@components/ui/FeedbackMessage'
@@ -13,33 +12,29 @@ import AppearanceSettingsTab from '@components/settings/AppearanceSettingsTab'
 import PermissionsSettingsTab from '@components/settings/PermissionsSettingsTab'
 import SecuritySettingsTab from '@components/settings/SecuritySettingsTab'
 
+// ✅ Hooks centralizados
 import { useSettingsHandlers } from '@hooks/handlers'
-import * as settingsService from '@services/settingsService'
+import { useSettingsQueries } from '@hooks/queries/useSettingsQueries'
+import { useSettingsMutations } from '@hooks/mutations/useSettingsMutations'
 
 const Settings = () => {
-  const { profile, isAdmin, changePassword, logout } = useAuth()
-  const queryClient = useQueryClient()
+  const { isAdmin, changePassword, logout } = useAuth()
   
   const [activeTab, setActiveTab] = useState('company')
   const [feedback, setFeedback] = useState({ message: null, type: 'success' })
   const [localSettings, setLocalSettings] = useState(null)
 
+  // ✅ Queries centralizadas
   const { 
-    data: companySettings,
+    companySettings,
     isLoading,
     error,
     refetch
-  } = useQuery({
-    queryKey: ['company-settings'],
-    queryFn: settingsService.fetchCompanySettings,
-    enabled: isAdmin,
-    staleTime: 0,
-  })
+  } = useSettingsQueries(isAdmin)
 
-  const saveMutation = useMutation({
-    mutationFn: settingsService.saveCompanySettings,
-    onSuccess: (data) => {
-      queryClient.setQueryData(['company-settings'], data)
+  // ✅ Mutations com callbacks
+  const { saveMutation } = useSettingsMutations({
+    onSettingsSaved: () => {
       setLocalSettings(null)
       handlers.showFeedback('Configurações salvas com sucesso!')
     },
@@ -48,6 +43,7 @@ const Settings = () => {
     }
   })
 
+  // ✅ Handlers
   const handlers = useSettingsHandlers({
     companySettings,
     localSettings,
@@ -61,6 +57,7 @@ const Settings = () => {
 
   const currentSettings = localSettings || companySettings || {}
 
+  // Acesso restrito
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center px-4">
@@ -77,10 +74,12 @@ const Settings = () => {
     )
   }
 
+  // Carregando
   if (isLoading) {
     return <SplashScreen fullScreen message="Carregando configurações..." />
   }
   
+  // Erro
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center px-4">
@@ -120,7 +119,6 @@ const Settings = () => {
         />
 
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
-          {/* Sidebar */}
           <div className="lg:w-64 flex-shrink-0">
             <SettingsSidebar 
               activeTab={activeTab} 
@@ -128,7 +126,6 @@ const Settings = () => {
             />
           </div>
 
-          {/* Conteúdo principal */}
           <div className="flex-1 min-w-0">
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
               {activeTab === 'company' && (

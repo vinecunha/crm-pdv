@@ -1,7 +1,7 @@
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { User, RefreshCw } from '@lib/icons'
-import DataTable from '../ui/DataTable'
+import DataTable from '@components/ui/DataTable'
 import { formatCurrency, formatNumber } from '@utils/formatters'
 
 // Função para buscar os dados da API

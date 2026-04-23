@@ -1,7 +1,7 @@
 import React from 'react'
 import { Printer } from '@lib/icons'
-import Modal from '../ui/Modal'
-import Button from '../ui/Button'
+import Modal from '@components/ui/Modal'
+import Button from '@components/ui/Button'
 import { formatCurrency, formatDate, formatDateTime } from '@utils/formatters'
 
 const CashierDetailsModal = ({ isOpen, onClose, closing, users }) => {

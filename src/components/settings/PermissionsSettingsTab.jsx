@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Lock, Key, UserCheck, Save, RotateCcw, CheckCircle } from '@lib/icons'
 import { supabase } from '@lib/supabase'
-import FeedbackMessage from '../ui/FeedbackMessage'
-import Button from '../ui/Button'
-import Modal from '../ui/Modal'
+import FeedbackMessage from '@components/ui/FeedbackMessage'
+import Button from '@components/ui/Button'
+import Modal from '@components/ui/Modal'
 
 const PermissionsSettingsTab = () => {
   const [loading, setLoading] = useState(true)

@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react'
 import { Calculator, CheckCircle, AlertTriangle, Package, Hash, Calendar } from '@lib/icons'
-import Modal from '../ui/Modal'
+import Modal from '@components/ui/Modal'
 import FormInput from '../forms/FormInput'
-import Button from '../ui/Button'
+import Button from '@components/ui/Button'
 import { formShortcuts } from '@utils/formShortcuts'
 
 const CountItemModal = ({

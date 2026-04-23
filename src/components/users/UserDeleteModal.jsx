@@ -1,8 +1,8 @@
 import React from 'react'
 import { AlertTriangle } from '@lib/icons'
-import Modal from '../ui/Modal'
-import Button from '../ui/Button'
-import UserRoleBadge from './UserRoleBadge'
+import Modal from '@components/ui/Modal'
+import Button from '@components/ui/Button'
+import UserRoleBadge from '@components/users/UserRoleBadge'
 
 const UserDeleteModal = ({ isOpen, onClose, user, onConfirm, isSubmitting }) => {
   if (!user) return null

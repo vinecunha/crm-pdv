@@ -1,7 +1,7 @@
-// src/__tests__/integration/commissions.integration.test.js
+﻿// src/__tests__/integration/commissions.integration.test.js
 import { describe, it, expect, beforeAll, afterEach } from 'vitest'
 import { supabase, supabaseAdmin, testProfile } from './setup.integration'
-import { fetchSellerCommissions } from '@services/commissionService'
+import { fetchSellerCommissions } from '@services/commission/commissionService'
 
 describe('Integração - Comissões', () => {
   let testRuleId = null

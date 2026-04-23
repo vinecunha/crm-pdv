@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Key, Shield, AlertCircle, LogOut } from '@lib/icons'
-import Button from '../ui/Button'
+import Button from '@components/ui/Button'
 import { useAuth } from '@contexts/AuthContext'
 
 const SecuritySettingsTab = ({ onChangePassword, onLogout }) => {

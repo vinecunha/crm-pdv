@@ -21,7 +21,7 @@ import {
   Crown,
   AlertCircle
 } from '@lib/icons'
-import { useTableStrategy } from '@hooks/useTableStrategy'
+import { useTableStrategy } from '@hooks/utils/useTableStrategy'
 import Badge from '../Badge'
 import { formatCurrency, formatDate } from '@utils/formatters'
 

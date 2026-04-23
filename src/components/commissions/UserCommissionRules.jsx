@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@lib/supabase'
 import { useAuth } from '@contexts/AuthContext'
-import Modal from '../ui/Modal'
-import Button from '../ui/Button'
+import Modal from '@components/ui/Modal'
+import Button from '@components/ui/Button'
 import Badge from '../Badge'
-import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import { 
   Plus, 
   Trash2, 

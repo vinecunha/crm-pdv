@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useSystemLogs } from '@hooks/useSystemLogs'
+import { useSystemLogs } from '@hooks/system/useSystemLogs'
 
 export const usePDVCart = (products, showFeedback) => {
   const { logAction } = useSystemLogs()

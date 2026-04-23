@@ -1,9 +1,9 @@
 // src/components/stock-count/StockCountSessionsView.jsx
 import React from 'react'
-import DataCards from '../ui/DataCards'
-import DataFilters from '../ui/DataFilters'
-import DataEmptyState from '../ui/DataEmptyState'
-import StockCountSessionCard from './StockCountSessionCard'
+import DataCards from '@components/ui/DataCards'
+import DataFilters from '@components/ui/DataFilters'
+import DataEmptyState from '@components/ui/DataEmptyState'
+import StockCountSessionCard from '@components/stock-count/StockCountSessionCard'
 import { Plus } from '@lib/icons'
 
 const StockCountSessionsView = ({

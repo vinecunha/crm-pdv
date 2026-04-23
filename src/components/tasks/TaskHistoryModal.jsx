@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '@lib/supabase'
-import Modal from '../ui/Modal'
-import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
-import TaskHistoryTimeline from './TaskHistoryTimeline'
+import Modal from '@components/ui/Modal'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
+import TaskHistoryTimeline from '@components/tasks/TaskHistoryTimeline'
 import { History, Users, GitBranch } from '@lib/icons'
 
 const TaskHistoryModal = ({ isOpen, onClose, task }) => {

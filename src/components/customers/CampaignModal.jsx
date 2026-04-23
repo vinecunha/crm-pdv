@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react'
+﻿import React, { useState, useEffect } from 'react'
 import { supabase } from '@lib/supabase'
-import Modal from '../ui/Modal'
-import Button from '../ui/Button'
+import Modal from '@components/ui/Modal'
+import Button from '@components/ui/Button'
 import { Gift, Tag, MessageSquare, Plus, RefreshCw, Smartphone, Mail, MessageCircle } from '@lib/icons'
 import logger from '@utils/logger'
-import * as couponService from '@services/couponService'
+import * as couponService from '@services/coupon/couponService'
 
 const CampaignModal = ({ isOpen, onClose, onSend, customer, loading }) => {
   // Canais disponíveis

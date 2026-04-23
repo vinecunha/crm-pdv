@@ -3,9 +3,9 @@ import React, { useState, useEffect } from 'react'
 import { Package, DollarSign, AlertCircle, XCircle, TrendingUp, Archive } from '@lib/icons'
 import { supabase } from '@lib/supabase'
 import { formatCurrency, formatNumber, formatDateTime } from '@utils/formatters'
-import StatCard from '../ui/StatCard'
-import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
-import DataTable from '../ui/DataTable'
+import StatCard from '@components/ui/StatCard'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
+import DataTable from '@components/ui/DataTable'
 import Badge from '../Badge'
 
 const StockReport = ({ categoryFilter }) => {

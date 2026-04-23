@@ -1,6 +1,6 @@
 import React from 'react'
 import { TrendingUp, TrendingDown, RefreshCw } from '@lib/icons'
-import Modal from '../ui/Modal'
+import Modal from '@components/ui/Modal'
 import Badge from '../Badge'
 import { formatCurrency, formatNumber } from '@utils/formatters'
 

@@ -1,6 +1,5 @@
 // src/pages/Users.jsx
 import React, { useState, useMemo } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, RefreshCw, Users as UsersIcon, Unlock, Search, CheckCircle, Lock, Shield } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
 import FeedbackMessage from '@components/ui/FeedbackMessage'
@@ -10,10 +9,8 @@ import DataCards from '@components/ui/DataCards'
 import DataTable from '@components/ui/DataTable'
 import Badge from '@components/Badge'
 import PageHeader from '@components/ui/PageHeader'
-import { useSystemLogs } from '@hooks/useSystemLogs'
+import { useSystemLogs } from '@hooks/system/useSystemLogs'
 import { formatDateTime } from '@utils/formatters'
-
-import * as userService from '@services/userService'
 
 import UserStats from '@components/users/UserStats'
 import UserTable from '@components/users/UserTable'
@@ -21,7 +18,11 @@ import UserFilters from '@components/users/UserFilters'
 import UserRoleBadge from '@components/users/UserRoleBadge'
 import UsersModalsContainer from '@components/users/UsersModalsContainer'
 
+// ✅ Hooks centralizados
 import { useUsersHandlers } from '@hooks/handlers'
+import { useUserMutations } from '@hooks/mutations'
+import { useUsersQueries } from '@hooks/queries/useUsersQueries'
+import { useUserForm } from '@hooks/forms/useUserForm'
 
 const StatCard = ({ label, value, color, icon: Icon, active, onClick }) => {
   const colors = { 
@@ -46,24 +47,28 @@ const StatCard = ({ label, value, color, icon: Icon, active, onClick }) => {
 
 const Users = () => {
   const { profile } = useAuth()
-  const { logCreate, logUpdate, logDelete, logError, logAction } = useSystemLogs()
-  const queryClient = useQueryClient()
+  const { logAction } = useSystemLogs()
   
+  // Estados de UI
   const [activeTab, setActiveTab] = useState('users')
-  const [showModal, setShowModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [showUnlockAllModal, setShowUnlockAllModal] = useState(false)
-  const [editingUser, setEditingUser] = useState(null)
-  const [userToDelete, setUserToDelete] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filters, setFilters] = useState({})
   const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
-  const [formData, setFormData] = useState({ 
-    email: '', full_name: '', role: 'operador', password: '', registration_number: '' 
-  })
+  
+  // Estados de modais
+  const [showModal, setShowModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showUnlockAllModal, setShowUnlockAllModal] = useState(false)
+  
+  // Estados de seleção
+  const [editingUser, setEditingUser] = useState(null)
+  const [userToDelete, setUserToDelete] = useState(null)
+  
+  // Estados de busca/filtro (tab unlock)
   const [unlockSearchTerm, setUnlockSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('blocked')
 
+  // Permissões
   const isAdmin = profile?.role === 'admin'
   const isManager = profile?.role === 'gerente'
   const canCreateUser = isAdmin
@@ -71,97 +76,74 @@ const Users = () => {
   const canDeleteUser = isAdmin
   const canChangeRole = isAdmin
 
-  const { data: users = [], isLoading: loadingUsers, refetch: refetchUsers } = useQuery({
-    queryKey: ['users', { filters }],
-    queryFn: () => userService.fetchUsers(filters),
-    enabled: activeTab === 'users',
-  })
+  // ✅ Queries centralizadas
+  const {
+    users,
+    loadingUsers,
+    refetchUsers,
+    blockedUsers,
+    loadingBlocked,
+    refetchBlocked
+  } = useUsersQueries({ filters, activeTab, isAdmin })
 
-  const { data: blockedUsers = [], isLoading: loadingBlocked, refetch: refetchBlocked } = useQuery({
-    queryKey: ['blocked-users'],
-    queryFn: userService.fetchBlockedUsers,
-    enabled: activeTab === 'unlock' && isAdmin,
-  })
+  // ✅ Form centralizado
+  const {
+    formData,
+    setFormData,
+    resetForm,
+    setFormForEditing,
+    getCreatePayload,
+    getUpdatePayload
+  } = useUserForm()
 
-  const createMutation = useMutation({
-    mutationFn: userService.createUser,
-    onSuccess: async (user) => {
-      await logCreate('user', user.id, { email: formData.email, full_name: formData.full_name, role: formData.role })
-      queryClient.invalidateQueries({ queryKey: ['users'] })
-      showFeedback('success', 'Usuário criado!')
-      setShowModal(false)
-    },
-    onError: async (error) => { 
-      showFeedback('error', error.message || 'Erro ao criar usuário')
-      await logError('user', error, { action: 'create' }) 
-    }
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => userService.updateUser(id, data),
-    onSuccess: async (data) => {
-      await logUpdate('user', data.id, editingUser, data)
-      queryClient.invalidateQueries({ queryKey: ['users'] })
-      showFeedback('success', 'Usuário atualizado!')
-      setShowModal(false)
-    },
-    onError: async (error) => { 
-      showFeedback('error', error.message || 'Erro ao atualizar usuário')
-      await logError('user', error, { action: 'update' }) 
-    }
-  })
-
-  const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }) => userService.updateUserStatus(id, status),
-    onSuccess: async (data, variables) => {
-      await logAction({ action: 'UPDATE_USER_STATUS', entityType: 'profile', entityId: data.id, details: { old_status: variables.oldStatus, new_status: data.status } })
-      queryClient.invalidateQueries({ queryKey: ['users'] })
-      queryClient.invalidateQueries({ queryKey: ['blocked-users'] })
-      const messages = { active: 'ativado', inactive: 'desativado', blocked: 'bloqueado' }
-      showFeedback('success', `Usuário ${messages[data.status]}!`)
-    },
-    onError: (error) => showFeedback('error', 'Erro ao atualizar status: ' + error.message)
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: userService.deleteUser,
-    onSuccess: async (id) => {
-      await logDelete('user', id, userToDelete)
-      queryClient.invalidateQueries({ queryKey: ['users'] })
-      queryClient.invalidateQueries({ queryKey: ['blocked-users'] })
-      showFeedback('success', `Usuário ${userToDelete?.full_name || userToDelete?.email} excluído!`)
-      setShowDeleteModal(false)
-      setUserToDelete(null)
-    },
-    onError: (error) => showFeedback('error', error.message)
-  })
-
-  const unlockMutation = useMutation({
-    mutationFn: (id) => userService.updateUserStatus(id, 'active'),
-    onSuccess: async (data) => {
-      await logAction({ action: 'UNLOCK_USER', entityType: 'profile', entityId: data.id })
-      queryClient.invalidateQueries({ queryKey: ['blocked-users'] })
-      showFeedback('success', 'Usuário desbloqueado!')
-    },
-    onError: (error) => showFeedback('error', 'Erro ao desbloquear usuário')
-  })
-
-  const unlockAllMutation = useMutation({
-    mutationFn: userService.unlockAllUsers,
-    onSuccess: async (count) => {
-      await logAction({ action: 'UNLOCK_ALL_USERS', entityType: 'profile', details: { count } })
-      queryClient.invalidateQueries({ queryKey: ['blocked-users'] })
-      showFeedback('success', `${count} usuários desbloqueados!`)
-      setShowUnlockAllModal(false)
-    },
-    onError: (error) => showFeedback('error', 'Erro ao desbloquear usuários')
-  })
-
+  // Feedback
   const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
   }
 
+  // ✅ Mutations com callbacks
+  const {
+    createMutation,
+    updateMutation,
+    updateStatusMutation,
+    deleteMutation,
+    unlockMutation,
+    unlockAllMutation,
+    isMutating
+  } = useUserMutations({
+    onUserCreated: () => {
+      showFeedback('success', 'Usuário criado!')
+      setShowModal(false)
+      resetForm()
+    },
+    onUserUpdated: () => {
+      showFeedback('success', 'Usuário atualizado!')
+      setShowModal(false)
+      resetForm()
+    },
+    onUserStatusUpdated: (data) => {
+      const messages = { active: 'ativado', inactive: 'desativado', blocked: 'bloqueado' }
+      showFeedback('success', `Usuário ${messages[data.status]}!`)
+    },
+    onUserDeleted: () => {
+      showFeedback('success', `Usuário ${userToDelete?.full_name || userToDelete?.email} excluído!`)
+      setShowDeleteModal(false)
+      setUserToDelete(null)
+    },
+    onUserUnlocked: () => {
+      showFeedback('success', 'Usuário desbloqueado!')
+    },
+    onAllUsersUnlocked: (count) => {
+      showFeedback('success', `${count} usuários desbloqueados!`)
+      setShowUnlockAllModal(false)
+    },
+    onError: (error) => {
+      showFeedback('error', error.message || 'Erro na operação')
+    }
+  })
+
+  // ✅ Handlers
   const handlers = useUsersHandlers({
     profile, isAdmin, isManager, canCreateUser, canEditUser, canDeleteUser, canChangeRole,
     editingUser, setEditingUser, userToDelete, setUserToDelete, formData, setFormData,
@@ -170,9 +152,11 @@ const Users = () => {
     showModal, setShowModal, showDeleteModal, setShowDeleteModal,
     showUnlockAllModal, setShowUnlockAllModal, blockedUsers: blockedUsers || [],
     createMutation, updateMutation, updateStatusMutation, deleteMutation,
-    unlockMutation, unlockAllMutation, refetchUsers, refetchBlocked, showFeedback, logAction
+    unlockMutation, unlockAllMutation, refetchUsers, refetchBlocked, showFeedback, logAction,
+    resetForm, setFormForEditing, getCreatePayload, getUpdatePayload
   })
 
+  // Usuários filtrados
   const filteredUsers = useMemo(() => {
     const usersArray = Array.isArray(users) ? users : []
     return usersArray.filter(user => 
@@ -182,6 +166,7 @@ const Users = () => {
     )
   }, [users, searchTerm])
 
+  // Bloqueados filtrados
   const filteredBlockedUsers = useMemo(() => {
     const blockedArray = Array.isArray(blockedUsers) ? blockedUsers : []
     let filtered = [...blockedArray]
@@ -199,6 +184,7 @@ const Users = () => {
     return filtered
   }, [blockedUsers, unlockSearchTerm, statusFilter])
 
+  // Renderização de cards
   const renderUserCard = (user) => (
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-2 sm:mb-3">
@@ -221,55 +207,27 @@ const Users = () => {
     </div>
   )
 
+  // Colunas da tabela de desbloqueio
   const unlockColumns = [
-    { 
-      key: 'registration_number', 
-      header: 'Matrícula', 
-      render: (row) => <span className="font-mono text-xs sm:text-sm text-gray-600 dark:text-gray-400">{row.registration_number || '-'}</span> 
-    },
-    { 
-      key: 'email', 
-      header: 'Usuário', 
-      render: (row) => (
-        <div className="flex items-center gap-2">
-          <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0 ${
-            row.status === 'active' ? 'bg-gradient-to-br from-green-500 to-green-600' : 
-            row.status === 'inactive' ? 'bg-gradient-to-br from-gray-400 to-gray-500' : 
-            'bg-gradient-to-br from-red-500 to-red-600'
-          }`}>
-            {row.email?.charAt(0).toUpperCase() || 'U'}
-          </div>
-          <div className="min-w-0">
-            <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{row.display_name || row.full_name || row.email?.split('@')[0]}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{row.email}</p>
-          </div>
+    { key: 'registration_number', header: 'Matrícula', render: (row) => <span className="font-mono text-xs sm:text-sm text-gray-600 dark:text-gray-400">{row.registration_number || '-'}</span> },
+    { key: 'email', header: 'Usuário', render: (row) => (
+      <div className="flex items-center gap-2">
+        <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0 ${row.status === 'active' ? 'bg-gradient-to-br from-green-500 to-green-600' : row.status === 'inactive' ? 'bg-gradient-to-br from-gray-400 to-gray-500' : 'bg-gradient-to-br from-red-500 to-red-600'}`}>
+          {row.email?.charAt(0).toUpperCase() || 'U'}
         </div>
-      ) 
-    },
-    { 
-      key: 'role', 
-      header: 'Função', 
-      render: (row) => (
-        <Badge variant={row.role === 'admin' ? 'purple' : row.role === 'gerente' ? 'info' : 'default'} size="sm">
-          {row.role === 'admin' ? 'Admin' : row.role === 'gerente' ? 'Gerente' : 'Operador'}
-        </Badge>
-      ) 
-    },
-    { key: 'status', header: 'Status', render: (row) => {
-      const config = handlers.getStatusBadge(row.status)
-      return <Badge variant={config.variant} size="sm">{config.label}</Badge>
-    }},
-    { 
-      key: 'last_login', 
-      header: 'Último Acesso', 
-      render: (row) => <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{row.last_login ? formatDateTime(row.last_login) : 'Nunca'}</span> 
-    }
+        <div className="min-w-0">
+          <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{row.display_name || row.full_name || row.email?.split('@')[0]}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{row.email}</p>
+        </div>
+      </div>
+    )},
+    { key: 'role', header: 'Função', render: (row) => (<Badge variant={row.role === 'admin' ? 'purple' : row.role === 'gerente' ? 'info' : 'default'} size="sm">{row.role === 'admin' ? 'Admin' : row.role === 'gerente' ? 'Gerente' : 'Operador'}</Badge>) },
+    { key: 'status', header: 'Status', render: (row) => { const config = handlers.getStatusBadge(row.status); return <Badge variant={config.variant} size="sm">{config.label}</Badge> }},
+    { key: 'last_login', header: 'Último Acesso', render: (row) => <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{row.last_login ? formatDateTime(row.last_login) : 'Nunca'}</span> }
   ]
 
   const unlockActions = [{ 
-    label: 'Desbloquear', 
-    icon: <Unlock size={16} />, 
-    onClick: handlers.handleUnlockUser, 
+    label: 'Desbloquear', icon: <Unlock size={16} />, onClick: handlers.handleUnlockUser, 
     className: 'text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/30', 
     disabled: (row) => row.status === 'active' || row.id === profile?.id 
   }]
@@ -278,9 +236,6 @@ const Users = () => {
     { id: 'users', label: 'Usuários', icon: UsersIcon },
     ...(isAdmin ? [{ id: 'unlock', label: 'Desbloqueio', icon: Unlock, badge: handlers.unlockStats.totalBlocked }] : [])
   ]
-
-  const isMutating = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || 
-                     updateStatusMutation.isPending || unlockMutation.isPending || unlockAllMutation.isPending
 
   const getHeaderActions = () => {
     if (activeTab === 'users') {
@@ -324,16 +279,12 @@ const Users = () => {
           <>
             <UserStats users={users} />
             <UserFilters searchTerm={searchTerm} setSearchTerm={handlers.setSearchTerm} filters={filters} setFilters={handlers.setFilters} />
-            
             {loadingUsers && <DataLoadingSkeleton />}
             {!loadingUsers && filteredUsers.length === 0 && <DataEmptyState title="Nenhum usuário encontrado" description={searchTerm || filters.role ? "Tente ajustar os filtros" : "Clique em 'Novo Usuário' para adicionar"} icon="users" />}
-            
             {!loadingUsers && filteredUsers.length > 0 && (
               <>
                 <div className="block lg:hidden"><DataCards data={filteredUsers} renderCard={renderUserCard} keyExtractor={(u) => u.id} columns={1} gap={2} /></div>
-                <div className="hidden lg:block">
-                  <UserTable users={filteredUsers} currentUserId={profile?.id} onEdit={handlers.handleEdit} onDelete={handlers.handleDeleteClick} onUpdateStatus={handlers.handleUpdateStatus} canEdit={canEditUser} canDelete={canDeleteUser} isAdmin={isAdmin} />
-                </div>
+                <div className="hidden lg:block"><UserTable users={filteredUsers} currentUserId={profile?.id} onEdit={handlers.handleEdit} onDelete={handlers.handleDeleteClick} onUpdateStatus={handlers.handleUpdateStatus} canEdit={canEditUser} canDelete={canDeleteUser} isAdmin={isAdmin} /></div>
               </>
             )}
           </>
@@ -346,7 +297,6 @@ const Users = () => {
               <StatCard label="Inativos" value={handlers.unlockStats.totalInactive} color="yellow" icon={Shield} active={statusFilter === 'inactive'} onClick={() => handlers.setStatusFilter('inactive')} />
               <StatCard label="Ativos" value={handlers.unlockStats.totalActive} color="green" icon={CheckCircle} active={statusFilter === 'active'} onClick={() => handlers.setStatusFilter('active')} />
             </div>
-            
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-3 sm:p-4 mb-4 sm:mb-6">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                 <div className="flex-1 relative">
@@ -361,7 +311,6 @@ const Users = () => {
                 </select>
               </div>
             </div>
-            
             {loadingBlocked && <DataLoadingSkeleton />}
             {!loadingBlocked && filteredBlockedUsers.length === 0 ? (
               <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-8 sm:p-12 text-center">

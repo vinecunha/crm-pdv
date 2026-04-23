@@ -1,10 +1,10 @@
-// src/components/tasks/TaskModal.jsx
+﻿// src/components/tasks/TaskModal.jsx
 import React, { useState, useEffect } from 'react'
-import Modal from '../ui/Modal'
-import Button from '../ui/Button'
-import FormInput from '../forms/FormInput'
-import TaskAssigneeSelector from './TaskAssigneeSelector'
-import * as notificationService from '@services/notificationService'
+import Modal from '@components/ui/Modal'
+import Button from '@components/ui/Button'
+import FormInput from '@components/forms/FormInput'
+import TaskAssigneeSelector from '@components/tasks/TaskAssigneeSelector'
+import * as notificationService from '@services/system/notificationService'
 
 const TaskModal = ({ 
   isOpen, 

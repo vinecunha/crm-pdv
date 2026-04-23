@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Ticket, UserPlus, UserMinus, Search } from '@lib/icons'
-import Modal from '../ui/Modal'
-import Button from '../ui/Button'
+import Modal from '@components/ui/Modal'
+import Button from '@components/ui/Button'
 import { formatCurrency } from '@utils/formatters'
 
 const CouponCustomersModal = ({ 

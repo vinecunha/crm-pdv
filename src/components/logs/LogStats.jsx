@@ -1,6 +1,6 @@
 import React from 'react'
 import { FileText, AlertCircle, Activity, Clock } from '@lib/icons'
-import StatCard from '../ui/StatCard'
+import StatCard from '@components/ui/StatCard'
 
 const LogStats = ({ logs }) => {
   const totalLogs = logs.length

@@ -1,7 +1,7 @@
 import React from 'react'
 import { Eye, Printer } from '@lib/icons'
-import Modal from '../ui/Modal'
-import DataTable from '../ui/DataTable'
+import Modal from '@components/ui/Modal'
+import DataTable from '@components/ui/DataTable'
 import { formatCurrency, formatDate, formatDateTime } from '@utils/formatters'
 
 const CashierHistoryModal = ({ isOpen, onClose, history, users, onViewDetails, onPrint }) => {

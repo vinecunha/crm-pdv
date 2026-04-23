@@ -1,6 +1,6 @@
 import React from 'react'
 import { Keyboard, X } from '@lib/icons'
-import Modal from '../ui/Modal'
+import Modal from '@components/ui/Modal'
 
 const ShortcutsHelpModal = ({ isOpen, onClose, shortcuts }) => {
   const categories = shortcuts.reduce((acc, shortcut) => {

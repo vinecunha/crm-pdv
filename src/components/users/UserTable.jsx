@@ -17,8 +17,8 @@ import {
   Key,
   Unlock
 } from '@lib/icons'
-import { useTableStrategy } from '@hooks/useTableStrategy'
-import UserRoleBadge from './UserRoleBadge'
+import { useTableStrategy } from '@hooks/utils/useTableStrategy'
+import UserRoleBadge from '@components/users/UserRoleBadge'
 import Badge from '../Badge'
 import { formatDate } from '@utils/formatters'
 import { createAction } from '@utils/actions'

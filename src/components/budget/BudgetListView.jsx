@@ -1,6 +1,6 @@
 import React from 'react'
 import BudgetFilters from './BudgetFilters'
-import DataLoadingSkeleton from '../ui/DataLoadingSkeleton'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import BudgetEmptyState from './BudgetEmptyState'
 import BudgetContent from './BudgetContent'
 
