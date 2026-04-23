@@ -148,7 +148,7 @@ describe('usePDVCustomer', () => {
         response = await result.current.quickRegisterCustomer()
       })
       
-      expect(response).toBe(false)
+      expect(response.success).toBe(false)
       expect(result.current.quickCustomerErrors.name).toBe('Nome é obrigatório')
       expect(result.current.quickCustomerErrors.phone).toBe('Telefone inválido')
     })
@@ -171,7 +171,7 @@ describe('usePDVCustomer', () => {
         response = await result.current.quickRegisterCustomer()
       })
       
-      expect(response).toBe(false)
+      expect(response.success).toBe(false)
       expect(result.current.quickCustomerErrors.email).toBe('E-mail inválido')
     })
 
