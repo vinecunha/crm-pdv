@@ -1,7 +1,27 @@
+// src/components/LoginAlerts.tsx
 import React from 'react'
 import { Clock } from '@lib/icons'
 
-export const BlockedAlert = ({ timeRemaining, formatTimeRemaining }) => {
+// ============================================
+// Tipos
+// ============================================
+interface BlockedAlertProps {
+  timeRemaining: number // em segundos
+  formatTimeRemaining: (seconds: number) => string
+}
+
+interface AttemptsIndicatorProps {
+  remainingAttempts: number
+  primaryColor: string
+}
+
+// ============================================
+// Componente BlockedAlert
+// ============================================
+export const BlockedAlert: React.FC<BlockedAlertProps> = ({ 
+  timeRemaining, 
+  formatTimeRemaining 
+}) => {
   return (
     <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
       <div className="flex items-center gap-2 text-orange-800 dark:text-orange-300 mb-1">
@@ -15,8 +35,16 @@ export const BlockedAlert = ({ timeRemaining, formatTimeRemaining }) => {
   )
 }
 
-export const AttemptsIndicator = ({ remainingAttempts, primaryColor }) => {
+// ============================================
+// Componente AttemptsIndicator
+// ============================================
+export const AttemptsIndicator: React.FC<AttemptsIndicatorProps> = ({ 
+  remainingAttempts, 
+  primaryColor 
+}) => {
   if (remainingAttempts >= 5 || remainingAttempts <= 0) return null
+
+  const percentage = (remainingAttempts / 5) * 100
 
   return (
     <div 
@@ -38,7 +66,7 @@ export const AttemptsIndicator = ({ remainingAttempts, primaryColor }) => {
         <div 
           className="h-1.5 rounded-full transition-all"
           style={{ 
-            width: `${(remainingAttempts / 5) * 100}%`,
+            width: `${percentage}%`,
             backgroundColor: primaryColor
           }}
         />

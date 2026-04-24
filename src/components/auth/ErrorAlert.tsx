@@ -1,7 +1,12 @@
 import React from 'react'
 import { AlertCircle, AlertTriangle } from '@lib/icons'
 
-const ErrorAlert = ({ error, remainingAttempts }) => {
+interface ErrorAlertProps {
+  error: string | null
+  remainingAttempts: number
+}
+
+const ErrorAlert: React.FC<ErrorAlertProps> = ({ error, remainingAttempts }) => {
   if (!error) return null
 
   const isWarning = remainingAttempts <= 2

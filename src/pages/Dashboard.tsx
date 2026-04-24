@@ -1,3 +1,4 @@
+// src/pages/Dashboard.tsx
 import React, { useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@contexts/AuthContext'
@@ -33,6 +34,7 @@ import UserPerformanceCard from '@components/dashboard/UserPerformanceCard'
 import CommissionWidget from '@components/commissions/CommissionWidget'
 import { useCommissionSummary } from '@hooks/commissions/useCommissionSummary'
 import { useDashboardRealtime } from '@hooks/dashboard/useDashboardRealtime'
+import { useWelcomeMessage } from '@hooks/system/useWelcomeMessage'
 
 const Dashboard = () => {
   const { profile, permissions } = useAuth()
@@ -58,6 +60,19 @@ const Dashboard = () => {
   )
   
   const isAdminOrManager = profile?.role === 'admin' || profile?.role === 'gerente'
+
+  // Usar o hook existente
+  const welcomeData = useWelcomeMessage()
+
+  // Descrição baseada no perfil (não duplica o hook)
+  const roleDescription = useMemo(() => {
+    const descriptions: Record<string, string> = {
+      admin: 'Visão geral completa do sistema',
+      gerente: 'Gerencie sua equipe e acompanhe os resultados',
+      operador: 'Acompanhe seu desempenho individual'
+    }
+    return descriptions[profile?.role || 'operador'] || 'Visão geral do sistema'
+  }, [profile?.role])
 
   const quickActions = useMemo(() => {
     const actions = []
@@ -112,12 +127,6 @@ const Dashboard = () => {
   
   const tasksLoading = myTasksLoading || teamTasksLoading
 
-  const getWelcomeTitle = () => {
-    const firstName = profile?.full_name?.split(' ')[0] || 'Usuário'
-    const roleEmoji = profile?.role === 'admin' ? '👑' : profile?.role === 'gerente' ? '📊' : '💼'
-    return `${roleEmoji} Bem-vindo, ${firstName}!`
-  }
-
   if (isLoading) {
     return <DataLoadingSkeleton type="dashboard" />
   }
@@ -157,21 +166,22 @@ const Dashboard = () => {
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
         
         {/* ============================================= */}
-        {/* CABEÇALHO */}
+        {/* CABEÇALHO - Usando hook existente */}
         {/* ============================================= */}
         <PageHeader
-          title={getWelcomeTitle()}
-          description={
-            profile?.role === 'operador' 
-              ? 'Acompanhe seu desempenho individual'
-              : profile?.role === 'gerente'
-                ? 'Gerencie sua equipe e acompanhe os resultados'
-                : 'Visão geral completa do sistema'
-          }
+          title={welcomeData.fullWelcome}
+          description={roleDescription}
+          subtitle={`${welcomeData.roleLabel} • ${new Date().toLocaleDateString('pt-BR', { 
+            weekday: 'long', 
+            day: 'numeric', 
+            month: 'long',
+            year: 'numeric'
+          })}`}
           icon={LayoutDashboard}
           actions={quickActions}
         />
 
+        {/* Resto do conteúdo permanece igual... */}
         {/* ============================================= */}
         {/* SEÇÃO 1: MÉTRICAS PRINCIPAIS (KPIs) */}
         {/* ============================================= */}
@@ -194,7 +204,6 @@ const Dashboard = () => {
                 sales={rawData?.sales || []} 
                 profile={profile} 
               />
-              {/* Widget de metas diárias/semanais */}
               <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Target size={18} className="text-green-500" />
@@ -202,7 +211,6 @@ const Dashboard = () => {
                     Metas do Período
                   </h3>
                 </div>
-                {/* Conteúdo das metas */}
               </div>
             </div>
           </SectionErrorBoundary>
@@ -214,7 +222,6 @@ const Dashboard = () => {
         {/* ============================================= */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
           
-          {/* Gráfico de Vendas (ocupa 2 colunas no desktop) */}
           <div className="lg:col-span-2">
             <SectionErrorBoundary title="Erro no gráfico de vendas">
               <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5 h-full">
@@ -229,10 +236,8 @@ const Dashboard = () => {
             </SectionErrorBoundary>
           </div>
           
-          {/* Coluna Direita: Widgets Empilhados (Comissões + Tarefas) */}
           <div className="lg:col-span-1 space-y-4 sm:space-y-6">
             
-            {/* Widget de Comissões */}
             <SectionErrorBoundary title="Erro no widget de comissões">
               <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5">
                 <div className="flex items-center gap-2 mb-3">
@@ -249,7 +254,6 @@ const Dashboard = () => {
               </div>
             </SectionErrorBoundary>
             
-            {/* Widget de Tarefas */}
             <SectionErrorBoundary title="Erro no widget de tarefas">
               <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5">
                 <div className="flex items-center gap-2 mb-3">
@@ -276,7 +280,6 @@ const Dashboard = () => {
         {/* ============================================= */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
           
-          {/* Últimas Vendas */}
           <SectionErrorBoundary title="Erro nas últimas vendas">
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5">
               <div className="flex items-center justify-between mb-3">
@@ -298,7 +301,6 @@ const Dashboard = () => {
             </div>
           </SectionErrorBoundary>
 
-          {/* Produtos Mais Vendidos */}
           <SectionErrorBoundary title="Erro nos produtos mais vendidos">
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5">
               <div className="flex items-center justify-between mb-3">

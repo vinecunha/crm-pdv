@@ -120,6 +120,7 @@ export {
   Home,
   Bug,
   Loader,
+  Loader2,
   Bell,
   MapPin,
   PackageSearch,
@@ -165,4 +166,6 @@ export {
   GitBranch,
   ListChecks,
   Receipt,
+  Menu,
+  PiggyBank
 } from 'lucide-react'
