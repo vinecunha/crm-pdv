@@ -83,7 +83,7 @@ const SalesList = () => {
 
   // ✅ Mutations com callbacks
   const { cancelMutation } = useSaleMutations(profile, {
-    onSaleCancelled: (data, variables) => {
+onSaleCancelled: (data, variables) => {
       const message = canCancelDirectly 
         ? `Venda ${data.saleNumber} cancelada!`
         : `Venda ${data.saleNumber} cancelada com aprovação!`
@@ -100,7 +100,7 @@ const SalesList = () => {
     }
   })
 
-  const showFeedback = (type, message) => {
+const showFeedback = (type, message) => {
     setFeedback({ show: true, type, message })
     setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
   }

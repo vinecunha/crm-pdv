@@ -5,7 +5,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { CompanyProvider } from './contexts/CompanyContext'
-import { ToastProvider } from './contexts/ToastContext'
 import ErrorBoundaryWithCompany from '@components/ErrorBoundaryWithCompany'
 import SectionErrorBoundary from '@components/SectionErrorBoundary'
 import ProtectedRoute from '@components/ProtectedRoute'
@@ -161,7 +160,6 @@ function App() {
         <Router>
           <AuthProvider>
             <CompanyProvider>
-              <ToastProvider>
               <ThemeProvider> 
               <DynamicHead />
               <NotificationTriggersWrapper />
@@ -363,7 +361,6 @@ function App() {
               </Suspense>
                <PendingSalesIndicator />
               </ThemeProvider>
-              </ToastProvider>
             </CompanyProvider>
           </AuthProvider>
         </Router>
