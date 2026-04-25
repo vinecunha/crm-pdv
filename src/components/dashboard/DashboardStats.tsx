@@ -11,7 +11,8 @@ import {
   Package, 
   AlertCircle, 
   DollarSign,
-  RefreshCw
+  RefreshCw,
+  BarChart3,
 } from '@lib/icons'
 import { formatCurrency, formatNumber } from '@utils/formatters'
 import type { ComponentType } from 'react'
@@ -257,8 +258,5 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
     </div>
   )
 }
-
-// Import adicional necessário no topo
-import { BarChart3 } from '@lib/icons'
 
 export default DashboardStats

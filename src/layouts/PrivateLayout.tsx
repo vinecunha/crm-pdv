@@ -1,9 +1,12 @@
 // src/components/layout/PrivateLayout.tsx
-import React, { useState, useEffect } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useAuth } from '@contexts/AuthContext'
+import { Home } from '@lib/icons'
 import Sidebar from '@components/layout/Sidebar'
 import Header from '@components/layout/Header'
 import MobileSidebar from '@components/layout/MobileSidebar'
+import Breadcrumb from '@components/layout/Breadcrumb'
 import ThemeInitializer from '@components/ThemeInitializer'
 
 interface PrivateLayoutProps {
@@ -12,6 +15,7 @@ interface PrivateLayoutProps {
 
 const PrivateLayout: React.FC<PrivateLayoutProps> = ({ children }) => {
   const { profile, logout } = useAuth()
+  const location = useLocation() 
   
   // Estados
   const [collapsed, setCollapsed] = useState(() => {
@@ -22,6 +26,38 @@ const PrivateLayout: React.FC<PrivateLayoutProps> = ({ children }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(() => {
+    const path = location.pathname
+
+    const titles: Record<string, string> = {
+      '/dashboard': 'Dashboard',
+      '/sales': 'PDV',
+      '/sales-list': 'Histórico',
+      '/cashier': 'Fechar Caixa',
+      '/coupons': 'Cupons',
+      '/products': 'Produtos',
+      '/customers': 'Clientes',
+      '/reports': 'Relatórios',
+      '/users': 'Usuários',
+      '/logs': 'Logs',
+      '/settings': 'Configurações',
+      '/stock-count': 'Balanço',
+      '/profile': 'Meu Perfil',
+      '/tasks': 'Tarefas',
+      '/budgets': 'Orçamentos'
+    }
+    
+    const items = [{ label: 'Home', path: '/dashboard', icon: Home }]
+    
+    if (path !== '/dashboard') {
+      const title = titles[path] || 'Página'
+      items.push({ label: title, path })
+    }
+    
+    return items
+  }, [location.pathname])
 
   // Sincronizar com o perfil quando carregar
   useEffect(() => {
@@ -117,6 +153,8 @@ const PrivateLayout: React.FC<PrivateLayoutProps> = ({ children }) => {
     }
   }, [])
 
+  const isDashboard = location.pathname === '/dashboard'
+
   return (
     <>
       <ThemeInitializer />
@@ -148,6 +186,13 @@ const PrivateLayout: React.FC<PrivateLayoutProps> = ({ children }) => {
             isScrolled={isScrolled}
           />
         </div>
+
+        {!isDashboard && (
+          <Breadcrumb 
+            items={breadcrumbItems} 
+            collapsed={collapsed}
+          />
+        )}
 
         {/* Main Content */}
         <div className={`
