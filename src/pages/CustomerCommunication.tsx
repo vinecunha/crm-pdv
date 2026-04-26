@@ -4,10 +4,10 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, User, Mail, Phone, MapPin, AtSign, Hash, Copy, Check, MessageCircle, Send, Smartphone, AlertCircle } from '@lib/icons'
 import { supabase } from '@lib/supabase'
 import { useAuth } from '@contexts/AuthContext'
+import { useUI } from '@contexts/UIContext'
 import { useSystemLogs } from '@hooks/system/useSystemLogs'
 
 import Button from '@components/ui/Button'
-import FeedbackMessage from '@components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import Badge from '@components/Badge'
 import PageHeader from '@components/ui/PageHeader'
@@ -29,7 +29,6 @@ const CustomerCommunication = () => {
   const [recentPurchases, setRecentPurchases] = useState([])
   const [communicationHistory, setCommunicationHistory] = useState([])
   const [loading, setLoading] = useState(true)
-  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
   const [activeChannel, setActiveChannel] = useState(null)
   const [messageForm, setMessageForm] = useState({ subject: '', message: '', template: 'custom' })
   const [isSending, setIsSending] = useState(false)
@@ -74,10 +73,7 @@ const CustomerCommunication = () => {
     }
   }
 
-  const showFeedback = (type, message) => {
-    setFeedback({ show: true, type, message })
-    setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 4000)
-  }
+  const { showFeedback } = useUI()
 
   const getWhatsAppLink = (message) => `https://wa.me/55${customer?.phone?.replace(/\D/g, '')}${message ? `?text=${encodeURIComponent(message)}` : ''}`
   const getTelegramLink = (message) => message ? `https://t.me/share/url?url=&text=${encodeURIComponent(message)}` : `https://t.me/+55${customer?.phone?.replace(/\D/g, '')}`
@@ -123,7 +119,6 @@ const CustomerCommunication = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {feedback.show && <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />}
 
         {/* ✅ PageHeader com título STRING */}
         <PageHeader

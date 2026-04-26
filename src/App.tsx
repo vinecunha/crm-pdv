@@ -1,5 +1,7 @@
 import React, { Suspense, lazy } from 'react'
 import { ThemeProvider } from './contexts/ThemeContext'
+import { UIProvider, useUI } from './contexts/UIContext'
+import FeedbackMessage from '@components/ui/FeedbackMessage'
 import './index.css'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
@@ -150,6 +152,19 @@ const NotificationTriggersWrapper = () => {
   return null
 }
 
+const GlobalFeedback = () => {
+  const { feedback, hideFeedback } = useUI()
+  if (!feedback.show) return null
+  return (
+    <FeedbackMessage
+      type={feedback.type}
+      message={feedback.message}
+      onClose={hideFeedback}
+      position="absolute-bottom"
+    />
+  )
+}
+
 function App() {
 
   const isDevelopment = import.meta.env.DEV
@@ -160,12 +175,13 @@ function App() {
         <Router>
           <AuthProvider>
             <CompanyProvider>
-              <ThemeProvider> 
-              <DynamicHead />
-              <NotificationTriggersWrapper />
-              <Suspense fallback={<PageLoader />}>
-                <PrefetchRoute>
-                  <Routes>
+<ThemeProvider> 
+                <DynamicHead />
+                <NotificationTriggersWrapper />
+                <UIProvider>
+                  <Suspense fallback={<PageLoader />}>
+                    <PrefetchRoute>
+                      <Routes>
                     {/* Rota pública */}
                     <Route path="/login" element={<Login />} />
                     
@@ -182,7 +198,7 @@ function App() {
 
                     {/* Rota para TaskBoard */}
                     <Route path="/tasks" element={
-                      <ProtectedRoute>
+                      <ProtectedRoute requiredPermission="tasks.view">
                         <PrivateLayout>
                           <TaskBoard />
                         </PrivateLayout>
@@ -357,9 +373,11 @@ function App() {
                     <Route path="/404" element={<NotFound />} />
                     <Route path="*" element={<Navigate to="/404" replace />} />
                   </Routes>
-                </PrefetchRoute>
-              </Suspense>
-               <PendingSalesIndicator />
+                    </PrefetchRoute>
+                  </Suspense>
+                  <GlobalFeedback />
+                </UIProvider>
+                <PendingSalesIndicator />
               </ThemeProvider>
             </CompanyProvider>
           </AuthProvider>

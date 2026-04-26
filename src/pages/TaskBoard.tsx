@@ -1,6 +1,7 @@
 // src/pages/TaskBoard.jsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useAuth } from '@contexts/AuthContext'
+import { useUI } from '@contexts/UIContext'
 import { supabase } from '@lib/supabase'
 import { Plus, RefreshCw, Users, CheckCircle, User, ClipboardList } from '@lib/icons'
 import PageHeader from '@components/ui/PageHeader'
@@ -10,7 +11,6 @@ import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import TaskCard from '@components/tasks/TaskCard'
 import TaskModal from '@components/tasks/TaskModal'
 import ConfirmModal from '@components/ui/ConfirmModal'
-import FeedbackMessage from '@components/ui/FeedbackMessage'
 import TaskHistoryModal from '@components/tasks/TaskHistoryModal'
 import { useTasksQuery } from '@hooks/tasks/useTasksQuery'
 import { useTasksRealtime } from '@hooks/tasks/useTasksRealtime'
@@ -35,20 +35,13 @@ const TaskBoard = () => {
     taskId: null,
     taskTitle: ''
   })
-  const [feedback, setFeedback] = useState(null)
-  
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterPriority, setFilterPriority] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
 
-  const showFeedback = (type, message, description = null) => {
-    setFeedback({ id: Date.now(), type, message, description })
-    if (type === 'success' || type === 'info') {
-      setTimeout(() => setFeedback(null), 5000)
-    }
-  }
+  const { showFeedback } = useUI()
 
-  const hideFeedback = () => setFeedback(null)
+  const hideFeedback = () => {}
 
   const { data: allTasks = [], isLoading, refetch } = useTasksQuery({
     type: activeTab === 'team' ? 'team' : (activeTab === 'personal' ? 'personal' : null),
@@ -301,18 +294,6 @@ const TaskBoard = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
-        {feedback && (
-          <div className="mb-4">
-            <FeedbackMessage
-              type={feedback.type}
-              message={feedback.message}
-              description={feedback.description}
-              onClose={hideFeedback}
-              closable
-              animate
-            />
-          </div>
-        )}
         
         <PageHeader
           title="Tarefas"

@@ -6,8 +6,8 @@ import {
 } from '@lib/icons'
 import { supabase } from '@lib/supabase'
 import { useAuth } from '@contexts/AuthContext'
+import { useUI } from '@contexts/UIContext'
 import Button from '@components/ui/Button'
-import FeedbackMessage from '@components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import Modal from '@components/ui/Modal'
 
@@ -104,7 +104,6 @@ const RolePermissions = () => {
   const queryClient = useQueryClient()
   
   const [selectedRole, setSelectedRole] = useState('admin')
-  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
   const [showResetModal, setShowResetModal] = useState(false)
   const [localPermissions, setLocalPermissions] = useState({})
   const [hasChanges, setHasChanges] = useState(false)
@@ -162,10 +161,7 @@ const RolePermissions = () => {
     }
   }, [isAdmin])
 
-  const showFeedback = (type, message) => {
-    setFeedback({ show: true, type, message })
-    setTimeout(() => setFeedback({ show: false }), 3000)
-  }
+  const { showFeedback } = useUI()
 
   const handleTogglePermission = (permissionId) => {
     if (selectedRole === 'admin') {
@@ -308,18 +304,8 @@ const RolePermissions = () => {
                 </>
               )}
             </div>
-          </div>
+</div>
         </div>
-
-        {feedback.show && (
-          <div className="mb-4">
-            <FeedbackMessage
-              type={feedback.type}
-              message={feedback.message}
-              onClose={() => setFeedback({ show: false })}
-            />
-          </div>
-        )}
 
         <div className="mb-6">
           <div className="flex gap-2">

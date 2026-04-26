@@ -2,11 +2,11 @@
 import React, { useState, useMemo } from 'react'
 import { UserPlus, RefreshCw, Users as UsersIcon } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
+import { useUI } from '@contexts/UIContext'
 import { useSystemLogs } from '@hooks/system/useSystemLogs'
 import useMediaQuery from '@/hooks/utils/useMediaQuery'
 
 import Button from '@components/ui/Button'
-import FeedbackMessage from '@components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import DataEmptyState from '@components/ui/DataEmptyState'
 import PageHeader from '@components/ui/PageHeader'
@@ -33,8 +33,7 @@ const Customers = () => {
   const [viewMode] = useState('auto')
   const [searchTerm, setSearchTerm] = useState('')
   const [activeFilters, setActiveFilters] = useState({})
-  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
-  
+
   // Estados de modais
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -95,11 +94,7 @@ const Customers = () => {
     return filtered
   }, [customers, searchTerm, activeFilters])
 
-  // Feedback
-  const showFeedback = (type, message) => {
-    setFeedback({ show: true, type, message })
-    setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
-  }
+  const { showFeedback } = useUI()
 
   // ✅ Mutations com callbacks
   const {
@@ -108,17 +103,13 @@ const Customers = () => {
     deleteMutation,
     isMutating
   } = useCustomerMutations({
-    onCustomerCreated: () => {
-      showFeedback('success', 'Cliente cadastrado com sucesso!')
+    onSuccess: (data, action) => {
+      if (action === 'create') {
+        showFeedback('success', 'Cliente cadastrado com sucesso!')
+      } else if (action === 'update') {
+        showFeedback('success', 'Cliente atualizado com sucesso!')
+      }
       setIsModalOpen(false)
-    },
-    onCustomerUpdated: () => {
-      showFeedback('success', 'Cliente atualizado com sucesso!')
-      setIsModalOpen(false)
-    },
-    onCustomerDeleted: () => {
-      showFeedback('success', 'Cliente excluído!')
-      setIsDeleteModalOpen(false)
     },
     onError: (error) => {
       showFeedback('error', error.message)
@@ -188,14 +179,6 @@ const Customers = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {feedback.show && (
-          <FeedbackMessage 
-            type={feedback.type} 
-            message={feedback.message} 
-            onClose={() => setFeedback({ show: false })} 
-          />
-        )}
-
         <PageHeader
           title="Clientes"
           description={

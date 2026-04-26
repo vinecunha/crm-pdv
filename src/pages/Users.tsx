@@ -2,13 +2,7 @@
 import React, { useState, useMemo } from 'react'
 import { Plus, RefreshCw, Users as UsersIcon, Unlock, Search, CheckCircle, Lock, Shield } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
-import FeedbackMessage from '@components/ui/FeedbackMessage'
-import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
-import DataEmptyState from '@components/ui/DataEmptyState'
-import DataCards from '@components/ui/DataCards'
-import DataTable from '@components/ui/DataTable'
-import Badge from '@components/Badge'
-import PageHeader from '@components/ui/PageHeader'
+import { useUI } from '@contexts/UIContext'
 import { useSystemLogs } from '@hooks/system/useSystemLogs'
 import { formatDateTime } from '@utils/formatters'
 
@@ -47,13 +41,13 @@ const StatCard = ({ label, value, color, icon: Icon, active, onClick }) => {
 
 const Users = () => {
   const { profile } = useAuth()
+  const { showFeedback } = useUI()
   const { logAction } = useSystemLogs()
   
   // Estados de UI
   const [activeTab, setActiveTab] = useState('users')
   const [searchTerm, setSearchTerm] = useState('')
   const [filters, setFilters] = useState({})
-  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
   
   // Estados de modais
   const [showModal, setShowModal] = useState(false)
@@ -95,12 +89,6 @@ const Users = () => {
     getCreatePayload,
     getUpdatePayload
   } = useUserForm()
-
-  // Feedback
-  const showFeedback = (type, message) => {
-    setFeedback({ show: true, type, message })
-    setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
-  }
 
   // ✅ Mutations com callbacks
   const {
@@ -257,8 +245,6 @@ const Users = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {feedback.show && <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />}
-        
         <PageHeader title="Usuários" description="Gerencie os usuários e acessos do sistema" icon={UsersIcon} actions={getHeaderActions()} />
 
         <div className="border-b border-gray-200 dark:border-gray-700 mb-4 sm:mb-6">

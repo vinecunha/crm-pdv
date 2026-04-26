@@ -5,7 +5,7 @@ import {
   FileText, DollarSign, Ticket, Download, XCircle, CheckCircle, Clock, ShoppingCart, Receipt
 } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
-import FeedbackMessage from '@components/ui/FeedbackMessage'
+import { useUI } from '@contexts/UIContext'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import DataTable from '@components/ui/DataTable'
 import DataCards from '@components/ui/DataCards'
@@ -58,7 +58,7 @@ const SalesList = () => {
   const [selectedSale, setSelectedSale] = useState(null)
   const [cancelReason, setCancelReason] = useState('')
   const [cancelNotes, setCancelNotes] = useState('')
-  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
+  const { showFeedback } = useUI()
 
   const effectiveViewMode = viewMode === 'auto' 
     ? (isMobile ? 'cards' : 'table')
@@ -99,11 +99,6 @@ onSaleCancelled: (data, variables) => {
       showFeedback('error', `Erro ao cancelar: ${error.message}`)
     }
   })
-
-const showFeedback = (type, message) => {
-    setFeedback({ show: true, type, message })
-    setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
-  }
 
   // ✅ Handlers
   const handlers = useSalesListHandlers({
@@ -293,7 +288,7 @@ const showFeedback = (type, message) => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {feedback.show && <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />}
+        
 
         <PageHeader
           title="Gestão de Vendas"

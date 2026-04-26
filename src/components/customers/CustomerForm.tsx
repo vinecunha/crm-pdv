@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Calendar, Search } from '@lib/icons'
-import FormInput from '../forms/FormInput'
+import { useUI } from '@contexts/UIContext'
+import FormInput from '@components/forms/FormInput'
 import Button from '@components/ui/Button'
 
 const CustomerForm = ({ 
@@ -10,21 +11,21 @@ const CustomerForm = ({
   onSubmit, 
   onCancel, 
   isSubmitting,
-  isEditing,
-  showFeedback 
+  isEditing
 }) => {
   const [loadingCEP, setLoadingCEP] = useState(false)
+  const { showFeedback } = useUI()
 
-  const consultarCEP = async () => {
+const consultarCEP = async () => {
     const cep = formData.zip_code
     if (!cep) {
-      showFeedback?.('error', 'Digite um CEP')
+      showFeedback('error', 'Digite um CEP')
       return
     }
 
     const cepLimpo = cep.replace(/\D/g, '')
     if (cepLimpo.length !== 8) {
-      showFeedback?.('error', 'CEP deve ter 8 dígitos')
+      showFeedback('error', 'CEP deve ter 8 dígitos')
       return
     }
 
@@ -42,16 +43,16 @@ const CustomerForm = ({
       if (data.erro) {
         throw new Error('CEP não encontrado')
       }
-      
+
       onChange({ target: { name: 'address', value: data.logradouro || '' } })
       onChange({ target: { name: 'city', value: data.localidade || '' } })
       onChange({ target: { name: 'state', value: data.uf || '' } })
       
-      showFeedback?.('success', 'Endereço preenchido!')
+      showFeedback('success', 'Endereço preenchido!')
       
     } catch (error) {
       console.error('Erro ao consultar CEP:', error)
-      showFeedback?.('error', 'CEP não encontrado ou serviço indisponível')
+      showFeedback('error', 'CEP não encontrado ou serviço indisponível')
     } finally {
       setLoadingCEP(false)
     }
@@ -139,7 +140,7 @@ const CustomerForm = ({
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* CEP com botão */}
-            <div className="relative">
+            <div>
               <FormInput
                 label="CEP"
                 name="zip_code"
@@ -147,16 +148,18 @@ const CustomerForm = ({
                 value={formData.zip_code || ''}
                 onChange={onChange}
                 error={formErrors.zip_code}
+                rightElement={
+                  <button
+                    type="button"
+                    onClick={consultarCEP}
+                    disabled={loadingCEP || !formData.zip_code}
+                    className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 p-1 rounded-lg disabled:opacity-50 transition-colors -mr-1"
+                    title="Consultar CEP"
+                  >
+                    <Search size={14} className={loadingCEP ? 'animate-spin' : ''} />
+                  </button>
+                }
               />
-              <button
-                type="button"
-                onClick={consultarCEP}
-                disabled={loadingCEP || !formData.zip_code}
-                className="absolute right-3 top-8 p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg disabled:opacity-50 transition-colors"
-                title="Consultar CEP"
-              >
-                <Search size={16} className={loadingCEP ? 'animate-spin' : ''} />
-              </button>
             </div>
 
             <FormInput

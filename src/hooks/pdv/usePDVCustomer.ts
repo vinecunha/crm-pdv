@@ -1,6 +1,8 @@
 ﻿import { useState, useCallback } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useSystemLogs } from '@hooks/system/useSystemLogs'
+import { useFormWithSchema } from '@/hooks/forms/useFormWithSchema'
+import { quickCustomerSchema } from '@/utils/schemas'
 import * as saleService from '@services/sale/saleService'
 
 // Baseado em: public.customers
@@ -25,12 +27,6 @@ interface QuickCustomerForm {
   email: string
 }
 
-interface QuickCustomerErrors {
-  name?: string
-  phone?: string
-  email?: string
-}
-
 interface SearchCustomerResult {
   found: boolean
   customer?: Customer | null
@@ -50,11 +46,11 @@ interface UsePDVCustomerReturn {
   customer: Customer | null
   customerPhone: string
   quickCustomerForm: QuickCustomerForm
-  quickCustomerErrors: QuickCustomerErrors
+  quickCustomerErrors: Record<string, string>
   setCustomer: React.Dispatch<React.SetStateAction<Customer | null>>
   setCustomerPhone: React.Dispatch<React.SetStateAction<string>>
   setQuickCustomerForm: React.Dispatch<React.SetStateAction<QuickCustomerForm>>
-  setQuickCustomerErrors: React.Dispatch<React.SetStateAction<QuickCustomerErrors>>
+  setQuickCustomerErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>
   searchCustomer: () => Promise<SearchCustomerResult>
   quickRegisterCustomer: () => Promise<QuickRegisterResult>
   clearCustomer: () => void
@@ -66,12 +62,17 @@ export const usePDVCustomer = (showFeedback: ShowFeedback): UsePDVCustomerReturn
   const { logCreate } = useSystemLogs()
   const [customerPhone, setCustomerPhone] = useState<string>('')
   const [customer, setCustomer] = useState<Customer | null>(null)
-  const [quickCustomerForm, setQuickCustomerForm] = useState<QuickCustomerForm>({ 
-    name: '', 
-    phone: '', 
-    email: '' 
-  })
-  const [quickCustomerErrors, setQuickCustomerErrors] = useState<QuickCustomerErrors>({})
+
+  const quickCustomerFormHook = useFormWithSchema(quickCustomerSchema, {
+    name: '',
+    phone: '',
+    email: ''
+  }) as any
+
+  const { watch: watchQuick, setValue: setQuickValue, reset: resetQuick, getValues: getQuickValues } = quickCustomerFormHook
+
+  const quickCustomerForm = watchQuick() as QuickCustomerForm
+  const quickCustomerErrors = (quickCustomerFormHook.formState.errors || {}) as Record<string, string>
 
   const searchCustomerMutation = useMutation({
     mutationFn: (phone: string) => saleService.searchCustomerByPhone(phone),
@@ -80,7 +81,7 @@ export const usePDVCustomer = (showFeedback: ShowFeedback): UsePDVCustomerReturn
         setCustomer(data)
         showFeedback('success', `Cliente encontrado: ${data.name}`)
       } else {
-        setQuickCustomerForm({ name: '', phone: customerPhone, email: '' })
+        resetQuick({ name: '', phone: customerPhone, email: '' })
       }
     },
     onError: (error: Error) => showFeedback('error', 'Erro ao buscar cliente: ' + error.message)
@@ -111,44 +112,43 @@ export const usePDVCustomer = (showFeedback: ShowFeedback): UsePDVCustomerReturn
   }, [customerPhone, searchCustomerMutation, showFeedback])
 
   const quickRegisterCustomer = useCallback(async (): Promise<QuickRegisterResult> => {
-    const errors: QuickCustomerErrors = {}
-    if (!quickCustomerForm.name?.trim()) errors.name = 'Nome é obrigatório'
-    if (!quickCustomerForm.phone?.trim() || quickCustomerForm.phone.length < 10) {
-      errors.phone = 'Telefone inválido'
-    }
-    if (quickCustomerForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(quickCustomerForm.email)) {
-      errors.email = 'E-mail inválido'
-    }
-    
-    if (Object.keys(errors).length > 0) {
-      setQuickCustomerErrors(errors)
-      return { success: false }
+    const result = await quickCustomerFormHook.validate()
+    if (!result.success) {
+      return { success: false, error: result.error }
     }
     
     try {
-      const data = await createCustomerMutation.mutateAsync(quickCustomerForm)
+      const formData = getQuickValues()
+      const data = await createCustomerMutation.mutateAsync(formData)
       return { success: true, customer: data }
     } catch (error) {
       return { success: false, error: (error as Error).message }
     }
-  }, [quickCustomerForm, createCustomerMutation])
+  }, [quickCustomerFormHook, createCustomerMutation])
 
   const clearCustomer = useCallback(() => {
     setCustomer(null)
     setCustomerPhone('')
-    setQuickCustomerForm({ name: '', phone: '', email: '' })
-    setQuickCustomerErrors({})
-  }, [])
+    resetQuick({ name: '', phone: '', email: '' })
+  }, [resetQuick])
 
   return {
     customer,
     customerPhone,
-    quickCustomerForm,
+    quickCustomerForm: quickCustomerForm || { name: '', phone: '', email: '' },
     quickCustomerErrors,
     setCustomer,
     setCustomerPhone,
-    setQuickCustomerForm,
-    setQuickCustomerErrors,
+    setQuickCustomerForm: (data: QuickCustomerForm) => {
+      Object.entries(data).forEach(([key, value]) => setQuickValue(key as any, value))
+    },
+    setQuickCustomerErrors: (errors: Record<string, string>) => {
+      Object.entries(errors).forEach(([key, value]) => {
+        if (value) {
+          quickCustomerFormHook.setError(key as any, { message: value })
+        }
+      })
+    },
     searchCustomer,
     quickRegisterCustomer,
     clearCustomer,

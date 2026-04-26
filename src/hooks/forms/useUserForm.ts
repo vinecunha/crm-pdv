@@ -1,4 +1,16 @@
-import { useState, useCallback, ChangeEvent } from 'react'
+import { useCallback, ChangeEvent } from 'react'
+import { useFormWithSchema } from './useFormWithSchema'
+import { z } from 'zod'
+
+const userSchema = z.object({
+  name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
+  email: z.string().email('E-mail inválido'),
+  phone: z.string().min(10, 'Telefone deve ter pelo menos 10 dígitos'),
+  role: z.enum(['admin', 'gerente', 'vendedor']).default('vendedor'),
+  password: z.string().optional(),
+  registration_number: z.string().optional(),
+  status: z.string().default('active')
+})
 
 // Baseado em: public.profiles
 interface User {
@@ -37,12 +49,12 @@ interface ValidationResult {
   error?: string
 }
 
-const initialFormData: UserFormData = { 
-  email: '', 
-  full_name: '', 
-  role: 'operador', 
-  password: '', 
-  registration_number: '' 
+const initialFormData: UserFormData = {
+  email: '',
+  full_name: '',
+  role: 'vendedor',
+  password: '',
+  registration_number: ''
 }
 
 interface UseUserFormReturn {
@@ -57,58 +69,63 @@ interface UseUserFormReturn {
 }
 
 export const useUserForm = (): UseUserFormReturn => {
-  const [formData, setFormData] = useState<UserFormData>(initialFormData)
+  const form = useFormWithSchema(userSchema, initialFormData) as any
+  const { watch, setValue, reset, getValues } = form
+
+  const formData = watch() as UserFormData
 
   const resetForm = useCallback(() => {
-    setFormData(initialFormData)
-  }, [])
+    reset(initialFormData)
+  }, [reset])
 
   const setFormForEditing = useCallback((user: User | null) => {
     if (user) {
-      setFormData({ 
-        email: user.email, 
-        full_name: user.full_name || '', 
-        role: user.role || 'operador', 
+      reset({
+        email: user.email,
+        full_name: user.full_name || '',
+        role: user.role || 'vendedor',
         password: '',
         registration_number: user.registration_number || ''
       })
     } else {
       resetForm()
     }
-  }, [resetForm])
+  }, [reset, resetForm])
 
   const handleChange = useCallback((e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }, [])
+    setValue(name as any, value)
+  }, [setValue])
 
-  const validate = useCallback((): ValidationResult => {
-    if (!formData.email || !formData.password || !formData.full_name) {
-      return { valid: false, error: 'Preencha todos os campos obrigatórios' }
-    }
-    return { valid: true }
-  }, [formData])
+  const validate = useCallback(async (): Promise<ValidationResult> => {
+    const result = await form.validate()
+    return result
+  }, [form])
 
   const getCreatePayload = useCallback((): CreateUserPayload => {
+    const data = getValues()
     return {
-      email: formData.email,
-      password: formData.password,
-      full_name: formData.full_name,
-      role: formData.role,
-      registration_number: formData.registration_number
+      email: data.email,
+      password: data.password,
+      full_name: data.full_name,
+      role: data.role,
+      registration_number: data.registration_number
     }
-  }, [formData])
+  }, [getValues])
 
   const getUpdatePayload = useCallback((): UpdateUserPayload => {
+    const data = getValues()
     return {
-      full_name: formData.full_name,
-      role: formData.role
+      full_name: data.full_name,
+      role: data.role
     }
-  }, [formData])
+  }, [getValues])
 
   return {
-    formData,
-    setFormData,
+    formData: formData || initialFormData,
+    setFormData: (data: UserFormData) => {
+      Object.entries(data).forEach(([key, value]) => setValue(key as any, value))
+    },
     resetForm,
     setFormForEditing,
     handleChange,

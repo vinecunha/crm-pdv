@@ -2,26 +2,12 @@
 import React, { useState } from 'react'
 import { Shield, Settings as SettingsIcon } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
-import FeedbackMessage from '@components/ui/FeedbackMessage'
-import SplashScreen from '@components/ui/SplashScreen'
-import PageHeader from '@components/ui/PageHeader'
-
-import SettingsSidebar from '@components/settings/SettingsSidebar'
-import CompanySettingsTab from '@components/settings/CompanySettingsTab'
-import AppearanceSettingsTab from '@components/settings/AppearanceSettingsTab'
-import PermissionsSettingsTab from '@components/settings/PermissionsSettingsTab'
-import SecuritySettingsTab from '@components/settings/SecuritySettingsTab'
-
-// ✅ Hooks centralizados
-import { useSettingsHandlers } from '@hooks/handlers'
-import { useSettingsQueries } from '@hooks/queries/useSettingsQueries'
-import { useSettingsMutations } from '@hooks/mutations/useSettingsMutations'
-
+import { useUI } from '@contexts/UIContext'
 const Settings = () => {
   const { isAdmin, changePassword, logout } = useAuth()
+  const { showFeedback } = useUI()
   
   const [activeTab, setActiveTab] = useState('company')
-  const [feedback, setFeedback] = useState({ message: null, type: 'success' })
   const [localSettings, setLocalSettings] = useState(null)
 
   // ✅ Queries centralizadas
@@ -49,7 +35,6 @@ const Settings = () => {
     localSettings,
     setLocalSettings,
     setActiveTab,
-    setFeedback,
     saveMutation,
     changePassword,
     logout
@@ -104,14 +89,6 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {feedback.message && (
-          <FeedbackMessage 
-            type={feedback.type} 
-            message={feedback.message} 
-            onClose={() => setFeedback({ message: null })} 
-          />
-        )}
-
         <PageHeader
           title="Configurações"
           description="Gerencie as preferências do sistema"

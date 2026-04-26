@@ -109,7 +109,8 @@ const FormInput = ({
   focusOnShortcut = true,
   onShortcutTriggered = null,
   showShortcutHint = true,
-  shortcutEnabled = true
+  shortcutEnabled = true,
+  rightElement = null
 }) => {
   const inputRef = useRef(null)
   const [showPassword, setShowPassword] = useState(false)
@@ -360,7 +361,7 @@ const FormInput = ({
         )}
         
         {/* Botão de limpar */}
-        {showClearButton && !showPasswordButton && (
+        {showClearButton && !showPasswordButton && !rightElement && (
           <button
             type="button"
             onClick={handleClear}
@@ -370,6 +371,13 @@ const FormInput = ({
           >
             <X size={16} />
           </button>
+        )}
+        
+        {/* Elemento direito customizado */}
+        {rightElement && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10 pointer-events-auto">
+            {rightElement}
+          </div>
         )}
         
         {/* Contador de caracteres */}

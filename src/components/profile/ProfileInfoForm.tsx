@@ -1,20 +1,22 @@
 import React, { useState } from 'react'
 import { Phone, MapPin, Calendar, Hash, User, AtSign, Search } from '@lib/icons'
-import FormInput from '../forms/FormInput'
+import { useUI } from '@contexts/UIContext'
+import FormInput from '@components/forms/FormInput'
 
-const ProfileInfoForm = ({ formData, formErrors, onChange, showFeedback }) => {
+const ProfileInfoForm = ({ formData, formErrors, onChange }) => {
   const [loadingCEP, setLoadingCEP] = useState(false)
+  const { showFeedback } = useUI()
 
   const consultarCEP = async () => {
     const cep = formData.zip_code
     if (!cep) {
-      showFeedback?.('error', 'Digite um CEP')
+      showFeedback('error', 'Digite um CEP')
       return
     }
 
     const cepLimpo = cep.replace(/\D/g, '')
     if (cepLimpo.length !== 8) {
-      showFeedback?.('error', 'CEP deve ter 8 dígitos')
+      showFeedback('error', 'CEP deve ter 8 dígitos')
       return
     }
 
@@ -34,11 +36,11 @@ const ProfileInfoForm = ({ formData, formErrors, onChange, showFeedback }) => {
       onChange({ target: { name: 'city', value: data.city || '' } })
       onChange({ target: { name: 'state', value: data.state || '' } })
       
-      showFeedback?.('success', `Endereço encontrado: ${data.street}, ${data.city}/${data.state}`)
+      showFeedback('success', `Endereço encontrado: ${data.street}, ${data.city}/${data.state}`)
       
     } catch (error) {
       console.error('Erro ao consultar CEP:', error)
-      showFeedback?.('error', 'CEP não encontrado ou serviço indisponível')
+      showFeedback('error', 'CEP não encontrado ou serviço indisponível')
     } finally {
       setLoadingCEP(false)
     }
@@ -114,7 +116,7 @@ const ProfileInfoForm = ({ formData, formErrors, onChange, showFeedback }) => {
 
         <div className="space-y-4">
           {/* CEP com botão de consulta */}
-          <div className="relative">
+          <div>
             <FormInput
               label="CEP"
               name="zip_code"
@@ -122,16 +124,18 @@ const ProfileInfoForm = ({ formData, formErrors, onChange, showFeedback }) => {
               onChange={onChange}
               placeholder="12345-678"
               mask="cep"
+              rightElement={
+                <button
+                  type="button"
+                  onClick={consultarCEP}
+                  disabled={loadingCEP || !formData.zip_code}
+                  className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 p-1 rounded-lg transition-colors disabled:opacity-50"
+                  title="Consultar CEP"
+                >
+                  <Search size={14} className={loadingCEP ? 'animate-spin' : ''} />
+                </button>
+              }
             />
-            <button
-              type="button"
-              onClick={consultarCEP}
-              disabled={loadingCEP || !formData.zip_code}
-              className="absolute right-3 top-8 p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors disabled:opacity-50"
-              title="Consultar CEP"
-            >
-              <Search size={16} className={loadingCEP ? 'animate-spin' : ''} />
-            </button>
           </div>
 
           <FormInput

@@ -328,13 +328,23 @@ const FeedbackMessage = ({
   }
 
   const { icon: Icon, colors } = configs[type]
-  const { bg: bgColor, border: borderColor, text: textColor, icon: iconColor } = colors[variant]
+  const isBottomToast = position === 'absolute-bottom'
+  const toastBg = type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'
+  const { bg: bgColor, border: borderColor, text: textColor, icon: iconColor } = isBottomToast 
+    ? { 
+        bg: toastBg,
+        border: 'border-transparent',
+        text: 'text-white',
+        icon: 'text-white'
+      }
+    : colors[variant]
 
   const positionClasses = {
     static: '',
     fixed: 'fixed top-4 right-4 z-50 max-w-md',
     'fixed-bottom': 'fixed bottom-4 right-4 z-50 max-w-md',
-    'fixed-top-center': 'fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4'
+    'fixed-top-center': 'fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4',
+    'absolute-bottom': `fixed top-4 left-4 right-4 z-50 max-w-md mx-auto px-4 py-3 rounded-2xl shadow-xl flex items-center justify-between animate-in slide-in-from-right duration-300 ${toastBg}`
   }
 
   if (!message || !isVisible) return null
@@ -343,22 +353,25 @@ const FeedbackMessage = ({
     <div
       ref={messageRef}
       className={`
-        ${bgColor} border ${borderColor} rounded-lg 
+        ${isBottomToast ? '' : `${bgColor} border ${borderColor} rounded-lg`} 
         ${compact ? 'p-3' : 'p-4'} 
         flex items-start gap-3
         transform transition-all duration-300
-        ${position !== 'static' && isLeaving 
+        ${position !== 'static' && position !== 'absolute-bottom' && isLeaving 
           ? 'opacity-0 translate-x-full scale-95' 
-          : position !== 'static'
-            ? 'opacity-100 translate-x-0 scale-100'
-            : isLeaving
-              ? 'opacity-0 translate-y-2'
-              : 'opacity-100 translate-y-0'
+          : position === 'absolute-bottom' && isLeaving
+            ? 'opacity-0 translate-y-full scale-95'
+            : position !== 'static'
+              ? 'opacity-100 translate-x-0 scale-100'
+              : isLeaving
+                ? 'opacity-0 translate-y-2'
+                : 'opacity-100 translate-y-0'
         }
         ${position !== 'static' ? 'shadow-xl hover:shadow-2xl' : 'shadow-lg hover:shadow-xl'}
         ${positionClasses[position]}
         relative overflow-hidden
-        ${animate && position !== 'static' ? 'animate-in slide-in-from-right fade-in duration-300' : ''}
+        ${animate && (position === 'absolute-bottom' || position === 'fixed-bottom') ? 'animate-in slide-in-from-bottom-4 fade-in duration-300' : ''}
+        ${animate && position !== 'static' && position !== 'absolute-bottom' && position !== 'fixed-bottom' ? 'animate-in slide-in-from-right fade-in duration-300' : ''}
         ${animate && position === 'static' ? 'animate-in slide-in-from-top-2 fade-in duration-300' : ''}
         ${className}
       `}

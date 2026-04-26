@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react'
 import { Plus, ClipboardList, Package } from '@lib/icons'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@contexts/AuthContext'
+import { useUI } from '@contexts/UIContext'
 import { useSystemLogs } from '@hooks/system/useSystemLogs'
 import useMediaQuery from '@/hooks/utils/useMediaQuery'
 
@@ -27,6 +28,7 @@ import { useProductForms } from '@hooks/forms/useProductForms'
 
 const Products = () => {
   const { profile } = useAuth()
+  const { showFeedback } = useUI()
   const { logAction } = useSystemLogs()
   const navigate = useNavigate()
   const isMobile = useMediaQuery('(max-width: 768px)')
@@ -35,7 +37,6 @@ const Products = () => {
   const [viewMode] = useState('auto')
   const [searchTerm, setSearchTerm] = useState('')
   const [activeFilters, setActiveFilters] = useState({})
-  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
   
   // Estados de modais
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
@@ -96,35 +97,24 @@ const Products = () => {
   ]
 
   // Produtos filtrados
-  const filteredProducts = useMemo(() => {
-    const productsArray = Array.isArray(products) ? products : []
-    let filtered = [...productsArray]
+const filteredProducts = useMemo(() => {
+    if (!searchTerm && Object.keys(activeFilters).length === 0) return products
     
-    if (searchTerm.trim()) {
-      const search = searchTerm.toLowerCase()
-      filtered = filtered.filter(p => 
-        p.name?.toLowerCase().includes(search) || 
-        p.code?.toLowerCase().includes(search)
-      )
-    }
-    
-    if (activeFilters.category) filtered = filtered.filter(p => p.category === activeFilters.category)
-    if (activeFilters.unit) filtered = filtered.filter(p => p.unit === activeFilters.unit)
-    if (activeFilters.is_active !== undefined && activeFilters.is_active !== '') {
-      filtered = filtered.filter(p => p.is_active === (activeFilters.is_active === 'true'))
-    }
-    if (activeFilters.low_stock === 'true') {
-      filtered = filtered.filter(p => p.stock_quantity <= p.min_stock)
-    }
-    
-    return filtered
+    return products.filter(product => {
+      const matchesSearch = !searchTerm || 
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.brand?.toLowerCase().includes(searchTerm.toLowerCase())
+      
+      const matchesFilters = Object.entries(activeFilters).every(([key, value]) => {
+        if (!value) return true
+        return product[key]?.toString().toLowerCase() === value.toLowerCase()
+      })
+      
+      return matchesSearch && matchesFilters
+    })
   }, [products, searchTerm, activeFilters])
-
-  // Feedback
-  const showFeedback = (type, message) => {
-    setFeedback({ show: true, type, message })
-    setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
-  }
 
   // ✅ Mutations com callbacks
   const {
@@ -248,10 +238,6 @@ const Products = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {feedback.show && (
-          <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />
-        )}
-
         <PageHeader
           title="Gestão de Estoque"
           description={

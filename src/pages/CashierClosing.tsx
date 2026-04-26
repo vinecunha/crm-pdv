@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import { FileText, RefreshCw, Calculator, AlertCircle } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
-import FeedbackMessage from '@components/ui/FeedbackMessage'
+import { useUI } from '@contexts/UIContext'
 import Button from '@components/ui/Button'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import PageHeader from '@components/ui/PageHeader'
@@ -28,7 +28,6 @@ const CashierClosing = () => {
   // Estado
   const [dateRange, setDateRange] = useState({ start: todayStr, end: todayStr })
   const [selectedUser, setSelectedUser] = useState('all')
-  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
   const [showClosingModal, setShowClosingModal] = useState(false)
   const [showHistoryModal, setShowHistoryModal] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
@@ -50,13 +49,18 @@ const CashierClosing = () => {
   } = useCashierQueries({ dateRange, selectedUser })
 
   // ✅ Mutations
-  const { closingMutation } = useCashierMutations()
+  const { closingMutation } = useCashierMutations({
+    onSuccess: () => {
+      showFeedback('success', 'Fechamento realizado com sucesso!')
+      setShowClosingModal(false)
+      setDeclaredValues({ cash: 0, credit_card: 0, debit_card: 0, pix: 0, notes: '' })
+    },
+    onError: (error) => {
+      showFeedback('error', 'Erro ao fechar caixa: ' + error.message)
+    }
+  })
 
-  // Feedback
-  const showFeedback = (type, message) => {
-    setFeedback({ show: true, type, message })
-    setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
-  }
+  const { showFeedback } = useUI()
 
   // ✅ Handlers
   const handlers = useCashierHandlers({
@@ -100,10 +104,6 @@ const CashierClosing = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {feedback.show && (
-          <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />
-        )}
-
         <PageHeader
           title="Fechamento de Caixa"
           description={`${formatDate(dateRange.start)} - ${formatDate(dateRange.end)}`}

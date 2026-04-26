@@ -1,4 +1,6 @@
-import { useState, useCallback, ChangeEvent } from 'react'
+import { useCallback, ChangeEvent } from 'react'
+import { useFormWithSchema } from './useFormWithSchema'
+import { customerSchema } from '@/utils/schemas'
 
 // Baseado em: public.customers
 interface Customer {
@@ -42,33 +44,24 @@ interface CustomerPayload {
   status: string
 }
 
-interface FormErrors {
-  name?: string
-  email?: string
-  phone?: string
-  document?: string
-  zip_code?: string
-  [key: string]: string | undefined
-}
-
 const initialFormData: CustomerFormData = {
-  name: '', 
-  email: '', 
-  phone: '', 
-  document: '', 
+  name: '',
+  email: '',
+  phone: '',
+  document: '',
   address: '',
-  city: '', 
-  state: '', 
-  zip_code: '', 
-  birth_date: '', 
+  city: '',
+  state: '',
+  zip_code: '',
+  birth_date: '',
   status: 'active'
 }
 
 interface UseCustomerFormReturn {
   formData: CustomerFormData
   setFormData: React.Dispatch<React.SetStateAction<CustomerFormData>>
-  formErrors: FormErrors
-  setFormErrors: React.Dispatch<React.SetStateAction<FormErrors>>
+  formErrors: Record<string, string>
+  setFormErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>
   resetForm: () => void
   setFormForEditing: (customer: Customer | null) => void
   handleChange: (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void
@@ -77,17 +70,29 @@ interface UseCustomerFormReturn {
 }
 
 export const useCustomerForm = (): UseCustomerFormReturn => {
-  const [formData, setFormData] = useState<CustomerFormData>(initialFormData)
-  const [formErrors, setFormErrors] = useState<FormErrors>({})
+  const form = useFormWithSchema(customerSchema, initialFormData) as any
+  const { watch, setValue, reset, getValues } = form
+
+  const formData = watch() as CustomerFormData
+  const formErrors = (form.formState.errors || {}) as Record<string, string>
+  const setFormData = (data: CustomerFormData) => {
+    Object.entries(data).forEach(([key, value]) => setValue(key, value))
+  }
+  const setFormErrors = (errors: Record<string, string>) => {
+    Object.entries(errors).forEach(([key, value]) => {
+      if (value) {
+        form.setError(key as any, { message: value })
+      }
+    })
+  }
 
   const resetForm = useCallback(() => {
-    setFormData(initialFormData)
-    setFormErrors({})
-  }, [])
+    reset(initialFormData)
+  }, [reset])
 
   const setFormForEditing = useCallback((customer: Customer | null) => {
     if (customer) {
-      setFormData({
+      reset({
         name: customer.name || '',
         email: customer.email || '',
         phone: customer.phone || '',
@@ -102,56 +107,36 @@ export const useCustomerForm = (): UseCustomerFormReturn => {
     } else {
       resetForm()
     }
-    setFormErrors({})
-  }, [resetForm])
+  }, [reset, resetForm])
 
   const handleChange = useCallback((e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-    if (formErrors[name]) {
-      setFormErrors(prev => ({ ...prev, [name]: '' }))
-    }
-  }, [formErrors])
+    setValue(name as any, value)
+  }, [setValue])
 
-  const validate = useCallback((): boolean => {
-    const errors: FormErrors = {}
-    
-    if (!formData.name?.trim()) errors.name = 'Nome é obrigatório'
-    else if (formData.name.length < 3) errors.name = 'Nome deve ter pelo menos 3 caracteres'
-    
-    if (!formData.email?.trim()) errors.email = 'E-mail é obrigatório'
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'E-mail inválido'
-    
-    if (!formData.phone?.trim()) errors.phone = 'Telefone é obrigatório'
-    
-    if (formData.document && formData.document.replace(/\D/g, '').length < 11) {
-      errors.document = 'Documento inválido'
-    }
-    if (formData.zip_code && formData.zip_code.replace(/\D/g, '').length < 8) {
-      errors.zip_code = 'CEP inválido'
-    }
-    
-    setFormErrors(errors)
-    return Object.keys(errors).length === 0
-  }, [formData])
+  const validate = useCallback(async (): Promise<boolean> => {
+    const result = await form.validate()
+    return result.success
+  }, [form])
 
   const getCustomerPayload = useCallback((): CustomerPayload => {
+    const data = getValues()
     return {
-      name: formData.name.trim(),
-      email: formData.email.trim().toLowerCase(),
-      phone: formData.phone.replace(/\D/g, ''),
-      document: formData.document?.replace(/\D/g, '') || null,
-      address: formData.address?.trim() || null,
-      city: formData.city?.trim() || null,
-      state: formData.state?.trim() || null,
-      zip_code: formData.zip_code?.replace(/\D/g, '') || null,
-      birth_date: formData.birth_date || null,
-      status: formData.status || 'active'
+      name: data.name?.trim() || '',
+      email: data.email?.trim().toLowerCase() || '',
+      phone: data.phone?.replace(/\D/g, '') || '',
+      document: data.document?.replace(/\D/g, '') || null,
+      address: data.address?.trim() || null,
+      city: data.city?.trim() || null,
+      state: data.state?.trim() || null,
+      zip_code: data.zip_code?.replace(/\D/g, '') || null,
+      birth_date: data.birth_date || null,
+      status: data.status || 'active'
     }
-  }, [formData])
+  }, [getValues])
 
   return {
-    formData,
+    formData: formData || initialFormData,
     setFormData,
     formErrors,
     setFormErrors,

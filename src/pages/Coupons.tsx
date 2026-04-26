@@ -2,11 +2,11 @@
 import React, { useState } from 'react'
 import { Plus, RefreshCw, Ticket } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
+import { useUI } from '@contexts/UIContext'
 import useLogger from '@hooks/system/useLogger'
 import useMediaQuery from '@/hooks/utils/useMediaQuery'
 
 import Button from '@components/ui/Button'
-import FeedbackMessage from '@components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import PageHeader from '@components/ui/PageHeader'
 import DataCards from '@components/ui/DataCards'
@@ -32,8 +32,7 @@ const Coupons = () => {
   const [viewMode] = useState('auto')
   const [searchTerm, setSearchTerm] = useState('')
   const [filters, setFilters] = useState({})
-  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
-  
+
   // Estados de modais
   const [showModal, setShowModal] = useState(false)
   const [showCustomersModal, setShowCustomersModal] = useState(false)
@@ -70,11 +69,7 @@ const Coupons = () => {
     validate
   } = useCouponForm()
 
-  // Feedback
-  const showFeedback = (type, message) => {
-    setFeedback({ show: true, type, message })
-    setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
-  }
+  const { showFeedback } = useUI()
 
   // ✅ Mutations com callbacks
   const {
@@ -86,29 +81,18 @@ const Coupons = () => {
     removeCustomerMutation,
     isMutating
   } = useCouponMutations(profile, {
-    onCouponCreated: (coupon) => {
-      showFeedback('success', `Cupom ${coupon.code} criado!`)
-      setShowModal(false)
-      resetForm()
-    },
-    onCouponUpdated: (coupon) => {
-      showFeedback('success', `Cupom ${coupon.code} atualizado!`)
-      setShowModal(false)
-      resetForm()
-    },
-    onCouponDeleted: () => {
-      showFeedback('success', 'Cupom excluído!')
-      setShowDeleteConfirmModal(false)
-      setCouponToDelete(null)
-    },
-    onStatusToggled: (coupon) => {
-      showFeedback('success', `Cupom ${coupon.is_active ? 'ativado' : 'desativado'}!`)
-    },
-    onCustomerAdded: () => {
-      showFeedback('success', 'Cliente adicionado!')
-    },
-    onCustomerRemoved: () => {
-      showFeedback('success', 'Cliente removido!')
+    onSuccess: (coupon, action) => {
+      if (action === 'create') {
+        showFeedback('success', `Cupom ${coupon.code} criado!`)
+        setShowModal(false)
+        resetForm()
+      } else if (action === 'update') {
+        showFeedback('success', `Cupom ${coupon.code} atualizado!`)
+        setShowModal(false)
+        resetForm()
+      } else if (action === 'toggle') {
+        showFeedback('success', `Cupom ${coupon.is_active ? 'ativado' : 'desativado'}!`)
+      }
     },
     onError: (error) => {
       showFeedback('error', error.message)
@@ -188,14 +172,6 @@ const Coupons = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {feedback.show && (
-          <FeedbackMessage 
-            type={feedback.type} 
-            message={feedback.message} 
-            onClose={() => setFeedback({ show: false })} 
-          />
-        )}
-        
         <PageHeader
           title="Cupons de Desconto"
           description={

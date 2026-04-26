@@ -2,12 +2,12 @@
 import React, { useState, useMemo } from 'react'
 import { RefreshCw, X, RotateCcw, Database, FileText } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
+import { useUI } from '@contexts/UIContext'
 
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import DataEmptyState from '@components/ui/DataEmptyState'
 import DataCards from '@components/ui/DataCards'
 import Button from '@components/ui/Button'
-import FeedbackMessage from '@components/ui/FeedbackMessage'
 import StatCard from '@components/ui/StatCard'
 import PageHeader from '@components/ui/PageHeader'
 
@@ -33,7 +33,6 @@ const Logs = () => {
   const [selectedRecord, setSelectedRecord] = useState(null)
   const [showRestoreModal, setShowRestoreModal] = useState(false)
   const [exporting, setExporting] = useState(false)
-  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
 
   const isAdmin = profile?.role === 'admin'
   const isGerente = profile?.role === 'gerente'
@@ -64,12 +63,8 @@ const Logs = () => {
     }
   })
 
-  const showFeedback = (type, message) => {
-    setFeedback({ show: true, type, message })
-    setTimeout(() => setFeedback({ show: false }), 3000)
-  }
+  const { showFeedback } = useUI()
 
-  // ✅ Handlers
   const handlers = useLogsHandlers({
     logs,
     deletedRecords,
@@ -134,10 +129,6 @@ const Logs = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {feedback.show && (
-          <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />
-        )}
-
         <PageHeader
           title="Auditoria do Sistema"
           description={

@@ -7,8 +7,8 @@ import {
   TrendingUp, Award, Clock, Calendar, Target, Activity
 } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
+import { useUI } from '@contexts/UIContext'
 import Button from '@components/ui/Button'
-import FeedbackMessage from '@components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import { useSystemLogs } from '@hooks/system/useSystemLogs'
 import PageHeader from '@components/ui/PageHeader'
@@ -58,7 +58,6 @@ const Reports = () => {
     start: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0]
   })
-  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
   const [categoryFilter, setCategoryFilter] = useState('')
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('')
   const [isExporting, setIsExporting] = useState(false)
@@ -74,10 +73,7 @@ const Reports = () => {
     })
   }, [activeTab])
 
-  const showFeedback = (type, message) => {
-    setFeedback({ show: true, type, message })
-    setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 4000)
-  }
+  const { showFeedback } = useUI()
 
   const handleExport = async (format = 'csv') => {
     setIsExporting(true)
@@ -168,19 +164,9 @@ const Reports = () => {
     }
   ]
 
-  return (
+return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {feedback.show && (
-          <div className="mb-4">
-            <FeedbackMessage
-              type={feedback.type}
-              message={feedback.message}
-              onClose={() => setFeedback({ show: false })}
-            />
-          </div>
-        )}
-
         <PageHeader
           title="Relatórios e Análises"
           description="Visualize e analise os dados do seu negócio"

@@ -1,4 +1,21 @@
-import { useState, useCallback, ChangeEvent } from 'react'
+import { useCallback, ChangeEvent } from 'react'
+import { useFormWithSchema } from './useFormWithSchema'
+import { z } from 'zod'
+
+const couponSchema = z.object({
+  code: z.string().min(3, 'Código deve ter pelo menos 3 caracteres').transform(v => v?.toUpperCase()),
+  name: z.string().min(1, 'Nome é obrigatório'),
+  description: z.string().optional(),
+  discount_type: z.enum(['percent', 'fixed']),
+  discount_value: z.number({ invalid_type_error: 'Valor inválido' }).min(0, 'Valor não pode ser negativo'),
+  min_purchase: z.number({ invalid_type_error: 'Valor mínimo inválido' }).min(0, 'Valor não pode ser negativo').default(0),
+  max_discount: z.number({ invalid_type_error: 'Desconto máximo inválido' }).min(0, 'Valor não pode ser negativo').optional(),
+  is_global: z.boolean().default(true),
+  is_active: z.boolean().default(true),
+  valid_from: z.string().optional(),
+  valid_to: z.string().optional(),
+  usage_limit: z.number().int('Limite deve ser inteiro').min(1, 'Limite deve ser pelo menos 1').optional()
+})
 
 // Baseado em: public.coupons
 interface Coupon {
@@ -63,17 +80,17 @@ interface ValidationResult {
 }
 
 const initialFormData: CouponFormData = {
-  code: '', 
-  name: '', 
-  description: '', 
+  code: '',
+  name: '',
+  description: '',
   discount_type: 'percent',
-  discount_value: '', 
-  max_discount: '', 
+  discount_value: '',
+  max_discount: '',
   min_purchase: '0',
-  is_global: true, 
-  is_active: true, 
-  valid_from: '', 
-  valid_to: '', 
+  is_global: true,
+  is_active: true,
+  valid_from: '',
+  valid_to: '',
   usage_limit: ''
 }
 
@@ -88,15 +105,18 @@ interface UseCouponFormReturn {
 }
 
 export const useCouponForm = (): UseCouponFormReturn => {
-  const [formData, setFormData] = useState<CouponFormData>(initialFormData)
+  const form = useFormWithSchema(couponSchema, initialFormData) as any
+  const { watch, setValue, reset, getValues } = form
+
+  const formData = watch() as CouponFormData
 
   const resetForm = useCallback(() => {
-    setFormData(initialFormData)
-  }, [])
+    reset(initialFormData)
+  }, [reset])
 
   const setFormForEditing = useCallback((coupon: Coupon | null, allowedCustomers: AllowedCustomer[] = []) => {
     if (coupon) {
-      setFormData({
+      reset({
         code: coupon.code,
         name: coupon.name,
         description: coupon.description || '',
@@ -113,44 +133,42 @@ export const useCouponForm = (): UseCouponFormReturn => {
     } else {
       resetForm()
     }
-  }, [resetForm])
+  }, [reset, resetForm])
 
   const handleChange = useCallback((e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target
     const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
-    }))
-  }, [])
+    setValue(name as any, type === 'checkbox' ? checked : value)
+  }, [setValue])
 
   const getCouponPayload = useCallback((): CouponPayload => {
+    const data = getValues()
     return {
-      code: formData.code.toUpperCase(),
-      name: formData.name,
-      description: formData.description || null,
-      discount_type: formData.discount_type,
-      discount_value: parseFloat(formData.discount_value as string),
-      max_discount: formData.max_discount ? parseFloat(formData.max_discount as string) : null,
-      min_purchase: parseFloat(formData.min_purchase as string) || 0,
-      is_global: formData.is_global,
-      is_active: formData.is_active,
-      valid_from: formData.valid_from ? new Date(formData.valid_from).toISOString() : null,
-      valid_to: formData.valid_to ? new Date(formData.valid_to).toISOString() : null,
-      usage_limit: formData.usage_limit ? parseInt(formData.usage_limit as string) : null,
+      code: data.code?.toUpperCase() || '',
+      name: data.name || '',
+      description: data.description || null,
+      discount_type: data.discount_type || 'percent',
+      discount_value: parseFloat(String(data.discount_value)) || 0,
+      max_discount: data.max_discount ? parseFloat(String(data.max_discount)) : null,
+      min_purchase: parseFloat(String(data.min_purchase)) || 0,
+      is_global: data.is_global ?? true,
+      is_active: data.is_active ?? true,
+      valid_from: data.valid_from ? new Date(data.valid_from).toISOString() : null,
+      valid_to: data.valid_to ? new Date(data.valid_to).toISOString() : null,
+      usage_limit: data.usage_limit ? parseInt(String(data.usage_limit)) : null,
     }
-  }, [formData])
+  }, [getValues])
 
-  const validate = useCallback((): ValidationResult => {
-    if (!formData.code || !formData.name || !formData.discount_value || Number(formData.discount_value) <= 0) {
-      return { valid: false, error: 'Preencha todos os campos obrigatórios' }
-    }
-    return { valid: true }
-  }, [formData])
+  const validate = useCallback(async (): Promise<ValidationResult> => {
+    const result = await form.validate()
+    return result
+  }, [form])
 
   return {
-    formData,
-    setFormData,
+    formData: formData || initialFormData,
+    setFormData: (data: CouponFormData) => {
+      Object.entries(data).forEach(([key, value]) => setValue(key as any, value))
+    },
     resetForm,
     setFormForEditing,
     handleChange,
