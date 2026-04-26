@@ -1,8 +1,8 @@
 // src/components/stock-count/SessionDetailsModal.jsx
-import React from 'react'
+import React, { useMemo } from 'react'
 import { X, CheckCircle, AlertTriangle, Clock, Package, DollarSign, Calendar, User, MapPin, FileText, PackageSearch, Eye } from '@lib/icons'
 import Button from '@components/ui/Button'
-import Badge from '../Badge'
+import Badge from '@components/ui/Badge'
 import StatCard from '@components/ui/StatCard'
 import DataTable from '@components/ui/DataTable'
 import { formatCurrency, formatDateTime, formatNumber } from '@utils/formatters'
@@ -50,7 +50,7 @@ const SessionDetailsModal = ({ isOpen, onClose, session, items, isLoading, onVie
     .reduce((sum, i) => sum + (i.counted_quantity * (i.system_cost || 0)), 0) || 0
   const totalDifference = totalCountedValue - totalSystemValue
 
-  const columns = [
+  const columns = useMemo(() => [
     {
       key: 'product',
       header: 'Produto',
@@ -133,7 +133,7 @@ const SessionDetailsModal = ({ isOpen, onClose, session, items, isLoading, onVie
         </span>
       )
     }
-  ]
+  ], [])
 
   const actions = onViewItem ? [
     createAction('view', (row) => onViewItem(row), {
@@ -316,3 +316,4 @@ const SessionDetailsModal = ({ isOpen, onClose, session, items, isLoading, onVie
 }
 
 export default SessionDetailsModal
+

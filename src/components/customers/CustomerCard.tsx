@@ -14,7 +14,7 @@ import {
   User,
   FileText
 } from '@lib/icons'
-import Badge from '../Badge'
+import Badge from '@components/ui/Badge'
 import { formatDate } from '@utils/formatters'
 
 const CustomerCard = ({ 
@@ -175,3 +175,4 @@ const CustomerCard = ({
 }
 
 export default CustomerCard
+

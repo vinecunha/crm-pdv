@@ -4,17 +4,35 @@ const SIGNATURE_KEY = 'app_signature'
 const STORAGE_VERSION = '1.0'
 
 /**
- * Gera uma assinatura para os dados usando uma chave secreta
- * Em produção, use uma chave do ambiente
+ * Gera uma assinatura HMAC-SHA256 para os dados usando Web Crypto API
  */
-const generateSignature = (data) => {
+const generateSignature = async (data) => {
   try {
     const secret = import.meta.env.VITE_STORAGE_SECRET
     if (!secret) throw new Error('[secureStorage] VITE_STORAGE_SECRET não definida no .env')
-    const dataString = JSON.stringify(data) + secret + STORAGE_VERSION
-    return btoa(dataString).slice(0, 32)
+    
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    )
+    
+const signature = await crypto.subtle.sign(
+      'HMAC',
+      key,
+      new TextEncoder().encode(JSON.stringify(data) + STORAGE_VERSION)
+    )
+    
+    const sigArray = new Uint8Array(signature)
+    let binary = ''
+    for (let i = 0; i < sigArray.length; i++) {
+      binary += String.fromCharCode(sigArray[i])
+    }
+    return btoa(binary).slice(0, 32)
   } catch (error) {
-    console.error('Erro ao gerar assinatura:', error)
+    logger.error('Erro ao gerar assinatura:', error)
     return null
   }
 }
@@ -22,21 +40,21 @@ const generateSignature = (data) => {
 /**
  * Verifica se os dados são válidos (não expiraram e assinatura confere)
  */
-const isValid = (data, maxAge = 7 * 24 * 60 * 60 * 1000) => { // 7 dias default
+const isValid = async (data, maxAge = 7 * 24 * 60 * 60 * 1000) => { // 7 dias default
   if (!data || !data.signature || !data.timestamp) {
     return false
   }
   
   // Verificar idade
   if (Date.now() - data.timestamp > maxAge) {
-    console.warn('Dados expirados no storage')
+    logger.warn('Dados expirados no storage')
     return false
   }
   
   // Verificar assinatura
-  const expectedSignature = generateSignature(data.value)
+  const expectedSignature = await generateSignature(data.value)
   if (data.signature !== expectedSignature) {
-    console.warn('Assinatura inválida - dados podem ter sido adulterados')
+    logger.warn('Assinatura inválida - dados podem ter sido adulterados')
     return false
   }
   
@@ -50,11 +68,12 @@ export const secureStorage = {
   /**
    * Salva dados no storage com assinatura
    */
-  set(key, value, options = {}) {
+  async set(key, value, options = {}) {
     try {
+      const signature = await generateSignature(value)
       const data = {
         value,
-        signature: generateSignature(value),
+        signature,
         timestamp: Date.now(),
         version: STORAGE_VERSION,
         ...options.metadata
@@ -63,22 +82,23 @@ export const secureStorage = {
       localStorage.setItem(key, JSON.stringify(data))
       return true
     } catch (error) {
-      console.error('Erro ao salvar no secureStorage:', error)
+      logger.error('Erro ao salvar no secureStorage:', error)
       
       // Se o localStorage estiver cheio, tenta limpar itens antigos
       if (error.name === 'QuotaExceededError') {
         this.cleanup()
         try {
+          const signature = await generateSignature(value)
           const data = {
             value,
-            signature: generateSignature(value),
+            signature,
             timestamp: Date.now(),
             version: STORAGE_VERSION
           }
           localStorage.setItem(key, JSON.stringify(data))
           return true
         } catch (retryError) {
-          console.error('Falha ao salvar mesmo após cleanup:', retryError)
+          logger.error('Falha ao salvar mesmo após cleanup:', retryError)
           return false
         }
       }
@@ -90,21 +110,21 @@ export const secureStorage = {
   /**
    * Recupera dados do storage se forem válidos
    */
-  get(key, maxAge = 7 * 24 * 60 * 60 * 1000) {
+  async get(key, maxAge = 7 * 24 * 60 * 60 * 1000) {
     try {
       const stored = localStorage.getItem(key)
       if (!stored) return null
       
       const data = JSON.parse(stored)
       
-      if (!isValid(data, maxAge)) {
+      if (!(await isValid(data, maxAge))) {
         localStorage.removeItem(key)
         return null
       }
       
       return data.value
     } catch (error) {
-      console.error('Erro ao ler do secureStorage:', error)
+      logger.error('Erro ao ler do secureStorage:', error)
       localStorage.removeItem(key)
       return null
     }
@@ -118,7 +138,7 @@ export const secureStorage = {
       localStorage.removeItem(key)
       return true
     } catch (error) {
-      console.error('Erro ao remover do secureStorage:', error)
+      logger.error('Erro ao remover do secureStorage:', error)
       return false
     }
   },
@@ -149,7 +169,7 @@ export const secureStorage = {
       logger.log(`🧹 ${keysToRemove.length} itens removidos do storage`)
       return true
     } catch (error) {
-      console.error('Erro ao limpar secureStorage:', error)
+      logger.error('Erro ao limpar secureStorage:', error)
       return false
     }
   },
@@ -196,7 +216,7 @@ export const secureStorage = {
       
       return cleaned
     } catch (error) {
-      console.error('Erro durante cleanup:', error)
+      logger.error('Erro durante cleanup:', error)
       return 0
     }
   },
@@ -243,7 +263,7 @@ export const secureStorage = {
         quota: navigator.storage?.estimate ? 'Disponível' : 'Indisponível'
       }
     } catch (error) {
-      console.error('Erro ao obter informações do storage:', error)
+      logger.error('Erro ao obter informações do storage:', error)
       return null
     }
   },
@@ -277,27 +297,27 @@ export const useSecureStorage = (key, initialValue = null) => {
       const item = secureStorage.get(key)
       return item !== null ? item : initialValue
     } catch (error) {
-      console.error('Erro ao ler do storage:', error)
+      logger.error('Erro ao ler do storage:', error)
       return initialValue
     }
   })
   
-  const setValue = (value) => {
+  const setValue = async (value) => {
     try {
       const valueToStore = value instanceof Function ? value(storedValue) : value
       setStoredValue(valueToStore)
-      secureStorage.set(key, valueToStore)
+      await secureStorage.set(key, valueToStore)
     } catch (error) {
-      console.error('Erro ao salvar no storage:', error)
+      logger.error('Erro ao salvar no storage:', error)
     }
   }
   
-  const removeValue = () => {
+  const removeValue = async () => {
     try {
       secureStorage.remove(key)
       setStoredValue(initialValue)
     } catch (error) {
-      console.error('Erro ao remover do storage:', error)
+      logger.error('Erro ao remover do storage:', error)
     }
   }
   

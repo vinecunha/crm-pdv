@@ -71,9 +71,10 @@ interface UseCashierMutationsReturn {
   isPending: boolean
 }
 
-export const useCashierMutations = (): UseCashierMutationsReturn => {
+export const useCashierMutations = (callbacks?: { onSuccess?: (result: ClosingResult) => void; onError?: (error: Error) => void }): UseCashierMutationsReturn => {
   const queryClient = useQueryClient()
   const { logCreate } = useSystemLogs()
+  const { onSuccess, onError } = callbacks || {}
 
   const closingMutation = useMutation({
     mutationFn: ({ closingData, profile }: { closingData: ClosingData; profile: Profile | null }) =>
@@ -87,6 +88,10 @@ export const useCashierMutations = (): UseCashierMutationsReturn => {
       })
       queryClient.invalidateQueries({ queryKey: ['closing-history'] })
       queryClient.invalidateQueries({ queryKey: ['cashier-summary'] })
+      onSuccess?.(result)
+    },
+    onError: (error: Error) => {
+      onError?.(error)
     },
   })
 

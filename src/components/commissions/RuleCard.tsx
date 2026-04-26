@@ -1,6 +1,6 @@
 // src/components/commissions/RuleCard.jsx
 import React from 'react'
-import Badge from '../Badge'
+import Badge from '@components/ui/Badge'
 import Button from '@components/ui/Button'
 import { Edit3, TrendingUp } from '@lib/icons'
 import { formatCurrency } from '@utils/formatters'
@@ -127,3 +127,4 @@ const RuleCard = ({ rule, onEdit, onToggle, canEdit }) => {
 }
 
 export default RuleCard
+

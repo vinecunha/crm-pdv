@@ -4,7 +4,7 @@ import { supabase } from '@lib/supabase'
 import { useAuth } from '@contexts/AuthContext'
 import Modal from '@components/ui/Modal'
 import Button from '@components/ui/Button'
-import Badge from '../Badge'
+import Badge from '@components/ui/Badge'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import { 
   Plus, 
@@ -273,3 +273,4 @@ const UserCommissionRules = ({ isOpen, onClose, userId, userName }) => {
 }
 
 export default UserCommissionRules
+

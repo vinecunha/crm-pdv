@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { Moon, Sun, Monitor, Clock, ChevronDown, Check } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
 import { supabase } from '@lib/supabase'
+import { logger } from '@utils/logger'
 
 // Tipos
 type ThemeMode = 'manual' | 'system' | 'auto'
@@ -161,7 +162,7 @@ const ThemeSelector: React.FC = () => {
         .eq('id', profile.id)
         
     } catch (error) {
-      console.error('Erro ao salvar tema:', error)
+      logger.error('Erro ao salvar tema:', error)
     }
   }, [profile?.id])
 

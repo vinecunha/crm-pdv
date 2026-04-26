@@ -73,7 +73,7 @@ export const useNotifications = (): UseNotificationsReturn => {
             seenIds.add(notification.id)
             uniqueNotifications.push(notification)
           } else {
-            console.warn('Notificação duplicada encontrada no banco:', notification.id)
+            logger.warn('Notificação duplicada encontrada no banco:', notification.id)
           }
         }
 
@@ -84,7 +84,7 @@ export const useNotifications = (): UseNotificationsReturn => {
         setLoading(false)
       }
     } catch (error) {
-      console.error('Erro ao buscar notificações:', error)
+      logger.error('Erro ao buscar notificações:', error)
       setLoading(false)
     } finally {
       isFetchingRef.current = false
@@ -110,7 +110,7 @@ export const useNotifications = (): UseNotificationsReturn => {
         throw error
       }
     } catch (error) {
-      console.error('Erro ao marcar notificação como lida:', error)
+      logger.error('Erro ao marcar notificação como lida:', error)
     }
   }, [fetchNotifications])
 
@@ -137,7 +137,7 @@ export const useNotifications = (): UseNotificationsReturn => {
         throw error
       }
     } catch (error) {
-      console.error('Erro ao marcar todas como lidas:', error)
+      logger.error('Erro ao marcar todas como lidas:', error)
     }
   }, [notifications, profile?.id, fetchNotifications])
 

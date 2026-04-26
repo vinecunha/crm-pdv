@@ -1,4 +1,5 @@
 ﻿import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useAuth } from '@contexts/AuthContext'
 import { useSystemLogs } from '@hooks/system/useSystemLogs'
 import * as budgetService from '@services/budget/budgetService'
 
@@ -111,6 +112,7 @@ interface UseBudgetMutationsReturn {
 
 export const useBudgetMutations = (callbacks: BudgetCallbacks = {}): UseBudgetMutationsReturn => {
   const queryClient = useQueryClient()
+  const { profile } = useAuth()
   const { logCreate, logUpdate } = useSystemLogs()
 
   const {
@@ -122,7 +124,7 @@ export const useBudgetMutations = (callbacks: BudgetCallbacks = {}): UseBudgetMu
 
   const createBudget = useMutation({
     mutationFn: ({ cart, customer, coupon, discount, notes, validUntil }: CreateBudgetParams) =>
-      budgetService.createBudget({ cart, customer, coupon, discount, notes, validUntil }),
+      budgetService.createBudget(cart, customer, coupon, discount, profile, notes, validUntil),
     onSuccess: async (data: Budget) => {
       await logCreate('budget', data.id.toString(), { budget_number: data.budget_number })
       queryClient.invalidateQueries({ queryKey: ['budgets'] })
@@ -133,7 +135,7 @@ export const useBudgetMutations = (callbacks: BudgetCallbacks = {}): UseBudgetMu
 
   const updateStatus = useMutation({
     mutationFn: ({ id, status }: UpdateStatusParams) =>
-      budgetService.updateBudgetStatus(id, status),
+      budgetService.updateBudgetStatus(id, status, profile),
     onSuccess: async (data: Budget, variables: UpdateStatusParams) => {
       await logUpdate('budget', variables.id.toString(), { status: variables.status }, data)
       queryClient.invalidateQueries({ queryKey: ['budgets'] })

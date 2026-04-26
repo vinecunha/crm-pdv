@@ -12,7 +12,7 @@ import {
   User,
   Receipt
 } from '@lib/icons'
-import Badge from '../../Badge'
+import Badge from '@components/ui/Badge'
 import { formatCurrency, formatDateTime } from '@utils/formatters'
 
 const SalesListCard = ({ sale, onViewDetails, onCancel, onPrint, onReceipt, canCancel, canRequestCancellation }) => {
@@ -154,7 +154,7 @@ const SalesListCard = ({ sale, onViewDetails, onCancel, onPrint, onReceipt, canC
               e.stopPropagation()
               onCancel?.(sale)
             }}
-            className={`flex items-center justify-center gap-1 px-2 py-2 text-xs font-medium rounded-lg transition-colors ${
+            className={`w-full flex items-center justify-center gap-1 px-2 py-2 text-xs font-medium rounded-lg transition-colors ${
               canCancel 
                 ? 'text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30'
                 : 'text-orange-700 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30'
@@ -170,3 +170,4 @@ const SalesListCard = ({ sale, onViewDetails, onCancel, onPrint, onReceipt, canC
 }
 
 export default SalesListCard
+

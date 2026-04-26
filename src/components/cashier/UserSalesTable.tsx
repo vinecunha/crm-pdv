@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { User, RefreshCw } from '@lib/icons'
 import DataTable from '@components/ui/DataTable'
@@ -35,7 +35,7 @@ const UserSalesTable = ({
     retry: 2
   })
 
-  const columns = [
+  const columns = useMemo(() => [
     {
       key: 'user_name',
       header: 'Operador',
@@ -71,7 +71,7 @@ const UserSalesTable = ({
       sortable: true,
       render: (row) => <div className="text-gray-900 dark:text-white">{formatCurrency(row.media_ticket)}</div>
     }
-  ]
+  ], [])
 
   // Estados de loading e erro
   if (isLoading) {

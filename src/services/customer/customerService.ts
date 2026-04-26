@@ -1,5 +1,6 @@
 import { supabase } from '@lib/supabase'
 import { sanitizeObject } from '@utils/sanitize'
+import { logger } from '@utils/logger'
 
 /**
  * Verificar e renovar sessão se necessário
@@ -46,7 +47,7 @@ export const fetchCustomers = async () => {
     if (error) throw error
     return data || []
   } catch (error) {
-    console.error('Erro ao buscar clientes:', error)
+    logger.error('Erro ao buscar clientes:', error)
     throw error
   }
 }
@@ -68,7 +69,7 @@ export const fetchCustomerById = async (id) => {
     if (error) throw error
     return data
   } catch (error) {
-    console.error('Erro ao buscar cliente:', error)
+    logger.error('Erro ao buscar cliente:', error)
     throw error
   }
 }
@@ -91,7 +92,7 @@ export const searchCustomerByPhone = async (phone) => {
     if (error) throw error
     return data
   } catch (error) {
-    console.error('Erro ao buscar cliente por telefone:', error)
+    logger.error('Erro ao buscar cliente por telefone:', error)
     throw error
   }
 }
@@ -167,7 +168,7 @@ export const createCustomer = async (customerData) => {
       .single()
     
     if (error) {
-      console.error('Erro Supabase ao criar cliente:', error)
+      logger.error('Erro Supabase ao criar cliente:', error)
       
       if (error.code === '23505') {
         if (error.message.includes('email')) {
@@ -188,7 +189,7 @@ export const createCustomer = async (customerData) => {
     
     return data
   } catch (error) {
-    console.error('Erro ao criar cliente:', error)
+    logger.error('Erro ao criar cliente:', error)
     throw error
   }
 }
@@ -258,7 +259,7 @@ export const updateCustomer = async (id, customerData) => {
       .single()
     
     if (error) {
-      console.error('Erro Supabase ao atualizar cliente:', error)
+      logger.error('Erro Supabase ao atualizar cliente:', error)
       
       if (error.code === '23505') {
         throw new Error('Email ou telefone já cadastrado para outro cliente')
@@ -269,7 +270,7 @@ export const updateCustomer = async (id, customerData) => {
     
     return data
   } catch (error) {
-    console.error('Erro ao atualizar cliente:', error)
+    logger.error('Erro ao atualizar cliente:', error)
     throw error
   }
 }
@@ -294,7 +295,7 @@ export const deleteCustomer = async (id) => {
     if (error) throw error
     return id
   } catch (error) {
-    console.error('Erro ao excluir cliente:', error)
+    logger.error('Erro ao excluir cliente:', error)
     throw error
   }
 }
@@ -319,7 +320,7 @@ export const updateCustomerStatus = async (id, status) => {
     if (error) throw error
     return data
   } catch (error) {
-    console.error('Erro ao atualizar status:', error)
+    logger.error('Erro ao atualizar status:', error)
     throw error
   }
 }
@@ -347,7 +348,7 @@ export const fetchCustomerStats = async () => {
     
     return stats
   } catch (error) {
-    console.error('Erro ao buscar estatísticas:', error)
+    logger.error('Erro ao buscar estatísticas:', error)
     throw error
   }
 }

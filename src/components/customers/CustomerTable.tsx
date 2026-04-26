@@ -19,10 +19,12 @@ import {
   Users as UsersIcon,
   Cake,
   Crown,
-  AlertCircle
+  AlertCircle,
+  CheckCircle,
+  XCircle
 } from '@lib/icons'
 import { useTableStrategy } from '@hooks/utils/useTableStrategy'
-import Badge from '../Badge'
+import Badge from '@components/ui/Badge'
 import { formatCurrency, formatDate } from '@utils/formatters'
 
 // ✅ MAPEAMENTO DE LABELS (mantido)
@@ -142,8 +144,8 @@ const CustomerTable = ({
   // Status badge
   const getStatusBadge = useCallback((status) => {
     return status === 'active' 
-      ? <Badge variant="success">Ativo</Badge> 
-      : <Badge variant="danger">Inativo</Badge>
+      ? <Badge variant="success"><CheckCircle size={10} />Ativo</Badge> 
+      : <Badge variant="danger"><XCircle size={10} />Inativo</Badge>
   }, [])
 
   // RFV Badge
@@ -564,3 +566,4 @@ const CustomerTable = ({
 }
 
 export default CustomerTable
+

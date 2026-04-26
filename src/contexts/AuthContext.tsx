@@ -113,7 +113,7 @@ export function AuthProvider({ children }) {
         canEditCustomers: true, canCommunicateWithCustomers: true, canViewCoupons: true,
         canCreateCoupons: true, canEditCoupons: true, canViewCashier: true,
         canCloseCashier: true, canViewReports: true, canExportReports: true,
-        canViewUsers: false, canViewLogs: true, canViewSettings: false, CanViewTasks: true
+        canViewUsers: false, canViewLogs: true, canViewSettings: false, canViewTasks: true
       },
       operador: {
         roleName: 'Operador',
@@ -125,7 +125,7 @@ export function AuthProvider({ children }) {
         canEditCustomers: false, canCommunicateWithCustomers: false, canViewCoupons: false,
         canCreateCoupons: false, canEditCoupons: false, canViewCashier: false,
         canCloseCashier: false, canViewReports: false, canExportReports: false,
-        canViewUsers:0, canViewLogs: false, canViewSettings: false, CanViewTasks: true
+        canViewUsers: false, canViewLogs: false, canViewSettings: false, canViewTasks: true
       }
     }
     return permissions[role] || permissions.operador
@@ -166,7 +166,7 @@ export function AuthProvider({ children }) {
           logger.warn('⚠️ Usuário com status não ativo:', profileData.status)
         }
         
-        secureStorage.set('profile', profileData)
+        await secureStorage.set('profile', profileData)
         return profileData
       }
       return null
@@ -183,8 +183,8 @@ export function AuthProvider({ children }) {
     
     if (jwtProfile) {
       setProfile(jwtProfile)
-      secureStorage.set('profile', jwtProfile)
-      secureStorage.set('user_role', jwtProfile.role)
+      await secureStorage.set('profile', jwtProfile)
+      await secureStorage.set('user_role', jwtProfile.role)
     }
     
     if (forceDBFetch) {
@@ -192,7 +192,7 @@ export function AuthProvider({ children }) {
       if (dbProfile) {
         const mergedProfile = { ...jwtProfile, ...dbProfile }
         setProfile(mergedProfile)
-        secureStorage.set('profile', mergedProfile)
+        await secureStorage.set('profile', mergedProfile)
         return mergedProfile
       }
     }
@@ -200,9 +200,9 @@ export function AuthProvider({ children }) {
     return jwtProfile
   }, [buildProfileFromJWT, fetchFullProfileFromDB])
 
-  const checkLoginRateLimit = useCallback(() => {
+  const checkLoginRateLimit = useCallback(async () => {
     try {
-      const stored = secureStorage.get(LOGIN_ATTEMPTS_KEY)
+      const stored = await secureStorage.get(LOGIN_ATTEMPTS_KEY)
       if (!stored) return { blocked: false, remaining: MAX_LOGIN_ATTEMPTS }
       
       const { attempts, blockedUntil } = stored
@@ -230,11 +230,11 @@ export function AuthProvider({ children }) {
         return
       }
       
-      const stored = secureStorage.get(LOGIN_ATTEMPTS_KEY)
+      const stored = await secureStorage.get(LOGIN_ATTEMPTS_KEY)
       const attempts = (stored?.attempts || 0) + 1
       
       if (attempts >= MAX_LOGIN_ATTEMPTS) {
-        secureStorage.set(LOGIN_ATTEMPTS_KEY, { attempts, blockedUntil: Date.now() + LOGIN_BLOCK_DURATION })
+        await secureStorage.set(LOGIN_ATTEMPTS_KEY, { attempts, blockedUntil: Date.now() + LOGIN_BLOCK_DURATION })
         
         if (email) {
           try {
@@ -247,7 +247,7 @@ export function AuthProvider({ children }) {
           }
         }
       } else {
-        secureStorage.set(LOGIN_ATTEMPTS_KEY, { attempts, blockedUntil: null })
+        await secureStorage.set(LOGIN_ATTEMPTS_KEY, { attempts, blockedUntil: null })
       }
     } catch (error) {
       logger.error('Erro ao registrar tentativa de login:', error)
@@ -426,7 +426,7 @@ export function AuthProvider({ children }) {
         
         if (!profileError && freshProfile) {
           setProfile(freshProfile)
-          secureStorage.set('profile', freshProfile)
+          await secureStorage.set('profile', freshProfile)
         }
       }
     } catch (error) {
@@ -445,7 +445,7 @@ export function AuthProvider({ children }) {
 
     const initializeAuth = async () => {
       try {
-        const cachedProfile = secureStorage.get('profile')
+        const cachedProfile = await secureStorage.get('profile')
         if (cachedProfile) setProfile(cachedProfile)
         
         const { data: { session }, error } = await supabase.auth.getSession()

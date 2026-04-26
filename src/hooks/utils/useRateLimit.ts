@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { supabase } from '@lib/supabase'
+import { logger } from '@utils/logger'
 
 interface RateLimitData {
   isBlocked: boolean
@@ -35,7 +36,7 @@ export const useRateLimit = (): UseRateLimitReturn => {
       
       return data
     } catch (error) {
-      console.error('Erro ao verificar rate limit:', error)
+      logger.error('Erro ao verificar rate limit:', error)
     }
   }, [])
 
@@ -65,7 +66,7 @@ export const useRateLimit = (): UseRateLimitReturn => {
 
       return data
     } catch (error) {
-      console.error('Erro ao registrar tentativa:', error)
+      logger.error('Erro ao registrar tentativa:', error)
     } finally {
       setLoading(false)
     }

@@ -1,11 +1,11 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Unlock, Clock, CheckCircle } from '@lib/icons'
 import DataTable from '@components/ui/DataTable'
-import Badge from '../Badge'
+import Badge from '@components/ui/Badge'
 import { formatDateTime } from '@utils/formatters'
 
 const UnlockTable = ({ users, onUnlock }) => {
-  const columns = [
+  const columns = useMemo(() => [
     {
       key: 'email',
       header: 'Usuário',
@@ -68,7 +68,7 @@ const UnlockTable = ({ users, onUnlock }) => {
         <span className="text-sm text-gray-600 dark:text-gray-400">{formatDateTime(row.last_attempt)}</span>
       )
     }
-  ]
+  ], [])
 
   const actions = [
     {
@@ -97,3 +97,4 @@ const UnlockTable = ({ users, onUnlock }) => {
 }
 
 export default UnlockTable
+

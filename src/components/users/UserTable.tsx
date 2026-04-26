@@ -19,7 +19,7 @@ import {
 } from '@lib/icons'
 import { useTableStrategy } from '@hooks/utils/useTableStrategy'
 import UserRoleBadge from '@components/users/UserRoleBadge'
-import Badge from '../Badge'
+import Badge from '@components/ui/Badge'
 import { formatDate } from '@utils/formatters'
 import { createAction } from '@utils/actions'
 
@@ -437,3 +437,4 @@ const StatusDropdown = ({ user, onClose, onUpdateStatus, onResetPassword, onUnlo
 }
 
 export default UserTable
+

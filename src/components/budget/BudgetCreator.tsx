@@ -2,8 +2,8 @@ import React from 'react'
 import { FileText, User, Ticket } from '@lib/icons'
 import { formatCurrency } from '@utils/formatters'
 import Button from '@components/ui/Button'
-import ProductGrid from '../sales/pdv/ProductGrid'
-import CartSummary from '../sales/pdv/CartSummary'
+import ProductGrid from '@components/sales/pdv/ProductGrid'
+import CartSummary from '@components/sales/pdv/CartSummary'
 
 const BudgetCreator = ({
   products, loading, cart, searchTerm, setSearchTerm,

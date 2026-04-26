@@ -43,7 +43,7 @@ async function fetchTopProductsByRole(userId, userRole, startDate, endDate) {
     const { data: items, error } = await itemsQuery
     
     if (error) {
-      console.error('❌ Erro ao buscar items:', error)
+      logger.error('❌ Erro ao buscar items:', error)
       throw error
     }
     
@@ -82,7 +82,7 @@ async function fetchTopProductsByRole(userId, userRole, startDate, endDate) {
     
     return result
   } catch (error) {
-    console.error('❌ Erro em fetchTopProductsByRole:', error)
+    logger.error('❌ Erro em fetchTopProductsByRole:', error)
     return []
   }
 }
@@ -117,7 +117,7 @@ async function fetchTeamData(userId, userRole) {
     const { data: members, error: membersError } = await membersQuery
     
     if (membersError) {
-      console.error('❌ Erro ao buscar membros:', membersError)
+      logger.error('❌ Erro ao buscar membros:', membersError)
       throw membersError
     }
     
@@ -165,7 +165,7 @@ async function fetchTeamData(userId, userRole) {
     
     return result
   } catch (error) {
-    console.error('❌ Erro em fetchTeamData:', error)
+    logger.error('❌ Erro em fetchTeamData:', error)
     return []
   }
 }

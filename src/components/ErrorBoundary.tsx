@@ -26,7 +26,7 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     this.setState({ errorInfo })
-    console.error('ErrorBoundary capturou um erro:', error, errorInfo)
+    logger.error('ErrorBoundary capturou um erro:', error, errorInfo)
     this.logErrorToSupabase(error, errorInfo)
   }
 
@@ -68,7 +68,7 @@ class ErrorBoundary extends React.Component {
       
       logger.log('Erro registrado no Supabase')
     } catch (logError) {
-      console.error('Erro ao registrar erro no Supabase:', logError)
+      logger.error('Erro ao registrar erro no Supabase:', logError)
     }
   }
 

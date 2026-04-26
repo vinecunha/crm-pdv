@@ -10,9 +10,7 @@ const USE_TEST_RPC = import.meta.env.VITE_USE_TEST_RPC === 'true'
 
 // 🛡️ Validação de segurança para produção
 if (import.meta.env.PROD && USE_TEST_RPC) {
-  console.error('🚨 ERRO FATAL: VITE_USE_TEST_RPC ativado em produção!')
-  console.error('⚠️ Isso pode causar uso incorreto da RPC de teste em ambiente real')
-  // Opcional: throw new Error('Configuração inválida para ambiente de produção')
+  logger.error('🚨 ERRO FATAL: VITE_USE_TEST_RPC ativado em produção!')
 }
 
 // 📝 Função segura para obter o nome da RPC (decisão em runtime)
@@ -31,20 +29,12 @@ const getRPCName = () => {
   return 'create_sale'
 }
 
-console.log('🔥 saleService inicializado:', { 
-  mode: import.meta.env.MODE,
-  isProd: import.meta.env.PROD,
-  isDev: import.meta.env.DEV,
-  USE_TEST_RPC, 
-  currentRPC: getRPCName()
-})
-
 /**
  * Buscar produtos ativos com estoque
  */
 export const fetchProducts = async () => {
-  console.log('🔥 fetchProducts chamado')
-  
+  logger.log('🔥 fetchProducts chamado')
+
   const { data, error } = await supabase
     .from('products')
     .select('*')
@@ -52,10 +42,10 @@ export const fetchProducts = async () => {
     .gt('stock_quantity', 0)
     .order('name')
   
-  console.log('📦 fetchProducts resultado:', { data, error })
+  logger.log('📦 fetchProducts resultado:', { data, error })
   
   if (error) {
-    console.error('❌ Erro fetchProducts:', error)
+    logger.error('❌ Erro fetchProducts:', error)
     throw error
   }
   
@@ -67,12 +57,12 @@ export const fetchProducts = async () => {
  */
 export const fetchAvailableCoupons = async (customerId) => {
   if (!customerId) {
-    console.log('❌ fetchAvailableCoupons: customerId não fornecido')
+    logger.log('❌ fetchAvailableCoupons: customerId não fornecido')
     return []
   }
   
   const today = new Date().toISOString()
-  console.log('🔍 Buscando cupons disponíveis para:', { customerId, today })
+  logger.log('🔍 Buscando cupons disponíveis para:', { customerId, today })
   
   try {
     const [globalResult, allowedResult] = await Promise.all([
@@ -93,11 +83,11 @@ export const fetchAvailableCoupons = async (customerId) => {
     ])
     
     if (globalResult.error) {
-      console.error('❌ Erro ao buscar cupons globais:', globalResult.error)
+      logger.error('❌ Erro ao buscar cupons globais:', globalResult.error)
     }
     
     if (allowedResult.error) {
-      console.error('❌ Erro ao buscar permissões de cupons:', allowedResult.error)
+      logger.error('❌ Erro ao buscar permissões de cupons:', allowedResult.error)
     }
     
     let restricted = []
@@ -113,7 +103,7 @@ export const fetchAvailableCoupons = async (customerId) => {
         .or(`valid_to.is.null,valid_to.gte.${today}`)
       
       if (error) {
-        console.error('❌ Erro ao buscar cupons específicos:', error)
+        logger.error('❌ Erro ao buscar cupons específicos:', error)
       } else {
         restricted = data || []
       }
@@ -121,7 +111,7 @@ export const fetchAvailableCoupons = async (customerId) => {
     
     const allCoupons = [...(globalResult.data || []), ...restricted]
     
-    console.log(`✅ ${allCoupons.length} cupons encontrados:`, {
+    logger.log(`✅ ${allCoupons.length} cupons encontrados:`, {
       globais: globalResult.data?.length || 0,
       especificos: restricted.length
     })
@@ -129,7 +119,7 @@ export const fetchAvailableCoupons = async (customerId) => {
     return allCoupons
     
   } catch (error) {
-    console.error('❌ Erro inesperado em fetchAvailableCoupons:', error)
+    logger.error('❌ Erro inesperado em fetchAvailableCoupons:', error)
     return []
   }
 }
@@ -229,11 +219,11 @@ export const createSale = async (cart, customer, coupon, discount, paymentMethod
     // 🎯 Decisão da RPC no momento da chamada
     const rpcName = getRPCName()
     
-    console.log('\n=== SALESERVICE - DADOS RECEBIDOS ===')
-    console.log('customer?.id:', customer?.id)
-    console.log('profile?.id:', profile?.id)
-    console.log('RPC_NAME:', rpcName)
-    console.log('Ambiente:', import.meta.env.MODE)
+    logger.log('\n=== SALESERVICE - DADOS RECEBIDOS ===')
+    logger.log('customer?.id:', customer?.id)
+    logger.log('profile?.id:', profile?.id)
+    logger.log('RPC_NAME:', rpcName)
+    logger.log('Ambiente:', import.meta.env.MODE)
     
     const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
     const total = subtotal - discount
@@ -254,13 +244,13 @@ export const createSale = async (cart, customer, coupon, discount, paymentMethod
       p_notes: null
     }
     
-    console.log('rpcParams:', JSON.stringify(rpcParams, null, 2))
-    console.log('=====================================\n')
+    logger.log('rpcParams:', JSON.stringify(rpcParams, null, 2))
+    logger.log('=====================================\n')
     
     const { data, error } = await supabase.rpc(rpcName, rpcParams)
     
-    console.log('RPC data:', data)
-    console.log('RPC error:', error)
+    logger.log('RPC data:', data)
+    logger.log('RPC error:', error)
       
     if (error) {
       logger.error('❌ Erro na RPC:', error)

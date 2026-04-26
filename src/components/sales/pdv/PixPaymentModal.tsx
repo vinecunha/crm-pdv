@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { Copy, CheckCircle, Clock, X, RefreshCw, AlertCircle, ShieldCheck } from '@lib/icons'
-import Button from '../../ui/Button'
-import Modal from '../../ui/Modal'
+import Button from '@components/ui/Button'
+import Modal from '@components/ui/Modal'
 import { formatCurrency } from '@utils/formatters'
 import { supabase } from '@lib/supabase'
 

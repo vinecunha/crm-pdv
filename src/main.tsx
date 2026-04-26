@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'  
 import { perfMonitor } from '@lib/performance'
-import { logger } from '../src/utils/logger' 
+import { logger } from '@utils/logger' 
 
 perfMonitor.measurePageLoad()
 perfMonitor.measureFirstInputDelay()

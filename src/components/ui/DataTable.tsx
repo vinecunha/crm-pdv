@@ -28,6 +28,7 @@ import {
   Eye,
   Cake
 } from '@lib/icons'
+import { logger } from '@utils/logger'
 
 // ===== CONSTANTES (mantidas iguais) =====
 const DEFAULT_ACTION_LABELS = {
@@ -210,7 +211,7 @@ const ExportButton = memo(({ data, columns, filename = "dados.csv" }) => {
       link.click()
       URL.revokeObjectURL(link.href)
     } catch (error) {
-      console.error('Erro ao exportar:', error)
+      logger.error('Erro ao exportar:', error)
     } finally {
       setTimeout(() => setExporting(false), 500)
     }

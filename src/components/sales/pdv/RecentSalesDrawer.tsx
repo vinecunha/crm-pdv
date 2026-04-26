@@ -1,9 +1,9 @@
-Ôªøimport React, { useState } from 'react'
+import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { History, X, Printer, Eye } from '@lib/icons'
 import { formatCurrency, formatDate } from '@utils/formatters'
-import Badge from '../../Badge'
-import Button from '../../ui/Button'
+import Badge from '@components/ui/Badge'
+import Button from '@components/ui/Button'
 import * as saleService from '@services/sale/saleService'
 
 const RecentSalesDrawer = () => {
@@ -18,7 +18,7 @@ const RecentSalesDrawer = () => {
   
   const getStatusBadge = (status) => {
     const configs = {
-      completed: { label: 'Conclu√≠da', variant: 'success' },
+      completed: { label: 'ConcluÌda', variant: 'success' },
       pending: { label: 'Pendente', variant: 'warning' },
       cancelled: { label: 'Cancelada', variant: 'danger' }
     }
@@ -28,7 +28,7 @@ const RecentSalesDrawer = () => {
   
   return (
     <>
-      {/* Bot√£o de abrir */}
+      {/* Bot„o de abrir */}
       <button
         onClick={() => setIsOpen(true)}
         className="fixed right-0 top-1/3 -translate-y-1/2 bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-l-lg shadow-lg z-30 transition-colors"
@@ -51,7 +51,7 @@ const RecentSalesDrawer = () => {
             onClick={() => setIsOpen(false)}
           />
           
-          {/* Conte√∫do */}
+          {/* Conte˙do */}
           <div className="fixed right-0 top-0 bottom-0 w-96 bg-white dark:bg-gray-900 shadow-2xl z-50 flex flex-col">
             {/* Header */}
             <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
@@ -85,7 +85,7 @@ const RecentSalesDrawer = () => {
                           #{sale.sale_number}
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {sale.customer_name || 'Cliente n√£o identificado'}
+                          {sale.customer_name || 'Cliente n„o identificado'}
                         </p>
                       </div>
                       {getStatusBadge(sale.status)}
@@ -141,3 +141,4 @@ const RecentSalesDrawer = () => {
 }
 
 export default RecentSalesDrawer
+

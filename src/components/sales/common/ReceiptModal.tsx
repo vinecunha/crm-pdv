@@ -49,7 +49,7 @@ const ReceiptModal = ({ isOpen, onClose, sale, customer, cart, items = [], payme
       })
     }
     
-    console.warn('❌ NENHUM ITEM ENCONTRADO!')
+    logger.warn('❌ NENHUM ITEM ENCONTRADO!')
     return []
   }
 

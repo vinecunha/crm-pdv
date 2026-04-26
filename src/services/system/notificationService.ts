@@ -1,4 +1,5 @@
 import { supabase } from '@lib/supabase'
+import { logger } from '@utils/logger'
 
 /**
  * Criar notificação para um usuário
@@ -32,7 +33,7 @@ export const createNotification = async ({
     if (error) throw error
     return data
   } catch (error) {
-    console.error('Erro ao criar notificação:', error)
+    logger.error('Erro ao criar notificação:', error)
     throw error
   }
 }

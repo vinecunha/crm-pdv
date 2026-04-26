@@ -16,6 +16,7 @@ import {
 } from '@lib/icons'
 import { formatCurrency, formatNumber } from '@utils/formatters'
 import type { ComponentType } from 'react'
+import { logger } from '@utils/logger'
 
 // Tipos
 interface StatItem {
@@ -89,7 +90,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
     try {
       await onRefresh()
     } catch (error) {
-      console.error('Erro ao atualizar dashboard:', error)
+      logger.error('Erro ao atualizar dashboard:', error)
     } finally {
       // Pequeno delay para feedback visual
       setTimeout(() => {

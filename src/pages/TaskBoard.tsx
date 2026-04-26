@@ -15,6 +15,7 @@ import TaskHistoryModal from '@components/tasks/TaskHistoryModal'
 import { useTasksQuery } from '@hooks/tasks/useTasksQuery'
 import { useTasksRealtime } from '@hooks/tasks/useTasksRealtime'
 import { useTaskMutations } from '@hooks/mutations'
+import { logger } from '@utils/logger'
 
 const TaskBoard = () => {
   const { profile } = useAuth()
@@ -62,7 +63,7 @@ const TaskBoard = () => {
       if (error) throw error
       setTasks(data || [])
     } catch (error) {
-      console.error('Erro ao buscar tarefas:', error)
+      logger.error('Erro ao buscar tarefas:', error)
       showFeedback('error', 'Erro ao carregar tarefas', error.message)
     } finally {
       setLoading(false)

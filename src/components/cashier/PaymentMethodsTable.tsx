@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Banknote, CreditCard, QrCode, DollarSign } from '@lib/icons' // ✅ Corrigido o import
 import DataTable from '@components/ui/DataTable'
@@ -26,7 +26,7 @@ const PaymentMethodsTable = ({ initialData, enabled = true }) => {
     retry: 2
   })
 
-  const columns = [
+  const columns = useMemo(() => [
     {
       key: 'payment_method',
       header: 'Forma de Pagamento',
@@ -52,7 +52,7 @@ const PaymentMethodsTable = ({ initialData, enabled = true }) => {
       header: 'Valor Total',
       render: (row) => <div className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(row.total)}</div>
     }
-  ]
+  ], [])
 
   // Estados de loading e erro
   if (isLoading) {

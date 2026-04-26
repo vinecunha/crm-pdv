@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Settings, Save, X, AlertCircle } from '@lib/icons'
 import Modal from '@components/ui/Modal'
 import Button from '@components/ui/Button'
-import FormInput from '../forms/FormInput'
+import FormInput from '@components/forms/FormInput'
 
 const GoalSettings = ({ 
   isOpen, 

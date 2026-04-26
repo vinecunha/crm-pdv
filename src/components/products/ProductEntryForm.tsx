@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { FileText, Building, Calendar, Box, DollarSign, Search } from '@lib/icons'
-import FormInput from '../forms/FormInput'
+import FormInput from '@components/forms/FormInput'
 import Button from '@components/ui/Button'
+import { logger } from '@utils/logger'
 
 const ProductEntryForm = ({ 
   formData, 
@@ -46,7 +47,7 @@ const ProductEntryForm = ({
       showFeedback?.('success', `Fornecedor: ${nomeFornecedor}`)
       
     } catch (error) {
-      console.error('Erro ao consultar CNPJ:', error)
+      logger.error('Erro ao consultar CNPJ:', error)
       showFeedback?.('error', 'CNPJ não encontrado ou serviço indisponível')
     } finally {
       setLoadingCNPJ(false)

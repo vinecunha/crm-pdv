@@ -14,6 +14,7 @@ import { useSystemLogs } from '@hooks/system/useSystemLogs'
 import PageHeader from '@components/ui/PageHeader'
 import TabButton from '@components/reports/TabButton'
 import DateRangeFilter from '@components/reports/DateRangeFilter'
+import { logger } from '@utils/logger'
 
 const SalesReport = lazy(() => import('../components/reports/SalesReport'))
 const OperatorPerformance = lazy(() => import('../components/reports/OperatorPerformance'))
@@ -96,7 +97,7 @@ const Reports = () => {
       }, 1000)
       
     } catch (error) {
-      console.error('Erro ao exportar:', error)
+      logger.error('Erro ao exportar:', error)
       showFeedback('error', 'Erro ao exportar relatório')
       setIsExporting(false)
     }
@@ -110,7 +111,7 @@ const Reports = () => {
       await queryClient.invalidateQueries({ queryKey: ['report', activeTab] })
       showFeedback('success', 'Dados atualizados com sucesso!')
     } catch (error) {
-      console.error('Erro ao atualizar:', error)
+      logger.error('Erro ao atualizar:', error)
       showFeedback('error', 'Erro ao atualizar dados')
     } finally {
       setIsRefreshing(false)

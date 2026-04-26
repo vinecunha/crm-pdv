@@ -1,6 +1,6 @@
 import React from 'react'
 import { Package, Search } from '@lib/icons'
-import LazyImage from '../../ui/LazyImage'
+import LazyImage from '@components/ui/LazyImage'
 import { formatCurrency } from '@utils/formatters'
 
 const ProductGrid = ({ 
@@ -11,27 +11,36 @@ const ProductGrid = ({
   setSelectedCategory, 
   categories, 
   onAddToCart,
-  searchInputRef 
+  searchInputRef,
+  onSearchSubmit
 }) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && onSearchSubmit) {
+      e.preventDefault()
+      onSearchSubmit()
+    }
+  }
+
   return (
     <>
-      <div className="bg-white rounded-lg shadow-sm p-4 mb-4 dark:bg-gray-900 dark:shadow-gray-900/50">
-        <div className="flex flex-col sm:flex-row gap-3">
+      <div className="bg-white rounded-lg shadow-sm p-3 mb-3 sm:p-4 sm:mb-4 dark:bg-gray-900 dark:shadow-gray-900/50">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" size={16} />
             <input
               ref={searchInputRef}
               type="text"
-              placeholder="Buscar produto por nome ou código..."
+              placeholder="Digite o código..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-blue-400"
+              onKeyDown={handleKeyDown}
+              className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-blue-400"
             />
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1">
             <button
               onClick={() => setSelectedCategory('all')}
-              className={`px-3 py-2 rounded-lg whitespace-nowrap transition-colors ${
+              className={`px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg whitespace-nowrap text-xs sm:text-sm transition-colors ${
                 selectedCategory === 'all'
                   ? 'bg-blue-600 text-white dark:bg-blue-500'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-600'
@@ -43,7 +52,7 @@ const ProductGrid = ({
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-2 rounded-lg whitespace-nowrap transition-colors ${
+                className={`px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg whitespace-nowrap text-xs sm:text-sm transition-colors ${
                   selectedCategory === cat
                     ? 'bg-blue-600 text-white dark:bg-blue-500'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-600'
@@ -56,7 +65,7 @@ const ProductGrid = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3 max-h-[calc(100vh-250px)] overflow-y-auto">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-3 pb-24 sm:pb-0 max-h-[calc(100vh-280px)] sm:max-h-[calc(100vh-250px)] lg:max-h-[calc(100vh-250px)] overflow-y-auto">
         {products.map(product => (
           <button
             key={product.id}

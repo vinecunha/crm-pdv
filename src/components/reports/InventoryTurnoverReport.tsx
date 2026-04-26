@@ -86,7 +86,7 @@ const InventoryTurnoverReport = ({ dateRange, customDateRange }) => {
   const highTurnover = turnoverData.items.filter(p => p.status === 'high').length
 
   // Colunas para o DataTable
-  const columns = [
+  const columns = useMemo(() => [
     {
       key: 'name',
       header: 'Produto',
@@ -151,7 +151,7 @@ const InventoryTurnoverReport = ({ dateRange, customDateRange }) => {
         </span>
       )
     }
-  ]
+  ], [])
 
   return (
     <div className="space-y-6">

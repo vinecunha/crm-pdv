@@ -1,5 +1,6 @@
 import React from 'react'
 import { AlertCircle, RefreshCw, ChevronDown, ChevronUp, Copy, Check, Bug } from '@lib/icons'
+import { logger } from '@utils/logger'
 
 class SectionErrorBoundary extends React.Component {
   constructor(props) {
@@ -19,7 +20,7 @@ class SectionErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     this.setState({ errorInfo })
-    console.error('Erro na seção:', error, errorInfo)
+    logger.error('Erro na seção:', error, errorInfo)
     
     if (this.props.onError) {
       this.props.onError(error, errorInfo)

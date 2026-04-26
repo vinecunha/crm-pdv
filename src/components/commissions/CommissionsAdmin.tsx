@@ -1,5 +1,5 @@
 // src/pages/CommissionsAdmin.jsx
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@lib/supabase'
 import { useAuth } from '@contexts/AuthContext'
@@ -250,7 +250,7 @@ const CommissionsAdmin = () => {
     }
   })
   
-  const columns = [
+const columns = useMemo(() => [
     {
       key: 'user',
       header: 'Vendedor',
@@ -267,18 +267,14 @@ const CommissionsAdmin = () => {
     },
     {
       key: 'count',
-      header: 'Qtd. Vendas',
-      render: (row) => (
-        <span className="font-medium text-gray-900 dark:text-white">
-          {row.count} {row.count === 1 ? 'venda' : 'vendas'}
-        </span>
-      )
+      header: 'Comissões',
+      render: (row) => row.count
     },
     {
       key: 'totalAmount',
-      header: 'Total a Pagar',
+      header: 'Total',
       render: (row) => (
-        <span className="font-semibold text-green-600 dark:text-green-400">
+        <span className="font-medium text-green-600 dark:text-green-400">
           {formatCurrency(row.totalAmount)}
         </span>
       )
@@ -326,7 +322,7 @@ const CommissionsAdmin = () => {
         </div>
       )
     }
-  ]
+  ], [canMarkAsPaid])
   
   const headerActions = [
     ...(canEdit ? [{

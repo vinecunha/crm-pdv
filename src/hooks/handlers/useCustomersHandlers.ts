@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@lib/supabase'
 import { useSystemLogs } from '@hooks/system/useSystemLogs'
+import { logger } from '@utils/logger'
 
 // Baseado em: public.customers
 interface Customer {
@@ -305,7 +306,7 @@ export const useCustomersHandlers = ({
       showFeedback('success', `🎉 Campanha de aniversário enviada para ${selectedCustomer.name}!`)
       
     } catch (error) {
-      console.error('Erro ao enviar campanha de aniversário:', error)
+      logger.error('Erro ao enviar campanha de aniversário:', error)
       showFeedback('error', 'Erro ao enviar campanha: ' + (error as Error).message)
       await logError('customer', error as Error, { action: 'send_birthday_campaign' })
     } finally {
@@ -370,7 +371,7 @@ export const useCustomersHandlers = ({
       showFeedback('success', `✅ Campanha enviada para ${selectedCustomer.name}!`)
       
     } catch (error) {
-      console.error('Erro ao enviar campanha:', error)
+      logger.error('Erro ao enviar campanha:', error)
       showFeedback('error', 'Erro ao enviar campanha: ' + (error as Error).message)
       await logError('customer', error as Error, { action: 'send_campaign' })
     } finally {

@@ -1,5 +1,5 @@
 import React from 'react'
-import Badge from '../../Badge'
+import Badge from '@components/ui/Badge'
 import { Clock, CheckCircle, XCircle, AlertTriangle, Check } from '@lib/icons'
 import { BUDGET_STATUS } from '@utils/budgetConstants.jsx'
 
@@ -47,3 +47,4 @@ const StatusBadge = ({ status, size = 'md', showIcon = true }) => {
 }
 
 export default StatusBadge
+

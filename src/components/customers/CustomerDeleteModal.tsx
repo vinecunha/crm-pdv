@@ -1,6 +1,5 @@
 import React from 'react'
-import Modal from '@components/ui/Modal'
-import Button from '@components/ui/Button'
+import ConfirmModal from '@components/ui/ConfirmModal'
 
 const CustomerDeleteModal = ({ 
   isOpen, 
@@ -12,31 +11,25 @@ const CustomerDeleteModal = ({
   if (!customer) return null
 
   return (
-    <Modal
+    <ConfirmModal
       isOpen={isOpen}
-      onClose={() => !isSubmitting && onClose()}
+      onClose={onClose}
+      onConfirm={onConfirm}
+      loading={isSubmitting}
       title="Excluir Cliente"
-      size="sm"
-      isLoading={isSubmitting}
-    >
-      <div className="space-y-4">
-        <p className="text-gray-700 dark:text-gray-200">
-          Tem certeza que deseja excluir o cliente <strong className="dark:text-white">{customer.name}</strong>?
-        </p>
-        <p className="text-sm text-red-600 dark:text-red-400">
-          Esta ação não poderá ser desfeita.
-        </p>
-        
-        <div className="flex justify-end gap-3 pt-4">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
-            Cancelar
-          </Button>
-          <Button type="button" variant="danger" onClick={onConfirm} loading={isSubmitting}>
-            Excluir
-          </Button>
+      message={
+        <div>
+          <p className="text-gray-700 dark:text-gray-200">
+            Tem certeza que deseja excluir o cliente <strong className="dark:text-white">{customer.name}</strong>?
+          </p>
+          <p className="text-sm text-red-600 dark:text-red-400 mt-2">
+            Esta ação não poderá ser desfeita.
+          </p>
         </div>
-      </div>
-    </Modal>
+      }
+      confirmText="Excluir"
+      variant="danger"
+    />
   )
 }
 

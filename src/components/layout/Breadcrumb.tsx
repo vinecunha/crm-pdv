@@ -27,7 +27,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
 
   return (
     <div className={`
-      sticky top-[72px] lg:top-[88px] z-10
+      hidden md:block sticky top-[72px] lg:top-[88px] z-10
       transition-all duration-300
       ${collapsed ? 'lg:ml-20' : 'lg:ml-64'}
     `}>

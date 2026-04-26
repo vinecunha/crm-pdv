@@ -13,7 +13,7 @@ class LogService {
       const { data: { user } } = await supabase.auth.getUser()
       this.currentUser = user
     } catch (error) {
-      console.warn('LogService: Erro ao inicializar', error)
+      logger.warn('LogService: Erro ao inicializar', error)
       this.enabled = false
     }
   }
@@ -38,7 +38,7 @@ class LogService {
         
         if (profile) role = profile.role
       } catch (error) {
-        console.warn('LogService: Erro ao buscar role', error)
+        logger.warn('LogService: Erro ao buscar role', error)
       }
 
       return {
@@ -47,7 +47,7 @@ class LogService {
         role: role
       }
     } catch (error) {
-      console.error('LogService: Erro ao buscar user info', error)
+      logger.error('LogService: Erro ao buscar user info', error)
       return null
     }
   }
@@ -77,7 +77,7 @@ class LogService {
         .insert(logEntry)
 
       if (error) {
-        console.warn('LogService: Erro ao salvar log (não crítico):', error.message)
+        logger.warn('LogService: Erro ao salvar log (não crítico):', error.message)
       }
       
       // Em desenvolvimento, loga no console
@@ -86,7 +86,7 @@ class LogService {
       }
     } catch (error) {
       // Não deixar o erro de log quebrar a aplicação
-      console.warn('LogService: Erro não crítico:', error.message)
+      logger.warn('LogService: Erro não crítico:', error.message)
     }
   }
 
@@ -110,10 +110,10 @@ class LogService {
         .insert(logEntry)
 
       if (error) {
-        console.warn('LogService: Erro ao salvar log de acesso (não crítico):', error.message)
+        logger.warn('LogService: Erro ao salvar log de acesso (não crítico):', error.message)
       }
     } catch (error) {
-      console.warn('LogService: Erro não crítico:', error.message)
+      logger.warn('LogService: Erro não crítico:', error.message)
     }
   }
 

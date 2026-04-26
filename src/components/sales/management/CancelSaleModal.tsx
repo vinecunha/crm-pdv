@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { AlertCircle, Shield, Eye, EyeOff, Search } from '@lib/icons'
-import Modal from '../../ui/Modal'
-import Button from '../../ui/Button'
+import Modal from '@components/ui/Modal'
+import Button from '@components/ui/Button'
 import { formatCurrency } from '@utils/formatters'
 import { supabase } from '@lib/supabase'
+import { logger } from '@utils/logger'
 
 const CancelSaleModal = ({ 
   isOpen, 
@@ -60,7 +61,7 @@ const CancelSaleModal = ({
         }
       }
     } catch (error) {
-      console.error('Erro ao buscar aprovadores:', error)
+      logger.error('Erro ao buscar aprovadores:', error)
     }
   }
 
@@ -222,18 +223,22 @@ const CancelSaleModal = ({
             </div>
           )}
 
-          <div className="flex gap-3 pt-4">
-            <Button variant="outline" onClick={onClose} disabled={isSubmitting} className="flex-1">
-              Cancelar
-            </Button>
-            <Button 
-              variant="danger" 
-              onClick={handleContinue} 
-              disabled={!cancelReason}
-              className="flex-1"
-            >
-              {canCancelDirectly ? 'Confirmar Cancelamento' : 'Solicitar Aprovação'}
-            </Button>
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
+            <div className="order-2 sm:order-none flex-1 sm:flex-none">
+              <Button variant="outline" onClick={onClose} disabled={isSubmitting} className="w-full sm:w-auto">
+                Cancelar
+              </Button>
+            </div>
+            <div className="order-1 sm:order-none flex-1 sm:flex-none">
+              <Button 
+                variant="danger" 
+                onClick={handleContinue} 
+                disabled={!cancelReason}
+                className="w-full sm:w-auto"
+              >
+                {canCancelDirectly ? 'Confirmar Cancelamento' : 'Solicitar Aprovação'}
+              </Button>
+            </div>
           </div>
         </div>
       ) : (

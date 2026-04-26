@@ -5,6 +5,7 @@ import Button from '@components/ui/Button'
 import Modal from '@components/ui/Modal'
 import LazyImage from '@components/ui/LazyImage'
 import { supabase } from '@lib/supabase'
+import { logger } from '@utils/logger'
 
 const AvatarUploader = ({ user, avatarUrl, fullName, displayName, onAvatarUpdate }) => {
   const [showModal, setShowModal] = useState(false)
@@ -61,7 +62,7 @@ const AvatarUploader = ({ user, avatarUrl, fullName, displayName, onAvatarUpdate
 
       await saveAvatarUrl(publicUrl)
     } catch (error) {
-      console.error('Erro ao fazer upload:', error)
+      logger.error('Erro ao fazer upload:', error)
       setError('Erro ao enviar imagem: ' + error.message)
     } finally {
       setSaving(false)
@@ -84,7 +85,7 @@ const AvatarUploader = ({ user, avatarUrl, fullName, displayName, onAvatarUpdate
       onAvatarUpdate?.(url)
       setShowModal(false)
     } catch (error) {
-      console.error('Erro ao salvar avatar:', error)
+      logger.error('Erro ao salvar avatar:', error)
       setError('Erro ao salvar avatar: ' + error.message)
     } finally {
       setSaving(false)

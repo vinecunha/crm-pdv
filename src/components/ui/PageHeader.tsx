@@ -2,7 +2,7 @@
 import React from 'react'
 import Button from '@components/ui/Button'
 
-const PageHeader = ({
+const PageHeader = React.memo(({
   title,
   description,
   icon: Icon,
@@ -21,13 +21,13 @@ const PageHeader = ({
               {Icon && <Icon className="text-blue-600 dark:text-blue-400 flex-shrink-0" size={22} />}
               <span className="truncate">{title}</span>
             </h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5 sm:mt-1 line-clamp-2">
+            <p className="hidden sm:block text-sm text-gray-600 dark:text-gray-400 mt-0.5 sm:mt-1 line-clamp-2">
               {typeof description === 'function' ? description() : description}
             </p>
           </div>
           
-          {/* Container dos botões - com flex-wrap para mobile */}
-          <div className="flex flex-wrap items-center gap-2">
+          {/* Container dos botões - oculto em mobile, SM+ visível */}
+          <div className="hidden sm:flex flex-wrap justify-end items-center gap-2">
             {extraContent}
             {actions.map((action, index) => {
               // Se for um link, renderiza diferente
@@ -44,7 +44,7 @@ const PageHeader = ({
                 <Button
                   key={index}
                   variant={action.variant || 'outline'}
-                  size="sm" // ← SEMPRE usar size="sm" para mobile
+                  size="sm"
                   onClick={action.onClick}
                   loading={action.loading}
                   icon={action.icon}
@@ -61,6 +61,6 @@ const PageHeader = ({
       </div>
     </div>
   )
-}
+})
 
 export default PageHeader

@@ -1,4 +1,5 @@
 import { useRealtime } from '@/hooks/utils/useRealTime'
+import { logger } from '@utils/logger'
 
 interface ProductPayload {
   new: {
@@ -16,7 +17,7 @@ export const usePDVRealtime = (enabled: boolean = true): void => {
     table: 'products',
     event: 'UPDATE',
     onChange: () => {
-      console.log(`🔄 Estoque atualizado`)
+      logger.log(`🔄 Estoque atualizado`)
     },
     enabled
   })

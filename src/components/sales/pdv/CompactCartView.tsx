@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { ShoppingCart, ChevronUp, ChevronDown } from '@lib/icons'
 import { formatCurrency } from '@utils/formatters'
-import Button from '../../ui/Button'
+import Button from '@components/ui/Button'
 import CartSummary from './CartSummary'
 
 const CompactCartView = ({ 
@@ -47,7 +47,8 @@ const CompactCartView = ({
               onClick={onCheckout}
               disabled={cart.length === 0 || disabled}
             >
-              Finalizar
+              <span className="hidden sm:inline">Finalizar </span>
+              <span className="text-xs opacity-70 ml-1">[Ctrl+Enter]</span>
             </Button>
           </div>
         </div>

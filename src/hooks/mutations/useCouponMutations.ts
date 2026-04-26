@@ -65,9 +65,15 @@ interface UseCouponMutationsReturn {
   isMutating: boolean
 }
 
-export const useCouponMutations = (profile: Profile | null): UseCouponMutationsReturn => {
+interface CouponMutationsCallbacks {
+  onSuccess?: (coupon: Coupon, action: string) => void
+  onError?: (error: Error) => void
+}
+
+export const useCouponMutations = (profile: Profile | null, callbacks?: CouponMutationsCallbacks): UseCouponMutationsReturn => {
   const queryClient = useQueryClient()
   const { logCreate, logUpdate, logDelete, logError } = useSystemLogs()
+  const { onSuccess, onError } = callbacks || {}
 
   const createMutation = useMutation({
     mutationFn: ({ couponData, allowedCustomers }: { couponData: CouponData; allowedCustomers: number[] }) =>
@@ -75,18 +81,21 @@ export const useCouponMutations = (profile: Profile | null): UseCouponMutationsR
     onSuccess: async (coupon: Coupon) => {
       await logCreate('coupon', coupon.id.toString(), coupon)
       queryClient.invalidateQueries({ queryKey: ['coupons'] })
+      onSuccess?.(coupon, 'create')
     },
     onError: async (error: Error) => {
       await logError('coupon', error, { action: 'create' })
+      onError?.(error)
     }
   })
 
   const updateMutation = useMutation({
     mutationFn: ({ id, couponData, allowedCustomers }: { id: number; couponData: CouponData; allowedCustomers: number[] }) =>
       couponService.updateCoupon(id, couponData, allowedCustomers, profile),
-    onSuccess: async (coupon: Coupon, variables: { id: number; couponData: CouponData; allowedCustomers: number[] }) => {
-      await logUpdate('coupon', coupon.id.toString(), variables, coupon)
+    onSuccess: async (coupon: Coupon) => {
+      await logUpdate('coupon', coupon.id.toString(), null, coupon)
       queryClient.invalidateQueries({ queryKey: ['coupons'] })
+      onSuccess?.(coupon, 'update')
     },
   })
 
@@ -104,6 +113,7 @@ export const useCouponMutations = (profile: Profile | null): UseCouponMutationsR
     onSuccess: async (coupon: Coupon) => {
       await logUpdate('coupon', coupon.id.toString(), { is_active: !coupon.is_active }, coupon)
       queryClient.invalidateQueries({ queryKey: ['coupons'] })
+      onSuccess?.(coupon, 'toggle')
     },
   })
 

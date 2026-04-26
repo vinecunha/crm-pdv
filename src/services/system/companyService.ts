@@ -1,5 +1,6 @@
 // src/services/companyService.js
 import { supabase } from '@lib/supabase'
+import { logger } from '@utils/logger'
 
 export const fetchCompanySettings = async () => {
   const { data, error } = await supabase
@@ -9,7 +10,7 @@ export const fetchCompanySettings = async () => {
     .single()
   
   if (error) {
-    console.error('❌ Erro ao buscar configurações da empresa:', error)
+    logger.error('❌ Erro ao buscar configurações da empresa:', error)
     return null
   }
   

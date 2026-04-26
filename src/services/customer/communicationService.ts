@@ -1,4 +1,5 @@
 import { supabase } from '@lib/supabase'
+import { logger } from '@utils/logger'
 
 // ============= Constantes =============
 export const COMMUNICATION_CHANNELS = {
@@ -131,7 +132,7 @@ export const sendCommunication = async ({
 
     return { success: true, communication }
   } catch (error) {
-    console.error('Erro ao enviar comunicação:', error)
+    logger.error('Erro ao enviar comunicação:', error)
     
     // Registrar falha
     await supabase

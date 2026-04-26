@@ -1,9 +1,10 @@
 // src/services/commissionService.js
 import { supabase } from '@lib/supabase'
+import { logger } from '@utils/logger'
 
 export const fetchSellerCommissions = async (userId, period = null) => {
   try {
-    console.log('📞 Chamando RPC fetch_seller_commissions:', { userId, period })
+    logger.log('📞 Chamando RPC fetch_seller_commissions:', { userId, period })
     
     const { data, error } = await supabase.rpc('fetch_seller_commissions', {
       p_user_id: userId,
@@ -11,16 +12,16 @@ export const fetchSellerCommissions = async (userId, period = null) => {
     })
     
     if (error) {
-      console.error('❌ Erro na RPC:', error)
+      logger.error('❌ Erro na RPC:', error)
       throw error
     }
     
-    console.log('✅ Resposta da RPC:', data)
+    logger.log('✅ Resposta da RPC:', data)
     
     // A RPC retorna um objeto com a estrutura { summary, history }
     // Garantir que sempre retorne algo válido
     if (!data) {
-      console.warn('⚠️ RPC retornou null/undefined, retornando estrutura vazia')
+      logger.warn('⚠️ RPC retornou null/undefined, retornando estrutura vazia')
       return {
         summary: {
           total_pending: 0,
@@ -38,7 +39,7 @@ export const fetchSellerCommissions = async (userId, period = null) => {
     return data
     
   } catch (error) {
-    console.error('❌ Exceção em fetchSellerCommissions:', error)
+    logger.error('❌ Exceção em fetchSellerCommissions:', error)
     // Retornar estrutura vazia em caso de erro
     return {
       summary: {

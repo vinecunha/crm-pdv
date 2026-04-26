@@ -4,6 +4,7 @@ import Modal from '@components/ui/Modal'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import TaskHistoryTimeline from '@components/tasks/TaskHistoryTimeline'
 import { History, Users, GitBranch } from '@lib/icons'
+import { logger } from '@utils/logger'
 
 const TaskHistoryModal = ({ isOpen, onClose, task }) => {
   const [history, setHistory] = useState(null)
@@ -27,7 +28,7 @@ const TaskHistoryModal = ({ isOpen, onClose, task }) => {
       if (error) throw error
       setHistory(data)
     } catch (error) {
-      console.error('Erro ao buscar histórico:', error)
+      logger.error('Erro ao buscar histórico:', error)
     } finally {
       setLoading(false)
     }

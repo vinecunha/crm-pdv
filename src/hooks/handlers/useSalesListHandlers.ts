@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import { supabase } from '@lib/supabase'
+import { logger } from '@utils/logger'
 
 // Baseado em: public.sales
 interface Sale {
@@ -131,7 +132,7 @@ export const useSalesListHandlers = ({
 }: UseSalesListHandlersProps): UseSalesListHandlersReturn => {
 
   const openReceipt = useCallback(async (sale: Sale): Promise<void> => {
-    console.log('📌 Abrindo recibo para venda:', sale)
+    logger.log('📌 Abrindo recibo para venda:', sale)
     setReceiptSale(sale)
     setShowReceiptModal(true)
     setReceiptItems([])
@@ -140,21 +141,21 @@ export const useSalesListHandlers = ({
       setIsLoadingReceiptItems(true)
       try {
         const numericSaleId = Number(sale.id)
-        console.log('🔍 Buscando itens para saleId:', numericSaleId)
+        logger.log('🔍 Buscando itens para saleId:', numericSaleId)
         
         const { data, error } = await supabase
           .from('sale_items')
           .select('*')
           .eq('sale_id', numericSaleId)
         
-        console.log('📦 Resposta do Supabase:', { data, error })
+        logger.log('📦 Resposta do Supabase:', { data, error })
         
         if (error) throw error
         
         setReceiptItems(data as SaleItem[] || [])
-        console.log('✅ Itens carregados:', data?.length || 0)
+        logger.log('✅ Itens carregados:', data?.length || 0)
       } catch (error) {
-        console.error('❌ Erro ao carregar itens:', error)
+        logger.error('❌ Erro ao carregar itens:', error)
         setReceiptItems([])
       } finally {
         setIsLoadingReceiptItems(false)

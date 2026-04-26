@@ -163,7 +163,7 @@ const useRipple = () => {
   return createRipple
 }
 
-const Button = forwardRef(({ 
+const Button = React.memo(forwardRef(({ 
   children, 
   variant = 'primary', 
   size = 'md', 
@@ -398,7 +398,7 @@ const Button = forwardRef(({
   }
 
   return buttonContent
-})
+}))
 
 Button.displayName = 'Button'
 
@@ -427,11 +427,9 @@ const ButtonGroup = ({ children, vertical = false, className = '' }) => (
       [&>button:not(:first-child)]:${vertical ? '-mt-px' : '-ml-px'}
       ${className}
     `}
-    role="group"
-  >
-    {children}
-  </div>
-)
-
+    >
+      {children}
+    </div>
+  )
 export { ButtonGroup, useKeyboardShortcut }
 export default Button

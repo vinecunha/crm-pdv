@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Eye, Printer } from '@lib/icons'
 import Modal from '@components/ui/Modal'
 import DataTable from '@components/ui/DataTable'
@@ -11,14 +11,14 @@ const CashierHistoryModal = ({ isOpen, onClose, history, users, onViewDetails, o
     return 'text-red-600 dark:text-red-400'
   }
 
-  const columns = [
+  const columns = useMemo(() => [
     { key: 'closing_date', header: 'Data', sortable: true, render: (row) => formatDate(row.closing_date) },
     { key: 'expected_total', header: 'Esperado', render: (row) => formatCurrency(row.expected_total) },
     { key: 'declared_total', header: 'Declarado', render: (row) => formatCurrency(row.declared_total) },
     { key: 'difference', header: 'Diferença', render: (row) => <span className={`font-semibold ${getDifferenceColor(row.difference)}`}>{formatCurrency(row.difference)}</span> },
     { key: 'closed_by', header: 'Fechado por', render: (row) => users.find(u => u.id === row.closed_by)?.full_name || 'Sistema' },
     { key: 'closed_at', header: 'Data/Hora', render: (row) => formatDateTime(row.closed_at) }
-  ]
+  ], [users])
 
   const actions = [
     { 

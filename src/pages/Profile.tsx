@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@contexts/AuthContext'
+import { useUI } from '@contexts/UIContext'
 import { supabase } from '@lib/supabase'
 import { secureStorage } from '@utils/secureStorage'
 import {
@@ -8,7 +9,6 @@ import {
 } from '@lib/icons'
 import { sanitizeObject } from '@utils/sanitize'
 import Button from '@components/ui/Button'
-import FeedbackMessage from '@components/ui/FeedbackMessage'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import PageHeader from '@components/ui/PageHeader'
 import AvatarUploader from '@components/profile/AvatarUploader'
@@ -16,6 +16,7 @@ import ProfileInfoForm from '@components/profile/ProfileInfoForm'
 import SecuritySection from '@components/profile/SecuritySection'
 import ChangePasswordModal from '@components/profile/ChangePasswordModal'
 import UserPreferencesTab from '@components/profile/UserPreferencesTab'
+import { logger } from '@utils/logger'
 
 const fetchProfile = async (userId) => {
   const { data, error } = await supabase
@@ -33,7 +34,6 @@ const Profile = () => {
   const queryClient = useQueryClient()
   
   const [activeTab, setActiveTab] = useState('profile')
-  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' })
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   
   const [formData, setFormData] = useState({
@@ -120,14 +120,14 @@ const Profile = () => {
       if (fetchError) throw fetchError
       return freshProfile
     },
-    onSuccess: (freshProfile) => {
+    onSuccess: async (freshProfile) => {
+      await secureStorage.set('profile', freshProfile)
       queryClient.setQueryData(['profile', user?.id], freshProfile)
-      secureStorage.set('profile', freshProfile)
       showFeedback('success', 'Perfil atualizado com sucesso!')
       setHasChanges(false)
     },
     onError: (error) => {
-      console.error('Erro ao salvar perfil:', error)
+      logger.error('Erro ao salvar perfil:', error)
       showFeedback('error', 'Erro ao salvar perfil: ' + error.message)
     }
   })
@@ -157,10 +157,7 @@ const Profile = () => {
     }
   }, [profileData, user])
 
-  const showFeedback = (type, message) => {
-    setFeedback({ show: true, type, message })
-    setTimeout(() => setFeedback({ show: false, type: 'success', message: '' }), 3000)
-  }
+  const { showFeedback } = useUI()
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -360,16 +357,6 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {feedback.show && (
-          <div className="mb-4">
-            <FeedbackMessage
-              type={feedback.type}
-              message={feedback.message}
-              onClose={() => setFeedback({ show: false })}
-            />
-          </div>
-        )}
-
         <PageHeader
           title="Meu Perfil"
           description="Gerencie suas informações pessoais e configurações de conta"

@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
+import { logger } from '@utils/logger'
 
 interface UseKioskModeReturn {
   isKioskMode: boolean
@@ -20,7 +21,7 @@ const useKioskMode = (): UseKioskModeReturn => {
         document.body.classList.remove('kiosk-mode')
       }
     } catch (error) {
-      console.error('Erro ao alternar modo quiosque:', error)
+      logger.error('Erro ao alternar modo quiosque:', error)
     }
   }, [])
   

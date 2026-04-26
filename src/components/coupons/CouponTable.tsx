@@ -21,7 +21,7 @@ import {
   Eye
 } from '@lib/icons'
 import DataTable from '@components/ui/DataTable'
-import Badge from '@components/Badge'
+import Badge from '@components/ui/Badge'
 import { formatCurrency, formatDate } from '@utils/formatters'
 
 const CouponTable = ({ 
@@ -447,3 +447,4 @@ const CouponTable = ({
 }
 
 export default CouponTable
+

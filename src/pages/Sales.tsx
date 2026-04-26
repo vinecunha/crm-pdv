@@ -24,7 +24,7 @@ import useKioskMode from '@hooks/utils/useKioskMode'
 import { useNetworkStatus } from '@/hooks/utils/useNetworkStatus'
 import useMediaQuery from '@/hooks/utils/useMediaQuery'
 
-import { usePDVCart } from '@hooks/pdv/usePDVCart'
+import { useCart } from '@hooks/utils/useCart'
 import { usePDVCustomer } from '@hooks/pdv/usePDVCustomer'
 import { usePDVCoupon } from '@hooks/pdv/usePDVCoupon'
 import { usePDVModals } from '@hooks/pdv/usePDVModals'
@@ -66,18 +66,25 @@ const Sales = () => {
     hideShortcutFeedback
   } = usePDVFeedback()
 
+  // ✅ Queries centralizadas
+  const { 
+    products, 
+    isLoading, 
+    refetchProducts 
+  } = useSalesQueries()
+
   const {
     cart,
     addToCart,
-    updateCartItemQuantity,
-    removeFromCart,
+    updateQuantity: updateCartItemQuantity,
+    removeItem: removeFromCart,
     clearCart,
     getSubtotal,
     getTotal,
+    cartCount,
     selectedCartItemIndex,
-    setSelectedCartItemIndex,
-    cartCount
-  } = usePDVCart([], showFeedback)
+    setSelectedCartItemIndex
+  } = useCart(products, { checkStock: true, onStockError: (msg) => showFeedback('error', msg) })
 
   const {
     customer,
@@ -139,13 +146,6 @@ const Sales = () => {
     closeReceiptModal,
   } = usePDVModals()
 
-  // ✅ Queries centralizadas
-  const { 
-    products, 
-    isLoading, 
-    refetchProducts 
-  } = useSalesQueries()
-
   const {
     searchTerm,
     selectedCategory,
@@ -159,6 +159,34 @@ const Sales = () => {
 
   const updateLocalStock = (cartItems) => {
     // Função específica do Sales (manipula cache local)
+  }
+
+  const handleSearchSubmit = () => {
+    if (!searchTerm.trim()) return
+    
+    const code = searchTerm.trim().toUpperCase()
+    const product = products.find(p => p.code?.toUpperCase() === code || p.id.toString() === code)
+    
+    if (product) {
+      addToCart(product)
+      setSearchTerm('')
+      searchInputRef.current?.focus()
+    } else {
+      showFeedback('error', 'Produto não encontrado')
+    }
+  }
+
+  const handleSearchSubmitMobile = () => {
+    const code = searchTerm.trim().toUpperCase()
+    const product = filteredProducts.find(p => p.code?.toUpperCase() === code || p.id.toString() === code)
+    
+    if (product) {
+      addToCart(product)
+      setSearchTerm('')
+      searchInputRef.current?.focus()
+    } else {
+      showFeedback('error', 'Produto não encontrado')
+    }
   }
 
   // ✅ Mutations com callbacks
@@ -289,6 +317,18 @@ const Sales = () => {
     }
   }, [cartCount, selectedCartItemIndex, setSelectedCartItemIndex])
 
+  useEffect(() => {
+    if (searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+  }, [])
+
+  const handleContainerClick = () => {
+    if (searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+  }
+
   // ============= RENDER =============
   const subtotal = getSubtotal()
   const total = getTotal(discount)
@@ -312,7 +352,10 @@ const Sales = () => {
   if (isLoading) return <DataLoadingSkeleton />
 
   return (
-    <div className={`min-h-screen bg-gray-100 dark:bg-black ${isKioskMode ? 'kiosk-mode' : ''}`}>
+    <div 
+      className={`min-h-screen bg-gray-100 dark:bg-black ${isKioskMode ? 'kiosk-mode' : ''} cursor-pointer`}
+      onClick={handleContainerClick}
+    >
       {!isOnline && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-500 text-white py-1.5 px-3 text-center text-xs font-medium shadow-md">
           <div className="flex items-center justify-center gap-2">
@@ -322,12 +365,13 @@ const Sales = () => {
         </div>
       )}
       
-      <div className={`max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 ${!isOnline ? 'pt-10' : ''}`}>
+      <div className={`max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 ${!isOnline ? 'pt-10' : ''} ${isMobile ? 'mb-20' : ''}`}>
         {feedback.show && (
           <FeedbackMessage 
             type={feedback.type} 
             message={feedback.message} 
-            onClose={hideFeedback} 
+            onClose={hideFeedback}
+            position="fixed"
           />
         )}
         
@@ -345,7 +389,7 @@ const Sales = () => {
           actions={headerActions}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 pb-28 lg:pb-0">
           <div className="lg:col-span-2 order-2 lg:order-1">
             <ProductGrid 
               products={filteredProducts} 
@@ -355,11 +399,12 @@ const Sales = () => {
               setSelectedCategory={setSelectedCategory}
               categories={categories} 
               onAddToCart={addToCart} 
-              searchInputRef={searchInputRef} 
+              searchInputRef={searchInputRef}
+              onSearchSubmit={isMobile ? handleSearchSubmitMobile : handleSearchSubmit}
             />
           </div>
 
-          <div className="lg:col-span-1 order-1 lg:order-2">
+          <div className="lg:col-span-1 order-1 lg:order-2 hidden lg:block">
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 lg:sticky lg:top-4">
               <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between">
@@ -388,7 +433,7 @@ const Sales = () => {
                       <button
                         onClick={handlers.handleClearCart}
                         className="p-1.5 text-gray-400 hover:text-red-500 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
-                        title="Limpar carrinho"
+                        title="Limpar carrinho [Del]"
                       >
                         <RotateCcw size={16} />
                       </button>
@@ -499,6 +544,7 @@ const Sales = () => {
                   icon={CreditCard} 
                 >
                   {!isOnline ? 'Salvar Venda Offline' : 'Finalizar Venda'}
+                  <span className="ml-2 opacity-60 text-sm">[Ctrl+Enter]</span>
                 </Button>
               </div>
             </div>

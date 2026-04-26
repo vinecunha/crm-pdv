@@ -10,6 +10,7 @@ import LoginFooter from '@components/auth/LoginFooter'
 import LoginForm from '@components/auth/LoginForm'
 import { BlockedAlert, AttemptsIndicator } from '@components/auth/RateLimitIndicator'
 import ErrorAlert from '@components/auth/ErrorAlert'
+import { logger } from '@utils/logger'
 
 const Login = () => {
   const [email, setEmail] = useState('')
@@ -77,12 +78,12 @@ const Login = () => {
           .from('profiles')
           .update({ 
             last_login: new Date().toISOString(),
-            login_count: supabase.raw('COALESCE(login_count, 0) + 1')
+            login_count: supabase.raw('COALESCE(login_count, 0) + 1', [])
           })
           .eq('id', userId)
       }
     } catch (error) {
-      console.warn('Erro ao atualizar last_login:', error)
+      logger.warn('Erro ao atualizar last_login:', error)
     }
   }
 

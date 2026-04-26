@@ -1,5 +1,5 @@
 import React from 'react'
-import DataFilters from '../../ui/DataFilters'
+import DataFilters from '@components/ui/DataFilters'
 
 const SalesFilters = ({ searchTerm, setSearchTerm, onFilterChange }) => {
   const filterConfig = [

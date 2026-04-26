@@ -7,7 +7,7 @@ import {
   Check, 
   AlertTriangle 
 } from '@lib/icons'
-import Badge from '@components/Badge'
+import Badge from '@components/ui/Badge'
 
 export const BUDGET_STATUS = {
   PENDING: 'pending',
@@ -220,3 +220,4 @@ export const BUDGET_ACTIONS = [
     disabled: (row) => row.status !== BUDGET_STATUS.PENDING
   }
 ]
+

@@ -1,8 +1,9 @@
 ﻿import React, { useState, useEffect } from 'react'
 import { Shield } from '@lib/icons'
-import FormInput from '../forms/FormInput'
+import FormInput from '@components/forms/FormInput'
 import Button from '@components/ui/Button'
 import * as userService from '@services/user/userService'
+import { logger } from '@utils/logger'
 
 const UserForm = ({ 
   editingUser, 
@@ -27,7 +28,7 @@ const UserForm = ({
       const registration = await userService.generateRegistrationNumber()
       setFormData(prev => ({ ...prev, registration_number: registration }))
     } catch (error) {
-      console.error('Erro ao gerar matrícula:', error)
+      logger.error('Erro ao gerar matrícula:', error)
     } finally {
       setGeneratingCode(false)
     }

@@ -198,7 +198,7 @@ function App() {
 
                     {/* Rota para TaskBoard */}
                     <Route path="/tasks" element={
-                      <ProtectedRoute requiredPermission="tasks.view">
+                      <ProtectedRoute requiredPermission="canViewTasks">
                         <PrivateLayout>
                           <TaskBoard />
                         </PrivateLayout>

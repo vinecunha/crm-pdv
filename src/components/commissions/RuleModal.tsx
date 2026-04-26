@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import Modal from '@components/ui/Modal'
 import Button from '@components/ui/Button'
-import FormInput from '../forms/FormInput'
+import FormInput from '@components/forms/FormInput'
 import { Save } from '@lib/icons'
 
 const RuleModal = ({ isOpen, onClose, rule, onSave, isSaving }) => {

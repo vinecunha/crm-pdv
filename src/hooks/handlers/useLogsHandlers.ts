@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react'
+import { logger } from '@utils/logger'
 
 // Baseado em: public.system_logs
 interface SystemLog {
@@ -174,7 +175,7 @@ export const useLogsHandlers = ({
       link.download = `logs_${new Date().toISOString().slice(0, 19)}.csv`
       link.click()
     } catch (error) {
-      console.error('Erro ao exportar:', error)
+      logger.error('Erro ao exportar:', error)
       showFeedback('error', 'Erro ao exportar logs')
     } finally {
       setExporting(false)

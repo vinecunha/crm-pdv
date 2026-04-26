@@ -6,6 +6,9 @@ import { useUI } from '@contexts/UIContext'
 import { useSystemLogs } from '@hooks/system/useSystemLogs'
 import { formatDateTime } from '@utils/formatters'
 
+import PageHeader from '@components/ui/PageHeader'
+import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
+import DataCards from '@components/ui/DataCards'
 import UserStats from '@components/users/UserStats'
 import UserTable from '@components/users/UserTable'
 import UserFilters from '@components/users/UserFilters'
@@ -17,27 +20,7 @@ import { useUsersHandlers } from '@hooks/handlers'
 import { useUserMutations } from '@hooks/mutations'
 import { useUsersQueries } from '@hooks/queries/useUsersQueries'
 import { useUserForm } from '@hooks/forms/useUserForm'
-
-const StatCard = ({ label, value, color, icon: Icon, active, onClick }) => {
-  const colors = { 
-    green: { bg: 'bg-green-50 dark:bg-green-900/30', text: 'text-green-600 dark:text-green-400', border: 'border-green-500 dark:border-green-400' }, 
-    yellow: { bg: 'bg-yellow-50 dark:bg-yellow-900/30', text: 'text-yellow-600 dark:text-yellow-400', border: 'border-yellow-500 dark:border-yellow-400' }, 
-    red: { bg: 'bg-red-50 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400', border: 'border-red-500 dark:border-red-400' } 
-  }
-  return (
-    <div className={`bg-white dark:bg-gray-900 rounded-xl border-2 p-4 sm:p-5 cursor-pointer transition-all hover:shadow-md ${active ? colors[color].border : 'border-gray-200 dark:border-gray-700'}`} onClick={onClick}>
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{label}</p>
-          <p className={`text-xl sm:text-2xl font-bold ${colors[color].text}`}>{value}</p>
-        </div>
-        <div className={`p-2 sm:p-3 ${colors[color].bg} rounded-full`}>
-          <Icon size={20} className={colors[color].text} />
-        </div>
-      </div>
-    </div>
-  )
-}
+import StatCard from '@components/ui/StatCard'
 
 const Users = () => {
   const { profile } = useAuth()

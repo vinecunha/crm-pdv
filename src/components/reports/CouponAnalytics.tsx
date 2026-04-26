@@ -1,265 +1,28 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { 
   Ticket, Percent, Target, Gift, Zap, TrendingUp,
-  Users, Award, AlertCircle, ChevronRight, ShoppingBag, Eye
+  Users, Award, AlertCircle, Star
 } from '@lib/icons'
-import { supabase } from '@lib/supabase'
 import { formatCurrency, formatNumber } from '@utils/formatters'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import DataTable from '@components/ui/DataTable'
-import Badge from '../Badge'
+import Badge from '@components/ui/Badge'
 import Button from '@components/ui/Button'
-import { useNavigate } from 'react-router-dom'
+import { fetchCouponAnalytics } from '@services/coupon/analyticsService'
 import { logger } from '@utils/logger' 
 
 const CouponAnalytics = ({ dateRange, customDateRange }) => {
-  const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState(null)
-  const [topCouponUsers, setTopCouponUsers] = useState([])
-  const [engagementOpportunities, setEngagementOpportunities] = useState([])
-  const [couponPerformance, setCouponPerformance] = useState([])
   const [activeTab, setActiveTab] = useState('opportunities')
-  const navigate = useNavigate()
 
-  useEffect(() => {
-    loadCouponAnalytics()
-  }, [dateRange, customDateRange])
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['coupon-analytics', dateRange, customDateRange],
+    queryFn: () => fetchCouponAnalytics({ dateRange, customDateRange }),
+    staleTime: 5 * 60 * 1000
+  })
 
-  const getDateRange = () => {
-    const now = new Date()
-    let startDate, endDate
-    
-    switch (dateRange) {
-      case 'today':
-        startDate = new Date(now.setHours(0, 0, 0, 0))
-        endDate = new Date(now.setHours(23, 59, 59, 999))
-        break
-      case 'week':
-        startDate = new Date(now.setDate(now.getDate() - 7))
-        endDate = new Date()
-        break
-      case 'month':
-        startDate = new Date(now.setDate(now.getDate() - 30))
-        endDate = new Date()
-        break
-      case 'year':
-        startDate = new Date(now.setFullYear(now.getFullYear() - 1))
-        endDate = new Date()
-        break
-      case 'custom':
-        startDate = new Date(customDateRange.start)
-        endDate = new Date(customDateRange.end)
-        endDate.setHours(23, 59, 59, 999)
-        break
-      default:
-        startDate = new Date(now.setDate(now.getDate() - 30))
-        endDate = new Date()
-    }
-    
-    return { startDate, endDate }
-  }
-
-  const loadCouponAnalytics = async () => {
-    setLoading(true)
-    try {
-      const { startDate, endDate } = getDateRange()
-
-      const { data: salesWithCoupons, error: salesError } = await supabase
-        .from('sales')
-        .select(`
-          id,
-          customer_id,
-          final_amount,
-          discount_amount,
-          coupon_code,
-          created_at,
-          customer:customers(id, name, email, phone, total_purchases)
-        `)
-        .not('coupon_code', 'is', null)
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString())
-        .order('created_at', { ascending: false })
-
-      if (salesError) throw salesError
-
-      const { data: allSales, error: allSalesError } = await supabase
-        .from('sales')
-        .select('customer_id, created_at, status')
-        .eq('status', 'completed')
-        .order('created_at', { ascending: false })
-
-      if (allSalesError) throw allSalesError
-
-      const lastPurchaseMap = {}
-      allSales?.forEach(sale => {
-        if (sale.customer_id && !lastPurchaseMap[sale.customer_id]) {
-          lastPurchaseMap[sale.customer_id] = sale.created_at
-        }
-      })
-
-      const { data: coupons, error: couponsError } = await supabase
-        .from('coupons')
-        .select('*')
-        .eq('is_active', true)
-
-      if (couponsError) throw couponsError
-
-      const { data: allCustomers, error: customersError } = await supabase
-        .from('customers')
-        .select('id, name, email, phone, total_purchases, status, created_at')
-        .eq('status', 'active')
-
-      if (customersError) throw customersError
-
-      const customerCouponUsage = {}
-      const couponUsageCount = {}
-      
-      salesWithCoupons?.forEach(sale => {
-        const customerId = sale.customer_id
-        const couponCode = sale.coupon_code
-        
-        if (customerId) {
-          if (!customerCouponUsage[customerId]) {
-            customerCouponUsage[customerId] = {
-              customer: sale.customer,
-              count: 0,
-              totalDiscount: 0,
-              totalSpent: 0,
-              couponsUsed: new Set()
-            }
-          }
-          customerCouponUsage[customerId].count++
-          customerCouponUsage[customerId].totalDiscount += sale.discount_amount || 0
-          customerCouponUsage[customerId].totalSpent += sale.final_amount || 0
-          customerCouponUsage[customerId].couponsUsed.add(couponCode)
-        }
-        
-        if (couponCode) {
-          couponUsageCount[couponCode] = (couponUsageCount[couponCode] || 0) + 1
-        }
-      })
-
-      const topUsers = Object.values(customerCouponUsage)
-        .map(u => ({
-          ...u,
-          couponsUsed: Array.from(u.couponsUsed)
-        }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5)
-
-      setTopCouponUsers(topUsers)
-
-      const performance = coupons?.map(coupon => ({
-        ...coupon,
-        usageCount: couponUsageCount[coupon.code] || 0,
-        usageRate: coupon.usage_limit 
-          ? ((couponUsageCount[coupon.code] || 0) / coupon.usage_limit) * 100 
-          : 0
-      })).sort((a, b) => b.usageCount - a.usageCount)
-
-      setCouponPerformance(performance)
-
-      const opportunities = []
-      
-      const highSpendersNoCoupon = allCustomers?.filter(c => {
-        const hasUsedCoupon = customerCouponUsage[c.id]
-        return !hasUsedCoupon && (c.total_purchases || 0) > 100
-      }).sort((a, b) => (b.total_purchases || 0) - (a.total_purchases || 0)).slice(0, 5)
-
-      highSpendersNoCoupon?.forEach(customer => {
-        opportunities.push({
-          type: 'high_spender',
-          priority: 'high',
-          customer,
-          reason: 'Cliente fiel que nunca usou cupom',
-          suggestion: 'Ofereça cupom de fidelidade exclusivo',
-          icon: Star
-        })
-      })
-
-      const thirtyDaysAgo = new Date()
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-      
-      const inactiveCustomers = allCustomers?.filter(c => {
-        const lastPurchase = lastPurchaseMap[c.id]
-        if (!lastPurchase) {
-          const createdAt = new Date(c.created_at)
-          return createdAt < thirtyDaysAgo
-        }
-        return new Date(lastPurchase) < thirtyDaysAgo
-      }).slice(0, 5)
-
-      logger.log('📊 Clientes inativos encontrados:', inactiveCustomers.length)
-
-      inactiveCustomers?.forEach(customer => {
-        const lastPurchase = lastPurchaseMap[customer.id]
-        const reason = lastPurchase 
-          ? `Cliente inativo há mais de 30 dias (última compra: ${new Date(lastPurchase).toLocaleDateString('pt-BR')})`
-          : 'Cliente nunca realizou uma compra'
-        
-        opportunities.push({
-          type: 'inactive',
-          priority: 'medium',
-          customer,
-          reason: reason,
-          suggestion: 'Envie cupom de reengajamento',
-          icon: AlertCircle
-        })
-      })
-
-      const frequentCouponUsers = Object.values(customerCouponUsage)
-        .filter(u => u.count >= 3)
-        .map(u => u.customer)
-        .slice(0, 5)
-
-      frequentCouponUsers?.forEach(customer => {
-        opportunities.push({
-          type: 'coupon_lover',
-          priority: 'medium',
-          customer,
-          reason: 'Cliente que adora cupons',
-          suggestion: 'Ofereça cupons exclusivos com frequência',
-          icon: Gift
-        })
-      })
-
-      const uniqueOpportunities = []
-      const seenCustomers = new Set()
-      
-      opportunities.forEach(opp => {
-        if (!seenCustomers.has(opp.customer.id)) {
-          seenCustomers.add(opp.customer.id)
-          uniqueOpportunities.push(opp)
-        }
-      })
-
-      setEngagementOpportunities(uniqueOpportunities)
-
-      const customersWithCoupon = Object.keys(customerCouponUsage).length
-      const totalCustomers = allCustomers?.length || 0
-      const couponAdoptionRate = totalCustomers > 0 ? (customersWithCoupon / totalCustomers) * 100 : 0
-      
-      const totalDiscountGiven = salesWithCoupons?.reduce((sum, s) => sum + (s.discount_amount || 0), 0) || 0
-      const totalSalesWithCoupon = salesWithCoupons?.reduce((sum, s) => sum + (s.final_amount || 0), 0) || 0
-      const averageDiscount = salesWithCoupons?.length > 0 ? totalDiscountGiven / salesWithCoupons.length : 0
-
-      setStats({
-        totalCouponsAvailable: coupons?.length || 0,
-        activeCoupons: coupons?.filter(c => c.is_active).length || 0,
-        customersWithCoupon,
-        couponAdoptionRate,
-        totalDiscountGiven,
-        totalSalesWithCoupon,
-        averageDiscount,
-        totalCouponSales: salesWithCoupons?.length || 0
-      })
-
-    } catch (error) {
-      console.error('Erro ao carregar análise de cupons:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { stats, topCouponUsers, engagementOpportunities, couponPerformance } = data || {}
+  const loading = isLoading
 
   const getPriorityColor = (priority) => {
     switch (priority) {
@@ -653,3 +416,4 @@ const CouponAnalytics = ({ dateRange, customDateRange }) => {
 }
 
 export default CouponAnalytics
+

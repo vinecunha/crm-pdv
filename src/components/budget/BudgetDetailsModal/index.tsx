@@ -1,5 +1,5 @@
 import React from 'react'
-import Modal from '../../ui/Modal'
+import Modal from '@components/ui/Modal'
 import BudgetDetailsHeader from './BudgetDetailsHeader'
 import BudgetStatusInfo from './BudgetStatusInfo'
 import BudgetItemsList from './BudgetItemsList'

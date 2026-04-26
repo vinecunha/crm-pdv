@@ -1,5 +1,5 @@
 // src/components/reports/OperatorPerformance.jsx
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { 
   UserCheck, TrendingUp, Award, ShoppingBag, 
   DollarSign, Target, Medal, Star, User
@@ -9,6 +9,7 @@ import { formatCurrency, formatNumber } from '@utils/formatters'
 import StatCard from '@components/ui/StatCard'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import DataTable from '@components/ui/DataTable'
+import { logger } from '@utils/logger'
 
 const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }) => {
   const [loading, setLoading] = useState(true)
@@ -167,7 +168,7 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
       })
 
     } catch (error) {
-      console.error('Erro ao carregar desempenho:', error)
+      logger.error('Erro ao carregar desempenho:', error)
     } finally {
       setLoading(false)
     }
@@ -194,7 +195,7 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
     return <span className="text-sm font-medium text-gray-500 dark:text-gray-400">#{rank}</span>
   }
 
-  const columns = [
+const columns = useMemo(() => [
     {
       key: 'rank',
       header: '#',
@@ -205,9 +206,9 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
       header: 'Operador',
       sortable: true,
       render: (row) => (
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
-            {row.name.charAt(0).toUpperCase()}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium">
+            {row.name?.charAt(0).toUpperCase() || '?'}
           </div>
           <div>
             <p className="font-medium text-gray-900 dark:text-white">{row.name}</p>
@@ -219,19 +220,19 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
     {
       key: 'role',
       header: 'Função',
-      render: (row) => getRoleBadge(row.role)
+      render: (row) => <Badge variant="purple">{row.role}</Badge>
     },
     {
       key: 'salesCount',
       header: 'Vendas',
       sortable: true,
-      render: (row) => <span className="text-gray-900 dark:text-white">{row.salesCount}</span>
+      render: (row) => <span className="font-medium text-gray-900 dark:text-white">{formatNumber(row.salesCount)}</span>
     },
     {
       key: 'itemsSold',
       header: 'Itens',
       sortable: true,
-      render: (row) => <span className="text-gray-900 dark:text-white">{formatNumber(row.itemsSold)}</span>
+      render: (row) => <span className="text-gray-600 dark:text-gray-400">{formatNumber(row.itemsSold)}</span>
     },
     {
       key: 'averageTicket',
@@ -251,7 +252,7 @@ const OperatorPerformance = ({ dateRange, customDateRange, paymentMethodFilter }
       sortable: true,
       render: (row) => <span className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(row.totalRevenue)}</span>
     }
-  ]
+  ], [])
 
   if (loading) return <DataLoadingSkeleton type="cards" rows={4} />
 

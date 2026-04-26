@@ -1,7 +1,7 @@
 import React from 'react'
 import { FileText } from '@lib/icons'
 import Modal from '@components/ui/Modal'
-import FormInput from '../forms/FormInput'
+import FormInput from '@components/forms/FormInput'
 import Button from '@components/ui/Button'
 
 const MessageModal = ({ 

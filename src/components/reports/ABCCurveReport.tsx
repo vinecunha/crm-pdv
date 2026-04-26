@@ -81,7 +81,7 @@ const ABCCurveReport = ({ dateRange, customDateRange }) => {
   const cRevenue = abcData.items.filter(p => p.classification === 'C').reduce((sum, p) => sum + p.revenue, 0)
 
   // Colunas para o DataTable
-  const columns = [
+  const columns = useMemo(() => [
     {
       key: 'classification',
       header: 'Classificação',
@@ -139,7 +139,7 @@ const ABCCurveReport = ({ dateRange, customDateRange }) => {
       width: '100px',
       render: (row) => <span className="text-gray-700 dark:text-gray-300">{formatNumber(row.quantity)}</span>
     }
-  ]
+  ], [])
 
   return (
     <div className="space-y-6">

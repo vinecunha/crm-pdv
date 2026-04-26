@@ -1,7 +1,7 @@
 import React from 'react'
 import { Trash2, Plus, Minus, ShoppingBag } from '@lib/icons'
 import { formatCurrency } from '@utils/formatters'
-import Button from '../../ui/Button'
+import Button from '@components/ui/Button'
 
 const CartSummary = ({ 
   cart, 

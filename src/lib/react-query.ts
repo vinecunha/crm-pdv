@@ -47,7 +47,7 @@ export const queryClient = new QueryClient({
       retry: 1,
       networkMode: 'offlineFirst',
       onError: (error) => {
-        console.error('[React Query] Mutation error:', error)
+        logger.error('[React Query] Mutation error:', error)
       },
     },
   },
@@ -90,7 +90,7 @@ if (typeof window !== 'undefined') {
 
     logger.log('✅ [React Query] Persist client inicializado')
   } catch (error) {
-    console.warn('⚠️ [React Query] Erro ao inicializar persist client:', error)
+    logger.warn('⚠️ [React Query] Erro ao inicializar persist client:', error)
   }
 }
 
@@ -101,7 +101,7 @@ export const clearPersistedCache = () => {
     logger.log('✅ [React Query] Cache persistido limpo')
     return true
   } catch (error) {
-    console.warn('[React Query] Erro ao limpar cache:', error)
+    logger.warn('[React Query] Erro ao limpar cache:', error)
     return false
   }
 }
@@ -129,7 +129,7 @@ export const clearAllCache = (queryClient) => {
   try {
     localStorage.removeItem('REACT_QUERY_CACHE_V3')
   } catch (error) {
-    console.warn('[React Query] Erro ao limpar localStorage:', error)
+    logger.warn('[React Query] Erro ao limpar localStorage:', error)
   }
   return queryClient.clear()
 }

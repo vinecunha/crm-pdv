@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { ShoppingCart, ChevronRight } from '@lib/icons'
-import Badge from '../Badge'
+import Badge from '@components/ui/Badge'
 import { formatCurrency, formatDate } from '@utils/formatters'
 
 const getStatusBadge = (status) => {
@@ -69,3 +69,4 @@ const RecentSalesList = ({ sales }) => {
 }
 
 export default RecentSalesList
+

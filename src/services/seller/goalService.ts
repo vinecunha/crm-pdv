@@ -1,6 +1,7 @@
 ﻿// src/services/goalService.js
 import { supabase } from '@lib/supabase'
 import * as notificationService from '@services/system/notificationService'
+import { logger } from '@utils/logger'
 
 /**
  * Buscar metas de um usuário
@@ -62,7 +63,7 @@ export const fetchUserGoals = async (userId) => {
     return goals
     
   } catch (error) {
-    console.error('❌ Erro ao buscar metas:', error)
+    logger.error('❌ Erro ao buscar metas:', error)
     
     // Em caso de erro, retornar com flag isDefault: true
     return {
@@ -93,7 +94,7 @@ export const fetchDefaultGoals = async () => {
       }
     }
   } catch (error) {
-    console.warn('⚠️ Erro ao buscar metas padrão do sistema:', error)
+    logger.warn('⚠️ Erro ao buscar metas padrão do sistema:', error)
   }
   
   // Fallback para valores hardcoded
@@ -167,7 +168,7 @@ export const saveGoal = async (userId, goalType, targetAmount, createdBy) => {
     }
     
   } catch (error) {
-    console.error('❌ Erro ao salvar meta:', error)
+    logger.error('❌ Erro ao salvar meta:', error)
     throw error
   }
 }
@@ -228,7 +229,7 @@ export const fetchTeamGoals = async (userRole, userId) => {
     }))
     
   } catch (error) {
-    console.error('❌ Erro ao buscar metas da equipe:', error)
+    logger.error('❌ Erro ao buscar metas da equipe:', error)
     return []
   }
 }
@@ -336,12 +337,12 @@ export const checkAndNotifyGoalAchievement = async (userId) => {
           .eq('user_id', userId)
           .eq('goal_type', type)
         
-        console.log(`✅ Meta ${type} atingida para usuário ${userId}: ${currentAmount}/${targetAmount}`)
+        logger.log(`✅ Meta ${type} atingida para usuário ${userId}: ${currentAmount}/${targetAmount}`)
       }
     }
     
   } catch (error) {
-    console.error('❌ Erro ao verificar metas:', error)
+    logger.error('❌ Erro ao verificar metas:', error)
   }
 }
 
@@ -362,7 +363,7 @@ export const resetGoalNotification = async (userId, goalType) => {
     
     return true
   } catch (error) {
-    console.error('❌ Erro ao resetar notificação:', error)
+    logger.error('❌ Erro ao resetar notificação:', error)
     return false
   }
 }
@@ -377,7 +378,7 @@ export const updateGoalProgress = async (userId, saleAmount) => {
     
     return true
   } catch (error) {
-    console.error('❌ Erro ao atualizar progresso da meta:', error)
+    logger.error('❌ Erro ao atualizar progresso da meta:', error)
     return false
   }
 }

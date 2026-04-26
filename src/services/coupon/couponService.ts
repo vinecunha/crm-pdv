@@ -48,11 +48,13 @@ export const fetchCoupons = async (searchTerm = '', filters = {}, forceRefresh =
 export const fetchActiveCoupons = async () => {
   logger.log('🔄 [couponService] Buscando cupons ativos')
   
+  const today = new Date().toISOString()
+  
   const { data, error } = await supabase
     .from('coupons')
     .select('*')
     .eq('is_active', true)
-    .gte('valid_to', new Date().toISOString())
+    .or(`valid_to.is.null,valid_to.gte.${today}`)
     .order('code')
   
   if (error) {

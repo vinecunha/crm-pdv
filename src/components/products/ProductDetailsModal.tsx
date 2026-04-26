@@ -1,7 +1,7 @@
 import React from 'react'
 import { TrendingUp, TrendingDown, RefreshCw } from '@lib/icons'
 import Modal from '@components/ui/Modal'
-import Badge from '../Badge'
+import Badge from '@components/ui/Badge'
 import { formatCurrency, formatNumber } from '@utils/formatters'
 
 const ProductDetailsModal = ({ 
@@ -145,3 +145,4 @@ const ProductDetailsModal = ({
 }
 
 export default ProductDetailsModal
+

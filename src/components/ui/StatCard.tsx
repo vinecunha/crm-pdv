@@ -277,6 +277,11 @@ const StatCard = ({
       bg: 'bg-purple-50 dark:bg-purple-900/20',
       border: 'border-purple-200 dark:border-purple-800',
       hover: 'hover:border-purple-300 dark:hover:border-purple-700'
+    },
+    orange: {
+      bg: 'bg-orange-50 dark:bg-orange-900/20',
+      border: 'border-orange-200 dark:border-orange-800',
+      hover: 'hover:border-orange-300 dark:hover:border-orange-700'
     }
   }
 
@@ -286,7 +291,8 @@ const StatCard = ({
     warning: 'text-yellow-600 dark:text-yellow-400',
     danger: 'text-red-600 dark:text-red-400',
     info: 'text-blue-600 dark:text-blue-400',
-    purple: 'text-purple-600 dark:text-purple-400'
+    purple: 'text-purple-600 dark:text-purple-400',
+    orange: 'text-orange-600 dark:text-orange-400'
   }
 
   const sizes = {

@@ -1,5 +1,6 @@
 import { supabase } from '@lib/supabase'
 import { useAuth } from '@contexts/AuthContext'
+import { logger } from '@utils/logger'
 
 // Baseado em: public.system_logs
 interface SystemLog {
@@ -146,12 +147,12 @@ export const useSystemLogs = (): UseSystemLogsReturn => {
         .insert(logData)
 
       if (error) {
-        console.error('Erro ao salvar log:', error)
+        logger.error('Erro ao salvar log:', error)
       }
 
       return true
     } catch (error) {
-      console.error('Erro ao criar log:', error)
+      logger.error('Erro ao criar log:', error)
       return false
     }
   }

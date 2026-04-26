@@ -13,7 +13,7 @@ import {
   MapPin,
   Layers
 } from '@lib/icons'
-import Badge from '../Badge'
+import Badge from '@components/ui/Badge'
 import { formatCurrency } from '@utils/formatters'
 
 const ProductCard = ({ 
@@ -191,3 +191,4 @@ const ProductCard = ({
 }
 
 export default ProductCard
+

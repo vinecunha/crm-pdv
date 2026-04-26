@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@lib/supabase'
-import Badge from '../Badge'
+import Badge from '@components/ui/Badge'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import { Calendar, DollarSign, CheckCircle, Clock, Filter } from '@lib/icons'
 import { formatCurrency } from '@utils/formatters'
@@ -147,3 +147,4 @@ const CommissionHistory = ({ userId }) => {
 }
 
 export default CommissionHistory
+

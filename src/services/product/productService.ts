@@ -1,5 +1,6 @@
 import { supabase } from '@lib/supabase'
 import { sanitizeObject } from '@utils/sanitize'
+import { logger } from '@utils/logger'
 
 // ============= Constantes =============
 export const units = [
@@ -52,7 +53,7 @@ export const generateNextCode = async () => {
     
     return '001'
   } catch (error) {
-    console.error('Erro ao gerar código:', error)
+    logger.error('Erro ao gerar código:', error)
     return Date.now().toString().slice(-6)
   }
 }

@@ -24,7 +24,9 @@ const Modal = ({
   isLoading = false,
   error = null,      
   onRetry = null,
-  zIndex = 50
+  zIndex = 50,
+  showHeader = true,
+  hideCloseButton = false
 }) => {
   const modalRef = useRef(null)
   

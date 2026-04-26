@@ -11,6 +11,7 @@ import {
   Copy,
   RotateCcw
 } from '@lib/icons'
+import { logger } from '@utils/logger'
 
 // Hook para animação de progresso
 const useProgressTimer = (duration, onComplete, isPaused = false) => {
@@ -151,7 +152,7 @@ const useCopyToClipboard = () => {
       setTimeout(() => setCopied(false), 2000)
       return true
     } catch (err) {
-      console.error('Failed to copy:', err)
+      logger.error('Failed to copy:', err)
       return false
     }
   }, [])

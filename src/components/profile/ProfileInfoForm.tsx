@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Phone, MapPin, Calendar, Hash, User, AtSign, Search } from '@lib/icons'
 import { useUI } from '@contexts/UIContext'
 import FormInput from '@components/forms/FormInput'
+import { logger } from '@utils/logger'
 
 const ProfileInfoForm = ({ formData, formErrors, onChange }) => {
   const [loadingCEP, setLoadingCEP] = useState(false)
@@ -39,7 +40,7 @@ const ProfileInfoForm = ({ formData, formErrors, onChange }) => {
       showFeedback('success', `Endereço encontrado: ${data.street}, ${data.city}/${data.state}`)
       
     } catch (error) {
-      console.error('Erro ao consultar CEP:', error)
+      logger.error('Erro ao consultar CEP:', error)
       showFeedback('error', 'CEP não encontrado ou serviço indisponível')
     } finally {
       setLoadingCEP(false)

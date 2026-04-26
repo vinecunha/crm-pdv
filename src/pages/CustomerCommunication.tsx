@@ -9,7 +9,7 @@ import { useSystemLogs } from '@hooks/system/useSystemLogs'
 
 import Button from '@components/ui/Button'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
-import Badge from '@components/Badge'
+import Badge from '@components/ui/Badge'
 import PageHeader from '@components/ui/PageHeader'
 
 import CustomerStats from '@components/customers/CustomerStats'
@@ -235,3 +235,4 @@ const CustomerCommunication = () => {
 }
 
 export default CustomerCommunication
+

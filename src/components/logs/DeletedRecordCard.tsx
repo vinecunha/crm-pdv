@@ -1,6 +1,6 @@
 import React from 'react'
 import { RotateCcw, Package, User } from '@lib/icons'
-import Badge from '../Badge'
+import Badge from '@components/ui/Badge'
 import Button from '@components/ui/Button'
 import { formatDateTime } from '@utils/formatters'
 
@@ -56,3 +56,4 @@ const DeletedRecordCard = ({ record, onRestore, canRestore }) => {
 }
 
 export default DeletedRecordCard
+

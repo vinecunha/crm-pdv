@@ -1,7 +1,7 @@
 import React from 'react'
 import { ClipboardList, Clock, CheckCircle, XCircle, Eye, FileText, ArrowRight } from '@lib/icons'
 import Button from '@components/ui/Button'
-import Badge from '../Badge'
+import Badge from '@components/ui/Badge'
 
 const statusConfig = {
   in_progress: { label: 'Em Andamento', color: 'warning', icon: Clock },
@@ -108,3 +108,4 @@ const StockCountSessionCard = ({ session, onContinue, onViewDetails }) => {
 }
 
 export default StockCountSessionCard
+

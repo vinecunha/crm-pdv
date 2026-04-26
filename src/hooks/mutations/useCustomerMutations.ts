@@ -44,18 +44,24 @@ interface UseCustomerMutationsReturn {
   isMutating: boolean
 }
 
-export const useCustomerMutations = (): UseCustomerMutationsReturn => {
+export const useCustomerMutations = (callbacks?: { 
+  onSuccess?: (data: Customer, action: string) => void; 
+  onError?: (error: Error) => void 
+}): UseCustomerMutationsReturn => {
   const queryClient = useQueryClient()
   const { logCreate, logUpdate, logDelete, logError } = useSystemLogs()
+  const { onSuccess, onError } = callbacks || {}
 
   const createMutation = useMutation({
     mutationFn: (data: CustomerFormData) => customerService.createCustomer(data),
     onSuccess: async (data: Customer) => {
       await logCreate('customer', data.id.toString(), data)
       queryClient.invalidateQueries({ queryKey: ['customers'] })
+      onSuccess?.(data, 'create')
     },
     onError: async (error: Error) => {
       await logError('customer', error, { action: 'create' })
+      onError?.(error)
     }
   })
 
@@ -65,6 +71,7 @@ export const useCustomerMutations = (): UseCustomerMutationsReturn => {
     onSuccess: async (data: Customer, variables: { id: number; data: Partial<CustomerFormData> }) => {
       await logUpdate('customer', data.id.toString(), variables, data)
       queryClient.invalidateQueries({ queryKey: ['customers'] })
+      onSuccess?.(data, 'update')
     },
   })
 

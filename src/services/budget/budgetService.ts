@@ -60,7 +60,7 @@ export const fetchAvailableCoupons = async (customerId) => {
   const today = new Date().toISOString()
   
   const [globalResult, allowedResult] = await Promise.all([
-    supabase.from('coupons').select('*').eq('is_active', true).eq('is_global', true).lte('valid_from', today).gte('valid_to', today),
+    supabase.from('coupons').select('*').eq('is_active', true).eq('is_global', true).lte('valid_from', today).or(`valid_to.is.null,valid_to.gte.${today}`),
     supabase.from('coupon_allowed_customers').select('coupon_id').eq('customer_id', customerId)
   ])
   
@@ -72,7 +72,7 @@ export const fetchAvailableCoupons = async (customerId) => {
       .eq('is_active', true)
       .in('id', allowedResult.data.map(a => a.coupon_id))
       .lte('valid_from', today)
-      .gte('valid_to', today)
+      .or(`valid_to.is.null,valid_to.gte.${today}`)
     restricted = data || []
   }
   
@@ -244,17 +244,23 @@ export const convertBudgetToSale = async (budget, budgetItems, profile) => {
   const { error: itemsError } = await supabase.from('sale_items').insert(saleItems)
   if (itemsError) throw itemsError
   
-  for (const item of budgetItems) {
-    const { data: product } = await supabase.from('products').select('stock_quantity').eq('id', item.product_id).single()
-    if (product) {
-      await supabase.from('products').update({ stock_quantity: product.stock_quantity - item.quantity, updated_at: new Date().toISOString() }).eq('id', item.product_id)
-    }
-  }
+  await supabase.rpc('convert_budget_to_sale', {
+    p_budget_id: budget.id,
+    p_items: budgetItems.map(item => ({
+      product_id: item.product_id,
+      quantity: item.quantity
+    }))
+  })
   
   await supabase.from('budgets').update({ status: 'converted', converted_sale_id: sale.id, updated_at: new Date().toISOString() }).eq('id', budget.id)
   
   if (budget.customer_id) {
-    await supabase.from('customers').update({ last_purchase: new Date().toISOString(), total_purchases: supabase.raw(`COALESCE(total_purchases, 0) + ${budget.final_amount}`) }).eq('id', budget.customer_id)
+    const { data: customer } = await supabase.from('customers').select('total_purchases').eq('id', budget.customer_id).single()
+    const newTotal = (customer?.total_purchases || 0) + budget.final_amount
+    await supabase.from('customers').update({ 
+      last_purchase: new Date().toISOString(), 
+      total_purchases: newTotal 
+    }).eq('id', budget.customer_id)
   }
   
   return sale

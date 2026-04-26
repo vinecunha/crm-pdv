@@ -3,6 +3,17 @@ import React, { useState } from 'react'
 import { Shield, Settings as SettingsIcon } from '@lib/icons'
 import { useAuth } from '@contexts/AuthContext'
 import { useUI } from '@contexts/UIContext'
+import { useSettingsQueries } from '@hooks/queries/useSettingsQueries'
+import { useSettingsMutations } from '@hooks/mutations/useSettingsMutations'
+import { useSettingsHandlers } from '@hooks/handlers/useSettingsHandlers'
+import SplashScreen from '@components/ui/SplashScreen'
+import PageHeader from '@components/ui/PageHeader'
+import SettingsSidebar from '@components/settings/SettingsSidebar'
+import CompanySettingsTab from '@components/settings/CompanySettingsTab'
+import AppearanceSettingsTab from '@components/settings/AppearanceSettingsTab'
+import PermissionsSettingsTab from '@components/settings/PermissionsSettingsTab'
+import SecuritySettingsTab from '@components/settings/SecuritySettingsTab'
+
 const Settings = () => {
   const { isAdmin, changePassword, logout } = useAuth()
   const { showFeedback } = useUI()
@@ -18,26 +29,28 @@ const Settings = () => {
     refetch
   } = useSettingsQueries(isAdmin)
 
-  // ✅ Mutations com callbacks
+  // ✅ Mutations - definido antes dos handlers
   const { saveMutation } = useSettingsMutations({
     onSettingsSaved: () => {
       setLocalSettings(null)
-      handlers.showFeedback('Configurações salvas com sucesso!')
+      showFeedback('Configurações salvas com sucesso!')
     },
     onError: (error) => {
-      handlers.showFeedback('Erro ao salvar: ' + error.message, 'error')
+      showFeedback('Erro ao salvar: ' + error.message, 'error')
     }
   })
 
-  // ✅ Handlers
+  // ✅ Handlers - agora mutations existe
   const handlers = useSettingsHandlers({
     companySettings,
     localSettings,
     setLocalSettings,
     setActiveTab,
-    saveMutation,
+    showFeedback,
+    logout,
+    refetch,
     changePassword,
-    logout
+    saveMutation
   })
 
   const currentSettings = localSettings || companySettings || {}

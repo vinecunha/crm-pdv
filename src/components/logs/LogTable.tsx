@@ -1,5 +1,5 @@
 // src/components/logs/LogTable.jsx
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Eye } from '@lib/icons'
 import { useTableStrategy } from '@hooks/utils/useTableStrategy'
 import { formatDateTime } from '@utils/formatters'
@@ -59,7 +59,7 @@ const ActionsLegend = ({ actions }) => {
 const LogTable = ({ logs, onViewDetails, getActionColor, getActionLabel }) => {
   const TableComponent = useTableStrategy(logs, 100)
 
-  const columns = [
+  const columns = useMemo(() => [
     {
       key: 'created_at',
       header: 'Data/Hora',
@@ -117,7 +117,7 @@ const LogTable = ({ logs, onViewDetails, getActionColor, getActionLabel }) => {
         </button>
       )
     }
-  ]
+  ], [getActionColor, getActionLabel, onViewDetails])
 
   // ✅ Ações com id para a legenda
   const actions = [

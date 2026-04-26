@@ -3,6 +3,7 @@ import { Calendar, Search } from '@lib/icons'
 import { useUI } from '@contexts/UIContext'
 import FormInput from '@components/forms/FormInput'
 import Button from '@components/ui/Button'
+import { logger } from '@utils/logger'
 
 const CustomerForm = ({ 
   formData, 
@@ -51,7 +52,7 @@ const consultarCEP = async () => {
       showFeedback('success', 'Endereço preenchido!')
       
     } catch (error) {
-      console.error('Erro ao consultar CEP:', error)
+      logger.error('Erro ao consultar CEP:', error)
       showFeedback('error', 'CEP não encontrado ou serviço indisponível')
     } finally {
       setLoadingCEP(false)

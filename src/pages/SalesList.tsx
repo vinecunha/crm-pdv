@@ -11,7 +11,7 @@ import DataTable from '@components/ui/DataTable'
 import DataCards from '@components/ui/DataCards'
 import SalesListCard from '@components/sales/management/SalesListCard' 
 import Button from '@components/ui/Button'
-import Badge from '@components/Badge'
+import Badge from '@components/ui/Badge'
 import PageHeader from '@components/ui/PageHeader'
 import { formatCurrency, formatNumber, formatDateTime } from '@utils/formatters'
 import { useSystemLogs } from '@hooks/system/useSystemLogs'
@@ -19,15 +19,12 @@ import useLogger from '@hooks/system/useLogger'
 import useDebounce from '@/hooks/utils/useDebounce'
 import useMediaQuery from '@/hooks/utils/useMediaQuery'
 import SalesListModalsContainer from '@components/sales/management/SalesListModalsContainer'
+import StatCard from '@components/ui/StatCard'
 
 // ✅ Hooks centralizados
 import { useSalesListHandlers } from '@hooks/handlers'
 import { useSaleMutations } from '@hooks/mutations'
 import { useSalesListQueries } from '@hooks/queries/useSalesListQueries'
-
-const StatCard = ({ label, value, sublabel, icon: Icon, variant = 'default' }) => {
-  // ... (permanece igual)
-}
 
 const SalesList = () => {
   const { profile } = useAuth()
@@ -407,3 +404,4 @@ onSaleCancelled: (data, variables) => {
 }
 
 export default SalesList
+

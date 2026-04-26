@@ -19,7 +19,7 @@ export const useNetworkStatus = (): NetworkStatus => {
         navigator.serviceWorker.ready.then((registration) => {
           registration.sync.register('sync-pending-sales')
             .then(() => logger.log('🔄 Sincronização registrada'))
-            .catch((err: Error) => console.error('Erro ao registrar sync:', err))
+            .catch((err: Error) => logger.error('Erro ao registrar sync:', err))
         })
       }
     }

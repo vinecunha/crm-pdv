@@ -149,20 +149,20 @@ const Header: React.FC<HeaderProps> = ({
               transition-all duration-300
               ${isScrolled && isCompact ? 'hidden' : ''}
             `}>
-              <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex items-center gap-2 sm:gap-4">
                 <button
                   onClick={onMobileMenuToggle}
-                  className="lg:hidden p-1 -ml-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                   aria-label="Abrir menu"
                 >
-                  <Menu size={14} />
+                  <Menu size={20} />
                 </button>
                 
-                <div className="hidden sm:flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5">
                   <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${
                     isOnline ? 'bg-green-500' : 'bg-yellow-500'
                   }`} />
-                  <span>{isOnline ? 'Online' : 'Offline'}</span>
+                  <span className="hidden sm:inline">{isOnline ? 'Online' : 'Offline'}</span>
                 </div>
                 
                 <div className="hidden md:flex items-center gap-1.5">
@@ -261,7 +261,7 @@ const Header: React.FC<HeaderProps> = ({
               </div>
 
               {/* Quick Actions */}
-              <div className={`flex items-center gap-1 sm:gap-1.5 lg:gap-2 ${
+              <div className={`flex items-center justify-between sm:justify-end gap-1 sm:gap-1.5 lg:gap-2 ${
                 isScrolled && isCompact ? 'self-end sm:self-auto' : ''
               }`}>
                 <ThemeSelector />

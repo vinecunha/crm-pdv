@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { formatCurrency, formatDateTime } from '@utils/formatters'
 import { fetchCompanySettings } from '@services/system/companyService'
+import { logger } from '@utils/logger'
 
 const ReceiptPrint = ({ sale, customer, cart, paymentMethod, discount, profile }) => {
   const [company, setCompany] = useState(null)
@@ -14,7 +15,7 @@ const ReceiptPrint = ({ sale, customer, cart, paymentMethod, discount, profile }
   useEffect(() => {
     const loadCompany = async () => {
       const settings = await fetchCompanySettings()
-      console.log('🏢 Configurações da empresa carregadas:', settings)
+      logger.log('🏢 Configurações da empresa carregadas:', settings)
       setCompany(settings)
     }
     loadCompany()
@@ -31,7 +32,7 @@ const ReceiptPrint = ({ sale, customer, cart, paymentMethod, discount, profile }
   const companyZip = company?.zip_code || '00000-000'
 
   // Debug para verificar os dados recebidos
-  console.log('📋 ReceiptPrint - Dados recebidos:', {
+  logger.log('📋 ReceiptPrint - Dados recebidos:', {
     sale,
     customer,
     cart,

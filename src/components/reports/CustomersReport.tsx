@@ -9,8 +9,9 @@ import { formatCurrency, formatNumber, formatDate } from '@utils/formatters'
 import StatCard from '@components/ui/StatCard'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import DataTable from '@components/ui/DataTable'
-import Badge from '../Badge'
+import Badge from '@components/ui/Badge'
 import CouponAnalytics from './CouponAnalytics'
+import { logger } from '@utils/logger'
 
 const CustomersReport = ({ dateRange, customDateRange }) => {
   const [loading, setLoading] = useState(true)
@@ -118,7 +119,7 @@ const CustomersReport = ({ dateRange, customDateRange }) => {
       })
 
     } catch (error) {
-      console.error('Erro ao carregar relatório de clientes:', error)
+      logger.error('Erro ao carregar relatório de clientes:', error)
     } finally {
       setLoading(false)
     }
@@ -306,3 +307,4 @@ const CustomersReport = ({ dateRange, customDateRange }) => {
 }
 
 export default CustomersReport
+

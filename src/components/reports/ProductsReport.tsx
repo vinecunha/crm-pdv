@@ -93,7 +93,7 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
       await fetchActiveProducts()
 
     } catch (error) {
-      console.error('Erro ao carregar relatório:', error)
+      logger.error('Erro ao carregar relatório:', error)
       setError(error.message)
     } finally {
       setLoading(false)
@@ -166,7 +166,7 @@ const ProductsReport = ({ dateRange, customDateRange }) => {
       }))
 
     } catch (error) {
-      console.error('Erro ao buscar produtos ativos:', error)
+      logger.error('Erro ao buscar produtos ativos:', error)
     }
   }
 

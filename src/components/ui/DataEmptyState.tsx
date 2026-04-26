@@ -15,7 +15,7 @@ const iconMap = {
   stock: Package, 
 }
 
-const DataEmptyState = ({
+const DataEmptyState = React.memo(({
   title = "Nenhum dado encontrado",
   description = "Não há registros para exibir no momento.",
   icon = "default",
@@ -46,6 +46,6 @@ const DataEmptyState = ({
       )}
     </div>
   )
-}
+})
 
 export default DataEmptyState

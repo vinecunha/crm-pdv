@@ -1,7 +1,7 @@
 // src/components/sales/pdv/CartItem.jsx
 import React, { useState } from 'react'  // ✅ Adicionar useState
 import { Minus, Plus, Trash2, Package } from '@lib/icons'
-import ConfirmModal from '../../ui/ConfirmModal'
+import ConfirmModal from '@components/ui/ConfirmModal'
 import { formatCurrency } from '@utils/formatters'
 
 const CartItem = ({ 

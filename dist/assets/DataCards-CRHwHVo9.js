@@ -1,0 +1,20 @@
+import{r as R}from"./rolldown-runtime-Bnw7wDfq.js";import{M as q}from"./vendor-BpO4XCYx.js";import{Hn as E,et as I,vn as T}from"./vendor-react-RNFk1jVI.js";var l=R(q(),1),e=E(),z=({children:i,enableAnimations:o})=>{const[g,a]=(0,l.useState)(!1);return(0,l.useEffect)(()=>{o?requestAnimationFrame(()=>a(!0)):a(!0)},[o]),o?(0,e.jsx)("div",{className:`
+        transition-all duration-300 ease-out
+        ${g?"opacity-100 translate-y-0":"opacity-0 translate-y-5"}
+      `,children:i}):i},H=({data:i,renderCard:o,keyExtractor:g,columns:a={default:1,sm:2,lg:3,xl:4},gap:h=4,onCardClick:s,emptyMessage:y="Nenhum dado encontrado",loading:n=!1,loadingSkeleton:v,className:b="",enableAnimations:j=!0,infiniteScroll:D,hasMore:u,onLoadMore:c,refreshControl:x,onRefresh:p,containerProps:N={}})=>{const $={0:"gap-0",1:"gap-1",2:"gap-2",3:"gap-3",4:"gap-4",5:"gap-5",6:"gap-6",8:"gap-8",10:"gap-10"},k=(0,l.useMemo)(()=>{const r=typeof a=="number"?{default:a}:a;return`
+      grid-cols-${r.default||1}
+      ${r.sm?`sm:grid-cols-${r.sm}`:""}
+      ${r.md?`md:grid-cols-${r.md}`:""}
+      ${r.lg?`lg:grid-cols-${r.lg}`:""}
+      ${r.xl?`xl:grid-cols-${r.xl}`:""}
+      ${r["2xl"]?`2xl:grid-cols-${r["2xl"]}`:""}
+    `},[a]),d=l.useRef(),w=(0,l.useCallback)(r=>{n||!u||!c||(d.current&&d.current.disconnect(),d.current=new IntersectionObserver(t=>{t[0].isIntersecting&&c()},{threshold:.1,rootMargin:"100px"}),r&&d.current.observe(r))},[n,u,c]);return!n&&i.length===0?(0,e.jsx)("div",{className:"flex flex-col items-center justify-center min-h-[300px] p-8 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-xl border border-gray-200 dark:border-gray-700",children:(0,e.jsxs)("div",{className:"text-center space-y-3",children:[(0,e.jsx)("div",{className:"text-6xl mb-4",children:"🔍"}),(0,e.jsx)("h3",{className:"text-lg font-semibold text-gray-700 dark:text-gray-300",children:y}),(0,e.jsx)("p",{className:"text-sm text-gray-500 dark:text-gray-400",children:"Tente ajustar seus filtros ou recarregar a página"}),p&&(0,e.jsxs)("button",{onClick:p,className:"mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors",children:[(0,e.jsx)(I,{className:"w-4 h-4 mr-2"}),"Atualizar"]})]})}):(0,e.jsxs)("div",{className:"relative w-full",...N,children:[x&&(0,e.jsx)("div",{className:"sticky top-0 z-10 bg-gradient-to-b from-white dark:from-gray-900 to-transparent",children:x}),(0,e.jsx)("div",{className:`
+          grid 
+          ${k} 
+          ${$[h]||"gap-4"} 
+          auto-rows-min
+          ${b}
+        `,role:"grid","aria-label":"Grid de cards de dados",children:i.map((r,t)=>{const _=t===i.length-1,m=g?.(r,t)||t,f=(0,e.jsx)(z,{enableAnimations:j,children:(0,e.jsxs)("div",{onClick:()=>s?.(r,t),className:`
+                  relative group
+                  ${s?"cursor-pointer transform transition-all duration-200 hover:-translate-y-1 hover:shadow-lg":""}
+                `,role:"gridcell",tabIndex:s?0:void 0,onKeyDown:S=>{S.key==="Enter"&&s&&s(r,t)},"aria-label":s?`Card ${t+1} de ${i.length}`:void 0,children:[s&&(0,e.jsx)("div",{className:"absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-5 dark:group-hover:opacity-10 rounded-lg transition-opacity duration-200"}),s&&(0,e.jsx)(T,{className:"absolute top-4 right-4 w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200"}),o(r,t)]})},m);return _?(0,e.jsx)("div",{ref:w,children:f},m):(0,e.jsx)(l.Fragment,{children:f},m)})}),n&&(0,e.jsx)("div",{className:"mt-4",children:v||(0,e.jsx)("div",{className:"grid gap-4",style:{gridTemplateColumns:`repeat(${a.default||1}, 1fr)`},children:[...Array(a.default||3)].map((r,t)=>(0,e.jsx)("div",{className:"h-48 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"},t))})}),u&&!n&&(0,e.jsx)("div",{className:"mt-4 text-center",children:(0,e.jsx)("button",{onClick:c,className:"px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors",children:"Carregar mais..."})})]})};export{H as t};

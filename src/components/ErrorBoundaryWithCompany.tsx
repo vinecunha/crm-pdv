@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '@lib/supabase'
 import ErrorBoundary from '@components/ErrorBoundary'
+import { logger } from '@utils/logger'
 
 const ErrorBoundaryWithCompany = ({ children }) => {
   const [companySettings, setCompanySettings] = useState(null)
@@ -19,7 +20,7 @@ const ErrorBoundaryWithCompany = ({ children }) => {
           setCompanySettings(data)
         }
       } catch (error) {
-        console.error('Erro ao buscar configurações da empresa:', error)
+        logger.error('Erro ao buscar configurações da empresa:', error)
       } finally {
         setLoading(false)
       }

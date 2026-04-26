@@ -18,7 +18,7 @@ import {
   Eye
 } from '@lib/icons'
 import { useTableStrategy } from '@hooks/utils/useTableStrategy'
-import Badge from '../Badge'
+import Badge from '@components/ui/Badge'
 import { formatCurrency, formatDateTime } from '@utils/formatters'
 import { createAction } from '@utils/actions'
 
@@ -321,3 +321,4 @@ const SalesTable = ({
 }
 
 export default SalesTable
+

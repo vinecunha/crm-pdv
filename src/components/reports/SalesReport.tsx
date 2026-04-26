@@ -8,9 +8,10 @@ import { formatCurrency, formatNumber, formatDateTime } from '@utils/formatters'
 import StatCard from '@components/ui/StatCard'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import DataTable from '@components/ui/DataTable'
-import Badge from '../Badge'
+import Badge from '@components/ui/Badge'
 import { Line, Doughnut } from 'react-chartjs-2'
 import '../../lib/chartConfig'
+import { logger } from '@utils/logger'
 
 const SalesReport = ({ dateRange, customDateRange, paymentMethodFilter }) => {
   const [loading, setLoading] = useState(true)
@@ -110,7 +111,7 @@ const SalesReport = ({ dateRange, customDateRange, paymentMethodFilter }) => {
       })
 
     } catch (error) {
-      console.error('Erro ao carregar relatório de vendas:', error)
+      logger.error('Erro ao carregar relatório de vendas:', error)
     } finally {
       setLoading(false)
     }
@@ -350,3 +351,4 @@ const SalesReport = ({ dateRange, customDateRange, paymentMethodFilter }) => {
 }
 
 export default SalesReport
+

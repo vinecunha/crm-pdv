@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@contexts/AuthContext'
+import { logger } from '@utils/logger'
 
 interface Coordinates {
   latitude: number
@@ -48,7 +49,7 @@ export const useThemeDetection = () => {
         })
       },
       (error: GeolocationPositionError) => {
-        console.warn('Erro ao obter localização:', error.message)
+        logger.warn('Erro ao obter localização:', error.message)
       }
     )
   }, [])

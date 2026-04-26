@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@lib/supabase'
+import { logger } from '@utils/logger'
 
 // Baseado em: public.company_settings
 interface CompanySettings {
@@ -73,7 +74,7 @@ export const useCompany = (): UseCompanyReturn => {
       }
       
     } catch (err) {
-      console.error('Erro ao buscar configurações da empresa:', err)
+      logger.error('Erro ao buscar configurações da empresa:', err)
       setError((err as Error).message)
       
       setCompany({
@@ -106,7 +107,7 @@ export const useCompany = (): UseCompanyReturn => {
       return { success: true, data: data as CompanySettings }
       
     } catch (err) {
-      console.error('Erro ao atualizar configurações:', err)
+      logger.error('Erro ao atualizar configurações:', err)
       return { success: false, error: (err as Error).message }
     } finally {
       setLoading(false)

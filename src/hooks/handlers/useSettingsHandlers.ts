@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import { useUI } from '@contexts/UIContext'
 
 // Baseado em: public.company_settings
 interface CompanySettings {
@@ -37,7 +38,6 @@ interface UseSettingsHandlersProps {
   localSettings: CompanySettings | null
   setLocalSettings: (settings: CompanySettings | null) => void
   setActiveTab: (tab: string) => void
-  setFeedback: (feedback: FeedbackState) => void
   saveMutation: MutationResult<CompanySettings>
   changePassword: (newPassword: string) => Promise<void>
   logout: () => void
@@ -58,16 +58,12 @@ export const useSettingsHandlers = ({
   localSettings,
   setLocalSettings,
   setActiveTab,
-  setFeedback,
   saveMutation,
   changePassword,
   logout
 }: UseSettingsHandlersProps): UseSettingsHandlersReturn => {
 
-  const showFeedback = useCallback((message: string, type: 'success' | 'error' | 'info' | 'warning' = 'success') => {
-    setFeedback({ message, type })
-    setTimeout(() => setFeedback({ message: null, type: 'success' }), 3000)
-  }, [setFeedback])
+  const { showFeedback } = useUI()
 
   const handleTabChange = useCallback((tab: string) => {
     setActiveTab(tab)

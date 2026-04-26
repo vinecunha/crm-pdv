@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Upload, X, Image as ImageIcon } from '@lib/icons'
 import { compressLogo, isImageFile, validateImageSize } from '@utils/imageCompression'
 import LazyImage from '@components/ui/LazyImage'
+import { logger } from '@utils/logger'
 
 const LogoUploader = ({ currentLogo, onLogoChange, disabled }) => {
   const [uploading, setUploading] = useState(false)
@@ -43,7 +44,7 @@ const LogoUploader = ({ currentLogo, onLogoChange, disabled }) => {
       reader.readAsDataURL(compressedFile)
       
     } catch (error) {
-      console.error('Erro ao processar logo:', error)
+      logger.error('Erro ao processar logo:', error)
       setError('Erro ao processar imagem')
       setUploading(false)
       setPreview(null)

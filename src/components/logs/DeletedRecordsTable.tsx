@@ -1,5 +1,5 @@
 // src/components/logs/DeletedRecordsTable.jsx
-import React from 'react'
+import React, { useMemo } from 'react'
 import { RotateCcw, Eye } from '@lib/icons'
 import { useTableStrategy } from '@hooks/utils/useTableStrategy'
 import { formatDateTime } from '@utils/formatters'
@@ -60,7 +60,7 @@ const ActionsLegend = ({ actions }) => {
 const DeletedRecordsTable = ({ records, onRestore, canRestore, onViewDetails }) => {
   const TableComponent = useTableStrategy(records, 100)
 
-  const columns = [
+  const columns = useMemo(() => [
     {
       key: '_typeLabel',
       header: 'Tipo',
@@ -115,7 +115,7 @@ const DeletedRecordsTable = ({ records, onRestore, canRestore, onViewDetails }) 
         </div>
       )
     }
-  ]
+  ], [onViewDetails, canRestore, onRestore])
 
   // ✅ Ações com id para a legenda
   const actions = [

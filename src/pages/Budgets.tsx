@@ -12,7 +12,7 @@ import BudgetModalsContainer from '@components/budget/BudgetModalsContainer'
 
 // ✅ Hooks centralizados
 import { useBudgetMutations } from '@hooks/mutations/useBudgetMutations'
-import { useBudgetCart } from '@hooks/budget/useBudgetCart'
+import { useCart } from '@hooks/utils/useCart'
 import { useBudgetCustomer } from '@hooks/budget/useBudgetCustomer'
 import { useBudgetCoupon } from '@hooks/budget/useBudgetCoupon'
 import { useBudgetModals } from '@hooks/budget/useBudgetModals'
@@ -45,7 +45,7 @@ const Budgets = () => {
   const feedback = useFeedback()
   const modals = useBudgetModals()
   
-  const { cart, addToCart, updateQuantity, removeItem, clearCart, subtotal } = useBudgetCart()
+  const { cart, addToCart, updateQuantity, removeItem, clearCart, getSubtotal: subtotal } = useCart()
   const { customer, setCustomerPhone, searchCustomer, createCustomer, clearCustomer } = useBudgetCustomer()
   const { coupon, discount, validateCoupon, removeCoupon } = useBudgetCoupon(customer, subtotal)
   

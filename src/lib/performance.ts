@@ -30,7 +30,7 @@ class PerformanceMonitor {
     if (!this.isEnabled) return
     
     if (duration > 1000) {
-      console.warn(`⚠️ Query lenta [${queryKey}]: ${duration}ms`)
+      logger.warn(`⚠️ Query lenta [${queryKey}]: ${duration}ms`)
     }
     
     this.saveMetric('query_duration', duration, { queryKey })
@@ -69,7 +69,7 @@ class PerformanceMonitor {
     
     // Se for muito lento, alertar
     if (value > 3000) {
-      console.error(`🚨 ALERTA: ${name} demorou ${value}ms!`)
+      logger.error(`🚨 ALERTA: ${name} demorou ${value}ms!`)
     }
   }
 

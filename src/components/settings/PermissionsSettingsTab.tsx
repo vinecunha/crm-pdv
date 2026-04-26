@@ -103,7 +103,7 @@ const PermissionsSettingsTab = () => {
 
   return (
     <div className="space-y-6">
-      {feedback.show && <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />}
+      {feedback.show && <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} position="fixed" />}
 
       <div>
         <h2 className="block font-medium text-gray-700 m-3 dark:text-gray-300">Função</h2>
