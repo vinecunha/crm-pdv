@@ -14,7 +14,6 @@ import {
   Users,
   ClipboardList,
   BarChart3,
-  ListChecks,
   DollarSign,
   Target
 } from '@lib/icons'
@@ -26,12 +25,18 @@ import { useTasksQuery } from '@hooks/tasks/useTasksQuery'
 import Button from '@components/ui/Button'
 import PageHeader from '@components/ui/PageHeader'
 import DashboardStats from '@components/dashboard/DashboardStats'
-import SalesChart from '@components/dashboard/SalesChart'
+import SalesChart from '@/components/dashboard/chart/SalesChart'
 import RecentSalesList from '@components/dashboard/RecentSalesList'
 import TopProductsList from '@components/dashboard/TopProductsList'
 import TeamOverview from '@components/dashboard/TeamOverview'
 import UserPerformanceCard from '@components/dashboard/UserPerformanceCard'
 import CommissionWidget from '@components/commissions/CommissionWidget'
+import RevenueCostChart from '@/components/dashboard/chart/RevenueCostChart'
+import PaymentMethodsChart from '@/components/dashboard/chart/PaymentMethodsChart'
+import TopSellersChart from '@components/dashboard/chart/TopSellersChart'
+import { useTopSellers } from '@hooks/dashboard/useTopSellers'
+import { usePaymentMethods } from '@hooks/dashboard/usePaymentMethods'
+import { useRevenueCost } from '@hooks/dashboard/useRevenueCost'
 import { useCommissionSummary } from '@hooks/commissions/useCommissionSummary'
 import { useDashboardRealtime } from '@hooks/dashboard/useDashboardRealtime'
 import { useWelcomeMessage } from '@hooks/system/useWelcomeMessage'
@@ -59,12 +64,26 @@ const Dashboard = () => {
     profile?.role
   )
   
+  const { 
+    data: revenueCostData, 
+    isLoading: revenueCostLoading 
+  } = useRevenueCost('6months')
+
+  const { 
+    data: paymentMethodsData, 
+    isLoading: paymentMethodsLoading 
+  } = usePaymentMethods(6)
+
+  const { 
+  data: topSellersData, 
+  isLoading: topSellersLoading,
+  totalTeamSales 
+} = useTopSellers(1, 5)
+
   const isAdminOrManager = profile?.role === 'admin' || profile?.role === 'gerente'
 
-  // Usar o hook existente
   const welcomeData = useWelcomeMessage()
 
-  // Descrição baseada no perfil (não duplica o hook)
   const roleDescription = useMemo(() => {
     const descriptions: Record<string, string> = {
       admin: 'Visão geral completa do sistema',
@@ -165,9 +184,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
         
-        {/* ============================================= */}
-        {/* CABEÇALHO - Usando hook existente */}
-        {/* ============================================= */}
+        {/* CABEÇALHO */}
         <PageHeader
           title={welcomeData.fullWelcome}
           description={roleDescription}
@@ -181,10 +198,9 @@ const Dashboard = () => {
           actions={quickActions}
         />
 
-        {/* Resto do conteúdo permanece igual... */}
-        {/* ============================================= */}
-        {/* SEÇÃO 1: MÉTRICAS PRINCIPAIS (KPIs) */}
-        {/* ============================================= */}
+        
+
+        {/* KPIs */}
         <section className="mb-6">
           <DashboardStats 
             stats={dashboardStats}
@@ -193,93 +209,129 @@ const Dashboard = () => {
           />
         </section>
 
-        {/* ============================================= */}
-        {/* SEÇÃO 2: DESEMPENHO INDIVIDUAL (APENAS OPERADORES) */}
-        {/* ============================================= */}
+        {/* DESEMPENHO INDIVIDUAL - Operadores */}
         {profile?.role === 'operador' && (
-        <section className="mb-6">
-          <SectionErrorBoundary title="Erro nas metas pessoais">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <UserPerformanceCard 
-                sales={rawData?.sales || []} 
-                profile={profile} 
-              />
-              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Target size={18} className="text-green-500" />
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
-                    Metas do Período
-                  </h3>
+          <section className="mb-6">
+            <SectionErrorBoundary title="Erro nas metas pessoais">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <UserPerformanceCard 
+                  sales={rawData?.sales || []} 
+                  profile={profile} 
+                />
+                <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Target size={18} className="text-green-500" />
+                    <h3 className="font-semibold text-gray-900 dark:text-white">
+                      Metas do Período
+                    </h3>
+                  </div>
                 </div>
               </div>
+            </SectionErrorBoundary>
+          </section>
+        )}
+
+        {/* GRID: GRÁFICO DE VENDAS + COMISSÕES + TAREFAS */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
+
+        {/* Gráfico de Vendas - 2 colunas */}
+        <div className="lg:col-span-2">
+          <SectionErrorBoundary title="Erro no gráfico de vendas">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5 h-full">
+              <div className="flex items-center gap-2 mb-3">
+                <BarChart3 size={18} className="text-blue-500" />
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                  Evolução de Vendas (7 dias)
+                </h2>
+              </div>
+              <SalesChart data={chartData} />
             </div>
           </SectionErrorBoundary>
-        </section>
-      )}
-
-        {/* ============================================= */}
-        {/* SEÇÃO: GRID PRINCIPAL (GRÁFICO + WIDGETS) */}
-        {/* ============================================= */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
-          
-          <div className="lg:col-span-2">
-            <SectionErrorBoundary title="Erro no gráfico de vendas">
-              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5 h-full">
-                <div className="flex items-center gap-2 mb-3">
-                  <BarChart3 size={18} className="text-blue-500" />
-                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
-                    Evolução de Vendas (7 dias)
-                  </h2>
-                </div>
-                <SalesChart data={chartData} />
-              </div>
-            </SectionErrorBoundary>
-          </div>
-          
-          <div className="lg:col-span-1 space-y-4 sm:space-y-6">
-            
-            <SectionErrorBoundary title="Erro no widget de comissões">
-              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <DollarSign size={18} className="text-green-500" />
-                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
-                    {isAdminOrManager ? 'Comissões' : 'Minhas Comissões'}
-                  </h2>
-                </div>
-                <CommissionWidget 
-                  summary={commissionSummary} 
-                  loading={commissionLoading}
-                  userRole={profile?.role}
-                />
-              </div>
-            </SectionErrorBoundary>
-            
-            <SectionErrorBoundary title="Erro no widget de tarefas">
-              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <ClipboardList size={18} className="text-orange-500" />
-                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
-                    Tarefas Pendentes
-                  </h2>
-                </div>
-                <TaskWidget 
-                  myTasks={myTasks}
-                  teamTasks={teamTasks}
-                  loading={tasksLoading}
-                  maxItems={3}
-                  defaultTab="my"
-                />
-              </div>
-            </SectionErrorBoundary>
-            
-          </div>
         </div>
 
-        {/* ============================================= */}
-        {/* SEÇÃO 4: LISTAS (ÚLTIMAS VENDAS + PRODUTOS) */}
-        {/* ============================================= */}
+        {/* Widgets - 1 coluna */}
+        <div className="lg:col-span-1 space-y-4 sm:space-y-6">
+          
+          {/* Comissões */}
+          <SectionErrorBoundary title="Erro no widget de comissões">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <DollarSign size={18} className="text-green-500" />
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                  {isAdminOrManager ? 'Comissões' : 'Minhas Comissões'}
+                </h2>
+              </div>
+              <CommissionWidget 
+                summary={commissionSummary} 
+                loading={commissionLoading}
+                userRole={profile?.role}
+              />
+            </div>
+          </SectionErrorBoundary>
+          
+          {/* Tarefas */}
+          <SectionErrorBoundary title="Erro no widget de tarefas">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <ClipboardList size={18} className="text-orange-500" />
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                  Tarefas Pendentes
+                </h2>
+              </div>
+              <TaskWidget 
+                myTasks={myTasks}
+                teamTasks={teamTasks}
+                loading={tasksLoading}
+                maxItems={3}
+                defaultTab="my"
+              />
+            </div>
+          </SectionErrorBoundary>
+        </div>
+
+        {/* METODOS DE PAGAMENTO - Acima dos KPIs */}
+        <section className="mb-6 lg:col-span-2">
+          <SectionErrorBoundary title="Erro no gráfico de pagamentos">
+            <PaymentMethodsChart 
+              data={paymentMethodsData}
+              isLoading={paymentMethodsLoading}
+            />
+          </SectionErrorBoundary>
+        </section>
+
+        <section className="mb-6">
+          <SectionErrorBoundary title="Erro no ranking de vendedores">
+            <TopSellersChart 
+              data={topSellersData}
+              isLoading={topSellersLoading}
+              totalTeamSales={totalTeamSales}
+            />
+          </SectionErrorBoundary>
+        </section>
+
+        {/* RECEITAS VS CUSTOS - Admin/Gerente */}
+        {isAdminOrManager && (
+          <section className="mb-6 lg:col-span-3">
+            <SectionErrorBoundary title="Erro no gráfico de receitas e custos">
+              <RevenueCostChart 
+                data={revenueCostData}
+                isLoading={revenueCostLoading}
+                title="Receitas vs Custos"
+                period="Últimos 6 meses"
+              />
+            </SectionErrorBoundary>
+          </section>
+        )}
+          
+          
+
+          
+        </div>
+
+        {/* LISTAS: VENDAS + PRODUTOS */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
           
+          {/* Últimas Vendas */}
           <SectionErrorBoundary title="Erro nas últimas vendas">
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5">
               <div className="flex items-center justify-between mb-3">
@@ -301,6 +353,7 @@ const Dashboard = () => {
             </div>
           </SectionErrorBoundary>
 
+          {/* Top Produtos */}
           <SectionErrorBoundary title="Erro nos produtos mais vendidos">
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-5">
               <div className="flex items-center justify-between mb-3">
@@ -323,9 +376,7 @@ const Dashboard = () => {
           </SectionErrorBoundary>
         </div>
 
-        {/* ============================================= */}
-        {/* SEÇÃO 5: EQUIPE (APENAS GERENTES E ADMINS) */}
-        {/* ============================================= */}
+        {/* EQUIPE - Admin/Gerente */}
         {showTeamSection && (
           <section>
             <SectionErrorBoundary title="Erro na visão da equipe">
