@@ -1,19 +1,5 @@
 import { useState, useCallback, useMemo } from 'react'
-
-// Baseado em: public.products
-interface Product {
-  id: number
-  code: string | null
-  name: string
-  description: string | null
-  category: string | null
-  unit: string | null
-  price: number | null
-  stock_quantity: number | null
-  is_active: boolean | null
-  barcode?: string | null
-  [key: string]: unknown
-}
+import type { Product } from '@/types'
 
 interface UsePDVSearchReturn {
   searchTerm: string

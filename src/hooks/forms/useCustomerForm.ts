@@ -1,5 +1,5 @@
 import { useCallback, ChangeEvent } from 'react'
-import { useFormWithSchema } from './useFormWithSchema'
+import { useFormWithSchema } from '@hooks/forms/useFormWithSchema'
 import { customerSchema } from '@/utils/schemas'
 
 // Baseado em: public.customers

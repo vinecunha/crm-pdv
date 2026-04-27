@@ -1,4 +1,4 @@
-﻿import { useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import * as saleService from '@services/sale/saleService'
 import type { Coupon, CartItem, Customer } from '@/types'
@@ -19,7 +19,12 @@ interface ApplyCouponResult {
 type FeedbackType = 'success' | 'error' | 'info' | 'warning'
 type ShowFeedback = (type: FeedbackType, message: string) => void
 
-interface UsePDVCouponReturn {
+interface UseCouponOptions {
+  fetchAvailableCoupons?: boolean
+  showFeedback?: ShowFeedback
+}
+
+interface UseCouponReturn {
   coupon: Coupon | null
   couponCode: string
   couponError: string
@@ -32,11 +37,13 @@ interface UsePDVCouponReturn {
   isValidating: boolean
 }
 
-export const usePDVCoupon = (
+export const useCoupon = (
   customer: Customer | null,
   cart: CartItem[],
-  showFeedback: ShowFeedback
-): UsePDVCouponReturn => {
+  options: UseCouponOptions = {}
+): UseCouponReturn => {
+  const { fetchAvailableCoupons = false, showFeedback } = options
+  
   const [couponCode, setCouponCode] = useState<string>('')
   const [coupon, setCoupon] = useState<Coupon | null>(null)
   const [couponError, setCouponError] = useState<string>('')
@@ -45,7 +52,7 @@ export const usePDVCoupon = (
   const { data: availableCoupons = [] } = useQuery<Coupon[]>({
     queryKey: ['available-coupons', customer?.id],
     queryFn: () => saleService.fetchAvailableCoupons(customer?.id as number),
-    enabled: !!customer,
+    enabled: fetchAvailableCoupons && !!customer,
   })
 
   const validateCouponMutation = useMutation({
@@ -56,7 +63,7 @@ export const usePDVCoupon = (
       setCouponCode(data.coupon.code)
       setDiscount(data.discountValue)
       setCouponError('')
-      showFeedback('success', `Cupom ${data.coupon.code} aplicado! Desconto: ${data.discountValue.toFixed(2)}`)
+      showFeedback?.('success', `Cupom ${data.coupon.code} aplicado! Desconto: ${data.discountValue.toFixed(2)}`)
     },
     onError: (error: Error) => {
       setCouponError(error.message)
@@ -78,7 +85,7 @@ export const usePDVCoupon = (
       return { success: false, error: 'Identifique um cliente para usar cupons' }
     }
     
-    const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
+    const subtotal = cart.reduce((sum, item) => sum + (item.total || 0), 0)
     
     try {
       const result = await validateCouponMutation.mutateAsync({ 
@@ -104,7 +111,7 @@ export const usePDVCoupon = (
     setCouponCode('')
     setDiscount(0)
     setCouponError('')
-    showFeedback('info', 'Cupom removido')
+    showFeedback?.('info', 'Cupom removido')
   }, [showFeedback])
 
   return {
@@ -120,3 +127,14 @@ export const usePDVCoupon = (
     isValidating: validateCouponMutation.isPending
   }
 }
+
+export const useBudgetCoupon = (
+  customer: Customer | null,
+  cart: CartItem[]
+) => useCoupon(customer, cart, { fetchAvailableCoupons: false })
+
+export const usePDVCoupon = (
+  customer: Customer | null,
+  cart: CartItem[],
+  showFeedback: ShowFeedback
+) => useCoupon(customer, cart, { fetchAvailableCoupons: true, showFeedback })

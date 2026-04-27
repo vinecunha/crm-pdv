@@ -1,7 +1,7 @@
 // src/components/GlobalSearch/GlobalSearchResults.tsx
 import React from 'react'
 import { SearchGroup, SearchResult, SearchHandler } from '@/types/search'
-import { GlobalSearchResultItem } from './GlobalSearchResultItem'
+import { GlobalSearchResultItem } from '@components/globalSearch/GlobalSearchResultItem'
 
 interface GlobalSearchResultsProps {
   groupedResults: SearchGroup[]

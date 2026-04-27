@@ -1,7 +1,7 @@
 // src/components/logs/LogsModalsContainer.jsx
 import React from 'react'
-import LogDetailsModal from './LogDetailsModal'
-import RestoreConfirmModal from './RestoreConfirmModal'
+import LogDetailsModal from '@components/logs/LogDetailsModal'
+import RestoreConfirmModal from '@components/logs/RestoreConfirmModal'
 
 const LogsModalsContainer = ({
   selectedLog,

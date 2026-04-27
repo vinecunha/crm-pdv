@@ -1,27 +1,8 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useSystemLogs } from '@hooks/system/useSystemLogs'
+import type { Product } from '@/types'
 
-interface Product {
-  id: number
-  code: string | null
-  name: string
-  price: number | null
-  stock_quantity: number | null
-  unit: string | null
-  is_active: boolean | null
-  [key: string]: unknown
-}
-
-export interface CartItem {
-  id: number
-  name: string
-  code: string | null
-  price: number
-  quantity: number
-  total: number
-  unit: string | null
-  stock?: number | null
-}
+export type { CartItem } from '@/types'
 
 interface UseCartOptions {
   checkStock?: boolean

@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { X, AlertCircle } from '@lib/icons'
 
-const useScrollLock = (isLocked) => {
+const useScrollLock = (isLocked: boolean) => {
   useEffect(() => {
     if (!isLocked) return
     
@@ -26,7 +26,8 @@ const Modal = ({
   onRetry = null,
   zIndex = 50,
   showHeader = true,
-  hideCloseButton = false
+  hideCloseButton = false,
+  footer = null,
 }) => {
   const modalRef = useRef(null)
   
@@ -54,7 +55,7 @@ const Modal = ({
   if (!isOpen) return null
 
   const sizes = {
-    sm: 'max-w-md',
+    sm: 'max-w-sm',
     md: 'max-w-lg',
     lg: 'max-w-2xl',
     xl: 'max-w-4xl'
@@ -71,7 +72,7 @@ const Modal = ({
       <div className="flex min-h-screen items-center justify-center p-4">
         {/* Overlay - Backdrop */}
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 transition-opacity"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-fadeIn"
           onClick={!isLoading ? onClose : undefined}
           aria-hidden="true"
         />
@@ -79,27 +80,29 @@ const Modal = ({
         {/* Modal Container */}
         <div 
           ref={modalRef}
-          tabIndex={-1} // Permite foco programático
-          className={`relative bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full ${sizes[size]} transform transition-all outline-none`}
+          tabIndex={-1}
+          className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full ${sizes[size]} transform transition-all outline-none animate-slideUp`}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
-              {title}
-            </h2>
-            {!isLoading && (
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 transition-colors p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-                aria-label="Fechar modal"
-              >
-                <X size={20} />
-              </button>
-            )}
-          </div>
+          {showHeader && (
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+                {title}
+              </h2>
+              {!isLoading && !hideCloseButton && (
+                <button
+                  onClick={onClose}
+                  className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 transition-colors p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                  aria-label="Fechar modal"
+                >
+                  <X size={20} />
+                </button>
+              )}
+            </div>
+          )}
           
           {/* Body */}
-          <div className="p-4 sm:p-6">
+          <div className="p-6">
             {error && (
               <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                 <div className="flex items-start gap-3">
@@ -121,6 +124,12 @@ const Modal = ({
             )}
             
             {children}
+
+            {footer && (
+              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                {footer}
+              </div>
+            )}
           </div>
         </div>
       </div>

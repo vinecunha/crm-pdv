@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Image as ImageIcon, Save } from '@lib/icons'
-import LogoUploader from './LogoUploader'
+import LogoUploader from '@components/settings/LogoUploader'
 import Button from '@components/ui/Button'
 import LazyImage from '@components/ui/LazyImage'
 

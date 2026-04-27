@@ -1,5 +1,5 @@
 import { useCallback, ChangeEvent } from 'react'
-import { useFormWithSchema } from './useFormWithSchema'
+import { useFormWithSchema } from '@hooks/forms/useFormWithSchema'
 import { z } from 'zod'
 
 const productSchema = z.object({

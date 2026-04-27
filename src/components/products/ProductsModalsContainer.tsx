@@ -1,10 +1,10 @@
 // src/components/products/ProductsModalsContainer.jsx
 import React from 'react'
 import Modal from '@components/ui/Modal'
-import ProductForm from './ProductForm'
-import ProductEntryForm from './ProductEntryForm'
-import ProductDetailsModal from './ProductDetailsModal'
-import ProductDeleteModal from './ProductDeleteModal'
+import ProductForm from '@components/products/ProductForm'
+import ProductEntryForm from '@components/products/ProductEntryForm'
+import ProductDetailsModal from '@components/products/ProductDetailsModal'
+import ProductDeleteModal from '@components/products/ProductDeleteModal'
 
 const ProductsModalsContainer = ({
   // Product Form Modal

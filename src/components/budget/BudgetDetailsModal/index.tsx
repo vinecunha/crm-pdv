@@ -1,10 +1,10 @@
 import React from 'react'
 import Modal from '@components/ui/Modal'
-import BudgetDetailsHeader from './BudgetDetailsHeader'
-import BudgetStatusInfo from './BudgetStatusInfo'
-import BudgetItemsList from './BudgetItemsList'
-import BudgetTotals from './BudgetTotals'
-import BudgetDetailsActions from './BudgetDetailsActions'
+import BudgetDetailsHeader from '@components/budget/BudgetDetailsModal/BudgetDetailsHeader'
+import BudgetStatusInfo from '@components/budget/BudgetDetailsModal/BudgetStatusInfo'
+import BudgetItemsList from '@components/budget/BudgetDetailsModal/BudgetItemsList'
+import BudgetTotals from '@components/budget/BudgetDetailsModal/BudgetTotals'
+import BudgetDetailsActions from '@components/budget/BudgetDetailsModal/BudgetDetailsActions'
 
 const BudgetDetailsModal = ({ 
   isOpen, 

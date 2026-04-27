@@ -1,8 +1,8 @@
 import React from 'react'
-import BudgetFilters from './BudgetFilters'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
-import BudgetEmptyState from './BudgetEmptyState'
-import BudgetContent from './BudgetContent'
+import BudgetEmptyState from '@components/budget/BudgetEmptyState'
+import BudgetContent from '@components/budget/BudgetContent'
+import BudgetFilters from '@components/budget/BudgetFilters'
 
 const BudgetListView = ({
   budgets,

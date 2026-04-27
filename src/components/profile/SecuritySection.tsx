@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Key, Shield, AlertCircle } from '@lib/icons'
 import Button from '@components/ui/Button'
-import ChangePasswordModal from './ChangePasswordModal'
+import ChangePasswordModal from '@components/profile/ChangePasswordModal'
 
 const SecuritySection = ({ user, onChangePassword, onLogout }) => {
   const [showPasswordModal, setShowPasswordModal] = useState(false)

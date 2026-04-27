@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useKeyboardShortcuts } from '@/hooks/utils/useKeyboardShortcuts'
+import type { CartItem } from '@/types'
 
 interface Shortcut {
   key: string

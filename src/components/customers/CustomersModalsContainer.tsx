@@ -2,9 +2,9 @@
 import React from 'react'
 import Modal from '@components/ui/Modal'
 import ConfirmModal from '@components/ui/ConfirmModal'
-import CampaignModal from './CampaignModal'
-import CustomerForm from './CustomerForm'
-import CustomerDeleteModal from './CustomerDeleteModal'
+import CampaignModal from '@components/customers/CampaignModal'
+import CustomerForm from '@components/customers/CustomerForm'
+import CustomerDeleteModal from '@components/customers/CustomerDeleteModal'
 
 const CustomersModalsContainer = ({
   // Form Modal

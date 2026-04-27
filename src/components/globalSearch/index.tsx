@@ -1,9 +1,9 @@
 // src/components/GlobalSearch/index.tsx
 import React, { useEffect } from 'react'
 import { useGlobalSearch } from '@hooks/useGlobalSearch'
-import { GlobalSearchInput } from './GlobalSearchInput'
-import { GlobalSearchResults } from './GlobalSearchResults'
-import { GlobalSearchEmpty } from './GlobalSearchEmpty'
+import { GlobalSearchInput } from '@components/globalSearch/GlobalSearchInput'
+import { GlobalSearchResults } from '@components/globalSearch/GlobalSearchResults'
+import { GlobalSearchEmpty } from '@components/globalSearch/GlobalSearchEmpty'
 
 interface GlobalSearchProps {
   isOpen: boolean

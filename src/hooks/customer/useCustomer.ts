@@ -1,4 +1,4 @@
-﻿import { useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useSystemLogs } from '@hooks/system/useSystemLogs'
 import { useFormWithSchema } from '@/hooks/forms/useFormWithSchema'
@@ -27,7 +27,16 @@ interface QuickRegisterResult {
 type FeedbackType = 'success' | 'error' | 'info' | 'warning'
 type ShowFeedback = (type: FeedbackType, message: string) => void
 
-interface UsePDVCustomerReturn {
+interface UseCustomerOptions {
+  searchFn?: (phone: string) => Promise<Customer | null>
+  createFn?: (formData: QuickCustomerForm) => Promise<Customer>
+  onCustomerFound?: (customer: Customer) => void
+  onCustomerCreated?: (customer: Customer) => void
+  showFeedback?: ShowFeedback
+  logCustomer?: boolean
+}
+
+interface UseCustomerReturn {
   customer: Customer | null
   customerPhone: string
   quickCustomerForm: QuickCustomerForm
@@ -43,7 +52,16 @@ interface UsePDVCustomerReturn {
   isCreating: boolean
 }
 
-export const usePDVCustomer = (showFeedback: ShowFeedback): UsePDVCustomerReturn => {
+export const useCustomer = (options: UseCustomerOptions = {}): UseCustomerReturn => {
+  const {
+    searchFn,
+    createFn,
+    onCustomerFound,
+    onCustomerCreated,
+    showFeedback,
+    logCustomer = false
+  } = options
+
   const { logCreate } = useSystemLogs()
   const [customerPhone, setCustomerPhone] = useState<string>('')
   const [customer, setCustomer] = useState<Customer | null>(null)
@@ -60,31 +78,35 @@ export const usePDVCustomer = (showFeedback: ShowFeedback): UsePDVCustomerReturn
   const quickCustomerErrors = (quickCustomerFormHook.formState.errors || {}) as Record<string, string>
 
   const searchCustomerMutation = useMutation({
-    mutationFn: (phone: string) => saleService.searchCustomerByPhone(phone),
+    mutationFn: searchFn || ((phone: string) => saleService.searchCustomerByPhone(phone)),
     onSuccess: (data: Customer | null) => {
       if (data) {
         setCustomer(data)
-        showFeedback('success', `Cliente encontrado: ${data.name}`)
+        onCustomerFound?.(data)
+        showFeedback?.('success', `Cliente encontrado: ${data.name}`)
       } else {
         resetQuick({ name: '', phone: customerPhone, email: '' })
       }
     },
-    onError: (error: Error) => showFeedback('error', 'Erro ao buscar cliente: ' + error.message)
+    onError: (error: Error) => showFeedback?.('error', 'Erro ao buscar cliente: ' + error.message)
   })
 
   const createCustomerMutation = useMutation({
-    mutationFn: (formData: QuickCustomerForm) => saleService.createCustomer(formData),
+    mutationFn: createFn || ((formData: QuickCustomerForm) => saleService.createCustomer(formData)),
     onSuccess: async (data: Customer) => {
       setCustomer(data)
-      await logCreate('customer', data.id.toString(), { name: data.name, phone: data.phone })
-      showFeedback('success', `Cliente ${data.name} cadastrado!`)
+      if (logCustomer) {
+        await logCreate('customer', data.id.toString(), { name: data.name, phone: data.phone })
+      }
+      onCustomerCreated?.(data)
+      showFeedback?.('success', `Cliente ${data.name} cadastrado!`)
     },
-    onError: (error: Error) => showFeedback('error', 'Erro ao cadastrar cliente: ' + error.message)
+    onError: (error: Error) => showFeedback?.('error', 'Erro ao cadastrar cliente: ' + error.message)
   })
 
   const searchCustomer = useCallback(async (): Promise<SearchCustomerResult> => {
     if (!customerPhone || customerPhone.length < 10) {
-      showFeedback('error', 'Digite um telefone válido')
+      showFeedback?.('error', 'Digite um telefone válido')
       return { found: false, error: 'Telefone inválido' }
     }
     
@@ -141,3 +163,9 @@ export const usePDVCustomer = (showFeedback: ShowFeedback): UsePDVCustomerReturn
     isCreating: createCustomerMutation.isPending
   }
 }
+
+export const usePDVCustomer = (showFeedback: ShowFeedback) => 
+  useCustomer({ showFeedback, logCustomer: true })
+
+export const useBudgetCustomer = () => 
+  useCustomer({})

@@ -1,7 +1,7 @@
 // src/components/sales/management/SalesListModalsContainer.jsx
 import React from 'react'
 import Button from '@components/ui/Button'
-import CancelSaleModal from './CancelSaleModal'
+import CancelSaleModal from '@components/sales/management/CancelSaleModal'
 import ReceiptModal from '@components/sales/common/ReceiptModal'
 import { RefreshCw, XCircle } from '@lib/icons'
 import { formatCurrency, formatDateTime } from '@utils/formatters'
@@ -46,9 +46,9 @@ const SalesListModalsContainer = ({
                   {formatDateTime(selectedSale.created_at)}
                 </p>
               </div>
-              <button onClick={closeDetailsModal} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 text-xl">
+              <Button onClick={closeDetailsModal} variant="ghost" size="sm" ariaLabel="Fechar">
                 ✕
-              </button>
+              </Button>
             </div>
             
             <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh] space-y-4">

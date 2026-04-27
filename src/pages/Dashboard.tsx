@@ -168,7 +168,7 @@ const Dashboard = () => {
     )
   }
 
-  const teamData = rawData?.teamData
+  const teamData = topSellersData
   const showTeamSection = profile?.role !== 'operador' && teamData
 
   const dashboardStats = {

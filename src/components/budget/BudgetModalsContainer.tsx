@@ -4,8 +4,8 @@ import Modal from '@components/ui/Modal'
 import ConfirmModal from '@components/ui/ConfirmModal'
 import QuickCustomerForm from '@components/sales/pdv/QuickCustomerForm'
 import CouponSelector from '@components/sales/pdv/CouponSelector'
-import IdentifyCustomerModal from './IdentifyCustomerModal'
-import BudgetDetailsModal from './BudgetDetailsModal'
+import IdentifyCustomerModal from '@components/budget/IdentifyCustomerModal'
+import BudgetDetailsModal from '@components/budget/BudgetDetailsModal'
 
 const BudgetModalsContainer = ({
   modals,

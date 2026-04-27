@@ -70,9 +70,9 @@ const BudgetCreator = ({
               {customer ? (
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-600 dark:text-gray-300 truncate max-w-[150px]">{customer.name}</span>
-                  <button onClick={onClearCustomer} className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300" disabled={isMutating}>
+                  <Button onClick={onClearCustomer} variant="ghost" size="xs" disabled={isMutating}>
                     Remover
-                  </button>
+                  </Button>
                 </div>
               ) : (
                 <Button size="sm" variant="outline" onClick={onShowCustomerModal} disabled={isMutating}>
@@ -89,9 +89,9 @@ const BudgetCreator = ({
               {coupon ? (
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-green-600 dark:text-green-400 font-medium">{coupon.code}</span>
-                  <button onClick={onRemoveCoupon} className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300" disabled={isMutating}>
+                  <Button onClick={onRemoveCoupon} variant="ghost" size="xs" disabled={isMutating}>
                     Remover
-                  </button>
+                  </Button>
                 </div>
               ) : (
                 <Button size="sm" variant="outline" onClick={onShowCouponModal} disabled={!customer || isMutating}>

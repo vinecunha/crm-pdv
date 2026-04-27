@@ -7,6 +7,7 @@ import { useSystemLogs } from '@hooks/system/useSystemLogs'
 import { formatDateTime } from '@utils/formatters'
 
 import PageHeader from '@components/ui/PageHeader'
+import Button from '@components/ui/Button'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import DataCards from '@components/ui/DataCards'
 import UserStats from '@components/users/UserStats'
@@ -169,10 +170,10 @@ const Users = () => {
       <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-2 sm:mb-3 break-all">{user.email}</p>
       <div className="flex gap-2 pt-2 sm:pt-3 border-t border-gray-100 dark:border-gray-700">
         {canEditUser && (!isAdmin ? user.role !== 'admin' : true) && (
-          <button onClick={() => handlers.handleEdit(user)} className="flex-1 py-1.5 sm:py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800/50 text-xs sm:text-sm">Editar</button>
+          <Button onClick={() => handlers.handleEdit(user)} variant="outline" size="sm" fullWidth>Editar</Button>
         )}
         {canDeleteUser && user.id !== profile?.id && (!isAdmin ? user.role !== 'admin' : true) && (
-          <button onClick={() => handlers.handleDeleteClick(user)} className="flex-1 py-1.5 sm:py-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-800/50 text-xs sm:text-sm">Excluir</button>
+          <Button onClick={() => handlers.handleDeleteClick(user)} variant="danger" size="sm" fullWidth>Excluir</Button>
         )}
       </div>
     </div>

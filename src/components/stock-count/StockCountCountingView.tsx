@@ -1,8 +1,8 @@
 import React from 'react'
 import DataCards from '@components/ui/DataCards'
 import DataEmptyState from '@components/ui/DataEmptyState'
-import StockCountProgressBar from './StockCountProgressBar'
-import StockCountItemCard from './StockCountItemCard'
+import StockCountProgressBar from '@components/stock-count/StockCountProgressBar'
+import StockCountItemCard from '@components/stock-count/StockCountItemCard'
 import Button from '@components/ui/Button'
 import { Plus } from '@lib/icons'
 

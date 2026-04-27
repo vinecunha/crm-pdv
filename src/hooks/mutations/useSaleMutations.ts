@@ -1,70 +1,7 @@
 ﻿import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSystemLogs } from '@hooks/system/useSystemLogs'
 import * as saleService from '@services/sale/saleService'
-
-// Baseado em: public.sales
-interface Sale {
-  id: number
-  sale_number: string
-  customer_id: number | null
-  customer_name: string | null
-  customer_phone: string | null
-  total_amount: number
-  discount_amount: number | null
-  discount_percent: number | null
-  coupon_code: string | null
-  final_amount: number
-  payment_method: string | null
-  payment_status: string | null
-  status: string | null
-  notes: string | null
-  created_at: string | null
-  created_by: string | null
-  updated_at: string | null
-  cancelled_at: string | null
-  cancelled_by: string | null
-  cancellation_reason: string | null
-  cancellation_notes: string | null
-  approved_by: string | null
-  created_by_name: string | null
-}
-
-interface CartItem {
-  id: number
-  name: string
-  code: string | null
-  quantity: number
-  price: number
-  total: number
-  [key: string]: unknown
-}
-
-interface Customer {
-  id: number
-  name: string
-  email: string
-  phone: string
-  [key: string]: unknown
-}
-
-interface Coupon {
-  id: number
-  code: string
-  discount_type: 'fixed' | 'percent'
-  discount_value: number
-  [key: string]: unknown
-}
-
-interface Profile {
-  id: string
-  [key: string]: unknown
-}
-
-interface SaleCallbacks {
-  onSaleCreated?: (sale: Sale) => void
-  onSaleError?: (error: Error) => void
-  onOfflineSale?: (data: unknown) => void
-}
+import type { Sale, CartItem, Customer, Coupon, Profile, SaleItem } from '@/types'
 
 interface CreateSaleParams {
   cart: CartItem[]
@@ -80,6 +17,12 @@ interface CancelSaleParams {
   approvedBy: string
   reason: string
   notes: string
+}
+
+interface SaleCallbacks {
+  onSaleCreated?: (sale: Sale) => void
+  onSaleError?: (error: Error) => void
+  onOfflineSale?: (data: unknown) => void
 }
 
 interface UseSaleMutationsReturn {

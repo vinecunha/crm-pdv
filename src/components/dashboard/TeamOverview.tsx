@@ -10,18 +10,16 @@ const TeamOverview = ({ teamData, userRole }) => {
   // Garantir que teamData é um array
   const members = Array.isArray(teamData) ? teamData : []
   
-  // ✅ CORRIGIR: Mapear os dados para o formato esperado
+  // Mapear os dados do SellerData para o formato esperado
   const formattedMembers = members.map(member => ({
     id: member.id,
     full_name: member.name || member.full_name,
     email: member.email,
     role: member.role,
     stats: {
-      totalSales: member.totalSales || member.total_sales || member.totalRevenue || member.total_revenue || 0,
-      salesCount: member.totalSales || member.total_sales || 0,
-      averageTicket: member.totalSales > 0 
-        ? (member.totalRevenue || member.total_revenue || 0) / member.totalSales 
-        : 0
+      totalSales: member.total || member.totalRevenue || member.total_revenue || 0,
+      salesCount: member.count || 0,
+      averageTicket: member.average || 0
     }
   }))
   

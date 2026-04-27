@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { ShoppingCart, ChevronUp, ChevronDown } from '@lib/icons'
 import { formatCurrency } from '@utils/formatters'
 import Button from '@components/ui/Button'
-import CartSummary from './CartSummary'
+import CartSummary from '@components/sales/pdv/CartSummary'
 
 const CompactCartView = ({ 
   cart, 

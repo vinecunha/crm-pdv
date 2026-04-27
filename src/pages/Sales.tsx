@@ -1,12 +1,14 @@
-// src/pages/Sales.jsx
-import React, { useEffect, useRef, useCallback, useState } from 'react'
+import React, { useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   Keyboard, ShoppingCart, User, Ticket, 
   CreditCard, WifiOff, FileText, Maximize, Minimize, RotateCcw 
 } from '@lib/icons'
-import { useAuth } from '@contexts/AuthContext'
-import { usePDVRealtime } from '@hooks/pdv/usePDVRealtime'
+import { usePDVSales } from '@hooks/pdv/usePDVSales'
+import { useSystemLogs } from '@hooks/system/useSystemLogs'
+import { useNetworkStatus } from '@/hooks/utils/useNetworkStatus'
+import useMediaQuery from '@/hooks/utils/useMediaQuery'
+
 import FeedbackMessage from '@components/ui/FeedbackMessage'
 import Button from '@components/ui/Button'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
@@ -18,75 +20,38 @@ import SyncStatus from '@components/sales/pdv/SyncStatus'
 import ShortcutFeedback from '@components/ui/ShortcutFeedback'
 import SalesModalsContainer from '@components/sales/pdv/SalesModalsContainer'
 
-import { useSystemLogs } from '@hooks/system/useSystemLogs'
-import { usePDVShortcuts } from '@hooks/pdv/usePDVShortcuts'
 import useKioskMode from '@hooks/utils/useKioskMode'
-import { useNetworkStatus } from '@/hooks/utils/useNetworkStatus'
-import useMediaQuery from '@/hooks/utils/useMediaQuery'
-
-import { useCart } from '@hooks/utils/useCart'
-import { usePDVCustomer } from '@hooks/pdv/usePDVCustomer'
-import { usePDVCoupon } from '@hooks/pdv/usePDVCoupon'
-import { usePDVModals } from '@hooks/pdv/usePDVModals'
-import { usePDVFeedback } from '@hooks/pdv/usePDVFeedback'
-import { usePDVSearch } from '@hooks/pdv/usePDVSearch'
-import { usePDVPayment } from '@hooks/pdv/usePDVPayment'
-
-// ✅ Hooks centralizados
-import { useSalesHandlers } from '@hooks/handlers'
-import { useSaleMutations } from '@hooks/mutations'
-import { useSalesQueries } from '@hooks/queries/useSalesQueries'
-
-import { saveSaleOffline } from '@utils/offlineStorage'
 import { formatCurrency } from '@utils/formatters'
-import { supabase } from '@lib/supabase'
-import { logger } from '@utils/logger'
 
 const Sales = () => {
-  const { profile } = useAuth()
-  const { logCreate, logError } = useSystemLogs()
   const navigate = useNavigate()
   const isMobile = useMediaQuery('(max-width: 1024px)')
   const { isKioskMode, toggleKioskMode } = useKioskMode()
+  const { logCreate, logError } = useSystemLogs()
   const { isOnline } = useNetworkStatus()
-  usePDVRealtime(true)
 
-  const searchInputRef = useRef(null)
-  const processingRef = useRef(false)
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
-  const [completedSaleData, setCompletedSaleData] = useState(null)
+  const searchInputRef = React.useRef(null)
 
-  // ============= HOOKS PERSONALIZADOS =============
   const {
     feedback,
     shortcutFeedback,
     showFeedback,
     hideFeedback,
     showShortcutFeedback,
-    hideShortcutFeedback
-  } = usePDVFeedback()
-
-  // ✅ Queries centralizadas
-  const { 
-    products, 
-    isLoading, 
-    refetchProducts 
-  } = useSalesQueries()
-
-  const {
+    hideShortcutFeedback,
+    products,
+    isLoading,
+    refetchProducts,
     cart,
     addToCart,
-    updateQuantity: updateCartItemQuantity,
-    removeItem: removeFromCart,
+    updateCartItemQuantity,
+    removeFromCart,
     clearCart,
     getSubtotal,
     getTotal,
     cartCount,
     selectedCartItemIndex,
-    setSelectedCartItemIndex
-  } = useCart(products, { checkStock: true, onStockError: (msg) => showFeedback('error', msg) })
-
-  const {
+    setSelectedCartItemIndex,
     customer,
     customerPhone,
     quickCustomerForm,
@@ -98,10 +63,7 @@ const Sales = () => {
     quickRegisterCustomer,
     clearCustomer,
     isSearching,
-    isCreating
-  } = usePDVCustomer(showFeedback)
-
-  const {
+    isCreating,
     coupon,
     couponCode,
     couponError,
@@ -111,16 +73,10 @@ const Sales = () => {
     setCouponError,
     applyCoupon,
     removeCoupon,
-    isValidating
-  } = usePDVCoupon(customer, cart, showFeedback)
-
-  const {
+    isValidating,
     paymentMethod,
     setPaymentMethod,
-    isPix
-  } = usePDVPayment()
-
-  const {
+    isPix,
     showCustomerModal,
     showQuickCustomerModal,
     showCouponModal,
@@ -128,40 +84,44 @@ const Sales = () => {
     showShortcutsHelp,
     showClearCartConfirm,
     isAnyModalOpen,
-    setShowQuickCustomerModal,
-    setShowCouponModal,   
-    openCustomerModal,
-    openCouponModal,
-    openPaymentModal,          
-    closeCustomerModal,
-    closeCouponModal,
-    closePaymentModal,
-    openShortcutsHelp,
-    closeShortcutsHelp,
-    openClearCartConfirm,
-    closeClearCartConfirm,
     showReceiptModal,
     setShowReceiptModal,
+    setShowQuickCustomerModal,
+    setShowCouponModal,
+    openCustomerModal,
+    closeCustomerModal,
+    openCouponModal,
+    closeCouponModal,
+    openPaymentModal,
+    closePaymentModal,
+    openClearCartConfirm,
+    closeClearCartConfirm,
     openReceiptModal,
     closeReceiptModal,
-  } = usePDVModals()
-
-  const {
+    openShortcutsHelp,
+    closeShortcutsHelp,
     searchTerm,
     selectedCategory,
     categories,
     filteredProducts,
     setSearchTerm,
     setSelectedCategory,
-    updateCategories,
-    clearSearch
-  } = usePDVSearch(products)
+    clearSearch,
+    isProcessingPayment,
+    completedSaleData,
+    handlers,
+    createSaleMutation,
+    updateLocalStock
+  } = usePDVSales({
+    onSaleCreated: (sale) => {
+      logCreate('sale', sale.id.toString(), { sale_number: sale.sale_number })
+    },
+    onSaleError: (error) => {
+      logError('sale', error.message)
+    }
+  })
 
-  const updateLocalStock = (cartItems) => {
-    // Função específica do Sales (manipula cache local)
-  }
-
-  const handleSearchSubmit = () => {
+  const handleSearchSubmit = useCallback(() => {
     if (!searchTerm.trim()) return
     
     const code = searchTerm.trim().toUpperCase()
@@ -174,9 +134,9 @@ const Sales = () => {
     } else {
       showFeedback('error', 'Produto não encontrado')
     }
-  }
+  }, [searchTerm, products, addToCart, setSearchTerm, showFeedback])
 
-  const handleSearchSubmitMobile = () => {
+  const handleSearchSubmitMobile = useCallback(() => {
     const code = searchTerm.trim().toUpperCase()
     const product = filteredProducts.find(p => p.code?.toUpperCase() === code || p.id.toString() === code)
     
@@ -187,127 +147,7 @@ const Sales = () => {
     } else {
       showFeedback('error', 'Produto não encontrado')
     }
-  }
-
-  // ✅ Mutations com callbacks
-  const { createSaleMutation } = useSaleMutations(profile, {
-    onSaleCreated: (sale) => {
-      showFeedback('success', `Venda #${sale.sale_number} finalizada!`)
-      
-      setCompletedSaleData({
-        sale: sale,
-        cart: [...cart],
-        customer: customer ? { ...customer } : null,
-        paymentMethod: paymentMethod,
-        discount: discount
-      })
-      
-      clearCart()
-      clearCustomer()
-      removeCoupon()
-      closePaymentModal()
-      openReceiptModal()
-    },
-    onSaleError: (error) => {
-      if (!isOnline || error.message?.includes('network') || error.message?.includes('fetch')) {
-        handlers.handleOfflineSale()
-      } else {
-        showFeedback('error', 'Erro ao finalizar venda: ' + error.message)
-      }
-    }
-  })
-
-  // ============= HANDLERS =============
-  const handlers = useSalesHandlers({
-    profile,
-    cart,
-    cartCount,
-    customer,
-    coupon,
-    discount,
-    paymentMethod,
-    products,
-    getSubtotal,
-    getTotal,
-    clearCart,
-    clearCustomer,
-    removeCoupon,
-    addToCart,
-    updateCartItemQuantity,
-    removeFromCart,
-    searchCustomer,
-    applyCoupon,
-    setCouponError,
-    setCustomerPhone,
-    setQuickCustomerForm,
-    quickRegisterCustomer,
-    setShowQuickCustomerModal,
-    setShowCouponModal,
-    openCustomerModal,
-    closeCustomerModal,
-    openCouponModal,
-    closeCouponModal,
-    openPaymentModal,
-    closePaymentModal,
-    openClearCartConfirm,
-    closeClearCartConfirm,
-    openShortcutsHelp,
-    closeShortcutsHelp,
-    openReceiptModal,
-    closeReceiptModal,
-    showFeedback,
-    refetchProducts,
-    updateCategories,
-    setSelectedCartItemIndex,
-    isOnline,
-    isProcessingPayment,
-    setIsProcessingPayment,
-    processingRef,
-    createSaleMutation,
-    saveSaleOffline,
-    updateLocalStock,
-    logCreate,
-    logError,
-    setCompletedSaleData,
-    queryClient: null,
-    supabase,
-    logger
-  })
-
-  // ============= ATALHOS =============
-  const handleFocusSearch = useCallback(() => searchInputRef.current?.focus(), [])
-  
-  const { shortcuts } = usePDVShortcuts({
-    onFocusSearch: handleFocusSearch,
-    onClearSearch: clearSearch,
-    onRefreshProducts: handlers.handleRefreshProducts,
-    onClearCart: handlers.handleClearCart,
-    onIncreaseQuantity: handlers.handleIncreaseQuantity,
-    onDecreaseQuantity: handlers.handleDecreaseQuantity,
-    onRemoveItem: removeFromCart,
-    onOpenCustomerModal: openCustomerModal,
-    onClearCustomer: clearCustomer,
-    onOpenCouponModal: () => {
-      if (customer) setCouponError('')
-      else showFeedback('warning', 'Identifique um cliente primeiro')
-    },
-    onRemoveCoupon: removeCoupon,
-    onOpenPaymentModal: () => {
-      if (cartCount === 0) showFeedback('warning', 'Adicione itens ao carrinho')
-      else closePaymentModal()
-    },
-    onOpenHelp: openShortcutsHelp,
-    cartItems: cart,
-    selectedCartItemIndex,
-    setSelectedCartItemIndex,
-    onShortcutFeedback: showShortcutFeedback,
-    enabled: !isAnyModalOpen
-  })
-
-  // ============= EFEITOS =============
-  useEffect(() => {
-    updateCategories(products)
-  }, [products, updateCategories])
+  }, [searchTerm, filteredProducts, addToCart, setSearchTerm, showFeedback])
 
   useEffect(() => {
     if (cartCount === 0) {
@@ -329,7 +169,8 @@ const Sales = () => {
     }
   }
 
-  // ============= RENDER =============
+  const handleFocusSearch = useCallback(() => searchInputRef.current?.focus(), [])
+
   const subtotal = getSubtotal()
   const total = getTotal(discount)
   const isMutating = isSearching || isCreating || isValidating || createSaleMutation.isPending
@@ -568,7 +409,6 @@ const Sales = () => {
           />
         )}
 
-        {/* Modais */}
         <SalesModalsContainer
           showCustomerModal={showCustomerModal}
           closeCustomerModal={closeCustomerModal}
@@ -611,11 +451,11 @@ const Sales = () => {
           confirmClearCart={handlers.confirmClearCart}
           showShortcutsHelp={showShortcutsHelp}
           closeShortcutsHelp={closeShortcutsHelp}
-          shortcuts={shortcuts}
+          shortcuts={[]}
           showReceiptModal={showReceiptModal}
           closeReceiptModal={closeReceiptModal}
           completedSaleData={completedSaleData}
-          profile={profile}
+          profile={null}
         />
       </div>
     </div>

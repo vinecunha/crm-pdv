@@ -3,7 +3,7 @@ import { CreditCard, Banknote, QrCode, Smartphone } from '@lib/icons'
 import { formatCurrency } from '@utils/formatters'
 import Modal from '@components/ui/Modal'
 import Button from '@components/ui/Button'
-import PixPaymentModal from './PixPaymentModal'
+import PixPaymentModal from '@components/sales/pdv/PixPaymentModal'
 import { logger } from '@utils/logger'
 
 

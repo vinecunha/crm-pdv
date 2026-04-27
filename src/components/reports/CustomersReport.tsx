@@ -10,7 +10,7 @@ import StatCard from '@components/ui/StatCard'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import DataTable from '@components/ui/DataTable'
 import Badge from '@components/ui/Badge'
-import CouponAnalytics from './CouponAnalytics'
+import CouponAnalytics from '@components/reports/CouponAnalytics'
 import { logger } from '@utils/logger'
 
 const CustomersReport = ({ dateRange, customDateRange }) => {

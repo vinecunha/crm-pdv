@@ -37,6 +37,8 @@ interface UseBudgetCustomerReturn {
   searchCustomer: ReturnType<typeof useMutation>
   createCustomer: ReturnType<typeof useMutation>
   clearCustomer: () => void
+  isSearching: boolean
+  isCreating: boolean
 }
 
 export const useBudgetCustomer = (): UseBudgetCustomerReturn => {
@@ -62,6 +64,9 @@ export const useBudgetCustomer = (): UseBudgetCustomerReturn => {
     mutationFn: (formData: QuickCustomerForm) => budgetService.createCustomer(formData)
   })
 
+  const isSearching = searchCustomer.isPending
+  const isCreating = createCustomer.isPending
+
   const clearCustomer = useCallback(() => {
     setCustomer(null)
     setCustomerPhone('')
@@ -77,6 +82,8 @@ export const useBudgetCustomer = (): UseBudgetCustomerReturn => {
     quickCustomerErrors,
     searchCustomer,
     createCustomer,
-    clearCustomer
+    clearCustomer,
+    isSearching,
+    isCreating
   }
 }

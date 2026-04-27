@@ -2,22 +2,9 @@
 import { useAuth } from '@contexts/AuthContext'
 import { useSystemLogs } from '@hooks/system/useSystemLogs'
 import * as budgetService from '@services/budget/budgetService'
+import type { Budget, CartItem, Customer, Coupon, Discount } from '@/types'
 
-// Baseado em: public.budgets
-interface Budget {
-  id: number
-  budget_number: number
-  customer_id: number | null
-  customer_name: string | null
-  customer_phone: string | null
-  customer_email: string | null
-  total_amount: number
-  discount_amount: number | null
-  discount_percent: number | null
-  coupon_code: string | null
-  final_amount: number
-  status: string | null
-  valid_until: string | null
+interface Sale {
   notes: string | null
   created_by: string | null
   created_at: string | null
@@ -46,35 +33,6 @@ interface Sale {
   id: number
   sale_number: string
   [key: string]: unknown
-}
-
-interface CartItem {
-  product_id: number
-  product_name: string
-  quantity: number
-  unit_price: number
-  [key: string]: unknown
-}
-
-interface Customer {
-  id: number
-  name: string
-  email: string
-  phone: string
-  [key: string]: unknown
-}
-
-interface Coupon {
-  id: number
-  code: string
-  discount_type: 'fixed' | 'percent'
-  discount_value: number
-  [key: string]: unknown
-}
-
-interface Discount {
-  type: 'fixed' | 'percent'
-  value: number
 }
 
 interface BudgetCallbacks {

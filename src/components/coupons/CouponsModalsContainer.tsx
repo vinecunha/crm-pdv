@@ -3,9 +3,9 @@ import React from 'react'
 import Modal from '@components/ui/Modal'
 import Button from '@components/ui/Button'
 import ConfirmModal from '@components/ui/ConfirmModal'
-import CouponForm from './CouponForm'
-import CouponCustomersModal from './CouponCustomersModal'
-import CouponCampaignModal from './CouponCampaignModal'
+import CouponForm from '@components/coupons/CouponForm'
+import CouponCustomersModal from '@components/coupons/CouponCustomersModal'
+import CouponCampaignModal from '@components/coupons/CouponCampaignModal'
 
 const CouponsModalsContainer = ({
   // Form Modal

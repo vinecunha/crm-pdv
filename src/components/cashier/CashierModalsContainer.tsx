@@ -1,8 +1,8 @@
 // src/components/cashier/CashierModalsContainer.jsx
 import React from 'react'
-import CashierClosingModal from './CashierClosingModal'
-import CashierHistoryModal from './CashierHistoryModal'
-import CashierDetailsModal from './CashierDetailsModal'
+import CashierClosingModal from '@components/cashier/CashierClosingModal'
+import CashierHistoryModal from '@components/cashier/CashierHistoryModal'
+import CashierDetailsModal from '@components/cashier/CashierDetailsModal'
 
 const CashierModalsContainer = ({
   // Closing Modal

@@ -7,10 +7,10 @@ import PageHeader from '@components/ui/PageHeader'
 import Button from '@components/ui/Button'
 import DataTable from '@components/ui/DataTable'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
-import RuleCard from './RuleCard'
-import RuleModal from './RuleModal'
-import ConfirmPaymentModal from './ConfirmPaymentModal'
-import CommissionDetailsModal from './CommissionDetailsModal'
+import RuleCard from '@components/commissions/RuleCard'
+import RuleModal from '@components/commissions/RuleModal'
+import ConfirmPaymentModal from '@components/commissions/ConfirmPaymentModal'
+import CommissionDetailsModal from '@components/commissions/CommissionDetailsModal'
 import { 
   DollarSign, 
   Plus, 

@@ -35,10 +35,9 @@ const Header: React.FC<HeaderProps> = ({
   const { user, profile, logout } = useAuth()
   const { company, getCompanyColor } = useCompany()
   const location = useLocation()
-  const { formatTime, formatDate, refresh } = useClock()
+  const { formatTime, formatDate, refresh, isRefreshing } = useClock()
   const { isOnline } = useNetworkStatus()
   
-  const [isRefreshing, setIsRefreshing] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
@@ -102,9 +101,9 @@ const Header: React.FC<HeaderProps> = ({
   }, [location.pathname])
 
   const handleRefresh = async () => {
-    setIsRefreshing(true)
-    refresh()
-    setTimeout(() => setIsRefreshing(false), 1000)
+    console.log('🔄 Refresh clicked!')
+    await refresh()
+    console.log('✅ Refresh completed!')
   }
 
   const handleLogoutClick = () => {
