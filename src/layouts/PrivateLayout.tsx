@@ -7,7 +7,7 @@ import Sidebar from '@components/layout/Sidebar'
 import Header from '@components/layout/Header'
 import MobileSidebar from '@components/layout/MobileSidebar'
 import Breadcrumb from '@components/layout/Breadcrumb'
-import ThemeInitializer from '@components/ThemeInitializer'
+import ThemeInitializer from '@components/layout/ThemeInitializer'
 
 interface PrivateLayoutProps {
   children: React.ReactNode

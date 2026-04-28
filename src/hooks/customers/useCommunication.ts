@@ -2,15 +2,7 @@
 import { sendCommunication, sendBulkCommunication, getChannelConfig } from '@services/customer/communicationService'
 import { useAuth } from '@contexts/AuthContext'
 import { useSystemLogs } from '@hooks/system/useSystemLogs'
-
-// Baseado em: public.customers (campos relevantes)
-interface Customer {
-  id: number
-  name: string
-  email: string
-  phone: string
-  [key: string]: unknown
-}
+import type { Customer } from '@/types'
 
 // Baseado em: public.customer_communications
 interface Communication {

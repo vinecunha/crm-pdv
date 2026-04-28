@@ -1,5 +1,5 @@
 import { logger } from '@utils/logger' 
-import { useState } from 'react'
+
 const SIGNATURE_KEY = 'app_signature'
 const STORAGE_VERSION = '1.0'
 
@@ -288,45 +288,6 @@ export const secureStorage = {
   removeTemp(key) {
     return this.remove(`temp_${key}`)
   }
-}
-
-// Hook para usar secureStorage em componentes React
-export const useSecureStorage = (key, initialValue = null) => {
-  const [storedValue, setStoredValue] = useState(() => {
-    try {
-      const item = secureStorage.get(key)
-      return item !== null ? item : initialValue
-    } catch (error) {
-      logger.error('Erro ao ler do storage:', error)
-      return initialValue
-    }
-  })
-  
-  const setValue = async (value) => {
-    try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value
-      setStoredValue(valueToStore)
-      await secureStorage.set(key, valueToStore)
-    } catch (error) {
-      logger.error('Erro ao salvar no storage:', error)
-    }
-  }
-  
-  const removeValue = async () => {
-    try {
-      secureStorage.remove(key)
-      setStoredValue(initialValue)
-    } catch (error) {
-      logger.error('Erro ao remover do storage:', error)
-    }
-  }
-  
-  return [storedValue, setValue, removeValue]
-}
-
-// Exporta também a função de validação para uso externo
-export const validateStorageIntegrity = () => {
-  return secureStorage.cleanup()
 }
 
 export default secureStorage

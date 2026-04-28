@@ -18,7 +18,7 @@ import {
   Target
 } from '@lib/icons'
 import { useDashboard } from '@hooks/dashboard/useDashboard'
-import SectionErrorBoundary from '@components/SectionErrorBoundary'
+import SectionErrorBoundary from '@components/error/SectionErrorBoundary'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
 import TaskWidget from '@components/tasks/TaskWidget'
 import { useTasksQuery } from '@hooks/tasks/useTasksQuery'

@@ -14,13 +14,6 @@ interface Shortcut {
   shift?: boolean
 }
 
-interface CartItem {
-  id: number
-  name: string
-  quantity: number
-  [key: string]: unknown
-}
-
 type PaymentMethod = 'cash' | 'pix' | 'credit_card' | 'debit_card'
 
 interface ShortcutCategories {

@@ -7,9 +7,8 @@ import { logger } from '@utils/logger'
 
 const AuthContext = createContext(null)
 
-const LOGIN_ATTEMPTS_KEY = 'login_attempts'
-const MAX_LOGIN_ATTEMPTS = 5
-const LOGIN_BLOCK_DURATION = 15 * 60 * 1000
+// NOTE: Rate limiting moved to server-side (Supabase Edge Function or database)
+// Client-side rate limiting was bypassable via localStorage clearing/incognito mode
 
 // ==============================
 // VALIDAÇÃO DE FORÇA DA SENHA
@@ -90,6 +89,14 @@ export function AuthProvider({ children }) {
   const initialized = useRef(false)
 
   const getPermissions = useCallback((role) => {
+    // NOTE: These are DEFAULT permissions for UI display only.
+    // Actual access control MUST be enforced by:
+    // 1. Supabase RLS policies on tables
+    // 2. Edge Functions for sensitive operations
+    // 3. Backend role checks in API calls
+    // 
+    // For finer control, permissions should be stored in the database
+    // (e.g., profile.role_permissions JSONB column) and fetched with the profile.
     const permissions = {
       admin: {
         roleName: 'Administrador',
@@ -190,7 +197,14 @@ export function AuthProvider({ children }) {
     if (forceDBFetch) {
       const dbProfile = await fetchFullProfileFromDB(userData.id)
       if (dbProfile) {
-        const mergedProfile = { ...jwtProfile, ...dbProfile }
+        // CRITICAL: Role must ALWAYS come from JWT to prevent privilege escalation
+        // The database role can be modified directly, but JWT role is cryptographically signed
+        const mergedProfile = { 
+          ...dbProfile, 
+          id: jwtProfile.id, // Force ID from auth.users
+          role: jwtProfile.role, // NEVER allow DB to override JWT role
+          email: jwtProfile.email, // Force email from auth.users
+        }
         setProfile(mergedProfile)
         await secureStorage.set('profile', mergedProfile)
         return mergedProfile
@@ -200,57 +214,47 @@ export function AuthProvider({ children }) {
     return jwtProfile
   }, [buildProfileFromJWT, fetchFullProfileFromDB])
 
-  const checkLoginRateLimit = useCallback(async () => {
+  // ==============================
+  // SERVER-SIDE RATE LIMITING
+  // ==============================
+  const checkLoginRateLimit = useCallback(async (email: string) => {
     try {
-      const stored = await secureStorage.get(LOGIN_ATTEMPTS_KEY)
-      if (!stored) return { blocked: false, remaining: MAX_LOGIN_ATTEMPTS }
+      const { data, error } = await supabase.rpc('check_login_rate_limit', {
+        p_email: email,
+      })
       
-      const { attempts, blockedUntil } = stored
-      
-      if (blockedUntil && Date.now() < blockedUntil) {
-        const minutesLeft = Math.ceil((blockedUntil - Date.now()) / 60000)
-        return { blocked: true, remaining: 0, minutesLeft, message: `Muitas tentativas. Tente novamente em ${minutesLeft} minuto(s).` }
+      if (error) {
+        logger.error('Rate limit check failed:', error)
+        return { blocked: false, remaining: 999 }
       }
       
-      if (blockedUntil && Date.now() >= blockedUntil) {
-        secureStorage.remove(LOGIN_ATTEMPTS_KEY)
-        return { blocked: false, remaining: MAX_LOGIN_ATTEMPTS }
+      if (data && !data.allowed) {
+        const minutesLeft = data.blocked_until 
+          ? Math.ceil((new Date(data.blocked_until).getTime() - Date.now()) / 60000)
+          : 15
+        return { 
+          blocked: true, 
+          remaining: 0, 
+          minutesLeft,
+          message: `Muitas tentativas. Tente novamente em ${minutesLeft} minuto(s).`
+        }
       }
       
-      return { blocked: false, remaining: MAX_LOGIN_ATTEMPTS - (attempts || 0) }
-    } catch {
-      return { blocked: false, remaining: MAX_LOGIN_ATTEMPTS }
+      return { blocked: false, remaining: 999 - (data?.attempts || 0) }
+    } catch (error) {
+      logger.error('Rate limit check error:', error)
+      return { blocked: false, remaining: 999 }
     }
   }, [])
 
-  const recordLoginAttempt = useCallback(async (success, email = null) => {
+  const recordLoginAttempt = useCallback(async (email: string, success: boolean) => {
     try {
-      if (success) {
-        secureStorage.remove(LOGIN_ATTEMPTS_KEY)
-        return
-      }
-      
-      const stored = await secureStorage.get(LOGIN_ATTEMPTS_KEY)
-      const attempts = (stored?.attempts || 0) + 1
-      
-      if (attempts >= MAX_LOGIN_ATTEMPTS) {
-        await secureStorage.set(LOGIN_ATTEMPTS_KEY, { attempts, blockedUntil: Date.now() + LOGIN_BLOCK_DURATION })
-        
-        if (email) {
-          try {
-            await supabase
-              .from('profiles')
-              .update({ status: 'locked', updated_at: new Date().toISOString() })
-              .eq('email', email)
-          } catch (err) {
-            logger.error('Erro ao bloquear usuário:', err)
-          }
-        }
-      } else {
-        await secureStorage.set(LOGIN_ATTEMPTS_KEY, { attempts, blockedUntil: null })
-      }
+      await supabase.rpc('record_login_attempt', {
+        p_email: email,
+        p_success: success,
+      })
     } catch (error) {
-      logger.error('Erro ao registrar tentativa de login:', error)
+      logger.error('Record login attempt error:', error)
     }
   }, [])
 
@@ -259,13 +263,14 @@ export function AuthProvider({ children }) {
   // ==============================
   const login = async (email, password) => {
     try {
-      const rateLimit = checkLoginRateLimit()
-      if (rateLimit.blocked) throw new Error(rateLimit.message)
-      
       const safeEmail = sanitizeInput(email)
       
       if (!safeEmail || !safeEmail.includes('@')) throw new Error('Email inválido')
       if (!password || password.length < 1) throw new Error('Senha é obrigatória')
+      
+      // Server-side rate limiting
+      const rateLimit = await checkLoginRateLimit(safeEmail)
+      if (rateLimit.blocked) throw new Error(rateLimit.message)
       
       setLoading(true)
       
@@ -290,7 +295,7 @@ export function AuthProvider({ children }) {
         
         if (profileData?.status && profileData.status !== 'active') {
           await supabase.auth.signOut()
-          await recordLoginAttempt(false, safeEmail)
+          await recordLoginAttempt(safeEmail, false)
           
           const messages = {
             'inactive': 'Usuário inativo. Contate o administrador.',
@@ -300,7 +305,7 @@ export function AuthProvider({ children }) {
           throw new Error(messages[profileData.status] || 'Acesso negado.')
         }
         
-        await recordLoginAttempt(true)
+        await recordLoginAttempt(safeEmail, true)
         setUser(data.user)
         await syncProfile(data.user, true)
       }
@@ -391,7 +396,6 @@ export function AuthProvider({ children }) {
       
       secureStorage.remove('profile')
       secureStorage.remove('user_role')
-      secureStorage.remove(LOGIN_ATTEMPTS_KEY)
       
       setUser(null)
       setProfile(null)
@@ -478,7 +482,6 @@ export function AuthProvider({ children }) {
         if (event === 'SIGNED_OUT') {
           secureStorage.remove('profile')
           secureStorage.remove('user_role')
-          secureStorage.remove(LOGIN_ATTEMPTS_KEY)
           setUser(null)
           setProfile(null)
           return
@@ -531,7 +534,11 @@ export function AuthProvider({ children }) {
     isAdmin: profile?.role === 'admin', isManager: profile?.role === 'gerente',
     isOperator: profile?.role === 'operador', permissions,
     roleName: permissions.roleName, roleColor: permissions.roleColor,
-    hasPermission: (perm) => permissions[perm] === true,
+    hasPermission: (perm) => {
+      // NOTE: This only controls UI visibility, NOT actual access.
+      // All data access must be protected by Supabase RLS policies.
+      return permissions[perm] === true
+    },
     checkLoginRateLimit, validatePasswordStrength,
   }
 

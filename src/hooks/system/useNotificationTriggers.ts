@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useAuth } from '@contexts/AuthContext'
 import { supabase } from '@lib/supabase'
 import { logger } from '@utils/logger'
+import type { Customer, Product } from '@/types'
 
 // Baseado em: public.goals
 interface Goal {
@@ -19,24 +20,6 @@ interface Goal {
 interface Sale {
   final_amount: number | null // numeric(10,2)
   created_at: string | null // timestamp with time zone
-}
-
-// Baseado em: public.customers
-interface Customer {
-  id: number // bigint (bigserial)
-  name: string // character varying(255)
-  birth_date: string | null // date
-  status: string | null // character varying(20)
-}
-
-// Baseado em: public.products
-interface Product {
-  id: number // bigint (bigserial)
-  name: string // character varying(255)
-  stock_quantity: number | null // numeric(10,2)
-  min_stock: number | null // numeric(10,2)
-  unit: string | null // character varying(20)
-  is_active: boolean | null // boolean
 }
 
 // Baseado em: public.profiles (campos relevantes)

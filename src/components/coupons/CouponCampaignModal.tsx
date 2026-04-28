@@ -6,6 +6,7 @@ import ConfirmModal from '@components/ui/ConfirmModal'
 import FeedbackMessage from '@components/ui/FeedbackMessage'
 import { Gift, Search, CheckSquare, Square, Send, ChevronRight, Smartphone, Mail, MessageCircle, Copy } from '@lib/icons'
 import logger from '@utils/logger'
+import { sanitizeInput } from '@utils/sanitize'
 
 // ============= SUB-COMPONENTES =============
 
@@ -222,12 +223,13 @@ const CouponCampaignModal = ({ isOpen, onClose, coupon, onSuccess }) => {
     for (let i = 0; i < customersList.length; i++) {
       const customer = customersList[i]
       const personalizedMsg = customMessage.replace(/{{nome}}/g, customer.name || 'Cliente')
+      const safeContent = sanitizeInput(personalizedMsg)
       
       await supabase.from('customer_communications').insert({
         customer_id: customer.id,
         channel: selectedChannel,
         subject: `Campanha: ${coupon.code}`,
-        content: personalizedMsg,
+        content: safeContent,
         status: 'sent',
         sent_by: userId
       })

@@ -2,22 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Wifi, WifiOff, RefreshCw, X } from '@lib/icons'
 import { useNetworkStatus } from '@/hooks/utils/useNetworkStatus'
 import { getPendingSalesCount } from '@utils/offlineStorage'
-
-const Button = ({ variant = 'primary', onClick, children }) => {
-  const variants = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600',
-    outline: 'border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
-  }
-  
-  return (
-    <button 
-      onClick={onClick}
-      className={`px-4 py-2 rounded-lg transition-colors ${variants[variant]}`}
-    >
-      {children}
-    </button>
-  )
-}
+import Button from '@components/ui/Button'
 
 const NetworkStatus = () => {
   const { isOnline } = useNetworkStatus()

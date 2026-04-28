@@ -3,7 +3,6 @@ import React, { useState, useMemo, useCallback } from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import { useAuth } from '@contexts/AuthContext'
 import { useCompany } from '@hooks/system/useCompany'
-import PrefetchLink from '@components/PrefetchLink'
 import {
   LogOut,
   X,
@@ -322,13 +321,12 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
       background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`
     } : {}
     
-    const LinkComponent = item.prefetch ? PrefetchLink : Link
+    const LinkComponent = Link
     
     return (
       <div className="relative group">
         <LinkComponent
           to={item.path}
-          prefetch={item.prefetch ? true : undefined}
           onClick={() => isMobile && handleMobileClose()}
           className={`
             flex items-center rounded-xl transition-all duration-200

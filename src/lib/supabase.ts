@@ -23,7 +23,3 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     },
   },
 })
-
-if (import.meta.env.DEV) {
-  window.supabase = supabase
-}

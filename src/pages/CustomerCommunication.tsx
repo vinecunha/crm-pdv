@@ -6,6 +6,7 @@ import { supabase } from '@lib/supabase'
 import { useAuth } from '@contexts/AuthContext'
 import { useUI } from '@contexts/UIContext'
 import { useSystemLogs } from '@hooks/system/useSystemLogs'
+import { sanitizeInput } from '@utils/sanitize'
 
 import Button from '@components/ui/Button'
 import DataLoadingSkeleton from '@components/ui/DataLoadingSkeleton'
@@ -79,7 +80,9 @@ const CustomerCommunication = () => {
   const getTelegramLink = (message) => message ? `https://t.me/share/url?url=&text=${encodeURIComponent(message)}` : `https://t.me/+55${customer?.phone?.replace(/\D/g, '')}`
 
   const registerCommunication = async (channel, subject, content) => {
-    const { data, error } = await supabase.from('customer_communications').insert([{ customer_id: id, channel, subject: subject?.replace(/{nome}/g, customer?.name), content: content.replace(/{nome}/g, customer?.name), sent_by: profile?.id, status: 'sent' }]).select().single()
+    const safeSubject = subject ? sanitizeInput(subject) : null
+    const safeContent = sanitizeInput(content)
+    const { data, error } = await supabase.from('customer_communications').insert([{ customer_id: id, channel, subject: safeSubject?.replace(/{nome}/g, customer?.name), content: safeContent.replace(/{nome}/g, customer?.name), sent_by: profile?.id, status: 'sent' }]).select().single()
     if (!error) { await logCreate('customer_communication', data.id, { customer_id: id, channel }); await loadCustomerData() }
   }
 

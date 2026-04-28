@@ -1,4 +1,3 @@
-export { usePDVCart } from './usePDVCart'
 export { usePDVCoupon } from '@hooks/coupon/useCoupon'
 export { usePDVFeedback } from './usePDVFeedback'
 export { usePDVModals } from './usePDVModals'

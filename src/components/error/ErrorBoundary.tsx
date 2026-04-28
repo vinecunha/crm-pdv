@@ -3,6 +3,16 @@ import { supabase } from '@lib/supabase'
 import { AlertCircle, RefreshCw, Home, Bug, ChevronLeft, ChevronRight } from '@lib/icons'
 import { logger } from '@utils/logger' 
 
+const CIRCUIT_BREAKER_WINDOW = 60000
+const CIRCUIT_BREAKER_THRESHOLD = 10
+const CIRCUIT_BREAKER_COOLDOWN = 300000
+
+let errorLogState = {
+  errors: [] as number[],
+  circuitOpen: false,
+  circuitOpensAt: 0
+}
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props)
@@ -31,6 +41,27 @@ class ErrorBoundary extends React.Component {
   }
 
   logErrorToSupabase = async (error, errorInfo) => {
+    const now = Date.now()
+
+    if (errorLogState.circuitOpen) {
+      if (now - errorLogState.circuitOpensAt > CIRCUIT_BREAKER_COOLDOWN) {
+        errorLogState.circuitOpen = false
+        errorLogState.errors = []
+      } else {
+        return
+      }
+    }
+
+    errorLogState.errors = errorLogState.errors.filter(t => now - t < CIRCUIT_BREAKER_WINDOW)
+    errorLogState.errors.push(now)
+
+    if (errorLogState.errors.length > CIRCUIT_BREAKER_THRESHOLD) {
+      errorLogState.circuitOpen = true
+      errorLogState.circuitOpensAt = now
+      logger.warn('Circuit breaker aberto: muitos erros de logging')
+      return
+    }
+
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const user = session?.user

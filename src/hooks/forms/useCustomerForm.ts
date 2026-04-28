@@ -1,22 +1,7 @@
 import { useCallback, ChangeEvent } from 'react'
 import { useFormWithSchema } from '@hooks/forms/useFormWithSchema'
 import { customerSchema } from '@/utils/schemas'
-
-// Baseado em: public.customers
-interface Customer {
-  id: number
-  name: string
-  email: string
-  phone: string
-  document: string | null
-  address: string | null
-  city: string | null
-  state: string | null
-  zip_code: string | null
-  birth_date: string | null
-  status: string | null
-  [key: string]: unknown
-}
+import type { Customer } from '@/types'
 
 interface CustomerFormData {
   name: string

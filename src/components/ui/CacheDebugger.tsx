@@ -37,7 +37,7 @@ const CacheDebugger = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
-  if (process.env.NODE_ENV !== 'development') return null
+  if (!import.meta.env.DEV) return null
 
   return (
     <>

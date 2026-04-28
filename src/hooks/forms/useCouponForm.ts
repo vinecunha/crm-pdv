@@ -1,6 +1,7 @@
 import { useCallback, ChangeEvent } from 'react'
 import { useFormWithSchema } from '@hooks/forms/useFormWithSchema'
 import { z } from 'zod'
+import type { Coupon } from '@/types'
 
 const couponSchema = z.object({
   code: z.string().min(3, 'Código deve ter pelo menos 3 caracteres').transform(v => v?.toUpperCase()),
@@ -16,25 +17,6 @@ const couponSchema = z.object({
   valid_to: z.string().optional(),
   usage_limit: z.number().int('Limite deve ser inteiro').min(1, 'Limite deve ser pelo menos 1').optional()
 })
-
-// Baseado em: public.coupons
-interface Coupon {
-  id: number
-  code: string
-  name: string
-  description: string | null
-  discount_type: 'fixed' | 'percent'
-  discount_value: number
-  max_discount: number | null
-  min_purchase: number | null
-  is_global: boolean | null
-  is_active: boolean | null
-  valid_from: string | null
-  valid_to: string | null
-  usage_limit: number | null
-  used_count: number | null
-  [key: string]: unknown
-}
 
 // Baseado em: public.coupon_allowed_customers
 interface AllowedCustomer {

@@ -2,7 +2,7 @@
 import React, { useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import StatCard, { StatCardGroup } from '@components/ui/StatCard'
-import SectionErrorBoundary from '@components/SectionErrorBoundary'
+import SectionErrorBoundary from '@components/error/SectionErrorBoundary'
 import { 
   ShoppingCart, 
   TrendingUp, 

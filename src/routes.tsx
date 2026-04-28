@@ -1,7 +1,7 @@
 import React, { Suspense, lazy, ReactNode } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import ProtectedRoute from './components/ProtectedRoute'
-import SectionErrorBoundary from './components/SectionErrorBoundary'
+import ProtectedRoute from './components/auth/ProtectedRoute'
+import SectionErrorBoundary from './components/error/SectionErrorBoundary'
 import Login from './pages/Login'
 import NotFound from './pages/NotFound'
 

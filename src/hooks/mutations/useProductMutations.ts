@@ -1,28 +1,9 @@
 ﻿import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSystemLogs } from '@hooks/system/useSystemLogs'
 import * as productService from '@services/product/productService'
+import type { Product } from '@/types'
 
-// Baseado em: public.products
-interface Product {
-  id: number
-  code: string | null
-  name: string
-  description: string | null
-  category: string | null
-  unit: string | null
-  price: number | null
-  cost_price: number | null
-  stock_quantity: number | null
-  reserved_quantity: number | null
-  min_stock: number | null
-  max_stock: number | null
-  location: string | null
-  brand: string | null
-  weight: number | null
-  is_active: boolean | null
-  created_at: string | null
-  updated_at: string | null
-  created_by: string | null
+interface ProductFormData {
   updated_by: string | null
   deleted_at: string | null
   deleted_by: string | null

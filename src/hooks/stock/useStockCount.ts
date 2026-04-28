@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@lib/supabase'
-import { useAuth } from '@contexts/AuthContext.jsx'
+import { useAuth } from '@contexts/AuthContext'
 
 const addAllProductsToSession = async ({ sessionId, products }) => {
   const itemsToAdd = products.map(product => ({

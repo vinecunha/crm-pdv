@@ -7,7 +7,7 @@ import { useClock } from '@hooks/utils/useClock'
 import { useNetworkStatus } from '@/hooks/utils/useNetworkStatus'
 import GlobalSearch from '@components/GlobalSearch'
 import ThemeSelector from '@components/ui/ThemeSelector'
-import NotificationsPanel from '@components/NotificationsPanel'
+import NotificationsPanel from '@components/layout/NotificationsPanel'
 import ConfirmModal from '@components/ui/ConfirmModal'
 import {
   RefreshCw,

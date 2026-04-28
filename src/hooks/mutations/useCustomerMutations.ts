@@ -1,28 +1,7 @@
 ﻿import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSystemLogs } from '@hooks/system/useSystemLogs'
 import * as customerService from '@services/customer/customerService'
-
-// Baseado em: public.customers
-interface Customer {
-  id: number
-  name: string
-  email: string
-  phone: string
-  document: string | null
-  address: string | null
-  city: string | null
-  state: string | null
-  zip_code: string | null
-  birth_date: string | null
-  status: string | null
-  total_purchases: number | null
-  last_purchase: string | null
-  created_at: string | null
-  updated_at: string | null
-  deleted_at: string | null
-  deleted_by: string | null
-  [key: string]: unknown
-}
+import type { Customer } from '@/types'
 
 interface CustomerFormData {
   name: string

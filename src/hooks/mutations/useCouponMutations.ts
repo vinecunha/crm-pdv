@@ -1,39 +1,7 @@
 ﻿import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSystemLogs } from '@hooks/system/useSystemLogs'
 import * as couponService from '@services/coupon/couponService'
-
-// Baseado em: public.coupons
-interface Coupon {
-  id: number
-  code: string
-  name: string
-  description: string | null
-  discount_type: 'fixed' | 'percent'
-  discount_value: number
-  max_discount: number | null
-  min_purchase: number | null
-  is_global: boolean | null
-  is_active: boolean | null
-  valid_from: string | null
-  valid_to: string | null
-  usage_limit: number | null
-  used_count: number | null
-  created_at: string | null
-  created_by: string | null
-  updated_at: string | null
-  updated_by: string | null
-  deleted_at: string | null
-  deleted_by: string | null
-}
-
-// Baseado em: public.customers
-interface Customer {
-  id: number
-  name: string
-  email: string
-  phone: string
-  [key: string]: unknown
-}
+import type { Coupon, Customer } from '@/types'
 
 interface CouponData {
   code: string

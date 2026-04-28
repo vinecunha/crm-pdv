@@ -7,9 +7,8 @@ import { BrowserRouter as Router } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { CompanyProvider, useCompanyContext } from './contexts/CompanyContext'
-import ErrorBoundary from '@components/ErrorBoundary'
-import DynamicHead from '@components/DynamicHead'
-import PrefetchRoute from '@components/PrefetchRoute' 
+import ErrorBoundary from '@components/error/ErrorBoundary'
+import DynamicHead from '@components/layout/DynamicHead'
 import { queryClient } from '@lib/react-query'
 import CacheDebugger from '@components/ui/CacheDebugger'
 import NetworkStatus from '@components/ui/NetworkStatus'
@@ -48,34 +47,38 @@ const GlobalFeedback = () => {
 }
 
 const AppWithErrorBoundary = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <AuthProvider>
+          <CompanyProvider>
+            <ThemeProviderWithErrorBoundary />
+          </CompanyProvider>
+        </AuthProvider>
+      </Router>
+      {import.meta.env.DEV && <CacheDebugger />}
+      {import.meta.env.DEV && <NetworkStatus />}
+      {import.meta.env.DEV && <PerformanceDebugger />}
+    </QueryClientProvider>
+  )
+}
+
+const ThemeProviderWithErrorBoundary = () => {
   const { company } = useCompanyContext()
   
   return (
     <ErrorBoundary companySettings={company}>
-      <QueryClientProvider client={queryClient}>
-        <Router>
-          <AuthProvider>
-            <CompanyProvider>
-              <ThemeProvider> 
-                <DynamicHead />
-                <NotificationTriggersWrapper />
-                <UIProvider>
-                  <Suspense fallback={<PageLoader />}>
-                    <PrefetchRoute>
-                      <AppRoutes />
-                    </PrefetchRoute>
-                  </Suspense>
-                  <GlobalFeedback />
-                </UIProvider>
-                <PendingSalesIndicator />
-              </ThemeProvider>
-            </CompanyProvider>
-          </AuthProvider>
-        </Router>
-        {import.meta.env.DEV && <CacheDebugger />}
-        {import.meta.env.DEV && <NetworkStatus />}
-        {import.meta.env.DEV && <PerformanceDebugger />}
-      </QueryClientProvider>
+      <ThemeProvider> 
+        <DynamicHead />
+        <NotificationTriggersWrapper />
+        <UIProvider>
+          <Suspense fallback={<PageLoader />}>
+            <AppRoutes />
+          </Suspense>
+          <GlobalFeedback />
+        </UIProvider>
+        <PendingSalesIndicator />
+      </ThemeProvider>
     </ErrorBoundary>
   )
 }
