@@ -404,10 +404,13 @@ end;
 $$ language plpgsql security definer set search_path = '';
 
 -- Function to get current user role (for RLS policies)
+-- Using plpgsql to defer table validation until runtime
 create or replace function public.get_current_user_role()
 returns text as $$
-  select role from public.profiles where id = auth.uid() limit 1;
-$$ language sql security definer stable set search_path = '';
+begin
+  return (select role from public.profiles where id = auth.uid() limit 1);
+end;
+$$ language plpgsql security definer stable set search_path = '';
 
 -- Function to setup company (used in initial setup flow)
 create or replace function public.setup_company(
