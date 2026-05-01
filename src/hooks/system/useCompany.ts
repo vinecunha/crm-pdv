@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@lib/supabase'
 import { logger } from '@utils/logger'
 
@@ -37,13 +38,44 @@ interface UseCompanyReturn {
   error: string | null
   getCompanyColor: (type?: 'primary' | 'secondary') => string
   updateCompanySettings: (settings: Partial<CompanySettings>) => Promise<UpdateCompanyResult>
-  fetchCompanySettings: () => Promise<void>
+  refetch: () => void
 }
 
 export const useCompany = (): UseCompanyReturn => {
-  const [company, setCompany] = useState<CompanySettings | null>(null)
-  const [loading, setLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
+  const queryClient = useQueryClient()
+
+  const { data: company, isLoading: loading, error, refetch } = useQuery({
+    queryKey: ['company-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('company_settings')
+        .select('*')
+        .limit(1)
+        .single()
+      
+      if (error) {
+        logger.error('Erro ao buscar configurações da empresa:', error)
+        // Retorna dados padrão em caso de erro
+        return {
+          company_name: 'Brasalino Pollo',
+          primary_color: '#FF131E',
+          secondary_color: '#FFE526'
+        } as CompanySettings
+      }
+      
+      // Aplicar cores no DOM
+      if (data?.primary_color) {
+        document.documentElement.style.setProperty('--primary-color', data.primary_color)
+      }
+      if (data?.secondary_color) {
+        document.documentElement.style.setProperty('--secondary-color', data.secondary_color)
+      }
+      
+      return data as CompanySettings
+    },
+    staleTime: Infinity, // Configurações mudam raramente
+    retry: 1
+  })
 
   const getCompanyColor = (type: 'primary' | 'secondary' = 'primary'): string => {
     if (type === 'primary') {
@@ -52,45 +84,8 @@ export const useCompany = (): UseCompanyReturn => {
     return company?.secondary_color || '#7c3aed'
   }
 
-  const fetchCompanySettings = async (): Promise<void> => {
-    try {
-      setLoading(true)
-      
-      const { data, error } = await supabase
-        .from('company_settings')
-        .select('*')
-        .limit(1)
-        .single()
-      
-      if (error) throw error
-      
-      setCompany(data as CompanySettings)
-      
-      if (data?.primary_color) {
-        document.documentElement.style.setProperty('--primary-color', data.primary_color)
-      }
-      if (data?.secondary_color) {
-        document.documentElement.style.setProperty('--secondary-color', data.secondary_color)
-      }
-      
-    } catch (err) {
-      logger.error('Erro ao buscar configurações da empresa:', err)
-      setError((err as Error).message)
-      
-      setCompany({
-        company_name: 'Brasalino Pollo',
-        primary_color: '#FF131E',
-        secondary_color: '#FFE526'
-      } as CompanySettings)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const updateCompanySettings = async (settings: Partial<CompanySettings>): Promise<UpdateCompanyResult> => {
     try {
-      setLoading(true)
-      
       const { data, error } = await supabase
         .from('company_settings')
         .update({
@@ -103,27 +98,22 @@ export const useCompany = (): UseCompanyReturn => {
       
       if (error) throw error
       
-      setCompany(data as CompanySettings)
-      return { success: true, data: data as CompanySettings }
+      // Invalidar cache para refetch
+      queryClient.invalidateQueries({ queryKey: ['company-settings'] })
       
+      return { success: true, data: data as CompanySettings }
     } catch (err) {
       logger.error('Erro ao atualizar configurações:', err)
       return { success: false, error: (err as Error).message }
-    } finally {
-      setLoading(false)
     }
   }
 
-  useEffect(() => {
-    fetchCompanySettings()
-  }, [])
-
   return {
-    company,
+    company: company || null,
     loading,
-    error,
+    error: error?.message || null,
     getCompanyColor,
     updateCompanySettings,
-    fetchCompanySettings
+    refetch
   }
 }

@@ -16,23 +16,9 @@ export const ThemeProvider = ({ children }) => {
     return localStorage.getItem('manualTheme') || 'light'
   })
 
-  // Aplicar tema no DOM
+  // Aplicar tema no DOM - uses centralized logic from useThemeDetection
   useEffect(() => {
-    let effectiveTheme
-    
-    if (themeMode === 'manual') {
-      effectiveTheme = manualTheme
-    } else if (themeMode === 'system') {
-      effectiveTheme = systemTheme
-    } else {
-      // 'auto' - baseado no horário
-      effectiveTheme = timeBasedTheme
-    }
-    
-    // Se o usuário tem preferência salva, ela tem prioridade
-    if (profile?.dark_mode !== undefined) {
-      effectiveTheme = profile.dark_mode ? 'dark' : 'light'
-    }
+    const effectiveTheme = getEffectiveTheme(themeMode)
     
     if (effectiveTheme === 'dark') {
       document.documentElement.classList.add('dark')
@@ -42,7 +28,7 @@ export const ThemeProvider = ({ children }) => {
     
     // Salvar preferência no localStorage como cache
     localStorage.setItem('effectiveTheme', effectiveTheme)
-  }, [themeMode, manualTheme, systemTheme, timeBasedTheme, profile?.dark_mode])
+  }, [themeMode, getEffectiveTheme])
 
   const value = {
     themeMode,

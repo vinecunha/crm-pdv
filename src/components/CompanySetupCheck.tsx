@@ -1,28 +1,30 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { fetchCompanySettings } from '@services/system/companyService'
+import { useCompany } from '@hooks/system/useCompany'
 import SplashScreen from '@components/ui/SplashScreen'
 
 const CompanySetupCheck = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { company, loading } = useCompany()
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
+    if (loading) return // Ainda carregando
+    
     let cancelled = false
-    const check = async () => {
-      const settings = await fetchCompanySettings()
+    const check = () => {
       if (cancelled) return
       setChecking(false)
-      if (!settings && !['/setup', '/login'].includes(location.pathname)) {
+      if (!company && !['/setup', '/login'].includes(location.pathname)) {
         navigate('/setup', { replace: true })
       }
     }
     check()
     return () => { cancelled = true }
-  }, [navigate, location.pathname])
+  }, [company, loading, navigate, location.pathname])
 
-  if (checking) {
+  if (checking || loading) {
     return <SplashScreen fullScreen message="Verificando configurações..." />
   }
 

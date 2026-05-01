@@ -98,13 +98,21 @@ export const useThemeDetection = () => {
     }
   }, [location, calculateSunTimes])
 
-  const getEffectiveTheme = useCallback((mode: ThemeMode = 'auto'): Theme => {
+  // Centralized theme decision logic:
+  // Priority: userTheme (from profile.dark_mode) > manual > system > time-based
+  const getEffectiveTheme = useCallback((mode?: ThemeMode): Theme => {
+    // 1. User theme from profile (highest priority)
     if (userTheme) return userTheme
     
-    if (mode === 'system') return systemTheme
+    // 2. Use specified mode
+    const effectiveMode = mode || 'auto'
     
+    if (effectiveMode === 'system') return systemTheme
+    if (effectiveMode === 'manual') return manualTheme || 'light'
+    
+    // 3. 'auto' mode - time-based
     return timeBasedTheme
-  }, [userTheme, systemTheme, timeBasedTheme])
+  }, [userTheme, systemTheme, timeBasedTheme, manualTheme])
 
   return {
     systemTheme,
