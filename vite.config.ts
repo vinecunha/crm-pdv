@@ -20,11 +20,7 @@ export default defineConfig({
     // ✅ Configuração específica para integração
     isolate: true,
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true  // ✅ Rodar um teste por vez
-      }
-    },
+    singleFork: true,  // ✅ Rodar um teste por vez (Vitest 4+)
     
     // ✅ Limitar concorrência
     maxConcurrency: 1,

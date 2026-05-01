@@ -1,10 +1,52 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
-import { supabase } from '@lib/supabase'
+import { supabase, type User, type Session } from '@lib/supabase'
 import { sanitizeInput } from '@utils/sanitize' 
 import { logger } from '@utils/logger' 
 
-const AuthContext = createContext(null)
+interface Profile {
+  id: string
+  email: string
+  full_name: string
+  display_name: string
+  role: string
+  created_at: string
+  updated_at: string
+}
+
+interface PasswordStrength {
+  valid: boolean
+  score: number
+  message: string
+  checks?: Record<string, boolean>
+}
+
+interface Permissions {
+  roleName: string
+  roleColor: string
+  [key: string]: unknown
+}
+
+const AuthContext = createContext<{
+  user: User | null
+  profile: Profile | null
+  loading: boolean
+  login: (email: string, password: string) => Promise<any>
+  logout: () => Promise<void>
+  register: (email: string, password: string, fullName: string) => Promise<any>
+  changePassword: (newPassword: string) => Promise<any>
+  resetPassword: (email: string) => Promise<any>
+  refreshSession: () => Promise<void>
+  isAuthenticated: boolean
+  isAdmin: boolean
+  isManager: boolean
+  isOperator: boolean
+  permissions: Permissions
+  roleName: string
+  roleColor: string
+  hasPermission: (perm: string) => boolean
+  validatePasswordStrength: (password: string) => PasswordStrength
+} | null>(null)
 
 // NOTE: Rate limiting moved to server-side (Supabase Edge Function or database)
 // Client-side rate limiting was bypassable via localStorage clearing/incognito mode
@@ -12,13 +54,21 @@ const AuthContext = createContext(null)
 // ==============================
 // VALIDAÇÃO DE FORÇA DA SENHA
 // ==============================
-export const validatePasswordStrength = (password) => {
+interface PasswordChecks {
+  hasUpperCase: boolean
+  hasLowerCase: boolean
+  hasNumbers: boolean
+  hasSpecialChar: boolean
+  isLongEnough: boolean
+}
+
+export const validatePasswordStrength = (password: string): PasswordStrength => {
   if (!password || password.length < 8) {
     return { valid: false, score: 0, message: 'A senha deve ter pelo menos 8 caracteres' }
   }
   
   let score = 0
-  const checks = {
+  const checks: PasswordChecks = {
     hasUpperCase: /[A-Z]/.test(password),
     hasLowerCase: /[a-z]/.test(password),
     hasNumbers: /[0-9]/.test(password),
@@ -51,8 +101,8 @@ export const validatePasswordStrength = (password) => {
   return { valid: true, score, message, checks }
 }
 
-export const usePasswordStrength = (password) => {
-  const [strength, setStrength] = useState({ valid: false, score: 0, message: '' })
+export const usePasswordStrength = (password: string) => {
+  const [strength, setStrength] = useState<PasswordStrength>({ valid: false, score: 0, message: '' })
   
   useEffect(() => {
     if (password) {
@@ -62,14 +112,14 @@ export const usePasswordStrength = (password) => {
     }
   }, [password])
   
-  const getStrengthColor = () => {
+  const getStrengthColor = (): string => {
     if (strength.score <= 2) return 'bg-red-500'
     if (strength.score === 3) return 'bg-yellow-500'
     if (strength.score === 4) return 'bg-green-500'
     return 'bg-green-600'
   }
   
-  const getStrengthWidth = () => `${(strength.score / 5) * 100}%`
+  const getStrengthWidth = (): string => `${(strength.score / 5) * 100}%`
   
   return { ...strength, color: getStrengthColor(), width: getStrengthWidth() }
 }
@@ -80,14 +130,14 @@ export function useAuth() {
   return context
 }
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [profile, setProfile] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const initialized = useRef(false)
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [loading, setLoading] = useState<boolean>(true)
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false)
+  const initialized = useRef<boolean>(false)
 
-  const getPermissions = useCallback((role) => {
+  const getPermissions = useCallback((role: string): Permissions => {
     // NOTE: These are DEFAULT permissions for UI display only.
     // Actual access control MUST be enforced by:
     // 1. Supabase RLS policies on tables
@@ -96,7 +146,7 @@ export function AuthProvider({ children }) {
     // 
     // For finer control, permissions should be stored in the database
     // (e.g., profile.role_permissions JSONB column) and fetched with the profile.
-    const permissions = {
+    const permissions: Record<string, Permissions> = {
       admin: {
         roleName: 'Administrador',
         roleColor: 'from-purple-600 to-purple-700',
@@ -137,22 +187,22 @@ export function AuthProvider({ children }) {
     return permissions[role] || permissions.operador
   }, [])
 
-  const buildProfileFromJWT = useCallback((userData) => {
+  const buildProfileFromJWT = useCallback((userData: User): Profile | null => {
     if (!userData) return null
     const role = userData.app_metadata?.role || 'operador'
     const fullName = userData.user_metadata?.full_name || userData.email?.split('@')[0] || 'Usuário'
     return {
       id: userData.id,
-      email: userData.email,
+      email: userData.email || '',
       full_name: fullName,
-      display_name: userData.user_metadata?.display_name || fullName.split(' ')[0],
+      display_name: userData.user_metadata?.display_name || fullName.split(' ')[0] || '',
       role: role,
-      created_at: userData.created_at,
-      updated_at: userData.updated_at
+      created_at: userData.created_at || '',
+      updated_at: userData.updated_at || ''
     }
   }, [])
 
-  const fetchFullProfileFromDB = useCallback(async (userId) => {
+  const fetchFullProfileFromDB = useCallback(async (userId: string): Promise<Profile | null> => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -163,7 +213,7 @@ export function AuthProvider({ children }) {
       if (error) throw error
       
       if (data) {
-        const profileData = {
+        const profileData: Profile = {
           ...data,
           id: userId, // Força o ID a ser o UUID do auth
           profile_id: data.id // Preserva o ID da tabela profiles se necessário
@@ -176,13 +226,13 @@ export function AuthProvider({ children }) {
         return profileData
       }
       return null
-    } catch (error) {
+    } catch (error: any) {
       logger.error('❌ Erro ao buscar profile do banco:', error.message)
       return null
     }
   }, [])
 
-  const syncProfile = useCallback(async (userData, forceDBFetch = false) => {
+  const syncProfile = useCallback(async (userData: User | null, forceDBFetch = false): Promise<Profile | null> => {
     if (!userData) return null
     
     const jwtProfile = buildProfileFromJWT(userData)
@@ -198,7 +248,7 @@ export function AuthProvider({ children }) {
       if (dbProfile) {
         // CRITICAL: Role must ALWAYS come from JWT to prevent privilege escalation
         // The database role can be modified directly, but JWT role is cryptographically signed
-        const mergedProfile = { 
+        const mergedProfile: Profile = { 
           ...dbProfile, 
           id: jwtProfile.id, // Force ID from auth.users
           role: jwtProfile.role, // NEVER allow DB to override JWT role
@@ -216,7 +266,7 @@ export function AuthProvider({ children }) {
   // ==============================
   // LOGIN COM SANITIZAÇÃO
   // ==============================
-  const login = async (email, password) => {
+  const login = async (email: string, password: string): Promise<any> => {
     try {
       const safeEmail = sanitizeInput(email)
       
@@ -244,7 +294,7 @@ export function AuthProvider({ children }) {
         if (profileData?.status && profileData.status !== 'active') {
           await supabase.auth.signOut()
           
-          const messages = {
+          const messages: Record<string, string> = {
             'inactive': 'Usuário inativo. Contate o administrador.',
             'blocked': 'Usuário bloqueado. Contate o administrador.',
             'locked': 'Conta bloqueada por excesso de tentativas.'
@@ -259,7 +309,7 @@ export function AuthProvider({ children }) {
       setLoading(false)
       return data
       
-    } catch (error) {
+    } catch (error: any) {
       logger.error('❌ Erro no login:', error.message)
       setLoading(false)
       throw error
@@ -269,7 +319,7 @@ export function AuthProvider({ children }) {
   // ==============================
   // REGISTRO COM SANITIZAÇÃO
   // ==============================
-  const register = async (email, password, fullName) => {
+  const register = async (email: string, password: string, fullName: string): Promise<any> => {
     try {
       const passwordValidation = validatePasswordStrength(password)
       if (!passwordValidation.valid) throw new Error(passwordValidation.message)
@@ -285,7 +335,7 @@ export function AuthProvider({ children }) {
         options: {
           data: {
             full_name: safeFullName,
-            display_name: safeFullName.split(' ')[0]
+            display_name: safeFullName.split(' ')[0] || ''
           }
         }
       })
@@ -294,14 +344,14 @@ export function AuthProvider({ children }) {
       
       setLoading(false)
       return data
-    } catch (error) {
+    } catch (error: any) {
       logger.error('❌ Erro no registro:', error.message)
       setLoading(false)
       throw error
     }
   }
 
-  const changePassword = async (newPassword) => {
+  const changePassword = async (newPassword: string): Promise<any> => {
     try {
       const passwordValidation = validatePasswordStrength(newPassword)
       if (!passwordValidation.valid) throw new Error(passwordValidation.message)
@@ -312,14 +362,14 @@ export function AuthProvider({ children }) {
       
       setLoading(false)
       return data
-    } catch (error) {
+    } catch (error: any) {
       logger.error('❌ Erro ao alterar senha:', error.message)
       setLoading(false)
       throw error
     }
   }
 
-  const resetPassword = async (email) => {
+  const resetPassword = async (email: string): Promise<any> => {
     try {
       const safeEmail = sanitizeInput(email)
       
@@ -330,13 +380,13 @@ export function AuthProvider({ children }) {
 
       if (error) throw error
       return data
-    } catch (error) {
+    } catch (error: any) {
       logger.error('❌ Erro ao solicitar reset:', error.message)
       throw error
     }
   }
 
-  const logout = async () => {
+  const logout = async (): Promise<void> => {
     try {
       setLoading(true)
       
@@ -350,14 +400,14 @@ export function AuthProvider({ children }) {
       if (error) throw error
       
       setLoading(false)
-    } catch (error) {
+    } catch (error: any) {
       logger.error('❌ Erro no logout:', error.message)
       setLoading(false)
       throw error
     }
   }
 
-  const refreshSession = useCallback(async () => {
+  const refreshSession = useCallback(async (): Promise<void> => {
     if (isRefreshing) return
     setIsRefreshing(true)
     
@@ -375,11 +425,11 @@ export function AuthProvider({ children }) {
           .single()
         
         if (!profileError && freshProfile) {
-          setProfile(freshProfile)
+          setProfile(freshProfile as Profile)
            localStorage.setItem('profile', JSON.stringify(freshProfile))
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.error('❌ Erro ao atualizar sessão:', error.message)
     } finally {
       setIsRefreshing(false)
