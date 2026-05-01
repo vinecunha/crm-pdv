@@ -5,199 +5,20 @@ import {
   CheckCircle, 
   Info, 
   X, 
-  AlertTriangle,
-  ChevronRight,
-  ExternalLink,
-  Copy,
-  RotateCcw
+  AlertTriangle
 } from '@lib/icons'
-import { logger } from '@utils/logger'
-
-// Hook para animação de progresso
-const useProgressTimer = (duration, onComplete, isPaused = false) => {
-  const [progress, setProgress] = useState(100)
-  const startTimeRef = useRef(null)
-  const rafRef = useRef(null)
-  const pausedProgressRef = useRef(null)
-
-  useEffect(() => {
-    if (!duration || isPaused) return
-
-    startTimeRef.current = Date.now()
-    const initialProgress = pausedProgressRef.current ?? 100
-    setProgress(initialProgress)
-
-    const animate = () => {
-      const elapsed = Date.now() - startTimeRef.current
-      const remaining = Math.max(0, initialProgress - (elapsed / duration) * 100)
-      
-      setProgress(remaining)
-      
-      if (remaining > 0) {
-        rafRef.current = requestAnimationFrame(animate)
-      } else {
-        onComplete?.()
-      }
-    }
-
-    rafRef.current = requestAnimationFrame(animate)
-
-    return () => {
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current)
-      }
-      if (isPaused) {
-        pausedProgressRef.current = progress
-      }
-    }
-  }, [duration, onComplete, isPaused])
-
-  return progress
-}
-
-// Componente de ação
-const MessageAction = ({ action, type }) => {
-  if (!action) return null
-
-  const actionConfig = {
-    primary: `text-${type}-700 dark:text-${type}-300 hover:text-${type}-900 dark:hover:text-${type}-100`,
-    secondary: `text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200`,
-    link: `text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline`
-  }
-
-  const Icon = action.icon || (action.external ? ExternalLink : ChevronRight)
-
-  return (
-    <button
-      onClick={action.onClick}
-      className={`
-        inline-flex items-center gap-1 text-sm font-medium
-        ${actionConfig[action.variant || 'primary']}
-        transition-colors duration-200
-        focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
-        focus-visible:ring-${type}-500 rounded px-1
-      `}
-    >
-      {action.label}
-      <Icon size={14} />
-    </button>
-  )
-}
-
-// Componente de barra de progresso
-const ProgressBar = ({ progress, type }) => {
-  const colorMap = {
-    success: 'bg-green-500 dark:bg-green-400',
-    error: 'bg-red-500 dark:bg-red-400',
-    warning: 'bg-yellow-500 dark:bg-yellow-400',
-    info: 'bg-blue-500 dark:bg-blue-400'
-  }
-
-  return (
-    <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/5 dark:bg-white/5 rounded-b-lg overflow-hidden">
-      <div
-        className={`h-full ${colorMap[type]} transition-all duration-100 ease-linear`}
-        style={{ width: `${progress}%` }}
-        role="progressbar"
-        aria-valuemin="0"
-        aria-valuemax="100"
-        aria-valuenow={Math.round(progress)}
-      />
-    </div>
-  )
-}
-
-// Componente de contador regressivo
-const CountdownIndicator = ({ duration, type }) => {
-  const [count, setCount] = useState(Math.ceil(duration / 1000))
-
-  useEffect(() => {
-    if (!duration) return
-
-    const timer = setInterval(() => {
-      setCount(prev => {
-        if (prev <= 1) {
-          clearInterval(timer)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [duration])
-
-  const colorMap = {
-    success: 'text-green-600 dark:text-green-400',
-    error: 'text-red-600 dark:text-red-400',
-    warning: 'text-yellow-600 dark:text-yellow-400',
-    info: 'text-blue-600 dark:text-blue-400'
-  }
-
-  return (
-    <span className={`text-xs font-mono ${colorMap[type]} ml-2`}>
-      {count}s
-    </span>
-  )
-}
-
-// Hook para copiar mensagem
-const useCopyToClipboard = () => {
-  const [copied, setCopied] = useState(false)
-
-  const copy = useCallback(async (text) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-      return true
-    } catch (err) {
-      logger.error('Failed to copy:', err)
-      return false
-    }
-  }, [])
-
-  return { copied, copy }
-}
 
 const FeedbackMessage = ({ 
   type = 'success',
   message, 
-  description,
-  onClose, 
-  duration = 5000,
-  showIcon = true,
-  closable = true,
-  showProgress = false,
-  pauseOnHover = true,
-  actions = [],
-  onAction,
-  id,
-  title,
-  copyable = false,
-  retry,
-  className = '',
-  animate = true,
+  onClose,
   position = 'static',
-  compact = false,
-  variant = 'default'
+  className = ''
 }) => {
   const [isHovered, setIsHovered] = useState(false)
-  const [isVisible, setIsVisible] = useState(true)
   const [isLeaving, setIsLeaving] = useState(false)
-  const messageRef = useRef(null)
-  const { copied, copy } = useCopyToClipboard()
-
-  const progress = useProgressTimer(
-    duration,
-    () => {
-      if (!isHovered && onClose) {
-        handleClose()
-      }
-    },
-    isHovered && pauseOnHover
-  )
-
+  const [isVisible, setIsVisible] = useState(true)
+  
   const handleClose = useCallback(() => {
     setIsLeaving(true)
     setTimeout(() => {
@@ -205,21 +26,21 @@ const FeedbackMessage = ({
       onClose?.()
     }, 300)
   }, [onClose])
-
-  // Auto-close com duração
+  
+  // Auto-close after 5 seconds
   useEffect(() => {
-    if (!duration || !onClose) return
-
+    if (!onClose) return
+    
     const timer = setTimeout(() => {
       if (!isHovered) {
         handleClose()
       }
-    }, duration)
-
+    }, 5000)
+    
     return () => clearTimeout(timer)
-  }, [duration, onClose, isHovered, handleClose])
-
-  // Anunciar para leitores de tela
+  }, [onClose, isHovered, handleClose])
+  
+  // Announce errors to screen readers
   useEffect(() => {
     if (message && type === 'error') {
       const announcement = `Erro: ${message}`
@@ -232,114 +53,42 @@ const FeedbackMessage = ({
       setTimeout(() => document.body.removeChild(ariaLive), 1000)
     }
   }, [message, type])
-
+  
   const configs = {
     success: {
       icon: CheckCircle,
-      colors: {
-        default: {
-          bg: 'bg-green-50 dark:bg-green-900/20',
-          border: 'border-green-200 dark:border-green-800',
-          text: 'text-green-800 dark:text-green-300',
-          icon: 'text-green-500 dark:text-green-400'
-        },
-        solid: {
-          bg: 'bg-green-600 dark:bg-green-700',
-          border: 'border-green-700 dark:border-green-800',
-          text: 'text-white dark:text-white',
-          icon: 'text-white dark:text-white'
-        },
-        outlined: {
-          bg: 'bg-white dark:bg-gray-800',
-          border: 'border-2 border-green-500 dark:border-green-400',
-          text: 'text-green-700 dark:text-green-300',
-          icon: 'text-green-500 dark:text-green-400'
-        }
-      }
+      bg: 'bg-green-50 dark:bg-green-900/20',
+      border: 'border-green-200 dark:border-green-800',
+      text: 'text-green-800 dark:text-green-300',
+      iconColor: 'text-green-500 dark:text-green-400'
     },
     error: {
       icon: AlertCircle,
-      colors: {
-        default: {
-          bg: 'bg-red-50 dark:bg-red-900/20',
-          border: 'border-red-200 dark:border-red-800',
-          text: 'text-red-800 dark:text-red-300',
-          icon: 'text-red-500 dark:text-red-400'
-        },
-        solid: {
-          bg: 'bg-red-600 dark:bg-red-700',
-          border: 'border-red-700 dark:border-red-800',
-          text: 'text-white dark:text-white',
-          icon: 'text-white dark:text-white'
-        },
-        outlined: {
-          bg: 'bg-white dark:bg-gray-800',
-          border: 'border-2 border-red-500 dark:border-red-400',
-          text: 'text-red-700 dark:text-red-300',
-          icon: 'text-red-500 dark:text-red-400'
-        }
-      }
+      bg: 'bg-red-50 dark:bg-red-900/20',
+      border: 'border-red-200 dark:border-red-800',
+      text: 'text-red-800 dark:text-red-300',
+      iconColor: 'text-red-500 dark:text-red-400'
     },
     warning: {
       icon: AlertTriangle,
-      colors: {
-        default: {
-          bg: 'bg-yellow-50 dark:bg-yellow-900/20',
-          border: 'border-yellow-200 dark:border-yellow-800',
-          text: 'text-yellow-800 dark:text-yellow-300',
-          icon: 'text-yellow-500 dark:text-yellow-400'
-        },
-        solid: {
-          bg: 'bg-yellow-500 dark:bg-yellow-600',
-          border: 'border-yellow-600 dark:border-yellow-700',
-          text: 'text-white dark:text-white',
-          icon: 'text-white dark:text-white'
-        },
-        outlined: {
-          bg: 'bg-white dark:bg-gray-800',
-          border: 'border-2 border-yellow-500 dark:border-yellow-400',
-          text: 'text-yellow-700 dark:text-yellow-300',
-          icon: 'text-yellow-500 dark:text-yellow-400'
-        }
-      }
+      bg: 'bg-yellow-50 dark:bg-yellow-900/20',
+      border: 'border-yellow-200 dark:border-yellow-800',
+      text: 'text-yellow-800 dark:text-yellow-300',
+      iconColor: 'text-yellow-500 dark:text-yellow-400'
     },
     info: {
       icon: Info,
-      colors: {
-        default: {
-          bg: 'bg-blue-50 dark:bg-blue-900/20',
-          border: 'border-blue-200 dark:border-blue-800',
-          text: 'text-blue-800 dark:text-blue-300',
-          icon: 'text-blue-500 dark:text-blue-400'
-        },
-        solid: {
-          bg: 'bg-blue-600 dark:bg-blue-700',
-          border: 'border-blue-700 dark:border-blue-800',
-          text: 'text-white dark:text-white',
-          icon: 'text-white dark:text-white'
-        },
-        outlined: {
-          bg: 'bg-white dark:bg-gray-800',
-          border: 'border-2 border-blue-500 dark:border-blue-400',
-          text: 'text-blue-700 dark:text-blue-300',
-          icon: 'text-blue-500 dark:text-blue-400'
-        }
-      }
+      bg: 'bg-blue-50 dark:bg-blue-900/20',
+      border: 'border-blue-200 dark:border-blue-800',
+      text: 'text-blue-800 dark:text-blue-300',
+      iconColor: 'text-blue-500 dark:text-blue-400'
     }
   }
-
-  const { icon: Icon, colors } = configs[type]
+  
+  const { icon: Icon, bg, border, text, iconColor } = configs[type]
   const isBottomToast = position === 'absolute-bottom'
   const toastBg = type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'
-  const { bg: bgColor, border: borderColor, text: textColor, icon: iconColor } = isBottomToast 
-    ? { 
-        bg: toastBg,
-        border: 'border-transparent',
-        text: 'text-white',
-        icon: 'text-white'
-      }
-    : colors[variant]
-
+  
   const positionClasses = {
     static: '',
     fixed: 'fixed top-4 right-4 z-50 max-w-md',
@@ -347,16 +96,15 @@ const FeedbackMessage = ({
     'fixed-top-center': 'fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4',
     'absolute-bottom': `fixed top-4 left-4 right-4 z-50 max-w-md mx-auto px-4 py-3 rounded-2xl shadow-xl flex items-center justify-between animate-in slide-in-from-right duration-300 ${toastBg}`
   }
-
+  
   if (!message || !isVisible) return null
-
+    
   const messageContent = (
     <div
-      ref={messageRef}
+      ref={useRef(null)}
       className={`
-        ${isBottomToast ? '' : `${bgColor} border ${borderColor} rounded-lg`} 
-        ${compact ? 'p-3' : 'p-4'} 
-        flex items-start gap-3
+        ${isBottomToast ? '' : `${bg} ${border} border rounded-lg`} 
+        p-4 flex items-start gap-3
         transform transition-all duration-300
         ${position !== 'static' && position !== 'absolute-bottom' && isLeaving 
           ? 'opacity-0 translate-x-full scale-95' 
@@ -369,11 +117,6 @@ const FeedbackMessage = ({
                 : 'opacity-100 translate-y-0'
         }
         ${position !== 'static' ? 'shadow-xl hover:shadow-2xl' : 'shadow-lg hover:shadow-xl'}
-        ${positionClasses[position]}
-        relative overflow-hidden
-        ${animate && (position === 'absolute-bottom' || position === 'fixed-bottom') ? 'animate-in slide-in-from-bottom-4 fade-in duration-300' : ''}
-        ${animate && position !== 'static' && position !== 'absolute-bottom' && position !== 'fixed-bottom' ? 'animate-in slide-in-from-right fade-in duration-300' : ''}
-        ${animate && position === 'static' ? 'animate-in slide-in-from-top-2 fade-in duration-300' : ''}
         ${className}
       `}
       role={type === 'error' ? 'alert' : 'status'}
@@ -382,168 +125,44 @@ const FeedbackMessage = ({
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Ícone */}
-      {showIcon && (
-        <div className="flex-shrink-0">
-          <Icon className={`${compact ? 'h-4 w-4' : 'h-5 w-5'} ${iconColor}`} />
-        </div>
-      )}
-
+      <div className="flex-shrink-0">
+        <Icon className={`h-5 w-5 ${iconColor}`} />
+      </div>
+      
       {/* Conteúdo */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1">
-            {title && (
-              <h4 className={`font-semibold ${textColor} ${compact ? 'text-sm' : 'text-base'} mb-0.5`}>
-                {title}
-              </h4>
-            )}
-            <p className={`${textColor} ${compact ? 'text-xs' : 'text-sm'} ${title ? 'opacity-90' : 'font-medium'}`}>
-              {message}
-            </p>
-            {description && (
-              <p className={`${textColor} text-xs mt-1 opacity-75`}>
-                {description}
-              </p>
-            )}
-          </div>
-
-          {/* Badge de contagem */}
-          {duration && showProgress && (
-            <CountdownIndicator duration={duration} type={type} />
-          )}
-        </div>
-
-        {/* Ações */}
-        {(actions.length > 0 || copyable || retry) && (
-          <div className="flex items-center gap-3 mt-2">
-            {actions.map((action, index) => (
-              <MessageAction key={index} action={action} type={type} />
-            ))}
-            
-            {copyable && (
-              <button
-                onClick={() => copy(message)}
-                className={`
-                  inline-flex items-center gap-1 text-xs
-                  ${copied ? 'text-green-600 dark:text-green-400' : `${textColor} opacity-70 hover:opacity-100`}
-                  transition-all duration-200
-                `}
-              >
-                <Copy size={12} />
-                {copied ? 'Copiado!' : 'Copiar'}
-              </button>
-            )}
-
-            {retry && (
-              <button
-                onClick={retry}
-                className={`
-                  inline-flex items-center gap-1 text-xs
-                  ${textColor} opacity-70 hover:opacity-100
-                  transition-all duration-200
-                `}
-              >
-                <RotateCcw size={12} />
-                Tentar novamente
-              </button>
-            )}
-          </div>
-        )}
+        <p className={`${text} font-medium text-sm`}>
+          {message}
+        </p>
       </div>
-
+      
       {/* Botão fechar */}
-      {closable && (
+      {onClose && (
         <button
           onClick={handleClose}
           className={`
-            flex-shrink-0 ${textColor} opacity-60 hover:opacity-100 
+            flex-shrink-0
+            ${text} opacity-60 hover:opacity-100 
             transition-opacity duration-200
             focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
             focus-visible:ring-${type}-500 rounded
-            ${compact ? 'p-0.5' : 'p-1'}
+            p-1
           `}
           aria-label="Fechar mensagem"
         >
-          <X size={compact ? 14 : 16} />
+          <X size={16} />
         </button>
-      )}
-
-      {/* Barra de progresso */}
-      {showProgress && duration && (
-        <ProgressBar progress={progress} type={type} />
       )}
     </div>
   )
-
-  // A MÁGICA: Se position for 'static', renderiza inline (comportamento antigo)
-  // Se for qualquer outra posição, renderiza como toast no portal
+  
+  // Se position for 'static', renderiza inline
   if (position === 'static') {
     return messageContent
   }
-
-  // Para posições fixed, renderiza como toast no topo direito por padrão
+  
+  // Para posições fixed, renderiza como toast no portal
   return createPortal(messageContent, document.body)
-}
-
-// Container para múltiplas mensagens
-export const FeedbackContainer = ({ 
-  messages, 
-  position = 'fixed',
-  maxMessages = 3 
-}) => {
-  const displayMessages = messages.slice(0, maxMessages)
-
-  const containerContent = (
-    <div className={`
-      space-y-2 w-full max-w-md
-    `}>
-      {displayMessages.map((msg, index) => (
-        <FeedbackMessage
-          key={msg.id || index}
-          {...msg}
-          position="static"
-          animate={true}
-        />
-      ))}
-      
-      {messages.length > maxMessages && (
-        <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-          +{messages.length - maxMessages} mais mensagens
-        </div>
-      )}
-    </div>
-  )
-
-  // Se for fixed, renderiza no portal
-  if (position === 'fixed') {
-    return createPortal(
-      <div className="fixed top-4 right-4 z-50">
-        {containerContent}
-      </div>,
-      document.body
-    )
-  }
-
-  if (position === 'fixed-bottom') {
-    return createPortal(
-      <div className="fixed bottom-4 right-4 z-50">
-        {containerContent}
-      </div>,
-      document.body
-    )
-  }
-
-  if (position === 'fixed-top-center') {
-    return createPortal(
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full px-4">
-        {containerContent}
-      </div>,
-      document.body
-    )
-  }
-
-  // Se não for fixed, renderiza inline
-  return containerContent
 }
 
 export default FeedbackMessage

@@ -10,15 +10,14 @@ import { CompanyProvider, useCompanyContext } from '@/contexts/CompanyContext'
 import ErrorBoundary from '@components/error/ErrorBoundary'
 import DynamicHead from '@components/layout/DynamicHead'
 import { queryClient } from '@lib/react-query'
-import CacheDebugger from '@components/ui/CacheDebugger'
 import NetworkStatus from '@components/ui/NetworkStatus'
 import PendingSalesIndicator from '@components/sales/pdv/PendingSalesIndicator'
-import PerformanceDebugger from '@components/ui/PerformanceDebugger'
 import { useNotificationTriggers } from '@hooks/system/useNotificationTriggers'
 import AppRoutes from '@/routes'
-import { fetchCompanySettings } from '@services/system/companyService'
 import CompanySetupCheck from '@components/CompanySetupCheck'
 
+const CacheDebugger = lazy(() => import('@components/ui/CacheDebugger'))
+const PerformanceDebugger = lazy(() => import('@components/ui/PerformanceDebugger'))
 const SplashScreen = lazy(() => import('@components/ui/SplashScreen'))
 
 const PageLoader = () => (
@@ -76,9 +75,21 @@ const AppWithErrorBoundary = () => {
           </CompanyProvider>
         </AuthProvider>
       </Router>
-      {import.meta.env.DEV && <CacheDebugger />}
-      {import.meta.env.DEV && <NetworkStatus />}
-      {import.meta.env.DEV && <PerformanceDebugger />}
+      {import.meta.env.DEV && (
+        <Suspense fallback={null}>
+          <CacheDebugger />
+        </Suspense>
+      )}
+      {import.meta.env.DEV && (
+        <Suspense fallback={null}>
+          <NetworkStatus />
+        </Suspense>
+      )}
+      {import.meta.env.DEV && (
+        <Suspense fallback={null}>
+          <PerformanceDebugger />
+        </Suspense>
+      )}
     </QueryClientProvider>
   )
 }
