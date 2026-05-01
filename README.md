@@ -348,9 +348,10 @@ Este projeto está sob a licença MIT.
 ## 📝 Changelog
 
 ### Últimas Atualizações
-- ✅ Limpeza de arquivos SQL desnecessários (removido schema.sql da pasta migrations)
-- ✅ Padronização dos nomes dos arquivos de migração
+- ✅ Limpeza de arquivos SQL desnecessários (removidos arquivos antigos)
+- ✅ Padronização dos nomes dos arquivos de migração (timestamp padrão)
 - ✅ Correção de sintaxe SQL (removido company_logo_url duplicado)
+- ✅ Correção de sintaxe (tablespace, inet, timestamptz)
 - ✅ Reordenação de tabelas para respeitar dependências FK
 - ✅ Criação de sequence própria para registration_number
 - ✅ Adição da tabela budget_items que estava faltando
@@ -364,6 +365,7 @@ Este projeto está sob a licença MIT.
 - ✅ Criação de hooks PDV (usePDVCoupon, usePDVCustomer, usePDVCart)
 - ✅ Página de setup /setup para configuração inicial
 - ✅ Documentação de AI context (agents.md) em múltiplos locais
+- ✅ Atualização da documentação (README.md)
 
 ## 🛠️ Scripts Disponíveis
 
