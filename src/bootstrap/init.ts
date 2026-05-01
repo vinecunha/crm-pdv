@@ -68,7 +68,8 @@ export const setupVersionCheck = (): void => {
 export const setupPrefetch = (): void => {
   if (!('requestIdleCallback' in window)) return
   requestIdleCallback(() => {
-    const images = ['/logomarca.png', '/brasalino-pollo.png']
+    // Prefetch apenas a logo padrão - a logo da company será carregada dinamicamente
+    const images = ['/logo.png']
     images.forEach(src => {
       const link = document.createElement('link')
       link.rel = 'prefetch'
