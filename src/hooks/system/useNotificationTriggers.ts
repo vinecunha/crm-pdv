@@ -32,34 +32,73 @@ export const useNotificationTriggers = (): null => {
   const notifiedGoalsRef = useRef<Set<string>>(new Set())
   const notifiedBirthdaysRef = useRef<Set<string>>(new Set())
   const notifiedLowStockRef = useRef<Set<string>>(new Set())
+  const channelsRef = useRef<any[]>([])
   
   useEffect(() => {
     if (!profile) return
     
+    // Check initial state
     checkGoalsAchieved(profile.id)
     checkBirthdayCustomers()
     if (['admin', 'gerente'].includes(profile.role)) {
       checkLowStock()
     }
     
-    const goalInterval = setInterval(async () => {
-      await checkGoalsAchieved(profile.id)
-    }, 5 * 60 * 1000)
+    // Use Supabase Realtime instead of polling
+    const goalsChannel = supabase
+      .channel('goals-changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'goals',
+        filter: `user_id=eq.${profile.id}`
+      }, () => {
+        checkGoalsAchieved(profile.id)
+      })
+      .subscribe()
     
-    const birthdayInterval = setInterval(async () => {
-      await checkBirthdayCustomers()
-    }, 60 * 60 * 1000)
+    const salesChannel = supabase
+      .channel('sales-changes')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'sales',
+        filter: `created_by=eq.${profile.id}`
+      }, () => {
+        checkGoalsAchieved(profile.id)
+      })
+      .subscribe()
     
-    const stockInterval = setInterval(async () => {
-      if (['admin', 'gerente'].includes(profile.role)) {
-        await checkLowStock()
-      }
-    }, 30 * 60 * 1000)
+    const customersChannel = supabase
+      .channel('customers-birthday')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'customers'
+      }, () => {
+        checkBirthdayCustomers()
+      })
+      .subscribe()
+    
+    const productsChannel = supabase
+      .channel('products-stock')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'products'
+      }, () => {
+        if (['admin', 'gerente'].includes(profile.role)) {
+          checkLowStock()
+        }
+      })
+      .subscribe()
+    
+    channelsRef.current = [goalsChannel, salesChannel, customersChannel, productsChannel]
     
     return () => {
-      clearInterval(goalInterval)
-      clearInterval(birthdayInterval)
-      clearInterval(stockInterval)
+      channelsRef.current.forEach(channel => {
+        supabase.removeChannel(channel)
+      })
     }
   }, [profile])
   

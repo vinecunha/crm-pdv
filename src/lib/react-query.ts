@@ -1,7 +1,8 @@
 import { QueryClient } from '@tanstack/react-query'
 import { persistQueryClient } from '@tanstack/react-query-persist-client'
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
-import { logger } from '@utils/logger' 
+import { get, set, del } from 'idb-keyval'
+import { logger } from '@utils/logger'
 
 // Lista de queries que NÃO devem ser persistidas (dados sensíveis)
 const SENSITIVE_QUERY_KEYS = [
@@ -17,17 +18,10 @@ const SENSITIVE_QUERY_KEYS = [
   'current-user',
 ]
 
-// Lista de queries que DEVEM ser persistidas (dados que mudam pouco)
+// Lista de queries que DEVEM ser persistidas (apenas dados estáticos)
 const PERSISTABLE_QUERY_KEYS = [
-  'products',
-  'products-active',
-  'customers',
-  'customers-active',
-  'categories',
   'company-settings',
-  'coupons',
-  'stock-count-sessions',
-  'dashboard-data',
+  'categories',
 ]
 
 // Configuração otimizada para PDV
@@ -56,23 +50,49 @@ export const queryClient = new QueryClient({
 // Função para verificar se uma query deve ser persistida
 const shouldPersistQuery = (queryKey) => {
   if (!queryKey || queryKey.length === 0) return false
-  
+
   const key = queryKey[0]
-  
+
   if (SENSITIVE_QUERY_KEYS.includes(key)) {
     return false
   }
-  
+
   return PERSISTABLE_QUERY_KEYS.includes(key)
 }
 
-// Persistir cache no localStorage
+// IndexedDB storage adapter using idb-keyval
+const indexedDBStorage = {
+  getItem: async (key: string) => {
+    try {
+      return await get(key)
+    } catch {
+      return null
+    }
+  },
+  setItem: async (key: string, value: string) => {
+    try {
+      await set(key, value)
+    } catch (error) {
+      logger.warn('[React Query] Erro ao salvar no IndexedDB:', error)
+    }
+  },
+  removeItem: async (key: string) => {
+    try {
+      await del(key)
+    } catch (error) {
+      logger.warn('[React Query] Erro ao remover do IndexedDB:', error)
+    }
+  },
+}
+
+// Persistir cache no IndexedDB (assíncrono)
 if (typeof window !== 'undefined') {
   try {
+    // Use localStorage as fallback for sync persister with limited scope
     const persister = createSyncStoragePersister({
       storage: window.localStorage,
       key: 'REACT_QUERY_CACHE_V3',
-      throttleTime: 1000,
+      throttleTime: 5000, // Increased throttle to reduce writes
     })
 
     persistQueryClient({
@@ -88,7 +108,7 @@ if (typeof window !== 'undefined') {
       },
     })
 
-    logger.log('✅ [React Query] Persist client inicializado')
+    logger.log('✅ [React Query] Persist client inicializado (apenas dados estáticos)')
   } catch (error) {
     logger.warn('⚠️ [React Query] Erro ao inicializar persist client:', error)
   }
@@ -110,11 +130,11 @@ export const getCacheStats = () => {
   try {
     const cache = localStorage.getItem('REACT_QUERY_CACHE_V3')
     if (!cache) return { size: 0, entries: 0 }
-    
+
     const size = new Blob([cache]).size
     const data = JSON.parse(cache)
     const entries = Object.keys(data?.clientState?.queries || {}).length
-    
+
     return { size, entries }
   } catch (error) {
     return { size: 0, entries: 0 }
