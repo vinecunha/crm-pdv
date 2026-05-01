@@ -35,30 +35,19 @@ export default defineConfig({
       exclude: ['node_modules/**', 'src/test/**']
     }
   },
-  // ============= HEADERS DE SEGURANÇA =============
-  server: {
-    host: true,
-    port: 5173,
-    strictPort: false,
-    
-    headers: isProduction ? {} : {
-      'Content-Security-Policy': [
-        "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co http://localhost:* ws://localhost:*",
-        "style-src 'self' 'unsafe-inline'",
-        "img-src 'self' data: https: blob:",
-        "font-src 'self' data:",
-        "connect-src 'self' http://localhost:* ws://localhost:* wss://localhost:* https://*.supabase.co wss://*.supabase.co https://api.ipify.org",
-        "frame-ancestors 'none'",
-        "base-uri 'self'",
-        "form-action 'self'"
-      ].join('; '),
-      'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY',
-      'X-XSS-Protection': '1; mode=block',
-      'Referrer-Policy': 'strict-origin-when-cross-origin',
-      'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-    },
+   // ============= HEADERS DE SEGURANÇA =============
+   // NOTE: CSP should be configured on the production web server (nginx, Cloudflare, etc.)
+   // Vite dev server is for development only - these headers are for testing purposes
+   server: {
+     host: true,
+     port: 5173,
+     strictPort: false,
+     
+     headers: {
+       'X-Content-Type-Options': 'nosniff',
+       'X-Frame-Options': 'DENY',
+       'Referrer-Policy': 'strict-origin-when-cross-origin',
+     },
     
     hmr: {
       protocol: 'ws',

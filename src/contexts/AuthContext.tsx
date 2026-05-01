@@ -188,9 +188,9 @@ export function AuthProvider({ children }) {
     const jwtProfile = buildProfileFromJWT(userData)
     
     if (jwtProfile) {
-       setProfile(jwtProfile)
-       localStorage.setItem('profile', JSON.stringify(jwtProfile))
-       localStorage.setItem('user_role', jwtProfile.role)
+      setProfile(jwtProfile)
+      localStorage.setItem('profile', JSON.stringify(jwtProfile))
+      localStorage.setItem('user_role', jwtProfile.role)
     }
     
     if (forceDBFetch) {
@@ -214,50 +214,6 @@ export function AuthProvider({ children }) {
   }, [buildProfileFromJWT, fetchFullProfileFromDB])
 
   // ==============================
-  // SERVER-SIDE RATE LIMITING
-  // ==============================
-  const checkLoginRateLimit = useCallback(async (email: string) => {
-    try {
-      const { data, error } = await supabase.rpc('check_login_rate_limit', {
-        p_email: email,
-      })
-      
-      if (error) {
-        logger.error('Rate limit check failed:', error)
-        return { blocked: false, remaining: 999 }
-      }
-      
-      if (data && !data.allowed) {
-        const minutesLeft = data.blocked_until 
-          ? Math.ceil((new Date(data.blocked_until).getTime() - Date.now()) / 60000)
-          : 15
-        return { 
-          blocked: true, 
-          remaining: 0, 
-          minutesLeft,
-          message: `Muitas tentativas. Tente novamente em ${minutesLeft} minuto(s).`
-        }
-      }
-      
-      return { blocked: false, remaining: 999 - (data?.attempts || 0) }
-    } catch (error) {
-      logger.error('Rate limit check error:', error)
-      return { blocked: false, remaining: 999 }
-    }
-  }, [])
-
-  const recordLoginAttempt = useCallback(async (email: string, success: boolean) => {
-    try {
-      await supabase.rpc('record_login_attempt', {
-        p_email: email,
-        p_success: success,
-      })
-    } catch (error) {
-      logger.error('Record login attempt error:', error)
-    }
-  }, [])
-
-  // ==============================
   // LOGIN COM SANITIZAÇÃO
   // ==============================
   const login = async (email, password) => {
@@ -267,10 +223,6 @@ export function AuthProvider({ children }) {
       if (!safeEmail || !safeEmail.includes('@')) throw new Error('Email inválido')
       if (!password || password.length < 1) throw new Error('Senha é obrigatória')
       
-      // Server-side rate limiting
-      const rateLimit = await checkLoginRateLimit(safeEmail)
-      if (rateLimit.blocked) throw new Error(rateLimit.message)
-      
       setLoading(true)
       
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -278,10 +230,7 @@ export function AuthProvider({ children }) {
         password,
       })
 
-      if (error) {
-        await recordLoginAttempt(false, safeEmail)
-        throw error
-      }
+      if (error) throw error
       
       if (data.user) {
         const { data: profileData, error: profileError } = await supabase
@@ -294,7 +243,6 @@ export function AuthProvider({ children }) {
         
         if (profileData?.status && profileData.status !== 'active') {
           await supabase.auth.signOut()
-          await recordLoginAttempt(safeEmail, false)
           
           const messages = {
             'inactive': 'Usuário inativo. Contate o administrador.',
@@ -304,7 +252,6 @@ export function AuthProvider({ children }) {
           throw new Error(messages[profileData.status] || 'Acesso negado.')
         }
         
-        await recordLoginAttempt(safeEmail, true)
         setUser(data.user)
         await syncProfile(data.user, true)
       }
@@ -538,7 +485,7 @@ export function AuthProvider({ children }) {
       // All data access must be protected by Supabase RLS policies.
       return permissions[perm] === true
     },
-    checkLoginRateLimit, validatePasswordStrength,
+    validatePasswordStrength,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -55,12 +55,7 @@ export const useCompany = (): UseCompanyReturn => {
       
       if (error) {
         logger.error('Erro ao buscar configurações da empresa:', error)
-        // Retorna dados padrão em caso de erro
-        return {
-          company_name: 'Brasalino Pollo',
-          primary_color: '#FF131E',
-          secondary_color: '#FFE526'
-        } as CompanySettings
+        return null
       }
       
       // Aplicar cores no DOM
