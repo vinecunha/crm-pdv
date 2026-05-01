@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@contexts/AuthContext'
 import { useUI } from '@contexts/UIContext'
 import { supabase } from '@lib/supabase'
-import { secureStorage } from '@utils/secureStorage'
 import {
   User, Save, RotateCcw, Shield, Settings,
 } from '@lib/icons'
@@ -121,7 +120,7 @@ const Profile = () => {
       return freshProfile
     },
     onSuccess: async (freshProfile) => {
-      await secureStorage.set('profile', freshProfile)
+      localStorage.setItem('profile', JSON.stringify(freshProfile))
       queryClient.setQueryData(['profile', user?.id], freshProfile)
       showFeedback('success', 'Perfil atualizado com sucesso!')
       setHasChanges(false)

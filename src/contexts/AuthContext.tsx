@@ -1,7 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '@lib/supabase'
-import { secureStorage } from '@utils/secureStorage'
 import { sanitizeInput } from '@utils/sanitize' 
 import { logger } from '@utils/logger' 
 
@@ -173,7 +172,7 @@ export function AuthProvider({ children }) {
           logger.warn('⚠️ Usuário com status não ativo:', profileData.status)
         }
         
-        await secureStorage.set('profile', profileData)
+        localStorage.setItem('profile', JSON.stringify(profileData))
         return profileData
       }
       return null
@@ -189,9 +188,9 @@ export function AuthProvider({ children }) {
     const jwtProfile = buildProfileFromJWT(userData)
     
     if (jwtProfile) {
-      setProfile(jwtProfile)
-      await secureStorage.set('profile', jwtProfile)
-      await secureStorage.set('user_role', jwtProfile.role)
+       setProfile(jwtProfile)
+       localStorage.setItem('profile', JSON.stringify(jwtProfile))
+       localStorage.setItem('user_role', jwtProfile.role)
     }
     
     if (forceDBFetch) {
@@ -206,7 +205,7 @@ export function AuthProvider({ children }) {
           email: jwtProfile.email, // Force email from auth.users
         }
         setProfile(mergedProfile)
-        await secureStorage.set('profile', mergedProfile)
+        localStorage.setItem('profile', JSON.stringify(mergedProfile))
         return mergedProfile
       }
     }
@@ -394,8 +393,8 @@ export function AuthProvider({ children }) {
     try {
       setLoading(true)
       
-      secureStorage.remove('profile')
-      secureStorage.remove('user_role')
+       localStorage.removeItem('profile')
+       localStorage.removeItem('user_role')
       
       setUser(null)
       setProfile(null)
@@ -430,7 +429,7 @@ export function AuthProvider({ children }) {
         
         if (!profileError && freshProfile) {
           setProfile(freshProfile)
-          await secureStorage.set('profile', freshProfile)
+           localStorage.setItem('profile', JSON.stringify(freshProfile))
         }
       }
     } catch (error) {
@@ -449,43 +448,43 @@ export function AuthProvider({ children }) {
 
     const initializeAuth = async () => {
       try {
-        const cachedProfile = await secureStorage.get('profile')
-        if (cachedProfile) setProfile(cachedProfile)
+       const cachedProfile = localStorage.getItem('profile')
+       if (cachedProfile) setProfile(JSON.parse(cachedProfile))
         
         const { data: { session }, error } = await supabase.auth.getSession()
         if (error) throw error
         
-        if (session?.user) {
-          setUser(session.user)
-          await syncProfile(session.user, true)
-        } else {
-          secureStorage.remove('profile')
-          secureStorage.remove('user_role')
-          setProfile(null)
-          setUser(null)
-        }
-      } catch (err) {
-        logger.error('❌ Erro na inicialização:', err.message)
-        setUser(null)
-        setProfile(null)
-        secureStorage.remove('profile')
-        secureStorage.remove('user_role')
-      } finally {
-        setLoading(false)
-      }
-    }
-    
-    initializeAuth()
+         if (session?.user) {
+           setUser(session.user)
+           await syncProfile(session.user, true)
+         } else {
+           localStorage.removeItem('profile')
+           localStorage.removeItem('user_role')
+           setProfile(null)
+           setUser(null)
+         }
+       } catch (err) {
+         logger.error('❌ Erro na inicialização:', err.message)
+         setUser(null)
+         setProfile(null)
+         localStorage.removeItem('profile')
+         localStorage.removeItem('user_role')
+       } finally {
+         setLoading(false)
+       }
+     }
+     
+     initializeAuth()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_OUT') {
-          secureStorage.remove('profile')
-          secureStorage.remove('user_role')
-          setUser(null)
-          setProfile(null)
-          return
-        }
+     const { data: { subscription } } = supabase.auth.onAuthStateChange(
+       async (event, session) => {
+         if (event === 'SIGNED_OUT') {
+           localStorage.removeItem('profile')
+           localStorage.removeItem('user_role')
+           setUser(null)
+           setProfile(null)
+           return
+         }
         
         if (event === 'SIGNED_IN' && session?.user) {
           setUser(session.user)
