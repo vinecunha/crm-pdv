@@ -468,7 +468,7 @@ begin
   -- Insert into company_settings table
   insert into public.company_settings (
     company_name,
-    company_logo_url,
+    company_logo,
     favicon,
     domain,
     email,
