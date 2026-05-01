@@ -269,7 +269,16 @@ create policy "Users see own commissions" on public.commissions
   for select to authenticated
   using (user_id = auth.uid() or public.get_current_user_role() = 'admin');
 
-create policy "Admin manage commissions" on public.commissions
+create policy "Users update own commissions" on public.commissions
+  for update to authenticated
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+
+create policy "Allow insert commissions" on public.commissions
+  for insert to authenticated
+  with check (true);
+
+create policy "Admin manage all commissions" on public.commissions
   for all to authenticated
   using (public.get_current_user_role() = 'admin')
   with check (public.get_current_user_role() = 'admin');
