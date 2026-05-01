@@ -18,7 +18,7 @@ create table public.companies (
   constraint companies_pkey primary key (id),
   constraint companies_domain_key unique (domain),
   constraint companies_slug_key unique (slug)
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 -- Company Settings
 create table public.company_settings (
@@ -41,7 +41,7 @@ create table public.company_settings (
   created_at timestamp without time zone null default now(),
   updated_at timestamp without time zone null default now(),
   constraint company_settings_pkey primary key (id)
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create trigger update_company_settings_updated_at before
 update on company_settings for each row
@@ -56,7 +56,7 @@ create table public.permissions (
   created_at timestamp with time zone null default now(),
   constraint permissions_pkey primary key (id),
   constraint permissions_name_key unique (name)
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 -- Profiles (depends on auth.users)
 create table public.profiles (
@@ -100,7 +100,7 @@ create table public.profiles (
   constraint profiles_status_check check (
     ((status)::text = any (array['active'::character varying, 'inactive'::character varying, 'blocked'::character varying, 'locked'::character varying]::text[]))
   )
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_profiles_id on public.profiles using btree (id);
 create index if not exists idx_profiles_email on public.profiles using btree (email);
@@ -137,7 +137,7 @@ create table public.role_permissions (
   constraint role_permissions_pkey primary key (id),
   constraint role_permissions_role_name_permission_id_key unique (role_name, permission_id),
   constraint role_permissions_permission_id_fkey foreign key (permission_id) references permissions (id) on delete cascade
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 -- Customers (depends on auth.users for deleted_by)
 create table public.customers (
@@ -168,7 +168,7 @@ create table public.customers (
   constraint customers_status_check check (
     ((status)::text = any (array['active'::character varying, 'inactive'::character varying]::text[]))
   )
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_customers_email on public.customers using btree (email);
 create index if not exists idx_customers_phone on public.customers using btree (phone);
@@ -213,7 +213,7 @@ create table public.products (
   constraint products_created_by_fkey foreign key (created_by) references auth.users (id),
   constraint products_deleted_by_fkey foreign key (deleted_by) references auth.users (id),
   constraint products_updated_by_fkey foreign key (updated_by) references auth.users (id)
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_products_code on public.products using btree (code);
 create index if not exists idx_products_name on public.products using btree (name);
@@ -267,7 +267,7 @@ create table public.coupons (
   constraint coupons_discount_type_check check (
     ((discount_type)::text = any (array['fixed'::character varying, 'percent'::character varying]::text[]))
   )
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_coupons_code on public.coupons using btree (code);
 create index if not exists idx_coupons_active on public.coupons using btree (is_active);
@@ -288,7 +288,7 @@ create table public.coupon_allowed_customers (
   constraint coupon_allowed_customers_coupon_id_customer_id_key unique (coupon_id, customer_id),
   constraint coupon_allowed_customers_coupon_id_fkey foreign key (coupon_id) references coupons (id) on delete cascade,
   constraint coupon_allowed_customers_customer_id_fkey foreign key (customer_id) references customers (id) on delete cascade
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_coupon_allowed_customers on public.coupon_allowed_customers using btree (coupon_id, customer_id);
 
@@ -307,7 +307,7 @@ create table public.customer_communications (
   constraint customer_communications_pkey primary key (id),
   constraint customer_communications_customer_id_fkey foreign key (customer_id) references customers (id) on delete cascade,
   constraint customer_communications_sent_by_fkey foreign key (sent_by) references auth.users (id)
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_customer_communications_customer_id on public.customer_communications using btree (customer_id);
 create index if not exists idx_customer_communications_channel on public.customer_communications using btree (channel);
@@ -349,7 +349,7 @@ create table public.sales (
   constraint sales_cancelled_by_fkey foreign key (cancelled_by) references auth.users (id),
   constraint sales_created_by_fkey foreign key (created_by) references auth.users (id),
   constraint sales_customer_id_fkey foreign key (customer_id) references customers (id)
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_sales_sale_number on public.sales using btree (sale_number);
 create index if not exists idx_sales_customer_id on public.sales using btree (customer_id);
@@ -410,7 +410,7 @@ create table public.budgets (
   constraint budgets_status_check check (
     (status = any (array['pending'::text, 'approved'::text, 'rejected'::text, 'expired'::text, 'converted'::text]))
   )
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_budgets_customer_id on public.budgets using btree (customer_id);
 create index if not exists idx_budgets_status on public.budgets using btree (status);
@@ -435,7 +435,7 @@ create table public.budget_items (
   constraint budget_items_pkey primary key (id),
   constraint budget_items_budget_id_fkey foreign key (budget_id) references budgets (id) on delete cascade,
   constraint budget_items_product_id_fkey foreign key (product_id) references products (id) on delete set null
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_budget_items_budget_id on public.budget_items using btree (budget_id);
 create index if not exists idx_budget_items_product_id on public.budget_items using btree (product_id);
@@ -454,7 +454,7 @@ create table public.sale_items (
   constraint sale_items_pkey primary key (id),
   constraint sale_items_product_id_fkey foreign key (product_id) references products (id),
   constraint sale_items_sale_id_fkey foreign key (sale_id) references sales (id) on delete cascade
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_sale_items_sale_id on public.sale_items using btree (sale_id);
 create index if not exists idx_sale_items_product_id on public.sale_items using btree (product_id);
@@ -474,7 +474,7 @@ create table public.customer_coupons (
   constraint customer_coupons_coupon_id_fkey foreign key (coupon_id) references coupons (id),
   constraint customer_coupons_customer_id_fkey foreign key (customer_id) references customers (id),
   constraint customer_coupons_sale_id_fkey foreign key (sale_id) references sales (id)
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_customer_coupons on public.customer_coupons using btree (coupon_id, customer_id);
 
@@ -493,7 +493,7 @@ create table public.pix_charges (
   constraint pix_charges_pkey primary key (id),
   constraint pix_charges_txid_key unique (txid),
   constraint pix_charges_sale_id_fkey foreign key (sale_id) references sales (id)
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_pix_charges_txid on public.pix_charges using btree (txid);
 create index if not exists idx_pix_charges_sale_id on public.pix_charges using btree (sale_id);
@@ -521,7 +521,7 @@ create table public.product_entries (
   constraint product_entries_pkey primary key (id),
   constraint product_entries_created_by_fkey foreign key (created_by) references auth.users (id),
   constraint product_entries_product_id_fkey foreign key (product_id) references products (id) on delete cascade
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_product_entries_product_id on public.product_entries using btree (product_id);
 create index if not exists idx_product_entries_invoice on public.product_entries using btree (invoice_number);
@@ -551,7 +551,7 @@ create table public.stock_movements (
   constraint stock_movements_pkey primary key (id),
   constraint stock_movements_created_by_fkey foreign key (created_by) references auth.users (id),
   constraint stock_movements_product_id_fkey foreign key (product_id) references products (id) on delete cascade
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_stock_movements_product_id on public.stock_movements using btree (product_id);
 create index if not exists idx_stock_movements_created_at on public.stock_movements using btree (created_at);
@@ -581,7 +581,7 @@ create table public.stock_count_sessions (
   constraint stock_count_sessions_cancelled_by_fkey foreign key (cancelled_by) references auth.users (id),
   constraint stock_count_sessions_completed_by_fkey foreign key (completed_by) references auth.users (id),
   constraint stock_count_sessions_created_by_fkey foreign key (created_by) references auth.users (id)
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_stock_count_sessions_status on public.stock_count_sessions using btree (status);
 create index if not exists idx_stock_count_sessions_created_at on public.stock_count_sessions using btree (created_at desc);
@@ -614,7 +614,7 @@ create table public.stock_count_items (
   constraint stock_count_items_count_session_id_fkey foreign key (count_session_id) references stock_count_sessions (id) on delete cascade,
   constraint stock_count_items_counted_by_fkey foreign key (counted_by) references auth.users (id),
   constraint stock_count_items_product_id_fkey foreign key (product_id) references products (id) on delete cascade
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_stock_count_items_session_id on public.stock_count_items using btree (count_session_id);
 create index if not exists idx_stock_count_items_product_id on public.stock_count_items using btree (product_id);
@@ -651,7 +651,7 @@ create table public.cashier_closing (
   created_at timestamp with time zone null default now(),
   constraint cashier_closing_pkey primary key (id),
   constraint cashier_closing_closed_by_fkey foreign key (closed_by) references auth.users (id)
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_cashier_closing_date on public.cashier_closing using btree (closing_date);
 create index if not exists idx_cashier_closing_closed_by on public.cashier_closing using btree (closed_by);
@@ -677,7 +677,7 @@ create table public.login_attempts (
   updated_at timestamp with time zone null default now(),
   constraint login_attempts_pkey primary key (id),
   constraint login_attempts_unlocked_by_fkey foreign key (unlocked_by) references auth.users (id)
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_login_attempts_email on public.login_attempts using btree (email);
 create index if not exists idx_login_attempts_blocked on public.login_attempts using btree (is_blocked);
@@ -703,7 +703,7 @@ create table public.notifications (
   updated_at timestamp with time zone null default now(),
   constraint notifications_pkey primary key (id),
   constraint notifications_user_id_fkey foreign key (user_id) references auth.users (id) on delete cascade
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_notifications_user_id on public.notifications using btree (user_id);
 create index if not exists idx_notifications_read on public.notifications using btree (read);
@@ -725,7 +725,7 @@ create table public.rate_limits (
   created_at timestamp with time zone null default now(),
   constraint rate_limits_pkey primary key (id),
   constraint rate_limits_user_id_fkey foreign key (user_id) references auth.users (id) on delete cascade
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_rate_limits_user_action on public.rate_limits using btree (user_id, action, created_at);
 create index if not exists idx_rate_limits_ip_action on public.rate_limits using btree (ip_address, action, created_at);
@@ -746,7 +746,7 @@ create table public.system_logs (
   details jsonb null,
   created_at timestamp with time zone null default now(),
   constraint system_logs_pkey primary key (id)
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_system_logs_user_id on public.system_logs using btree (user_id);
 create index if not exists idx_system_logs_created_at on public.system_logs using btree (created_at);
@@ -765,7 +765,7 @@ create table public.system_settings (
   timezone character varying(50) null default 'America/Sao_Paulo'::character varying,
   updated_at timestamp with time zone null default now(),
   constraint system_settings_pkey primary key (id)
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create trigger trg_enforce_single_system_settings before insert on system_settings for each row
 execute function enforce_single_system_settings();
@@ -792,7 +792,7 @@ create table public.goals (
   constraint goals_goal_type_check check (
     (goal_type = any (array['daily'::text, 'monthly'::text, 'yearly'::text]))
   )
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_goals_user_id on public.goals using btree (user_id);
 create index if not exists idx_goals_type on public.goals using btree (goal_type);
@@ -839,7 +839,7 @@ create table public.tasks (
   constraint tasks_visibility_check check (
     (visibility = any (array['assigned'::text, 'team'::text, 'all'::text]))
   )
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_tasks_type on public.tasks using btree (type, status);
 create index if not exists idx_tasks_created_by on public.tasks using btree (created_by);
@@ -865,7 +865,7 @@ create table public.task_status_history (
   constraint task_status_history_pkey primary key (id),
   constraint task_status_history_changed_by_fkey foreign key (changed_by) references auth.users (id),
   constraint task_status_history_task_id_fkey foreign key (task_id) references tasks (id) on delete cascade
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 -- Task Comments (depends on tasks, auth.users)
 create table public.task_comments (
@@ -878,7 +878,7 @@ create table public.task_comments (
   constraint task_comments_pkey primary key (id),
   constraint task_comments_task_id_fkey foreign key (task_id) references tasks (id) on delete cascade,
   constraint task_comments_user_id_fkey foreign key (user_id) references auth.users (id)
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 -- Task Assignment History (depends on tasks, auth.users)
 create table public.task_assignment_history (
@@ -896,7 +896,7 @@ create table public.task_assignment_history (
   constraint task_assignment_history_action_check check (
     (action = any (array['assigned'::text, 'unassigned'::text, 'claimed'::text]))
   )
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_task_assignment_history_task_id on public.task_assignment_history using btree (task_id, created_at desc);
 
@@ -925,7 +925,7 @@ create table public.commissions (
   constraint commissions_status_check check (
     (status = any (array['pending'::text, 'paid'::text, 'cancelled'::text]))
   )
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 create index if not exists idx_commissions_user_id on public.commissions using btree (user_id, created_at desc);
 create index if not exists idx_commissions_status on public.commissions using btree (status);
@@ -955,7 +955,7 @@ create table public.commission_rules (
   constraint commission_rules_rule_type_check check (
     (rule_type = any (array['percentage'::text, 'fixed'::text]))
   )
-) tablespace pg_default;
+) TABLESPACE pg_default;
 
 -- Create access_logs table
 create table if not exists public.access_logs (
