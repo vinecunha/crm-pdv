@@ -28,8 +28,8 @@ create policy "Allow admin full access" on public.companies
 -- =============================================
 alter table public.company_settings enable row level security;
 
-create policy "Allow authenticated read access" on public.company_settings
-  for select to authenticated using (true);
+create policy "Allow public read access" on public.company_settings
+  for select to anon, authenticated using (true);
 
 create policy "Allow admin full access" on public.company_settings
   for all to authenticated

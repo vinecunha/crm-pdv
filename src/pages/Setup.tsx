@@ -5,6 +5,7 @@ import PageHeader from '@components/ui/PageHeader'
 import Button from '@components/ui/Button'
 import FormInput from '@components/forms/FormInput'
 import SplashScreen from '@components/ui/SplashScreen'
+import FeedbackMessage from '@components/ui/FeedbackMessage'
 import { useSetup } from '@hooks/system/useSetup'
 
 const brazilianStates = [
@@ -37,15 +38,19 @@ const Setup: React.FC = () => {
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
+  const [success, setSuccess] = React.useState(false)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.company_name.trim()) return
 
+    setSuccess(false)
     const result = await createCompany(form)
     if (result.success) {
+      setSuccess(true)
       setTimeout(() => {
         navigate('/login', { replace: true })
-      }, 1500)
+      }, 2000)
     }
   }
 
@@ -75,9 +80,15 @@ const Setup: React.FC = () => {
             />
 
             {error && (
-              <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
-                <strong>Erro:</strong> {error}
-              </div>
+              <FeedbackMessage type="error" message={error} position="static" />
+            )}
+
+            {success && (
+              <FeedbackMessage 
+                type="success" 
+                message="Empresa configurada com sucesso! Redirecionando para o login..." 
+                position="static" 
+              />
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6 mt-6">
@@ -158,7 +169,7 @@ const Setup: React.FC = () => {
                     <select
                       value={form.state}
                       onChange={(e) => handleChange('state', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                     >
                       <option value="">Selecione...</option>
                       {brazilianStates.map(s => <option key={s} value={s}>{s}</option>)}
@@ -191,11 +202,13 @@ const Setup: React.FC = () => {
                         value={form.primary_color}
                         onChange={(e) => handleChange('primary_color', e.target.value)}
                         className="w-12 h-10 border border-gray-300 dark:border-gray-600 rounded cursor-pointer"
+                        aria-label="Cor primária"
                       />
                       <FormInput
                         name="primary_color"
                         value={form.primary_color}
                         onChange={(e) => handleChange('primary_color', e.target.value)}
+                        className="font-mono text-sm"
                       />
                     </div>
                   </div>
@@ -210,11 +223,13 @@ const Setup: React.FC = () => {
                         value={form.secondary_color}
                         onChange={(e) => handleChange('secondary_color', e.target.value)}
                         className="w-12 h-10 border border-gray-300 dark:border-gray-600 rounded cursor-pointer"
+                        aria-label="Cor secundária"
                       />
                       <FormInput
                         name="secondary_color"
                         value={form.secondary_color}
                         onChange={(e) => handleChange('secondary_color', e.target.value)}
+                        className="font-mono text-sm"
                       />
                     </div>
                   </div>
@@ -229,7 +244,8 @@ const Setup: React.FC = () => {
                   loading={loading}
                   fullWidth
                   style={{ backgroundColor: loading ? undefined : form.primary_color }}
-                  iconRight={<ArrowRight size={20} />}
+                  icon={ArrowRight}
+                  iconPosition="right"
                 >
                   {loading ? 'Salvando...' : 'Salvar e Continuar'}
                 </Button>

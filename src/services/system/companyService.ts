@@ -1,4 +1,4 @@
-// src/services/companyService.js
+// src/services/companyService.ts
 import { supabase } from '@lib/supabase'
 import { logger } from '@utils/logger'
 
@@ -7,7 +7,7 @@ export const fetchCompanySettings = async () => {
     .from('company_settings')
     .select('*')
     .limit(1)
-    .single()
+    .maybeSingle()
   
   if (error) {
     logger.error('❌ Erro ao buscar configurações da empresa:', error)
@@ -17,7 +17,7 @@ export const fetchCompanySettings = async () => {
   return data
 }
 
-export const setupCompany = async (companyData) => {
+export const setupCompany = async (companyData: any) => {
   const { data, error } = await supabase
     .rpc('setup_company', {
       p_company_name: companyData.company_name,
@@ -39,7 +39,7 @@ export const setupCompany = async (companyData) => {
   
   if (error) {
     logger.error('❌ Erro ao configurar empresa:', error)
-    throw error
+    throw new Error(error.message || 'Erro ao configurar empresa')
   }
   
   return data
