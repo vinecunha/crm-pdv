@@ -43,7 +43,10 @@ interface RouteConfig {
   redirect?: string
 }
 
+const Setup = lazy(() => import(/* webpackChunkName: "setup" */ './pages/Setup'))
+
 const routes: RouteConfig[] = [
+  { path: '/setup', component: Setup, isExact: true },
   { path: '/login', component: Login, isExact: true },
   { path: '/', redirect: '/dashboard' },
   { path: '/404', component: NotFound, isExact: true },

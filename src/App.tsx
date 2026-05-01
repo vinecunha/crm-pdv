@@ -1,9 +1,9 @@
-import React, { Suspense, lazy } from 'react'
+import { Suspense, lazy } from 'react'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { UIProvider, useUI } from './contexts/UIContext'
 import FeedbackMessage from '@components/ui/FeedbackMessage'
 import './index.css'
-import { BrowserRouter as Router } from 'react-router-dom'
+import { BrowserRouter as Router, useNavigate, useLocation } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { CompanyProvider, useCompanyContext } from './contexts/CompanyContext'
@@ -16,11 +16,10 @@ import PendingSalesIndicator from '@components/sales/pdv/PendingSalesIndicator'
 import PerformanceDebugger from '@components/ui/PerformanceDebugger'
 import { useNotificationTriggers } from '@hooks/system/useNotificationTriggers'
 import AppRoutes from './routes'
+import { fetchCompanySettings } from '@services/system/companyService'
+import CompanySetupCheck from '@components/CompanySetupCheck'
 
-const SplashScreen = lazy(() => import(
-  /* webpackChunkName: "layout" */
-  '@components/ui/SplashScreen'
-))
+const SplashScreen = lazy(() => import('@components/ui/SplashScreen'))
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black">
@@ -46,29 +45,12 @@ const GlobalFeedback = () => {
   )
 }
 
-const AppWithErrorBoundary = () => {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <AuthProvider>
-          <CompanyProvider>
-            <ThemeProviderWithErrorBoundary />
-          </CompanyProvider>
-        </AuthProvider>
-      </Router>
-      {import.meta.env.DEV && <CacheDebugger />}
-      {import.meta.env.DEV && <NetworkStatus />}
-      {import.meta.env.DEV && <PerformanceDebugger />}
-    </QueryClientProvider>
-  )
-}
-
 const ThemeProviderWithErrorBoundary = () => {
   const { company } = useCompanyContext()
-  
+
   return (
     <ErrorBoundary companySettings={company}>
-      <ThemeProvider> 
+      <ThemeProvider>
         <DynamicHead />
         <NotificationTriggersWrapper />
         <UIProvider>
@@ -80,6 +62,24 @@ const ThemeProviderWithErrorBoundary = () => {
         <PendingSalesIndicator />
       </ThemeProvider>
     </ErrorBoundary>
+  )
+}
+
+const AppWithErrorBoundary = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <CompanySetupCheck />
+        <AuthProvider>
+          <CompanyProvider>
+            <ThemeProviderWithErrorBoundary />
+          </CompanyProvider>
+        </AuthProvider>
+      </Router>
+      {import.meta.env.DEV && <CacheDebugger />}
+      {import.meta.env.DEV && <NetworkStatus />}
+      {import.meta.env.DEV && <PerformanceDebugger />}
+    </QueryClientProvider>
   )
 }
 
