@@ -352,12 +352,15 @@ begin
 end;
 $$ language plpgsql security definer set search_path = '';
 
+-- Create sequence for registration numbers
+create sequence if not exists public.registration_number_seq;
+
 -- Function to set registration number
 create or replace function set_registration_number()
 returns trigger as $$
 begin
   if new.registration_number is null then
-    new.registration_number = 'REG' || to_char(current_date, 'YYYYMMDD') || lpad(nextval('profiles_id_seq')::text, 4, '0');
+    new.registration_number = 'REG' || to_char(current_date, 'YYYYMMDD') || lpad(nextval('public.registration_number_seq')::text, 4, '0');
   end if;
   return new;
 end;

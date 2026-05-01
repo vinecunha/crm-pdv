@@ -5,17 +5,17 @@ import { Home, ArrowLeft, Search, AlertCircle } from '@lib/icons'
 
 // Configurações estáticas da empresa (fallback)
 const COMPANY_CONFIG = {
-  company_name: 'Brasalino Pollo',
-  company_logo_url: '/brasalino-pollo.png',
+  company_name: 'EveIT',
+  company_logo_url: '/eveit-logo.png',
   primary_color: '#FF131E',
   secondary_color: '#FFE526',
-  email: 'contato@brasalinopollo.com.br',
-  phone: '(21) 97982-7723',
+  email: 'contato@eveit.com.br',
+  phone: '(21) 97023-1259',
   address: 'Rua Geni Saraiva, 171',
   city: 'Nova Iguaçu',
   state: 'RJ',
   zip_code: '26032-661',
-  domain: 'www.brasalinopollo.com.br'
+  domain: 'www.eveit.com.br'
 }
 
 const NotFound = () => {

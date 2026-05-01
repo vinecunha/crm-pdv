@@ -10,7 +10,7 @@ const DynamicHead = () => {
     // Atualizar título
     const title = company.company_name 
       ? `${company.company_name} - Sistema de Gestão`
-      : 'Brasalino Pollo - Sistema de Gestão'
+      : 'Sistema de Gestão'
     
     document.title = title
 

@@ -10,7 +10,7 @@ const LoginHeader: React.FC = () => {
   // Valores com fallback seguro
   const primaryColor: string = company?.primary_color || '#2563eb'
   const logoUrl: string | null = company?.company_logo_url || company?.company_logo || null
-  const companyName: string = company?.company_name || 'Brasalino Pollo'
+  const companyName: string = company?.company_name || 'EveIT'
   const showLogo: boolean = !!(logoUrl && !imageError)
 
   return (

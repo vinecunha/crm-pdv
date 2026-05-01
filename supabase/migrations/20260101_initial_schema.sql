@@ -421,6 +421,26 @@ create trigger trigger_update_budget_updated_at before
 update on budgets for each row
 execute function update_budget_updated_at();
 
+-- Budget Items (depends on budgets, products)
+create table public.budget_items (
+  id bigserial not null,
+  budget_id bigint null,
+  product_id bigint null,
+  product_name text not null,
+  product_code text null,
+  quantity numeric(10, 3) not null,
+  unit_price numeric(10, 2) not null,
+  total_price numeric(10, 2) not null,
+  unit text null,
+  created_at timestamp with time zone null default now(),
+  constraint budget_items_pkey primary key (id),
+  constraint budget_items_budget_id_fkey foreign key (budget_id) references budgets (id) on delete cascade,
+  constraint budget_items_product_id_fkey foreign key (product_id) references products (id) on delete set null
+) tablespace pg_default;
+
+create index if not exists idx_budget_items_budget_id on public.budget_items using btree (budget_id);
+create index if not exists idx_budget_items_product_id on public.budget_items using btree (product_id);
+
 -- Sale Items (depends on sales, products)
 create table public.sale_items (
   id bigserial not null,

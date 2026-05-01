@@ -1,7 +1,7 @@
 # 🤖 Agents.md — CRM-PDV
 
 > **Arquivo de contexto para Agentes de IA**  
-> **Projeto:** Brasalino CRM-PDV — Sistema de Gestão Empresarial  
+> **Projeto:** Sistema de Gestão Empresarial  
 > **Stack:** React 18 + Vite + TypeScript + Tailwind CSS v4 + Supabase + React Query v5 + React Router v7  
 > **Última atualização:** 2026-05-01
 
