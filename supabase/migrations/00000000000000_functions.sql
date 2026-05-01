@@ -402,25 +402,3 @@ begin
   return new;
 end;
 $$ language plpgsql security definer set search_path = '';
-
--- Function to setup company (for initial setup)
-create or replace function setup_company(
-  p_name character varying,
-  p_slug character varying,
-  p_domain character varying default null,
-  p_settings jsonb default '{}'::jsonb
-)
-returns uuid as $$
-declare
-  v_company_id uuid;
-begin
-  insert into public.companies (name, slug, domain, settings)
-  values (p_name, p_slug, p_domain, p_settings)
-  returning id into v_company_id;
-  
-  insert into public.company_settings (company_name, domain)
-  values (p_name, p_domain);
-  
-  return v_company_id;
-end;
-$$ language plpgsql security definer set search_path = '';
