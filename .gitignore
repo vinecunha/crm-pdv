@@ -2,6 +2,9 @@
 dist/
 build/
 
+# Dependencies
+node_modules/
+
 # Arquivos compilados (não subir .js ou .jsx se o fonte for .ts/.tsx)
 *.js
 *.jsx

@@ -184,19 +184,96 @@ Todos os arquivos de migração estão em: `supabase/migrations/`
 
 ## 🏢 Como Criar uma Nova Company
 
-### Passo a Passo
+### ⚡️ Método Recomendado (Automático)
 
-1. **Acesse o SQL Editor no Supabase Dashboard**
+1. **Acesse**: `https://seu-dominio.com/setup`
+2. **Preencha os dados da empresa**:
+   - Nome da Empresa *
+   - CNPJ (opcional)
+   - E-mail de contato
+   - Telefone
+   - Endereço completo
+   - Cidade e Estado
+   - CEP
+   - Cores personalizadas (opcional)
 
-2. **Execute a função `setup_company()`**:
+3. **Clique em "Salvar e Continuar"**
+   - A empresa será criada automaticamente
+   - Você será redirecionado para `/login`
+
+4. **Cadastre o primeiro usuário**:
+   - No login, clique em "Criar conta"
+   - Use um e-mail válido
+   - ✅ **O primeiro usuário será admin automaticamente!**
+   - Não precisa alterar nada no banco
+
+---
+
+### 🔧 Método Manual (SQL)
+
+Se preferir criar via SQL Editor no Supabase:
+
 ```sql
+-- 1. Criar a empresa (usa a função setup_company)
 SELECT setup_company(
-  'Nome da Empresa'::character varying,
-  'slug-da-empresa'::character varying,
-  'dominio.com'::character varying, -- opcional
-  '{"theme": "dark"}'::jsonb -- opcional
+  'Minha Empresa'::character varying,
+  'minha-empresa'::character varying,
+  'minhaempresa.com'::character varying,
+  '{"primary_color": "#2563eb", "secondary_color": "#7c3aed"}'::jsonb
 );
+
+-- 2. O primeiro usuário a se cadastrar será admin automaticamente
+-- (isso é feito pelo trigger trg_auto_admin_first_user)
 ```
+
+**Para cadastrar o primeiro admin:**
+1. Acesse a interface web
+2. Cadastre-se com seu e-mail
+3. ✅ O sistema detecta que é o primeiro usuário e define como `admin` automaticamente
+
+---
+
+### 📋 Arquivos Necessários para Nova Company
+
+Para configurar um **novo ambiente**, execute os arquivos de migração em ordem:
+
+| Ordem | Arquivo | Descrição |
+|-------|---------|-------------|
+| 1️⃣ | `00000000000000_functions.sql` | Funções e triggers |
+| 2️⃣ | `20260101_initial_schema.sql` | Schema principal + tabelas |
+| 3️⃣ | `20260102_rls_policies.sql` | Row Level Security |
+| 4️⃣ | `20260104_auto_admin_first_user.sql` | Trigger para primeiro admin |
+
+**Ou use o comando único:**
+```bash
+npx supabase db push --linked --yes --include-all
+```
+
+---
+
+### 🔐 Verificação
+
+Após criar a company e o admin, verifique:
+
+```sql
+-- Ver companies criadas
+SELECT * FROM public.companies;
+
+-- Ver configurações
+SELECT * FROM public.company_settings;
+
+-- Ver usuários e roles (primeiro será admin)
+SELECT id, email, role FROM public.profiles;
+```
+
+---
+
+### ⚠️ Importante
+
+- ✅ O **primeiro usuário** a se cadastrar será **admin automaticamente**
+- ✅ Não é necessário alterar manualmente o banco
+- ✅ O trigger `trg_auto_admin_first_user` cuida disso
+- ✅ Se já existirem usuários, novos cadastros serão `operador` por padrão
 
 3. **Ou insira manualmente**:
 ```sql
