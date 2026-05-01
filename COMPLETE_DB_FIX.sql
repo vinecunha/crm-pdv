@@ -109,9 +109,9 @@ $$ language plpgsql security definer set search_path = '';
 
 -- Function to create sale (for production)
 create or replace function public.create_sale(
-  p_customer_id bigint default null,
   p_created_by uuid,
   p_items jsonb,
+  p_customer_id bigint default null,
   p_payment_method text default 'cash',
   p_discount_amount numeric(10,2) default 0,
   p_coupon_code text default null,
@@ -192,9 +192,9 @@ $$ language plpgsql security definer set search_path = '';
 
 -- Function to create sale test (for tests)
 create or replace function public.create_sale_test(
-  p_customer_id bigint default null,
   p_created_by uuid,
   p_items jsonb,
+  p_customer_id bigint default null,
   p_payment_method text default 'cash',
   p_discount_amount numeric(10,2) default 0,
   p_coupon_code text default null,
