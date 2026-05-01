@@ -14,8 +14,7 @@ let errorLogState = {
   circuitOpensAt: 0
 }
 
-// Modern functional ErrorBoundary using hooks
-export function ErrorBoundary({ children, fallback }: { children: React.ReactNode, fallback?: React.ReactNode }) {
+function ErrorBoundary({ children, fallback }: { children: React.ReactNode, fallback?: React.ReactNode }) {
   const [hasError, setHasError] = useState(false)
   const [error, setError] = useState<Error | null>(null)
   const [errorInfo, setErrorInfo] = useState<{ componentStack?: string } | null>(null)
@@ -45,7 +44,7 @@ export function ErrorBoundary({ children, fallback }: { children: React.ReactNod
       }
     }
     
-    errorLogState.errors = errorLogState.errors.filter(t => now - t < CIRCUIT_BREAKER_WINDOW)
+    errorLogState.errors = errorLogState.errors.filter((t: number) => now - t < CIRCUIT_BREAKER_WINDOW)
     errorLogState.errors.push(now)
     
     if (errorLogState.errors.length > CIRCUIT_BREAKER_THRESHOLD) {
@@ -113,24 +112,16 @@ export function ErrorBoundary({ children, fallback }: { children: React.ReactNod
   }
   
   if (!hasError) {
-    return children
+    return <>{children}</>
   }
   
-  // Usar configurações da empresa dinamicamente
   const companyName = company?.company_name || 'Sistema de Gestão'
   const primaryColor = company?.primary_color || '#2563eb'
-  const logoSrc = company?.company_logo_url || null
-  
-  if (fallback) {
-    return fallback
-  }
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full">
-        {/* Card de erro */}
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl overflow-hidden">
-          {/* Header com logo */}
           <div 
             className="px-6 py-8 text-center"
             style={{ background: `linear-gradient(135deg, ${primaryColor}15, ${primaryColor}05)` }}
@@ -146,9 +137,7 @@ export function ErrorBoundary({ children, fallback }: { children: React.ReactNod
             </p>
           </div>
           
-          {/* Corpo */}
           <div className="p-6">
-            {/* Mensagem de erro amigável */}
             <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6">
               <div className="flex items-start gap-3">
                 <Bug className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
@@ -163,7 +152,6 @@ export function ErrorBoundary({ children, fallback }: { children: React.ReactNod
               </div>
             </div>
             
-            {/* Botões de ação */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
               <button
                 onClick={handleRefresh}
@@ -188,7 +176,6 @@ export function ErrorBoundary({ children, fallback }: { children: React.ReactNod
               </button>
             </div>
             
-            {/* Detalhes técnicos (opcional) */}
             <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
               <button
                 onClick={toggleDetails}
@@ -214,7 +201,6 @@ export function ErrorBoundary({ children, fallback }: { children: React.ReactNod
             </div>
           </div>
           
-          {/* Footer */}
           <div className="px-6 py-4 bg-gray-50 dark:bg-black border-t border-gray-200 dark:border-gray-700 text-center">
             <p className="text-xs text-gray-500 dark:text-gray-400">
               {companyName} - Sistema de Gestão Integrada
@@ -229,3 +215,4 @@ export function ErrorBoundary({ children, fallback }: { children: React.ReactNod
   )
 }
 
+export default ErrorBoundary
