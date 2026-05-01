@@ -256,7 +256,7 @@ export const convertBudgetToSale = async (budget, budgetItems, profile) => {
   
   if (budget.customer_id) {
     const { data: customer } = await supabase.from('customers').select('total_purchases').eq('id', budget.customer_id).single()
-    const newTotal = (customer?.total_purchases || 0) + budget.final_amount
+    const newTotal = (customer?.total_purchases || 0) + Number(budget.final_amount)
     await supabase.from('customers').update({ 
       last_purchase: new Date().toISOString(), 
       total_purchases: newTotal 

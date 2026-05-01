@@ -5,29 +5,7 @@ import { logger } from '@utils/logger'
 import { notifyNewSale } from '@services/system/notificationService'
 import * as goalService from '@services/seller/goalService'
 
-// 🔥 CORREÇÃO: Usar APENAS flag explícita - sem detecção automática de ambiente
-const USE_TEST_RPC = import.meta.env.VITE_USE_TEST_RPC === 'true'
-
-// 🛡️ Validação de segurança para produção
-if (import.meta.env.PROD && USE_TEST_RPC) {
-  logger.error('🚨 ERRO FATAL: VITE_USE_TEST_RPC ativado em produção!')
-}
-
-// 📝 Função segura para obter o nome da RPC (decisão em runtime)
-const getRPCName = () => {
-  // Em produção, SEMPRE usa a RPC de produção
-  if (import.meta.env.PROD) {
-    return 'create_sale'
-  }
-  
-  // Em desenvolvimento, respeita a flag explícita
-  if (import.meta.env.DEV && USE_TEST_RPC) {
-    return 'create_sale_test'
-  }
-  
-  // Padrão: RPC de produção
-  return 'create_sale'
-}
+const RPC_NAME = import.meta.env.VITE_USE_TEST_RPC === 'true' ? 'create_sale_test' : 'create_sale'
 
 /**
  * Buscar produtos ativos com estoque
@@ -216,13 +194,10 @@ export const validateCoupon = async (code, customerId, cartSubtotal) => {
  */
 export const createSale = async (cart, customer, coupon, discount, paymentMethod, profile) => {
   try {
-    // 🎯 Decisão da RPC no momento da chamada
-    const rpcName = getRPCName()
-    
     logger.log('\n=== SALESERVICE - DADOS RECEBIDOS ===')
     logger.log('customer?.id:', customer?.id)
     logger.log('profile?.id:', profile?.id)
-    logger.log('RPC_NAME:', rpcName)
+    logger.log('RPC_NAME:', RPC_NAME)
     logger.log('Ambiente:', import.meta.env.MODE)
     
     const subtotal = cart.reduce((sum, item) => sum + item.total, 0)
@@ -247,7 +222,7 @@ export const createSale = async (cart, customer, coupon, discount, paymentMethod
     logger.log('rpcParams:', JSON.stringify(rpcParams, null, 2))
     logger.log('=====================================\n')
     
-    const { data, error } = await supabase.rpc(rpcName, rpcParams)
+    const { data, error } = await supabase.rpc(RPC_NAME, rpcParams)
     
     logger.log('RPC data:', data)
     logger.log('RPC error:', error)

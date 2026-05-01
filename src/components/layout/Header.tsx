@@ -101,9 +101,7 @@ const Header: React.FC<HeaderProps> = ({
   }, [location.pathname])
 
   const handleRefresh = async () => {
-    console.log('🔄 Refresh clicked!')
     await refresh()
-    console.log('✅ Refresh completed!')
   }
 
   const handleLogoutClick = () => {

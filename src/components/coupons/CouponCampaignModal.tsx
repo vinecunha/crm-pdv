@@ -395,7 +395,7 @@ const CouponCampaignModal = ({ isOpen, onClose, coupon, onSuccess }) => {
     <>
       {feedback.show && (
         <div className="fixed top-4 right-4 z-50">
-          <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} />
+          <FeedbackMessage type={feedback.type} message={feedback.message} onClose={() => setFeedback({ show: false })} position="fixed" />
         </div>
       )}
 

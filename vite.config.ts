@@ -111,10 +111,6 @@ export default defineConfig({
             // Restante das dependências
             return 'vendor'
           }
-          
-          // ❌ NÃO AGRUPAR código da aplicação!
-          // O Vite + lazy imports já faz code splitting automático por página
-          // Agrupar manualmente ANULA o lazy loading
         },
         
         chunkFileNames: 'assets/[name]-[hash].js',
