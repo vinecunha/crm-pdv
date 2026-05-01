@@ -142,6 +142,9 @@ Todos os arquivos de migração estão em: `supabase/migrations/`
    - Usuários veem apenas seus dados quando apropriado
    - Admins têm acesso total
 
+4. **`20260104_auto_admin_first_user.sql`** - Primeiro usuário é admin
+   - Trigger que torna o primeiro usuário admin automaticamente
+
 ### Tabelas Principais
 
 - **companies** - Empresas (multi-tenant)
@@ -233,9 +236,9 @@ SELECT setup_company(
 
 ---
 
-### 📋 Arquivos Necessários para Nova Company
+### 📋 Arquivos de Migração (ORDEM DE EXECUÇÃO)
 
-Para configurar um **novo ambiente**, execute os arquivos de migração em ordem:
+Todos os arquivos estão em: `supabase/migrations/`
 
 | Ordem | Arquivo | Descrição |
 |-------|---------|-------------|
@@ -244,9 +247,9 @@ Para configurar um **novo ambiente**, execute os arquivos de migração em ordem
 | 3️⃣ | `20260102_rls_policies.sql` | Row Level Security |
 | 4️⃣ | `20260104_auto_admin_first_user.sql` | Trigger para primeiro admin |
 
-**Ou use o comando único:**
+**Para um novo ambiente:**
 ```bash
-npx supabase db push --linked --yes --include-all
+npx supabase db push --linked --yes
 ```
 
 ---
@@ -345,20 +348,21 @@ Este projeto está sob a licença MIT.
 ## 📝 Changelog
 
 ### Últimas Atualizações
-- ✅ Correção de sintaxe SQL no schema
+- ✅ Limpeza de arquivos SQL desnecessários (removido schema.sql da pasta migrations)
+- ✅ Padronização dos nomes dos arquivos de migração
+- ✅ Correção de sintaxe SQL (removido company_logo_url duplicado)
 - ✅ Reordenação de tabelas para respeitar dependências FK
 - ✅ Criação de sequence própria para registration_number
-- ✅ Adição da tabela `budget_items` que estava faltando
-- ✅ Remoção de arquivos antigos não versionados
+- ✅ Adição da tabela budget_items que estava faltando
 - ✅ Implementação completa de RLS policies
-- ✅ Função `setup_company()` para criação de novas empresas
-- ✅ View `unified_logs` para logs unificados
+- ✅ Função setup_company() para criação de novas empresas
+- ✅ View unified_logs para logs unificados
 - ✅ Correção de tipos TypeScript
 - ✅ Performance: Substituição de polling por Supabase Realtime
 - ✅ Remoção de armazenamento inseguro (secureStorage)
 - ✅ Limpeza de imports não utilizados
 - ✅ Criação de hooks PDV (usePDVCoupon, usePDVCustomer, usePDVCart)
-- ✅ Página de setup `/setup` para configuração inicial
+- ✅ Página de setup /setup para configuração inicial
 - ✅ Documentação de AI context (agents.md) em múltiplos locais
 
 ## 🛠️ Scripts Disponíveis

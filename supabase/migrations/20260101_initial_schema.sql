@@ -25,7 +25,6 @@ create table public.company_settings (
   id uuid not null default gen_random_uuid(),
   company_name character varying(255) not null,
   company_logo text null,
-  company_logo_url text null,
   favicon text null,
   domain character varying(255) null,
   email character varying(255) null,
