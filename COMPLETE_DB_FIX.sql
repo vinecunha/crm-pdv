@@ -5,6 +5,13 @@
 -- 1. CREATE MISSING FUNCTIONS
 -- =============================================
 
+-- Drop existing functions to avoid parameter name conflicts
+DROP FUNCTION IF EXISTS public.setup_company(text,text,text,text,text,text,text,text,text,text,text,text,text,jsonb,text) CASCADE;
+DROP FUNCTION IF EXISTS public.setup_company(text,text,text,text,text,text,text,text,text,text,text,text,jsonb,text) CASCADE;
+DROP FUNCTION IF EXISTS public.get_current_user_role() CASCADE;
+DROP FUNCTION IF EXISTS public.create_sale(bigint,uuid,jsonb,text,numeric,text,text) CASCADE;
+DROP FUNCTION IF EXISTS public.create_sale_test(bigint,uuid,jsonb,text,numeric,text,text) CASCADE;
+
 -- Function to get current user role (fixed with plpgsql)
 create or replace function public.get_current_user_role()
 returns text as $$
