@@ -1,3 +1,17 @@
+# Build output
+dist/
+build/
+
+# Arquivos compilados (não subir .js ou .jsx se o fonte for .ts/.tsx)
+*.js
+*.jsx
+!jest.config.js
+!babel.config.js
+!webpack.config.js
+!vite.config.js
+!postcss.config.js
+!tailwind.config.js
+
 # Backups e dados do banco (NUNCA subir para o GitHub)
 *.backup.sql
 *backup*.sql
