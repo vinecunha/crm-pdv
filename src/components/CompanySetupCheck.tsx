@@ -1,30 +1,37 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useCompany } from '@hooks/system/useCompany'
+import { checkCompanyExists } from '@utils/companyCheck'
 import SplashScreen from '@components/ui/SplashScreen'
+import { logger } from '@utils/logger'
 
 const CompanySetupCheck = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { company, loading } = useCompany()
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    if (loading) return // Ainda carregando
-    
-    let cancelled = false
-    const check = () => {
-      if (cancelled) return
-      setChecking(false)
-      if (!company && !['/setup', '/login'].includes(location.pathname)) {
-        navigate('/setup', { replace: true })
+    const checkCompany = async () => {
+      try {
+        const { redirectTo } = await checkCompanyExists()
+        
+        // Se já estiver na página correta, não redireciona
+        if (location.pathname === redirectTo) {
+          setChecking(false)
+          return
+        }
+
+        // Redireciona para a página apropriada
+        navigate(redirectTo, { replace: true })
+      } catch (error) {
+        logger.error('Erro no CompanySetupCheck:', error)
+        setChecking(false)
       }
     }
-    check()
-    return () => { cancelled = true }
-  }, [company, loading, navigate, location.pathname])
 
-  if (checking || loading) {
+    checkCompany()
+  }, [navigate, location.pathname])
+
+  if (checking) {
     return <SplashScreen fullScreen message="Verificando configurações..." />
   }
 

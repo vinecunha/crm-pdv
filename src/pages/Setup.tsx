@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Settings as SettingsIcon } from '@lib/icons'
-import { setupCompany, fetchCompanySettings } from '@services/system/companyService'
+import { Settings as SettingsIcon, Building2, ArrowRight } from '@lib/icons'
 import PageHeader from '@components/ui/PageHeader'
 import Button from '@components/ui/Button'
 import FormInput from '@components/forms/FormInput'
 import SplashScreen from '@components/ui/SplashScreen'
-import { logger } from '@utils/logger'
+import { useSetup } from '@hooks/system/useSetup'
 
 const brazilianStates = [
   'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'
@@ -14,11 +13,9 @@ const brazilianStates = [
 
 const Setup: React.FC = () => {
   const navigate = useNavigate()
-  const [loading, setLoading] = useState(false)
-  const [checking, setChecking] = useState(true)
-  const [error, setError] = useState('')
-
-  const [form, setForm] = useState({
+  const { loading, checking, error, checkExisting, createCompany } = useSetup()
+  
+  const [form, setForm] = React.useState({
     company_name: '',
     cnpj: '',
     email: '',
@@ -28,20 +25,13 @@ const Setup: React.FC = () => {
     state: '',
     zip_code: '',
     primary_color: '#2563eb',
-    secondary_color: '#7c3aed'
+    secondary_color: '#7c3aed',
+    domain: ''
   })
 
   useEffect(() => {
-    const checkExisting = async () => {
-      const settings = await fetchCompanySettings()
-      if (settings) {
-        navigate('/login', { replace: true })
-        return
-      }
-      setChecking(false)
-    }
     checkExisting()
-  }, [navigate])
+  }, [checkExisting])
 
   const handleChange = (field: string, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -49,34 +39,13 @@ const Setup: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.company_name.trim()) {
-      setError('Nome da empresa é obrigatório')
-      return
-    }
-    setLoading(true)
-    setError('')
-    try {
-      const result = await setupCompany({
-        company_name: form.company_name,
-        cnpj: form.cnpj || null,
-        email: form.email || null,
-        phone: form.phone || null,
-        address: form.address || null,
-        city: form.city || null,
-        state: form.state || null,
-        zip_code: form.zip_code || null,
-        primary_color: form.primary_color,
-        secondary_color: form.secondary_color
-      })
-      if (result?.success === false) {
-        throw new Error(result.error || 'Erro ao configurar empresa')
-      }
-      navigate('/login', { replace: true })
-    } catch (err: any) {
-      logger.error('Erro no setup:', err)
-      setError(err.message || 'Erro ao salvar configurações')
-    } finally {
-      setLoading(false)
+    if (!form.company_name.trim()) return
+
+    const result = await createCompany(form)
+    if (result.success) {
+      setTimeout(() => {
+        navigate('/login', { replace: true })
+      }, 1500)
     }
   }
 
@@ -85,163 +54,194 @@ const Setup: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 px-4 py-8">
-      <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8">
-        <PageHeader
-          title="Configuração Inicial"
-          description="Configure os dados da sua empresa para começar a usar o sistema"
-          icon={SettingsIcon}
-        />
-
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
-            {error}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-2xl">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 text-white">
+            <div className="flex items-center gap-3 mb-4">
+              <Building2 size={32} />
+              <div>
+                <h1 className="text-2xl font-bold">Bem-vindo ao CRM-PDV</h1>
+                <p className="text-blue-100">Configure sua empresa para começar</p>
+              </div>
+            </div>
           </div>
-        )}
 
-        <form onSubmit={handleSubmit} className="space-y-6 mt-6">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Dados da Empresa
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <FormInput
-                  label="Nome da Empresa"
-                  name="company_name"
-                  value={form.company_name}
-                  onChange={(e) => handleChange('company_name', e.target.value)}
-                  placeholder="Ex: Minha Empresa Ltda"
-                  required
-                />
+          <div className="p-8">
+            <PageHeader
+              title="Configuração Inicial"
+              description="Preencha os dados da sua empresa para começar a usar o sistema"
+              icon={SettingsIcon}
+            />
+
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
+                <strong>Erro:</strong> {error}
               </div>
+            )}
 
-              <FormInput
-                label="CNPJ"
-                name="cnpj"
-                value={form.cnpj}
-                onChange={(e) => handleChange('cnpj', e.target.value)}
-                placeholder="00.000.000/0001-00"
-                mask="cnpj"
-              />
+            <form onSubmit={handleSubmit} className="space-y-6 mt-6">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Building2 size={20} />
+                  Dados da Empresa
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <FormInput
+                      label="Nome da Empresa *"
+                      name="company_name"
+                      value={form.company_name}
+                      onChange={(e) => handleChange('company_name', e.target.value)}
+                      placeholder="Ex: Minha Empresa Ltda"
+                      required
+                    />
+                  </div>
 
-              <FormInput
-                label="Email"
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={(e) => handleChange('email', e.target.value)}
-                placeholder="contato@empresa.com"
-              />
+                  <FormInput
+                    label="CNPJ"
+                    name="cnpj"
+                    value={form.cnpj}
+                    onChange={(e) => handleChange('cnpj', e.target.value)}
+                    placeholder="00.000.000/0001-00"
+                    mask="cnpj"
+                  />
 
-              <FormInput
-                label="Telefone"
-                name="phone"
-                value={form.phone}
-                onChange={(e) => handleChange('phone', e.target.value)}
-                placeholder="(11) 99999-9999"
-                mask="phone"
-              />
+                  <FormInput
+                    label="E-mail"
+                    name="email"
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => handleChange('email', e.target.value)}
+                    placeholder="contato@empresa.com"
+                  />
 
-              <div className="md:col-span-2">
-                <FormInput
-                  label="Endereço"
-                  name="address"
-                  value={form.address}
-                  onChange={(e) => handleChange('address', e.target.value)}
-                  placeholder="Rua Exemplo, 123"
-                />
+                  <FormInput
+                    label="Telefone"
+                    name="phone"
+                    value={form.phone}
+                    onChange={(e) => handleChange('phone', e.target.value)}
+                    placeholder="(11) 99999-9999"
+                    mask="phone"
+                  />
+
+                  <FormInput
+                    label="Domínio (opcional)"
+                    name="domain"
+                    value={form.domain}
+                    onChange={(e) => handleChange('domain', e.target.value)}
+                    placeholder="minhaempresa.com"
+                  />
+
+                  <div className="md:col-span-2">
+                    <FormInput
+                      label="Endereço"
+                      name="address"
+                      value={form.address}
+                      onChange={(e) => handleChange('address', e.target.value)}
+                      placeholder="Rua Exemplo, 123"
+                    />
+                  </div>
+
+                  <FormInput
+                    label="Cidade"
+                    name="city"
+                    value={form.city}
+                    onChange={(e) => handleChange('city', e.target.value)}
+                    placeholder="São Paulo"
+                  />
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Estado
+                    </label>
+                    <select
+                      value={form.state}
+                      onChange={(e) => handleChange('state', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Selecione...</option>
+                      {brazilianStates.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+
+                  <FormInput
+                    label="CEP"
+                    name="zip_code"
+                    value={form.zip_code}
+                    onChange={(e) => handleChange('zip_code', e.target.value)}
+                    placeholder="00000-000"
+                    mask="cep"
+                  />
+                </div>
               </div>
-
-              <FormInput
-                label="Cidade"
-                name="city"
-                value={form.city}
-                onChange={(e) => handleChange('city', e.target.value)}
-                placeholder="São Paulo"
-              />
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Estado
-                </label>
-                <select
-                  value={form.state}
-                  onChange={(e) => handleChange('state', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Personalização
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Cor Primária
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={form.primary_color}
+                        onChange={(e) => handleChange('primary_color', e.target.value)}
+                        className="w-12 h-10 border border-gray-300 dark:border-gray-600 rounded cursor-pointer"
+                      />
+                      <FormInput
+                        name="primary_color"
+                        value={form.primary_color}
+                        onChange={(e) => handleChange('primary_color', e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Cor Secundária
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={form.secondary_color}
+                        onChange={(e) => handleChange('secondary_color', e.target.value)}
+                        className="w-12 h-10 border border-gray-300 dark:border-gray-600 rounded cursor-pointer"
+                      />
+                      <FormInput
+                        name="secondary_color"
+                        value={form.secondary_color}
+                        onChange={(e) => handleChange('secondary_color', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  loading={loading}
+                  fullWidth
+                  style={{ backgroundColor: loading ? undefined : form.primary_color }}
+                  iconRight={<ArrowRight size={20} />}
                 >
-                  <option value="">Selecione...</option>
-                  {brazilianStates.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
+                  {loading ? 'Salvando...' : 'Salvar e Continuar'}
+                </Button>
               </div>
 
-              <FormInput
-                label="CEP"
-                name="zip_code"
-                value={form.zip_code}
-                onChange={(e) => handleChange('zip_code', e.target.value)}
-                placeholder="00000-000"
-                mask="cep"
-              />
-            </div>
+              <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+                <p>Após salvar, você será redirecionado para o login.</p>
+                <p className="mt-1">O primeiro usuário a se cadastrar será o <strong class="text-gray-700 dark:text-gray-300">administrador</strong>.</p>
+              </div>
+            </form>
           </div>
-
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Personalização
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Cor Primária
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={form.primary_color}
-                    onChange={(e) => handleChange('primary_color', e.target.value)}
-                    className="w-12 h-10 border border-gray-300 dark:border-gray-600 rounded cursor-pointer"
-                  />
-                  <FormInput
-                    name="primary_color"
-                    value={form.primary_color}
-                    onChange={(e) => handleChange('primary_color', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Cor Secundária
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={form.secondary_color}
-                    onChange={(e) => handleChange('secondary_color', e.target.value)}
-                    className="w-12 h-10 border border-gray-300 dark:border-gray-600 rounded cursor-pointer"
-                  />
-                  <FormInput
-                    name="secondary_color"
-                    value={form.secondary_color}
-                    onChange={(e) => handleChange('secondary_color', e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            loading={loading}
-            fullWidth
-            style={{ backgroundColor: loading ? undefined : form.primary_color }}
-          >
-            {loading ? 'Salvando...' : 'Salvar e Continuar'}
-          </Button>
-        </form>
+        </div>
       </div>
     </div>
   )
