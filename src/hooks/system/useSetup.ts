@@ -100,7 +100,30 @@ export const useSetup = (): UseSetupReturn => {
           throw new Error('Empresa criada, mas erro ao criar usuário admin: ' + authError.message)
         }
 
-        logger.info('✅ Usuário admin criado:', authData.user?.email)
+        if (!authData.user) {
+          throw new Error('Empresa criada, mas falha ao criar usuário admin')
+        }
+
+        logger.info('✅ Usuário admin criado:', authData.user.email)
+
+        // 3. Garantir que o perfil foi criado com role admin
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: authData.user.id,
+            email: authData.user.email,
+            full_name: 'Administrador',
+            role: 'admin'
+          }, {
+            onConflict: 'id'
+          })
+
+        if (profileError) {
+          logger.error('Erro ao criar perfil admin:', profileError)
+          throw new Error('Empresa criada, mas erro ao criar perfil: ' + profileError.message)
+        }
+
+        logger.info('✅ Perfil admin configurado com sucesso')
       }
 
       logger.info('✅ Empresa configurada com sucesso')
