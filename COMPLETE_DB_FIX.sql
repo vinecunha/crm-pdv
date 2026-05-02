@@ -283,6 +283,28 @@ CREATE POLICY "Service role full access notifications" ON public.notifications
   FOR ALL TO service_role
   USING (true) WITH CHECK (true);
 
+-- Customers - fix permissions
+ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow authenticated read access" ON public.customers;
+DROP POLICY IF EXISTS "Allow authenticated insert" ON public.customers;
+DROP POLICY IF EXISTS "Allow authenticated update" ON public.customers;
+DROP POLICY IF EXISTS "Allow admin delete" ON public.customers;
+
+CREATE POLICY "Allow authenticated read access" ON public.customers
+  FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "Allow authenticated insert" ON public.customers
+  FOR INSERT TO authenticated WITH CHECK (true);
+
+CREATE POLICY "Allow authenticated update" ON public.customers
+  FOR UPDATE TO authenticated
+  USING (deleted_at IS NULL)
+  WITH CHECK (deleted_at IS NULL);
+
+CREATE POLICY "Allow admin delete" ON public.customers
+  FOR DELETE TO authenticated
+  USING (public.get_current_user_role() = 'admin');
+
 -- =============================================
 -- 3. GRANT PERMISSIONS
 -- =============================================
@@ -291,6 +313,7 @@ GRANT USAGE ON SCHEMA public TO anon, authenticated;
 GRANT SELECT ON public.company_settings TO anon, authenticated;
 GRANT ALL ON public.commissions TO authenticated;
 GRANT ALL ON public.commissions TO service_role;
+GRANT SELECT ON public.customers TO authenticated;
 
 -- =============================================
 -- 4. VERIFY SETUP
