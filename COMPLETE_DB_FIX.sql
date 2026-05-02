@@ -259,6 +259,30 @@ CREATE POLICY "Admin manage all commissions" ON public.commissions
   USING (public.get_current_user_role() = 'admin')
   WITH CHECK (public.get_current_user_role() = 'admin');
 
+-- Notifications - fix permissions
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users see own notifications" ON public.notifications;
+DROP POLICY IF EXISTS "Users update own notifications" ON public.notifications;
+DROP POLICY IF EXISTS "Allow insert notifications" ON public.notifications;
+DROP POLICY IF EXISTS "Service role full access notifications" ON public.notifications;
+
+CREATE POLICY "Users see own notifications" ON public.notifications
+  FOR SELECT TO authenticated
+  USING (user_id = auth.uid());
+
+CREATE POLICY "Users update own notifications" ON public.notifications
+  FOR UPDATE TO authenticated
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Allow insert notifications" ON public.notifications
+  FOR INSERT TO authenticated
+  WITH CHECK (true);
+
+CREATE POLICY "Service role full access notifications" ON public.notifications
+  FOR ALL TO service_role
+  USING (true) WITH CHECK (true);
+
 -- =============================================
 -- 3. GRANT PERMISSIONS
 -- =============================================

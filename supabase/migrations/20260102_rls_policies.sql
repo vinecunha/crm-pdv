@@ -153,8 +153,12 @@ create policy "Users update own notifications" on public.notifications
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
-create policy "System can insert notifications" on public.notifications
+create policy "Allow insert notifications" on public.notifications
   for insert to authenticated with check (true);
+
+-- Allow service role full access to notifications
+CREATE POLICY "Service role full access notifications" ON public.notifications
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 -- =============================================
 -- PROFILES
