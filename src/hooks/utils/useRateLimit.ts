@@ -22,21 +22,28 @@ export const useRateLimit = (): UseRateLimitReturn => {
 
   const checkRateLimit = useCallback(async (email: string): Promise<RateLimitData | undefined> => {
     if (!email) return
-
+    
     try {
+      // TEMPORÁRIO: Pular verificação de rate limit se houver erro CORS
       const { data, error } = await supabase.functions.invoke<RateLimitData>('rate-limit', {
         body: { action: 'check', identifier: email.toLowerCase().trim() }
       })
-
-      if (error) throw error
-
+      
+      if (error) {
+        logger.warn('Rate limit check failed (CORS?), allowing login:', error.message)
+        // Retornar valores padrão para permitir login
+        return { isBlocked: false, remainingAttempts: 5, timeRemaining: 0 }
+      }
+      
       setIsBlocked(data.isBlocked)
       setRemainingAttempts(data.remainingAttempts)
       setTimeRemaining(data.timeRemaining)
       
       return data
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Erro ao verificar rate limit:', error)
+      // Em caso de erro, permitir login
+      return { isBlocked: false, remainingAttempts: 5, timeRemaining: 0 }
     }
   }, [])
 

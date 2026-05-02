@@ -33,6 +33,7 @@ export const setupCompany = async (data: {
   domain?: string | null;
   social_media?: object | null;
   custom_css?: string | null;
+  admin_user_id?: string | null; // NOVO: ID do usuário admin
 }) => {
   const { data: result, error } = await supabase.rpc("setup_company", {
     p_company_name: data.company_name,
@@ -50,6 +51,7 @@ export const setupCompany = async (data: {
     p_domain: data.domain || null,
     p_social_media: data.social_media || {},
     p_custom_css: data.custom_css || null,
+    p_admin_user_id: data.admin_user_id || null, // NOVO: passar ID do admin
   });
 
   return { data: result, error };

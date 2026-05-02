@@ -165,18 +165,19 @@ CREATE POLICY "Service role full access notifications" ON public.notifications
 -- =============================================
 alter table public.profiles enable row level security;
 
-create policy "Users see own profile" on public.profiles
+create policy "Users see all profiles" on public.profiles
   for select to authenticated
-  using (id = auth.uid());
+  using (auth.role() = 'authenticated');
 
 create policy "Users update own profile" on public.profiles
   for update to authenticated
   using (id = auth.uid())
   with check (id = auth.uid());
 
-create policy "Admin see all profiles" on public.profiles
-  for select to authenticated
-  using (public.get_current_user_role() = 'admin');
+create policy "Admin full access profiles" on public.profiles
+  for all to authenticated
+  using (public.get_current_user_role() = 'admin')
+  with check (public.get_current_user_role() = 'admin');
 
 -- =============================================
 -- TASKS

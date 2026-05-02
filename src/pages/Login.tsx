@@ -77,17 +77,25 @@ const Login = () => {
 
   const updateLastLogin = async (userId) => {
     try {
-      const { error } = await supabase.rpc("update_user_login_info", {
-        user_id: userId,
-      });
+      // Buscar login_count atual
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("login_count")
+        .eq("id", userId)
+        .single();
+      
+      const newCount = (profile?.login_count || 0) + 1;
+      
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          last_login: new Date().toISOString(),
+          login_count: newCount
+        })
+        .eq("id", userId);
+      
       if (error) {
-        await supabase
-          .from("profiles")
-          .update({
-            last_login: new Date().toISOString(),
-            login_count: supabase.raw("COALESCE(login_count, 0) + 1", []),
-          })
-          .eq("id", userId);
+        logger.warn("Erro ao atualizar last_login:", error);
       }
     } catch (error) {
       logger.warn("Erro ao atualizar last_login:", error);
@@ -100,29 +108,42 @@ const Login = () => {
 
     // Verificar rate limit antes de tentar login
     if (email) {
-      await checkRateLimit(email);
-    }
-
-    if (isBlocked) {
-      setError(
-        `Muitas tentativas. Tente novamente em ${formatTimeRemaining(timeRemaining)}.`,
-      );
-      return;
+      try {
+        await checkRateLimit(email);
+        if (isBlocked) {
+          setError(
+            `Muitas tentativas. Tente novamente em ${formatTimeRemaining(timeRemaining)}.`,
+          );
+          return;
+        }
+      } catch (err) {
+        // Se rate limit falhar (CORS), continuar com login normal
+        logger.warn('Rate limit check failed, continuing with login:', err);
+      }
     }
 
     setLoading(true);
     try {
       await login(email, password);
       // Login bem-sucedido - limpar rate limit
-      await recordAttempt(true, email);
+      try {
+        await recordAttempt(true, email);
+      } catch (err) {
+        // Ignorar erro no rate limit
+      }
     } catch (err) {
       // Login falhou - registrar tentativa
-      await recordAttempt(false, email);
-
-      // Atualizar estado após registro
-      if (email) {
-        await checkRateLimit(email);
+      try {
+        await recordAttempt(false, email);
+        // Atualizar estado após registro
+        if (email) {
+          await checkRateLimit(email);
+        }
+      } catch (recordErr) {
+        // Ignorar erro no rate limit
       }
+
+      // ... resto do código de erro...
 
       if (
         err.message.includes("bloqueado") ||

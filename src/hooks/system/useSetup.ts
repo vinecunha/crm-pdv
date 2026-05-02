@@ -65,7 +65,35 @@ export const useSetup = (): UseSetupReturn => {
     setError('')
     
     try {
-      // 1. Criar a empresa
+      // 1. Criar usuário admin PRIMEIRO se email e senha foram fornecidos
+      let adminUserId: string | null = null;
+      
+      if (data.admin_email && data.admin_password) {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: data.admin_email,
+          password: data.admin_password,
+          options: {
+            data: {
+              full_name: 'Administrador',
+              role: 'admin'
+            }
+          }
+        })
+
+        if (authError) {
+          logger.error('Erro ao criar usuário admin:', authError)
+          throw new Error('Erro ao criar usuário admin: ' + authError.message)
+        }
+
+        if (!authData.user) {
+          throw new Error('Falha ao criar usuário admin')
+        }
+
+        adminUserId = authData.user.id
+        logger.info('✅ Usuário admin criado:', authData.user.email)
+      }
+
+      // 2. Criar a empresa e passar o ID do admin para criar o perfil
       const result = await setupCompany({
         company_name: data.company_name,
         cnpj: data.cnpj || null,
@@ -77,7 +105,8 @@ export const useSetup = (): UseSetupReturn => {
         zip_code: data.zip_code || null,
         primary_color: data.primary_color || '#2563eb',
         secondary_color: data.secondary_color || '#7c3aed',
-        domain: data.domain || null
+        domain: data.domain || null,
+        admin_user_id: adminUserId  // Passar o ID do admin para criar o perfil
       })
 
       if (!result) {
@@ -93,48 +122,25 @@ export const useSetup = (): UseSetupReturn => {
         throw new Error(message)
       }
 
-      // 2. Criar usuário admin se email e senha foram fornecidos
-      if (data.admin_email && data.admin_password) {
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: data.admin_email,
-          password: data.admin_password,
-          options: {
-            data: {
-              full_name: 'Administrador',
-              role: 'admin'
-            }
-          }
-        })
-
-        if (authError) {
-          logger.error('Erro ao criar usuário admin:', authError)
-          throw new Error('Empresa criada, mas erro ao criar usuário admin: ' + authError.message)
-        }
-
-        if (!authData.user) {
-          throw new Error('Empresa criada, mas falha ao criar usuário admin')
-        }
-
-        logger.info('✅ Usuário admin criado:', authData.user.email)
-
-        // 3. Garantir que o perfil foi criado com role admin
+      // 3. Se ainda não criou o perfil (fallback), criar manualmente
+      if (adminUserId) {
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert({
-            id: authData.user.id,
-            email: authData.user.email,
+            id: adminUserId,
+            email: data.admin_email,
             full_name: 'Administrador',
-            role: 'admin'
+            role: 'admin',
+            status: 'active'
           }, {
             onConflict: 'id'
           })
 
         if (profileError) {
-          logger.error('Erro ao criar perfil admin:', profileError)
-          throw new Error('Empresa criada, mas erro ao criar perfil: ' + profileError.message)
+          logger.warn('Aviso: perfil pode já ter sido criado via RPC:', profileError.message)
+        } else {
+          logger.info('✅ Perfil admin configurado com sucesso')
         }
-
-        logger.info('✅ Perfil admin configurado com sucesso')
       }
 
       logger.info('✅ Empresa configurada com sucesso')
