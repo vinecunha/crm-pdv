@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@lib/supabase'
 import { setupCompany, fetchCompanySettings } from '@services/system/companyService'
@@ -37,10 +37,21 @@ export const useSetup = (): UseSetupReturn => {
   const checkExisting = async (): Promise<boolean> => {
     try {
       const settings = await fetchCompanySettings()
+      
       if (settings) {
-        navigate('/login', { replace: true })
+        // Verificar se usuário já está logado
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (user) {
+          // Usuário já está logado, redireciona para home
+          navigate('/', { replace: true })
+        } else {
+          // Usuário não está logado, vai para login
+          navigate('/login', { replace: true })
+        }
         return true
       }
+      
       setChecking(false)
       return false
     } catch (err) {
