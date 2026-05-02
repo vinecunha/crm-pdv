@@ -1,60 +1,62 @@
-import { useEffect } from 'react'
-import { useCompany } from '@hooks/system/useCompany'
+import { useEffect } from "react";
+import { useCompany } from "@hooks/system/useCompany";
 
 const DynamicHead = () => {
-  const { company, loading } = useCompany()
+  const { company, loading } = useCompany();
 
   useEffect(() => {
-    if (loading || !company) return
+    if (loading || !company) return;
 
     // Atualizar título
-    const title = company.company_name 
+    const title = company.company_name
       ? `${company.company_name} - Sistema de Gestão`
-      : 'Sistema de Gestão'
-    
-    document.title = title
+      : "Sistema de Gestão";
+
+    document.title = title;
 
     // Atualizar meta tags
-    updateMetaTag('description', `Sistema de gestão integrada ${company.company_name}`)
-    updateMetaTag('author', company.company_name)
-    updateMetaTag('theme-color', company.primary_color || '#2563eb')
+    updateMetaTag(
+      "description",
+      `Sistema de gestão integrada ${company.company_name}`,
+    );
+    updateMetaTag("author", company.company_name);
+    updateMetaTag("theme-color", company.primary_color || "#2563eb");
 
     // Atualizar favicon se existir
-    if (company.favicon || company.company_logo_url) {
-      updateFavicon(company.favicon || company.company_logo_url)
+    if (company.favicon || company.company_logo) {
+      updateFavicon(company.favicon || company.company_logo);
     }
-
-  }, [company, loading])
+  }, [company, loading]);
 
   const updateMetaTag = (name, content) => {
-    if (!content) return
-    
-    let meta = document.querySelector(`meta[name="${name}"]`)
+    if (!content) return;
+
+    let meta = document.querySelector(`meta[name="${name}"]`);
     if (!meta) {
-      meta = document.createElement('meta')
-      meta.setAttribute('name', name)
-      document.head.appendChild(meta)
+      meta = document.createElement("meta");
+      meta.setAttribute("name", name);
+      document.head.appendChild(meta);
     }
-    meta.setAttribute('content', content)
-  }
+    meta.setAttribute("content", content);
+  };
 
   const updateFavicon = (url) => {
     // Atualizar todos os tipos de favicon
     const selectors = [
       'link[rel="icon"]',
       'link[rel="shortcut icon"]',
-      'link[rel="apple-touch-icon"]'
-    ]
+      'link[rel="apple-touch-icon"]',
+    ];
 
-    selectors.forEach(selector => {
-      const link = document.querySelector(selector)
+    selectors.forEach((selector) => {
+      const link = document.querySelector(selector);
       if (link) {
-        link.href = url
+        link.href = url;
       }
-    })
-  }
+    });
+  };
 
-  return null 
-}
+  return null;
+};
 
-export default DynamicHead
+export default DynamicHead;

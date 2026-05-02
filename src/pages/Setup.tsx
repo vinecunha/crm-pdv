@@ -27,7 +27,9 @@ const Setup: React.FC = () => {
     zip_code: '',
     primary_color: '#2563eb',
     secondary_color: '#7c3aed',
-    domain: ''
+    domain: '',
+    admin_email: '',
+    admin_password: ''
   })
 
   useEffect(() => {
@@ -184,6 +186,38 @@ const Setup: React.FC = () => {
                     placeholder="00000-000"
                     mask="cep"
                   />
+                </div>
+              </div>
+
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Usuário Administrador
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <FormInput
+                      label="E-mail do Admin *"
+                      name="admin_email"
+                      type="email"
+                      value={form.admin_email}
+                      onChange={(e) => handleChange('admin_email', e.target.value)}
+                      placeholder="admin@empresa.com"
+                      required
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <FormInput
+                      label="Senha do Admin *"
+                      name="admin_password"
+                      type="password"
+                      value={form.admin_password}
+                      onChange={(e) => handleChange('admin_password', e.target.value)}
+                      placeholder="Mínimo 6 caracteres"
+                      required
+                      minLength={6}
+                    />
+                  </div>
                 </div>
               </div>
 

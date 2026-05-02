@@ -1,8 +1,8 @@
 // src/components/layout/Sidebar.tsx
-import React, { useState, useMemo, useCallback } from 'react'
-import { useLocation, Link } from 'react-router-dom'
-import { useAuth } from '@contexts/AuthContext'
-import { useCompany } from '@hooks/system/useCompany'
+import React, { useState, useMemo, useCallback } from "react";
+import { useLocation, Link } from "react-router-dom";
+import { useAuth } from "@contexts/AuthContext";
+import { useCompany } from "@hooks/system/useCompany";
 import {
   LogOut,
   X,
@@ -21,48 +21,48 @@ import {
   Tags,
   Archive,
   TrendingUp,
-  DollarSign
-} from '@lib/icons'
+  DollarSign,
+} from "@lib/icons";
 
 // Types
 interface MenuItem {
-  path: string
-  icon: React.ComponentType<{ size?: number; className?: string }>
-  label: string
-  permission: string
-  description: string
-  prefetch: boolean
-  highlight?: boolean
+  path: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  label: string;
+  permission: string;
+  description: string;
+  prefetch: boolean;
+  highlight?: boolean;
 }
 
 interface MenuGroup {
-  id: string
-  label: string
-  items: MenuItem[]
+  id: string;
+  label: string;
+  items: MenuItem[];
 }
 
 interface SidebarProps {
-  collapsed: boolean
-  setCollapsed: (collapsed: boolean) => void
+  collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
 }
 
 interface LogoutConfirmModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onConfirm: () => void
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
 }
 
 // Simple Modal Component (inline para não depender de import externo)
-const LogoutConfirmModal: React.FC<LogoutConfirmModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  onConfirm 
+const LogoutConfirmModal: React.FC<LogoutConfirmModalProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
 }) => {
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <>
-      <div 
+      <div
         className="fixed inset-0 bg-black/50 z-50 animate-fadeIn"
         onClick={onClose}
       />
@@ -99,230 +99,238 @@ const LogoutConfirmModal: React.FC<LogoutConfirmModalProps> = ({
         </div>
       </div>
     </>
-  )
-}
+  );
+};
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
-  const { permissions, logout, loading: authLoading } = useAuth()
-  const { company, loading: companyLoading, getCompanyColor } = useCompany()
-  const location = useLocation()
-  const [isMobileOpen, setIsMobileOpen] = useState<boolean>(false)
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState<boolean>(false)
+  const { permissions, logout, loading: authLoading } = useAuth();
+  const { company, loading: companyLoading, getCompanyColor } = useCompany();
+  const location = useLocation();
+  const [isMobileOpen, setIsMobileOpen] = useState<boolean>(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState<boolean>(false);
 
   // Company data
-  const companyName = company?.company_name || 'Empresa'
-  const logoSrc = company?.company_logo_url || '/logomarca.png'
-  const primaryColor = getCompanyColor('primary') || '#2563eb'
-  const secondaryColor = getCompanyColor('secondary') || '#7c3aed'
+  const companyName = company?.company_name || "Empresa";
+  const logoSrc = company?.company_logo || "/logomarca.png";
+  const primaryColor = getCompanyColor("primary") || "#2563eb";
+  const secondaryColor = getCompanyColor("secondary") || "#7c3aed";
 
   // Menu Groups Definition
-  const menuGroups: MenuGroup[] = useMemo(() => [
-    {
-      id: 'principal',
-      label: 'Principal',
-      items: [
-        { 
-          path: '/dashboard', 
-          icon: LayoutDashboard, 
-          label: 'Dashboard', 
-          permission: 'canViewDashboard', 
-          description: 'Visão geral do sistema', 
-          prefetch: true 
-        },
-        { 
-          path: '/tasks', 
-          icon: ClipboardList, 
-          label: 'Tarefas', 
-          permission: 'canViewTasks', 
-          description: 'Lista de tarefas', 
-          prefetch: true 
-        },
-      ]
-    },
-    {
-      id: 'vendas',
-      label: 'Vendas',
-      items: [
-        { 
-          path: '/sales', 
-          icon: ShoppingBag, 
-          label: 'PDV', 
-          permission: 'canViewSales', 
-          description: 'Ponto de venda', 
-          prefetch: true, 
-          highlight: true 
-        },
-        { 
-          path: '/budgets', 
-          icon: FileText, 
-          label: 'Orçamentos', 
-          permission: 'canViewSales', 
-          description: 'Gerenciar orçamentos', 
-          prefetch: true 
-        },
-        { 
-          path: '/sales-list', 
-          icon: ClipboardList, 
-          label: 'Histórico', 
-          permission: 'canViewSales', 
-          description: 'Vendas e cancelamentos', 
-          prefetch: true 
-        },
-      ]
-    },
-    {
-      id: 'financeiro',
-      label: 'Financeiro',
-      items: [
-        { 
-          path: '/cashier', 
-          icon: Calculator, 
-          label: 'Fechar Caixa', 
-          permission: 'canViewSales', 
-          description: 'Conciliação de vendas', 
-          prefetch: false 
-        },
-        { 
-          path: '/coupons', 
-          icon: Ticket, 
-          label: 'Cupons', 
-          permission: 'canViewCoupons', 
-          description: 'Gerenciar cupons', 
-          prefetch: true 
-        },
-      ]
-    },
-    {
-      id: 'catalogo',
-      label: 'Catálogo',
-      items: [
-        { 
-          path: '/products', 
-          icon: Package, 
-          label: 'Produtos', 
-          permission: 'canViewProducts', 
-          description: 'Gerenciar produtos', 
-          prefetch: true 
-        },
-        { 
-          path: '/stock-count', 
-          icon: Archive, 
-          label: 'Balanço', 
-          permission: 'canManageStock', 
-          description: 'Contagem de estoque', 
-          prefetch: true 
-        },
-      ]
-    },
-    {
-      id: 'clientes',
-      label: 'Clientes',
-      items: [
-        { 
-          path: '/customers', 
-          icon: Users, 
-          label: 'Clientes', 
-          permission: 'canViewCustomers', 
-          description: 'Gerenciar clientes', 
-          prefetch: true 
-        },
-      ]
-    },
-    {
-      id: 'analises',
-      label: 'Análises',
-      items: [
-        { 
-          path: '/reports', 
-          icon: BarChart3, 
-          label: 'Relatórios', 
-          permission: 'canViewReports', 
-          description: 'Análises e métricas', 
-          prefetch: false 
-        },
-      ]
-    },
-    {
-      id: 'administracao',
-      label: 'Administração',
-      items: [
-        { 
-          path: '/users', 
-          icon: Users, 
-          label: 'Usuários', 
-          permission: 'canViewUsers', 
-          description: 'Gerenciar usuários', 
-          prefetch: true 
-        },
-        { 
-          path: '/logs', 
-          icon: FileText, 
-          label: 'Logs', 
-          permission: 'canViewLogs', 
-          description: 'Histórico do sistema', 
-          prefetch: true 
-        },
-        { 
-          path: '/settings', 
-          icon: Settings, 
-          label: 'Configurações', 
-          permission: 'canViewSettings', 
-          description: 'Preferências do sistema', 
-          prefetch: true 
-        },
-      ]
-    }
-  ], [])
+  const menuGroups: MenuGroup[] = useMemo(
+    () => [
+      {
+        id: "principal",
+        label: "Principal",
+        items: [
+          {
+            path: "/dashboard",
+            icon: LayoutDashboard,
+            label: "Dashboard",
+            permission: "canViewDashboard",
+            description: "Visão geral do sistema",
+            prefetch: true,
+          },
+          {
+            path: "/tasks",
+            icon: ClipboardList,
+            label: "Tarefas",
+            permission: "canViewTasks",
+            description: "Lista de tarefas",
+            prefetch: true,
+          },
+        ],
+      },
+      {
+        id: "vendas",
+        label: "Vendas",
+        items: [
+          {
+            path: "/sales",
+            icon: ShoppingBag,
+            label: "PDV",
+            permission: "canViewSales",
+            description: "Ponto de venda",
+            prefetch: true,
+            highlight: true,
+          },
+          {
+            path: "/budgets",
+            icon: FileText,
+            label: "Orçamentos",
+            permission: "canViewSales",
+            description: "Gerenciar orçamentos",
+            prefetch: true,
+          },
+          {
+            path: "/sales-list",
+            icon: ClipboardList,
+            label: "Histórico",
+            permission: "canViewSales",
+            description: "Vendas e cancelamentos",
+            prefetch: true,
+          },
+        ],
+      },
+      {
+        id: "financeiro",
+        label: "Financeiro",
+        items: [
+          {
+            path: "/cashier",
+            icon: Calculator,
+            label: "Fechar Caixa",
+            permission: "canViewSales",
+            description: "Conciliação de vendas",
+            prefetch: false,
+          },
+          {
+            path: "/coupons",
+            icon: Ticket,
+            label: "Cupons",
+            permission: "canViewCoupons",
+            description: "Gerenciar cupons",
+            prefetch: true,
+          },
+        ],
+      },
+      {
+        id: "catalogo",
+        label: "Catálogo",
+        items: [
+          {
+            path: "/products",
+            icon: Package,
+            label: "Produtos",
+            permission: "canViewProducts",
+            description: "Gerenciar produtos",
+            prefetch: true,
+          },
+          {
+            path: "/stock-count",
+            icon: Archive,
+            label: "Balanço",
+            permission: "canManageStock",
+            description: "Contagem de estoque",
+            prefetch: true,
+          },
+        ],
+      },
+      {
+        id: "clientes",
+        label: "Clientes",
+        items: [
+          {
+            path: "/customers",
+            icon: Users,
+            label: "Clientes",
+            permission: "canViewCustomers",
+            description: "Gerenciar clientes",
+            prefetch: true,
+          },
+        ],
+      },
+      {
+        id: "analises",
+        label: "Análises",
+        items: [
+          {
+            path: "/reports",
+            icon: BarChart3,
+            label: "Relatórios",
+            permission: "canViewReports",
+            description: "Análises e métricas",
+            prefetch: false,
+          },
+        ],
+      },
+      {
+        id: "administracao",
+        label: "Administração",
+        items: [
+          {
+            path: "/users",
+            icon: Users,
+            label: "Usuários",
+            permission: "canViewUsers",
+            description: "Gerenciar usuários",
+            prefetch: true,
+          },
+          {
+            path: "/logs",
+            icon: FileText,
+            label: "Logs",
+            permission: "canViewLogs",
+            description: "Histórico do sistema",
+            prefetch: true,
+          },
+          {
+            path: "/settings",
+            icon: Settings,
+            label: "Configurações",
+            permission: "canViewSettings",
+            description: "Preferências do sistema",
+            prefetch: true,
+          },
+        ],
+      },
+    ],
+    [],
+  );
 
   // Filter visible groups based on permissions
   const visibleGroups: MenuGroup[] = useMemo(() => {
     return menuGroups
-      .map(group => ({
+      .map((group) => ({
         ...group,
-        items: group.items.filter(item => permissions?.[item.permission])
+        items: group.items.filter((item) => permissions?.[item.permission]),
       }))
-      .filter(group => group.items.length > 0)
-  }, [menuGroups, permissions])
+      .filter((group) => group.items.length > 0);
+  }, [menuGroups, permissions]);
 
   // Route checking
-  const isActiveRoute = useCallback((path: string): boolean => {
-    if (path === '/dashboard') return location.pathname === '/dashboard'
-    if (path === '/sales') return location.pathname === '/sales'
-    if (path === '/budgets') return location.pathname === '/budgets'
-    return location.pathname.startsWith(path)
-  }, [location.pathname])
+  const isActiveRoute = useCallback(
+    (path: string): boolean => {
+      if (path === "/dashboard") return location.pathname === "/dashboard";
+      if (path === "/sales") return location.pathname === "/sales";
+      if (path === "/budgets") return location.pathname === "/budgets";
+      return location.pathname.startsWith(path);
+    },
+    [location.pathname],
+  );
 
   // Logout handlers
   const handleLogoutClick = (): void => {
-    setShowLogoutConfirm(true)
-  }
+    setShowLogoutConfirm(true);
+  };
 
   const handleLogoutConfirm = async (): Promise<void> => {
-    setShowLogoutConfirm(false)
-    setIsMobileOpen(false)
-    await logout()
-  }
+    setShowLogoutConfirm(false);
+    setIsMobileOpen(false);
+    await logout();
+  };
 
   // Mobile close handler
   const handleMobileClose = (): void => {
-    setIsMobileOpen(false)
-  }
+    setIsMobileOpen(false);
+  };
 
   // Menu Item Component
-  const MenuItemComponent: React.FC<{ 
-    item: MenuItem
-    collapsed: boolean
-    isMobile?: boolean 
+  const MenuItemComponent: React.FC<{
+    item: MenuItem;
+    collapsed: boolean;
+    isMobile?: boolean;
   }> = ({ item, collapsed, isMobile = false }) => {
-    const Icon = item.icon
-    const isActive = isActiveRoute(item.path)
-    
-    const gradientStyle: React.CSSProperties = isActive ? {
-      background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`
-    } : {}
-    
-    const LinkComponent = Link
-    
+    const Icon = item.icon;
+    const isActive = isActiveRoute(item.path);
+
+    const gradientStyle: React.CSSProperties = isActive
+      ? {
+          background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
+        }
+      : {};
+
+    const LinkComponent = Link;
+
     return (
       <div className="relative group">
         <LinkComponent
@@ -330,57 +338,69 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
           onClick={() => isMobile && handleMobileClose()}
           className={`
             flex items-center rounded-xl transition-all duration-200
-            ${collapsed && !isMobile ? 'justify-center p-3' : 'gap-3 px-4 py-3'}
-            ${isActive 
-              ? 'text-white shadow-lg shadow-blue-500/25' 
-              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'}
-            ${item.highlight && !isActive ? 'border-l-4 border-blue-500 dark:border-blue-400' : ''}
+            ${collapsed && !isMobile ? "justify-center p-3" : "gap-3 px-4 py-3"}
+            ${
+              isActive
+                ? "text-white shadow-lg shadow-blue-500/25"
+                : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+            }
+            ${item.highlight && !isActive ? "border-l-4 border-blue-500 dark:border-blue-400" : ""}
           `}
           style={isActive ? gradientStyle : {}}
           title={collapsed && !isMobile ? item.label : undefined}
         >
-          <Icon 
+          <Icon
             className={`
               w-5 h-5 flex-shrink-0 transition-transform duration-200
-              ${isActive ? 'text-white' : 'text-gray-500 dark:text-gray-400'}
+              ${isActive ? "text-white" : "text-gray-500 dark:text-gray-400"}
               group-hover:scale-110
-            `} 
+            `}
           />
-          
+
           {(!collapsed || isMobile) && (
             <div className="flex-1 min-w-0 text-left">
-              <p className={`font-medium truncate text-sm ${
-                isActive ? 'text-white' : 'text-gray-700 dark:text-gray-200'
-              }`}>
+              <p
+                className={`font-medium truncate text-sm ${
+                  isActive ? "text-white" : "text-gray-700 dark:text-gray-200"
+                }`}
+              >
                 {item.label}
               </p>
-              <p className={`text-xs truncate ${
-                isActive ? 'text-white/80' : 'text-gray-400 dark:text-gray-500'
-              }`}>
+              <p
+                className={`text-xs truncate ${
+                  isActive
+                    ? "text-white/80"
+                    : "text-gray-400 dark:text-gray-500"
+                }`}
+              >
                 {item.description}
               </p>
             </div>
           )}
-          
+
           {(!collapsed || isMobile) && isActive && (
             <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse flex-shrink-0" />
           )}
         </LinkComponent>
-        
+
         {/* Tooltip for collapsed state */}
         {collapsed && !isMobile && (
-          <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-1.5 
+          <div
+            className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-1.5 
             bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg 
             opacity-0 group-hover:opacity-100 transition-all duration-200 
-            whitespace-nowrap z-50 pointer-events-none shadow-lg">
-            <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 
-              w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45" />
+            whitespace-nowrap z-50 pointer-events-none shadow-lg"
+          >
+            <div
+              className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 
+              w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45"
+            />
             {item.label}
           </div>
         )}
       </div>
-    )
-  }
+    );
+  };
 
   // Loading State
   if (authLoading || companyLoading) {
@@ -393,18 +413,30 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
             rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
           aria-label="Abrir menu"
         >
-          <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          <svg
+            className="w-5 h-5 text-gray-600 dark:text-gray-300"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
           </svg>
         </button>
 
         {/* Desktop skeleton */}
-        <div className="hidden lg:flex flex-col fixed left-0 top-0 h-full w-64 
-          bg-white dark:bg-gray-900 shadow-2xl z-30 items-center justify-center">
+        <div
+          className="hidden lg:flex flex-col fixed left-0 top-0 h-full w-64 
+          bg-white dark:bg-gray-900 shadow-2xl z-30 items-center justify-center"
+        >
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400" />
         </div>
       </>
-    )
+    );
   }
 
   // Mobile Sidebar
@@ -422,22 +454,27 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
           className="fixed inset-0 bg-black/50 z-50 animate-fadeIn lg:hidden backdrop-blur-sm"
           onClick={handleMobileClose}
         />
-        
+
         {/* Mobile Sidebar */}
-        <div className="fixed left-0 top-0 h-full w-72 bg-white dark:bg-gray-900 
-          z-50 shadow-2xl animate-slideInRight lg:hidden flex flex-col">
-          
+        <div
+          className="fixed left-0 top-0 h-full w-72 bg-white dark:bg-gray-900 
+          z-50 shadow-2xl animate-slideInRight lg:hidden flex flex-col"
+        >
           {/* Header */}
           <div className="p-5 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
             <div className="flex items-center justify-between">
-              <Link to="/dashboard" className="flex items-center gap-3" onClick={handleMobileClose}>
+              <Link
+                to="/dashboard"
+                className="flex items-center gap-3"
+                onClick={handleMobileClose}
+              >
                 <img
                   src={logoSrc}
                   alt={companyName}
                   className="h-10 w-auto object-contain"
-                  onError={(e) => { 
-                    const target = e.target as HTMLImageElement
-                    target.src = '/favicon.ico'
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "/favicon.ico";
                   }}
                 />
                 <div>
@@ -463,17 +500,19 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
             {visibleGroups.map((group) => (
               <div key={group.id}>
-                <p className="px-3 mb-2 text-xs font-semibold text-gray-400 
-                  dark:text-gray-500 uppercase tracking-wider">
+                <p
+                  className="px-3 mb-2 text-xs font-semibold text-gray-400 
+                  dark:text-gray-500 uppercase tracking-wider"
+                >
                   {group.label}
                 </p>
                 <div className="space-y-1">
                   {group.items.map((item) => (
-                    <MenuItemComponent 
-                      key={item.path} 
-                      item={item} 
-                      collapsed={false} 
-                      isMobile={true} 
+                    <MenuItemComponent
+                      key={item.path}
+                      item={item}
+                      collapsed={false}
+                      isMobile={true}
                     />
                   ))}
                 </div>
@@ -496,7 +535,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
           </div>
         </div>
       </>
-    )
+    );
   }
 
   // Desktop Sidebar
@@ -516,36 +555,50 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
           hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
         aria-label="Abrir menu"
       >
-        <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        <svg
+          className="w-5 h-5 text-gray-600 dark:text-gray-300"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 6h16M4 12h16M4 18h16"
+          />
         </svg>
       </button>
 
       {/* Desktop Sidebar */}
-      <div className={`
+      <div
+        className={`
         hidden lg:flex flex-col fixed left-0 top-0 h-full 
         bg-white dark:bg-gray-900 shadow-2xl transition-all duration-300 z-30 
         overflow-hidden border-r border-gray-200/50 dark:border-gray-700/50
-        ${collapsed ? 'w-20' : 'w-64'}
-      `}>
+        ${collapsed ? "w-20" : "w-64"}
+      `}
+      >
         {/* Header with Logo */}
-        <div className={`
+        <div
+          className={`
           p-5 border-b border-gray-100 dark:border-gray-700 
           transition-all duration-300 flex-shrink-0
-          ${collapsed ? 'px-3' : 'px-6'}
-        `}>
+          ${collapsed ? "px-3" : "px-6"}
+        `}
+        >
           <div className="flex items-center justify-between">
-            <Link 
-              to="/dashboard" 
+            <Link
+              to="/dashboard"
               className="flex items-center gap-3 flex-1 overflow-hidden"
             >
               <img
                 src={logoSrc}
                 alt={companyName}
                 className="h-10 w-auto object-contain flex-shrink-0"
-                onError={(e) => { 
-                  const target = e.target as HTMLImageElement
-                  target.src = '/favicon.ico'
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/favicon.ico";
                 }}
               />
               {!collapsed && (
@@ -559,39 +612,44 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
                 </div>
               )}
             </Link>
-            
+
             <button
               onClick={() => setCollapsed(!collapsed)}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 
                 transition-colors flex-shrink-0"
-              aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
+              aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
             >
-              {collapsed ? 
-                <ChevronRight className="w-4 h-4 text-gray-500 dark:text-gray-400" /> : 
+              {collapsed ? (
+                <ChevronRight className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              ) : (
                 <ChevronLeft className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-              }
+              )}
             </button>
           </div>
         </div>
 
         {/* Navigation */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-4 
+        <div
+          className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-4 
           scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 
-          scrollbar-track-transparent">
+          scrollbar-track-transparent"
+        >
           {visibleGroups.map((group) => (
             <div key={group.id}>
               {!collapsed && (
-                <p className="px-3 mb-2 text-xs font-semibold text-gray-400 
-                  dark:text-gray-500 uppercase tracking-wider">
+                <p
+                  className="px-3 mb-2 text-xs font-semibold text-gray-400 
+                  dark:text-gray-500 uppercase tracking-wider"
+                >
                   {group.label}
                 </p>
               )}
               <div className="space-y-1">
                 {group.items.map((item) => (
-                  <MenuItemComponent 
-                    key={item.path} 
-                    item={item} 
-                    collapsed={collapsed} 
+                  <MenuItemComponent
+                    key={item.path}
+                    item={item}
+                    collapsed={collapsed}
                   />
                 ))}
               </div>
@@ -605,22 +663,26 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
             onClick={handleLogoutClick}
             className={`
               flex items-center rounded-xl transition-all duration-200 group w-full
-              ${collapsed ? 'justify-center p-3' : 'gap-3 px-4 py-3'}
+              ${collapsed ? "justify-center p-3" : "gap-3 px-4 py-3"}
               text-red-600 dark:text-red-400 
               hover:bg-red-50 dark:hover:bg-red-900/30
             `}
-            title={collapsed ? 'Sair do sistema' : undefined}
+            title={collapsed ? "Sair do sistema" : undefined}
           >
             <LogOut className="w-5 h-5 transition-transform group-hover:scale-110 flex-shrink-0" />
-            {!collapsed && <span className="font-medium truncate">Sair do sistema</span>}
+            {!collapsed && (
+              <span className="font-medium truncate">Sair do sistema</span>
+            )}
           </button>
-          
+
           {/* Tooltip for collapsed state */}
           {collapsed && (
-            <div className="absolute left-full ml-3 bottom-4 px-3 py-1.5 
+            <div
+              className="absolute left-full ml-3 bottom-4 px-3 py-1.5 
               bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg 
               opacity-0 group-hover:opacity-100 transition-all duration-200 
-              whitespace-nowrap z-50 pointer-events-none shadow-lg">
+              whitespace-nowrap z-50 pointer-events-none shadow-lg"
+            >
               Sair do sistema
             </div>
           )}
@@ -681,7 +743,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
         }
       `}</style>
     </>
-  )
-}
+  );
+};
 
-export default Sidebar
+export default Sidebar;

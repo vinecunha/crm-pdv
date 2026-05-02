@@ -5,7 +5,7 @@
 DROP FUNCTION IF EXISTS public.setup_company CASCADE;
 DROP FUNCTION IF EXISTS public.get_current_user_role CASCADE;
 
--- 2. Create setup_company function with CORRECT parameter name (company_logo_url)
+-- 2. Create setup_company function with CORRECT parameter name (company_logo)
 create or replace function public.setup_company(
   p_company_name text,
   p_cnpj text default null,
@@ -17,7 +17,7 @@ create or replace function public.setup_company(
   p_zip_code text default null,
   p_primary_color text default '#2563eb',
   p_secondary_color text default '#7c3aed',
-  p_company_logo_url text default null,  -- CORRECT: matches client
+  p_company_logo text default null,  -- CORRECT: matches client
   p_favicon text default null,
   p_domain text default null,
   p_social_media jsonb default '{}'::jsonb,
@@ -58,10 +58,10 @@ begin
     select id into v_company_id from public.companies where slug = v_slug limit 1;
   end if;
   
-  -- Insert into company_settings table (use company_logo_url to match client)
+  -- Insert into company_settings table (use company_logo to match client)
   insert into public.company_settings (
     company_name,
-    company_logo_url,
+    company_logo,
     favicon,
     domain,
     email,
@@ -77,7 +77,7 @@ begin
     custom_css
   ) values (
     p_company_name,
-    p_company_logo_url,
+    p_company_logo,
     p_favicon,
     p_domain,
     p_email,

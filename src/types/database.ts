@@ -39,7 +39,12 @@ export interface BudgetItemUpdate extends Partial<BudgetItemInsert> {
 // ============================================
 // Budgets
 // ============================================
-export type BudgetStatus = 'pending' | 'approved' | 'rejected' | 'expired' | 'converted';
+export type BudgetStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "expired"
+  | "converted";
 
 export interface Budget {
   id: number;
@@ -132,7 +137,7 @@ export interface CompanySettings {
   id: UUID;
   company_name: string;
   company_logo: string | null;
-  company_logo_url: string | null;
+  company_logo: string | null;
   favicon: string | null;
   domain: string | null;
   email: string | null;
@@ -153,7 +158,7 @@ export interface CompanySettings {
 // ============================================
 // Coupons
 // ============================================
-export type DiscountType = 'fixed' | 'percent';
+export type DiscountType = "fixed" | "percent";
 
 export interface Coupon {
   id: number;
@@ -202,7 +207,7 @@ export interface CustomerCoupon {
 // ============================================
 // Customers
 // ============================================
-export type CustomerStatus = 'active' | 'inactive';
+export type CustomerStatus = "active" | "inactive";
 export type RFVScore = string; // char(3)
 
 export interface Customer {
@@ -233,7 +238,7 @@ export interface Customer {
 // Customer Communications
 // ============================================
 export type CommunicationChannel = string; // WhatsApp, Email, etc
-export type CommunicationStatus = 'sent' | 'delivered' | 'read' | 'failed';
+export type CommunicationStatus = "sent" | "delivered" | "read" | "failed";
 
 export interface CustomerCommunication {
   id: UUID;
@@ -269,7 +274,7 @@ export interface LoginAttempt {
 // ============================================
 // Notifications
 // ============================================
-export type NotificationType = 'info' | 'warning' | 'error' | 'success';
+export type NotificationType = "info" | "warning" | "error" | "success";
 
 export interface Notification {
   id: UUID;
@@ -310,7 +315,7 @@ export interface RolePermission {
 // ============================================
 // PIX Charges
 // ============================================
-export type PixStatus = 'pending' | 'paid' | 'expired' | 'cancelled';
+export type PixStatus = "pending" | "paid" | "expired" | "cancelled";
 
 export interface PixCharge {
   id: number;
@@ -379,9 +384,9 @@ export interface ProductEntry {
 // Profiles
 // ============================================
 export type UserRole = string; // 'admin', 'operador', etc
-export type TableDensity = 'compact' | 'comfortable' | 'spacious';
-export type ThemeMode = 'auto' | 'system' | 'manual';
-export type ProfileStatus = 'active' | 'inactive' | 'blocked' | 'locked';
+export type TableDensity = "compact" | "comfortable" | "spacious";
+export type ThemeMode = "auto" | "system" | "manual";
+export type ProfileStatus = "active" | "inactive" | "blocked" | "locked";
 
 export interface Profile {
   id: UUID;
@@ -428,9 +433,9 @@ export interface RateLimit {
 // ============================================
 // Sales
 // ============================================
-export type PaymentMethod = 'cash' | 'card' | 'pix' | 'transfer';
-export type PaymentStatus = 'pending' | 'paid' | 'cancelled';
-export type SaleStatus = 'completed' | 'pending' | 'cancelled';
+export type PaymentMethod = "cash" | "card" | "pix" | "transfer";
+export type PaymentStatus = "pending" | "paid" | "cancelled";
+export type SaleStatus = "completed" | "pending" | "cancelled";
 
 export interface Sale {
   id: number;
@@ -476,7 +481,12 @@ export interface SaleItem {
 // ============================================
 // Stock Movements
 // ============================================
-export type MovementType = 'entry' | 'sale' | 'adjustment' | 'reserve' | 'unreserve';
+export type MovementType =
+  | "entry"
+  | "sale"
+  | "adjustment"
+  | "reserve"
+  | "unreserve";
 
 export interface StockMovement {
   id: number;
@@ -496,7 +506,7 @@ export interface StockMovement {
 // ============================================
 // Stock Count Sessions
 // ============================================
-export type CountSessionStatus = 'in_progress' | 'completed' | 'cancelled';
+export type CountSessionStatus = "in_progress" | "completed" | "cancelled";
 
 export interface StockCountSession {
   id: UUID;
@@ -522,7 +532,7 @@ export interface StockCountSession {
 // ============================================
 // Stock Count Items
 // ============================================
-export type CountItemStatus = 'pending' | 'counted' | 'verified';
+export type CountItemStatus = "pending" | "counted" | "verified";
 
 export interface StockCountItem {
   id: UUID;
@@ -585,7 +595,7 @@ export interface AccessLog {
 // ============================================
 // Goals
 // ============================================
-export type GoalType = 'daily' | 'monthly' | 'yearly';
+export type GoalType = "daily" | "monthly" | "yearly";
 
 export interface Goal {
   id: UUID;
@@ -601,10 +611,10 @@ export interface Goal {
 // ============================================
 // Tasks
 // ============================================
-export type TaskType = 'personal' | 'team';
-export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
-export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
-export type TaskVisibility = 'assigned' | 'team' | 'all';
+export type TaskType = "personal" | "team";
+export type TaskPriority = "low" | "medium" | "high" | "urgent";
+export type TaskStatus = "pending" | "in_progress" | "completed" | "cancelled";
+export type TaskVisibility = "assigned" | "team" | "all";
 
 export interface Task {
   id: UUID;
@@ -659,7 +669,7 @@ export interface TaskComment {
 // ============================================
 // Task Assignment History
 // ============================================
-export type AssignmentAction = 'assigned' | 'unassigned' | 'claimed';
+export type AssignmentAction = "assigned" | "unassigned" | "claimed";
 
 export interface TaskAssignmentHistory {
   id: UUID;
@@ -675,7 +685,7 @@ export interface TaskAssignmentHistory {
 // ============================================
 // Commissions
 // ============================================
-export type CommissionStatus = 'pending' | 'paid' | 'cancelled';
+export type CommissionStatus = "pending" | "paid" | "cancelled";
 
 export interface Commission {
   id: UUID;
@@ -695,7 +705,7 @@ export interface Commission {
 // ============================================
 // Commission Rules
 // ============================================
-export type CommissionRuleType = 'percentage' | 'fixed';
+export type CommissionRuleType = "percentage" | "fixed";
 
 export interface CommissionRule {
   id: UUID;

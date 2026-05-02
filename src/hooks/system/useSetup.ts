@@ -16,6 +16,8 @@ interface SetupData {
   primary_color?: string
   secondary_color?: string
   domain?: string
+  admin_email?: string
+  admin_password?: string
 }
 
 interface UseSetupReturn {
@@ -52,6 +54,7 @@ export const useSetup = (): UseSetupReturn => {
     setError('')
     
     try {
+      // 1. Criar a empresa
       const result = await setupCompany({
         company_name: data.company_name,
         cnpj: data.cnpj || null,
@@ -66,15 +69,46 @@ export const useSetup = (): UseSetupReturn => {
         domain: data.domain || null
       })
 
-      if (result?.error) {
-        throw new Error(result.error)
+      if (!result) {
+        throw new Error('Nenhuma resposta do servidor')
       }
 
+      if (result.error) {
+        logger.error('Erro retornado pela RPC:', result.error)
+        const message = result.error?.message 
+          || result.error?.details 
+          || result.error?.hint 
+          || JSON.stringify(result.error)
+        throw new Error(message)
+      }
+
+      // 2. Criar usuário admin se email e senha foram fornecidos
+      if (data.admin_email && data.admin_password) {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: data.admin_email,
+          password: data.admin_password,
+          options: {
+            data: {
+              full_name: 'Administrador',
+              role: 'admin'
+            }
+          }
+        })
+
+        if (authError) {
+          logger.error('Erro ao criar usuário admin:', authError)
+          throw new Error('Empresa criada, mas erro ao criar usuário admin: ' + authError.message)
+        }
+
+        logger.info('✅ Usuário admin criado:', authData.user?.email)
+      }
+
+      logger.info('✅ Empresa configurada com sucesso')
       return { success: true }
     } catch (err: any) {
-      const message = err.message || 'Erro ao configurar empresa'
+      const message = err?.message || err?.error || JSON.stringify(err)
+      logger.error('❌ Erro no setup:', { error: err, message })
       setError(message)
-      logger.error('Erro no setup:', err)
       return { success: false, error: message }
     } finally {
       setLoading(false)

@@ -424,7 +424,7 @@ create or replace function public.setup_company(
   p_zip_code text default null,
   p_primary_color text default '#2563eb',
   p_secondary_color text default '#7c3aed',
-  p_company_logo_url text default null,
+  p_company_logo text default null,
   p_favicon text default null,
   p_domain text default null,
   p_social_media jsonb default '{}'::jsonb,
@@ -484,7 +484,7 @@ begin
     custom_css
   ) values (
     p_company_name,
-    p_company_logo_url,
+    p_company_logo,
     p_favicon,
     p_domain,
     p_email,
