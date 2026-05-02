@@ -44,7 +44,7 @@ const PrivateLayout: React.FC<PrivateLayoutProps> = ({ children }) => {
       '/logs': 'Logs',
       '/settings': 'Configurações',
       '/stock-count': 'Balanço',
-      '/profile': 'Meu Perfil',
+      '/settings/profile': 'Meu Perfil',
       '/tasks': 'Tarefas',
       '/budgets': 'Orçamentos'
     }

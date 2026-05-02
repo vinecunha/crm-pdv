@@ -8,7 +8,6 @@ interface CompanySettings {
   id: string; // uuid
   company_name: string; // character varying(255)
   company_logo: string | null; // text
-  company_logo: string | null; // text
   favicon: string | null; // text
   domain: string | null; // character varying(255)
   email: string | null; // character varying(255)
@@ -58,7 +57,7 @@ export const useCompany = (): UseCompanyReturn => {
         .from("company_settings")
         .select("*")
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) {
         logger.error("Erro ao buscar configurações da empresa:", error);

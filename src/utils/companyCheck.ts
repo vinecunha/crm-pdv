@@ -18,7 +18,8 @@ export const checkCompanyExists = async (): Promise<CompanyStatus> => {
     return { exists: false, redirectTo: '/setup' }
   } catch (error) {
     logger.error('Erro ao verificar company:', error)
-    // Em caso de erro, assumir que não existe company
-    return { exists: false, redirectTo: '/setup' }
+    // Em caso de erro de rede/banco, não redireciona para /setup
+    // para evitar apagar uma company que possa existir
+    return { exists: true, redirectTo: '/login' }
   }
 }

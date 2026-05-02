@@ -186,18 +186,60 @@ async function fetchTeamData(userId, userRole) {
  * Buscar dados do dashboard baseado no cargo do usuário
  */
 export const fetchDashboardDataByRole = async (userId, role) => {
-  const { data, error } = await supabase.rpc("get_dashboard", {
-    p_user_id: userId,
-    p_role: role,
-  });
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - 30);
 
-  if (error) throw error;
+  const startDateStr = startDate.toISOString().split('T')[0];
+  const endDateStr = endDate.toISOString().split('T')[0];
 
-  // ✅ IMPORTANTE: Garantir que os arrays sejam novos, não referências acumuladas
-  return {
-    sales: data.sales || [],
-    topProducts: data.topProducts || [],
-    totalCustomers: data.totalCustomers || 0,
-    teamData: data.teamData || null,
-  };
+  try {
+    // 1. Buscar vendas do período
+    let salesQuery = supabase
+      .from('sales')
+      .select('*')
+      .eq('status', 'completed')
+      .gte('created_at', `${startDateStr}T00:00:00`)
+      .lte('created_at', `${endDateStr}T23:59:59`)
+      .order('created_at', { ascending: false });
+
+    if (role === 'operador') {
+      salesQuery = salesQuery.eq('created_by', userId);
+    } else if (role === 'gerente') {
+      const { data: operadores } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('role', 'operador');
+      const allowedIds = [userId, ...(operadores?.map((o) => o.id) || [])];
+      salesQuery = salesQuery.in('created_by', allowedIds);
+    }
+
+    const { data: sales, error: salesError } = await salesQuery;
+    if (salesError) throw salesError;
+
+    // 2. Buscar top produtos
+    const topProducts = await fetchTopProductsByRole(userId, role, startDateStr, endDateStr);
+
+    // 3. Total de clientes
+    const { count: totalCustomers, error: customersError } = await supabase
+      .from('customers')
+      .select('*', { count: 'exact', head: true });
+    if (customersError) throw customersError;
+
+    // 4. Dados da equipe (apenas para gerentes e admins)
+    let teamData = null;
+    if (role === 'admin' || role === 'gerente') {
+      teamData = await fetchTeamData(userId, role);
+    }
+
+    return {
+      sales: sales || [],
+      topProducts,
+      totalCustomers: totalCustomers || 0,
+      teamData,
+    };
+  } catch (error) {
+    logger.error('❌ Erro em fetchDashboardDataByRole:', error);
+    throw error;
+  }
 };

@@ -24,6 +24,49 @@ import {
   DollarSign,
 } from "@lib/icons";
 
+// Helper functions for company logo placeholder
+const getInitials = (name: string): string => {
+  const words = name.trim().split(/\s+/).filter(Boolean)
+  if (words.length === 0) return '?'
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase()
+  return (words[0][0] + words[words.length - 1][0]).toUpperCase()
+}
+
+const CompanyLogoPlaceholder = ({
+  name,
+  color,
+  size = 40,
+}: {
+  name: string
+  color: string
+  size?: number
+}) => {
+  const initials = getInitials(name)
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 40 40"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ flexShrink: 0 }}
+    >
+      <rect width="40" height="40" rx="8" fill={color} />
+      <text
+        x="50%"
+        y="50%"
+        dominantBaseline="central"
+        textAnchor="middle"
+        fontSize={initials.length === 1 ? 22 : 16}
+        fontWeight="700"
+        fontFamily="system-ui, sans-serif"
+        fill="#ffffff"
+      >
+        {initials}
+      </text>
+    </svg>
+  )
+}
+
 // Types
 interface MenuItem {
   path: string;
@@ -111,7 +154,6 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
 
   // Company data
   const companyName = company?.company_name || "Empresa";
-  const logoSrc = company?.company_logo || "/logomarca.png";
   const primaryColor = getCompanyColor("primary") || "#2563eb";
   const secondaryColor = getCompanyColor("secondary") || "#7c3aed";
 
@@ -468,15 +510,23 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
                 className="flex items-center gap-3"
                 onClick={handleMobileClose}
               >
-                <img
-                  src={logoSrc}
-                  alt={companyName}
-                  className="h-10 w-auto object-contain"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = "/favicon.ico";
-                  }}
-                />
+                {company?.company_logo ? (
+                  <img
+                    src={company.company_logo}
+                    alt={companyName}
+                    className="h-10 w-auto object-contain"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <CompanyLogoPlaceholder
+                    name={companyName}
+                    color={primaryColor}
+                    size={40}
+                  />
+                )}
                 <div>
                   <h2 className="font-bold text-gray-900 dark:text-white text-sm">
                     {companyName}
@@ -592,15 +642,23 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
               to="/dashboard"
               className="flex items-center gap-3 flex-1 overflow-hidden"
             >
-              <img
-                src={logoSrc}
-                alt={companyName}
-                className="h-10 w-auto object-contain flex-shrink-0"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = "/favicon.ico";
-                }}
-              />
+              {company?.company_logo ? (
+                <img
+                  src={company.company_logo}
+                  alt={companyName}
+                  className="h-10 w-auto object-contain flex-shrink-0"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
+              ) : (
+                <CompanyLogoPlaceholder
+                  name={companyName}
+                  color={primaryColor}
+                  size={40}
+                />
+              )}
               {!collapsed && (
                 <div className="flex-1 min-w-0">
                   <h2 className="font-bold text-gray-900 dark:text-white text-lg leading-tight truncate">

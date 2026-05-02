@@ -68,9 +68,9 @@ const AppWithErrorBoundary = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <CompanySetupCheck />
         <AuthProvider>
           <CompanyProvider>
+            <CompanySetupCheck />
             <ThemeProviderWithErrorBoundary />
           </CompanyProvider>
         </AuthProvider>

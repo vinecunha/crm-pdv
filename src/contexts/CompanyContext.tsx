@@ -11,14 +11,13 @@ interface CompanyContextType {
   updateCompanySettings: (
     settings: Partial<CompanySettings>,
   ) => Promise<UpdateCompanyResult>;
-  fetchCompanySettings: () => Promise<void>;
+  refetch: () => void;
 }
 
 // Interface importada do hook (você pode mover para um arquivo de tipos se preferir)
 interface CompanySettings {
   id: string;
   company_name: string;
-  company_logo: string | null;
   company_logo: string | null;
   favicon: string | null;
   domain: string | null;

@@ -189,7 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const buildProfileFromJWT = useCallback((userData: User): Profile | null => {
     if (!userData) return null
-    const role = userData.app_metadata?.role || 'operador'
+    const role = userData.app_metadata?.role || userData.user_metadata?.role || 'operador'
     const fullName = userData.user_metadata?.full_name || userData.email?.split('@')[0] || 'Usuário'
     return {
       id: userData.id,
@@ -246,12 +246,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (forceDBFetch) {
       const dbProfile = await fetchFullProfileFromDB(userData.id)
       if (dbProfile) {
-        // CRITICAL: Role must ALWAYS come from JWT to prevent privilege escalation
-        // The database role can be modified directly, but JWT role is cryptographically signed
+        // Role: JWT has precedence when explicitly defined via app_metadata.
+        // If JWT returned the fallback 'operador' (app_metadata empty),
+        // use the role from the database as source of truth.
         const mergedProfile: Profile = { 
           ...dbProfile, 
           id: jwtProfile.id, // Force ID from auth.users
-          role: jwtProfile.role, // NEVER allow DB to override JWT role
+          role: jwtProfile.role !== 'operador'
+              ? jwtProfile.role          // JWT has explicit role → use it
+              : (dbProfile.role || 'operador'), // JWT empty → use database
           email: jwtProfile.email, // Force email from auth.users
         }
         setProfile(mergedProfile)

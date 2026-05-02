@@ -33,18 +33,44 @@ export const fetchClosingHistory = async () => {
  */
 export const fetchCashierSummary = async ({ queryKey }) => {
   const [, { startDate, endDate, userId }] = queryKey
-  
-  const start = new Date(startDate + 'T00:00:00')
-  const end = new Date(endDate + 'T23:59:59.999')
-  
-  const { data, error } = await supabase.rpc('get_cashier_summary', {
-    p_start_date: start.toISOString(),
-    p_end_date: end.toISOString(),
-    p_user_id: userId === 'all' ? null : userId
-  })
-  
+
+  const start = new Date(startDate + 'T00:00:00').toISOString()
+  const end = new Date(endDate + 'T23:59:59.999').toISOString()
+
+  let salesQuery = supabase
+    .from('sales')
+    .select('*')
+    .eq('status', 'completed')
+    .gte('created_at', start)
+    .lte('created_at', end)
+
+  if (userId && userId !== 'all') {
+    salesQuery = salesQuery.eq('created_by', userId)
+  }
+
+  const { data: sales, error } = await salesQuery
+
   if (error) throw error
-  return data
+
+  // Calcular resumo
+  const resumo = {
+    total_vendas: sales?.length || 0,
+    total_liquido: sales?.reduce((sum, s) => sum + (s.final_amount || 0), 0) || 0,
+    total_descontos: sales?.reduce((sum, s) => sum + (s.discount_amount || 0), 0) || 0,
+    total_cancelamentos: 0, // TODO: implementar lógica de cancelamentos se necessário
+    vendas_por_metodo: {} as Record<string, number>
+  }
+
+  // Agrupar por método de pagamento
+  sales?.forEach(sale => {
+    const method = sale.payment_method || 'não informado'
+    resumo.vendas_por_metodo[method] = (resumo.vendas_por_metodo[method] || 0) + sale.final_amount
+  })
+
+  return {
+    resumo,
+    vendas: sales || []
+  }
 }
 
 /**

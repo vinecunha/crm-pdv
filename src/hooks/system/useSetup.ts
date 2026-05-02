@@ -39,16 +39,9 @@ export const useSetup = (): UseSetupReturn => {
       const settings = await fetchCompanySettings()
       
       if (settings) {
-        // Verificar se usuário já está logado
-        const { data: { user } } = await supabase.auth.getUser()
-        
-        if (user) {
-          // Usuário já está logado, redireciona para home
-          navigate('/', { replace: true })
-        } else {
-          // Usuário não está logado, vai para login
-          navigate('/login', { replace: true })
-        }
+        // Sempre vai para /login — o AuthContext cuida de redirecionar
+        // para /dashboard se o usuário já estiver autenticado com profile
+        navigate('/login', { replace: true })
         return true
       }
       
@@ -91,6 +84,10 @@ export const useSetup = (): UseSetupReturn => {
 
         adminUserId = authData.user.id
         logger.info('✅ Usuário admin criado:', authData.user.email)
+
+        // Encerrar a sessão criada pelo signUp para não interferir no fluxo
+        // O usuário admin vai fazer login manualmente na tela de login
+        await supabase.auth.signOut()
       }
 
       // 2. Criar a empresa e passar o ID do admin para criar o perfil

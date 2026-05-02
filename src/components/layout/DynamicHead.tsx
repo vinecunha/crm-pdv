@@ -23,8 +23,30 @@ const DynamicHead = () => {
     updateMetaTag("theme-color", company.primary_color || "#2563eb");
 
     // Atualizar favicon se existir
-    if (company.favicon || company.company_logo) {
-      updateFavicon(company.favicon || company.company_logo);
+    if (company.favicon) {
+      // Favicon dedicado configurado → usa ele
+      updateFavicon(company.favicon);
+    } else if (company.company_logo) {
+      // Sem favicon, mas tem logo → usa a logo como favicon
+      updateFavicon(company.company_logo);
+    } else {
+      // Sem favicon nem logo → gera SVG inline com iniciais da empresa
+      const name = company.company_name || 'CRM';
+      const color = company.primary_color || '#2563eb';
+      const words = name.trim().split(/\s+/).filter(Boolean);
+      const initials = words.length === 1
+        ? words[0].slice(0, 2).toUpperCase()
+        : (words[0][0] + words[words.length - 1][0]).toUpperCase();
+
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+        <rect width="32" height="32" rx="6" fill="${color}"/>
+        <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle"
+          font-size="${initials.length === 1 ? '18' : '14'}" font-weight="700"
+          font-family="system-ui,sans-serif" fill="#fff">${initials}</text>
+      </svg>`;
+
+      const dataUrl = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+      updateFavicon(dataUrl);
     }
   }, [company, loading]);
 
@@ -40,19 +62,21 @@ const DynamicHead = () => {
     meta.setAttribute("content", content);
   };
 
-  const updateFavicon = (url) => {
-    // Atualizar todos os tipos de favicon
-    const selectors = [
-      'link[rel="icon"]',
-      'link[rel="shortcut icon"]',
-      'link[rel="apple-touch-icon"]',
+  const updateFavicon = (url: string) => {
+    const configs = [
+      { rel: 'icon', type: 'image/svg+xml' },
+      { rel: 'shortcut icon' },
+      { rel: 'apple-touch-icon' },
     ];
-
-    selectors.forEach((selector) => {
-      const link = document.querySelector(selector);
-      if (link) {
-        link.href = url;
+    configs.forEach(({ rel, type }) => {
+      let link = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = rel;
+        document.head.appendChild(link);
       }
+      link.href = url;
+      if (type) link.type = type;
     });
   };
 

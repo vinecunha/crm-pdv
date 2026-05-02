@@ -3,7 +3,7 @@ import { Eye, EyeOff } from '@lib/icons'
 import Modal from '@components/ui/Modal'
 import Button from '@components/ui/Button'
 import PasswordStrengthIndicator from '@components/ui/PasswordStrengthIndicator'
-import { usePasswordStrength } from '@contexts/AuthContext.jsx'
+import { usePasswordStrength } from '@contexts/AuthContext'
 
 const ChangePasswordModal = ({ isOpen, onClose, onChangePassword }) => {
   const [form, setForm] = useState({
